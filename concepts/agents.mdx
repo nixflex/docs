@@ -1,0 +1,122 @@
+---
+title: "Agents"
+description: "The AI personality that answers and makes calls"
+icon: "user"
+---
+
+An **agent** is the configurable AI personality behind a phone call. One agent owns:
+
+- A system prompt (what the AI says, how it behaves)
+- A voice (Inworld TTS voice ID)
+- A language
+- Behaviour settings (response length, interruption sensitivity, silence handling)
+- Action configuration (transfer numbers, SMS templates)
+- An optional webhook URL for post-call data
+
+One agent can be attached to **many phone numbers**. This is the multi-tenant pattern: one "dental receptionist" agent can serve hundreds of clinics, each with their own Twilio number.
+
+## Architecture
+
+```
+Agent (template/personality)
+  ├── Phone Number A → Clinic 1
+  ├── Phone Number B → Clinic 2
+  └── Phone Number C → Clinic 3
+```
+
+The engine identifies which clinic is calling by the phone number that was dialled, not by which agent. The agent prompt stays the same; the per-customer context comes from the phone number record and any history Nixflex finds.
+
+## Configurable fields
+
+When you `POST /v1/agents`, you can set:
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `name` | string | `"Untitled Agent"` | Display name in dashboard |
+| `system_prompt` | string | empty | What Claude should do (see below) |
+| `welcome_message` | string | generic | First thing the agent says on inbound calls |
+| `voice_id` | string | `"Dennis"` | Inworld TTS voice |
+| `language` | string | `"en"` | Default language code |
+| `response_length` | enum | `"medium"` | `short`, `medium`, or `long` |
+| `interruption_sensitivity` | enum | `"medium"` | `low`, `medium`, `high` |
+| `max_call_duration_seconds` | int | `300` | Hard cap; engine ends call at this |
+| `silence_hangup_seconds` | int | `30` | Hang up if caller silent this long |
+| `record_call` | bool | `true` | Record audio to Supabase bucket |
+| `webhook_url` | string | null | Where to POST post-call data |
+| `transfer_number` | string | null | Default destination for `[TRANSFER:]` |
+| `post_call_sms_template` | string | null | If set, sends this SMS after call ends |
+| `llm_model` | string | `"claude-haiku-4-5"` | LLM used during calls |
+| `temperature` | float | `0.7` | Creativity vs predictability |
+| `fallback_message` | string | sensible default | Said when STT confidence is too low |
+
+See the full [Create Agent API reference](/api-reference/agents/create) for request and response details.
+
+## Writing a good system prompt
+
+Claude is the brain. The prompt tells it who it is, what to do, and what not to do.
+
+A solid agent prompt has six sections:
+
+<Steps>
+  <Step title="Role">
+    Who the agent is. "You are the front-desk assistant for Acme Dental in London."
+  </Step>
+  <Step title="Business facts">
+    Concrete facts the agent must know. Opening hours, address, services, prices. Never invent these.
+  </Step>
+  <Step title="Goal">
+    What success looks like. "Book an appointment, answer a question, or transfer to the dentist if it's clinical."
+  </Step>
+  <Step title="Rules">
+    Hard constraints. "Never give medical advice. Never quote prices not in this prompt. If unsure, transfer."
+  </Step>
+  <Step title="Style">
+    How to speak. "Warm British accent. Short sentences. One question at a time. No bullet points (you're on a phone call)."
+  </Step>
+  <Step title="Actions">
+    When to use built-in tags like `[TRANSFER:]`, `[SEND_SMS:]`, `[END_CALL]`. See [Claude actions](/actions/overview).
+  </Step>
+</Steps>
+
+<Tip>
+  You don't need to teach Claude how to handle interruptions, silence, language switching, or call endings. The engine injects those rules automatically. Just write the business logic.
+</Tip>
+
+## Example prompt
+
+```
+ROLE
+You are the front-desk assistant at Acme Dental, a small dental practice in Croydon, London.
+
+BUSINESS FACTS
+- Opening hours: Mon-Fri 9am-6pm, Sat 9am-1pm, closed Sun
+- Address: 12 High Street, Croydon CR0 1AB
+- Services: check-ups (£45), cleaning (£60), whitening (£250)
+- Emergency line: transfer to +442087601234
+
+GOAL
+Book check-up appointments, answer pricing questions, transfer clinical questions to the dentist.
+
+RULES
+- Never give medical or dental advice. Transfer clinical questions.
+- Quote only prices listed above. Say "let me check" if asked anything else.
+- If caller sounds urgent or in pain, transfer immediately: [TRANSFER:+442087601234]
+- Confirm the booking details back to the caller before ending.
+
+STYLE
+Friendly, professional, brief. Speak naturally — you're on a phone call.
+
+ACTIONS
+- To transfer: [TRANSFER:+442087601234]
+- To end the call after a booking: [END_CALL]
+- To text booking confirmation: [SEND_SMS: Your appointment with Acme Dental is confirmed for {date} at {time}.]
+```
+
+## Listing and updating
+
+- `GET /v1/agents` — list all your agents
+- `GET /v1/agents/:id` — fetch one
+- `PUT /v1/agents/:id` — update any field
+- `DELETE /v1/agents/:id` — remove (calls in progress finish first)
+
+See the [API reference](/api-reference/agents/list) for full schemas.

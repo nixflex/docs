@@ -1,0 +1,37 @@
+---
+title: "Launch SMS campaign"
+description: "POST /v1/sms/campaigns/:id/launch"
+api: "POST https://api.nixflex.com/v1/sms/campaigns/{campaign_id}/launch"
+---
+
+Launches a scheduled SMS campaign immediately.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4/launch \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+No request body.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "status": "running",
+  "recipients_count": 100,
+  "queued_count": 100
+}
+```
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `campaign_not_found` | ID doesn't exist or isn't yours |
+| `campaign_already_completed` | Already finished |
+| `campaign_no_recipients` | Empty recipient list |

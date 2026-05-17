@@ -1,0 +1,147 @@
+---
+title: "SMS campaigns"
+description: "Send bulk SMS to many numbers at once"
+icon: "users"
+---
+
+SMS campaigns let you send the same message (or templated variations) to many recipients in one API call. Useful for promotions, appointment batches, announcements, and follow-up sequences.
+
+## Create a campaign
+
+```bash
+curl -X POST https://api.nixflex.com/v1/sms/campaigns \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "from_number": "+447446466847",
+    "name": "March promotion",
+    "body": "Hi! Acme Dental is offering 20% off cleanings this month. Reply YES to book.",
+    "recipients": [
+      { "phone_number": "+447111000001" },
+      { "phone_number": "+447111000002" },
+      { "phone_number": "+447111000003" }
+    ],
+    "context_prompt": "The campaign is a 20% off cleaning promotion in March. If caller says YES, book them in for any weekday next week 9am-5pm. If NO or STOP, just thank them.",
+    "schedule_type": "now"
+  }'
+```
+
+Response:
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "status": "running",
+  "recipients_count": 3,
+  "sent_count": 0
+}
+```
+
+The engine queues all the sends and processes them respecting your Twilio rate limit.
+
+## Scheduling
+
+Send later instead of now:
+
+```json
+{
+  "schedule_type": "schedule",
+  "scheduled_at": "2026-05-20T09:00:00Z",
+  ...
+}
+```
+
+Campaign queues at the scheduled time. You can cancel before then with `DELETE /v1/sms/campaigns/:id`.
+
+## Tracking delivery
+
+Get campaign status:
+
+```bash
+curl https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Response includes per-recipient delivery status:
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "status": "completed",
+  "recipients_count": 3,
+  "sent_count": 3,
+  "delivered_count": 3,
+  "failed_count": 0,
+  "replied_count": 1,
+  "recipients": [
+    {
+      "phone_number": "+447111000001",
+      "status": "delivered",
+      "replied": true,
+      "reply_text": "YES",
+      "replied_at": "2026-05-17T03:48:12Z"
+    }
+  ]
+}
+```
+
+## Handling replies
+
+Replies are handled the same as one-off SMS: within the campaign's reply window (default 24 hours), the agent automatically responds using `context_prompt` for context.
+
+Each reply triggers the agent to:
+
+1. Read the campaign's `context_prompt`
+2. Read the agent's `system_prompt`
+3. Read the original campaign message and the recipient's reply
+4. Compose an appropriate response
+
+If the reply triggers a booking, custom function, or other action, that runs too. The reply thread is logged as part of the campaign.
+
+## List campaigns
+
+```bash
+curl https://api.nixflex.com/v1/sms/campaigns \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Returns all campaigns for your account, newest first.
+
+## Update or cancel
+
+Before a campaign launches you can edit its `body`, `recipients`, or `scheduled_at`:
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -d '{"body": "Updated message text"}'
+```
+
+To cancel:
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4
+```
+
+Cancelling a running campaign stops further sends; already-sent messages are not recalled.
+
+## Rate limiting
+
+Twilio rate-limits SMS at ~1 message per second per number by default. For larger campaigns, the engine paces sends accordingly. A 1,000-recipient campaign takes roughly 20 minutes to send fully.
+
+Need faster? Request a higher Twilio MPS limit from Twilio support, or add more sending numbers to your account.
+
+## Compliance
+
+<Warning>
+  Bulk SMS has stricter rules than one-off messages.
+
+  - **UK**: Make sure all recipients opted in. Honour STOP keywords. Keep records.
+  - **US**: Requires A2P 10DLC registration. Carriers will block unregistered traffic.
+
+  Sending without consent risks carrier blocking, fines, and your sending number being marked as spam.
+</Warning>
+
+## Costs
+
+Same per-message Twilio billing as one-off SMS. No platform markup. Large campaigns can run into significant costs at scale — budget accordingly.

@@ -1,0 +1,45 @@
+---
+title: "Launch batch campaign"
+description: "POST /v1/calls/batch/:id/launch"
+api: "POST https://api.nixflex.com/v1/calls/batch/{campaign_id}/launch"
+---
+
+Launches a scheduled or paused campaign immediately. Use this when you created a campaign with `schedule_type: schedule` and want to override and start now.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/batch/camp_a1b2c3d4/launch \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+No request body required.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "campaign_id": "camp_a1b2c3d4",
+  "status": "running",
+  "recipients_count": 100,
+  "queued_count": 100
+}
+```
+
+The campaign moves from `scheduled` → `running`. Calls start dialling immediately.
+
+## Behaviour
+
+- **Already running**: no-op, returns current status
+- **Already completed**: 400 with `campaign_already_completed`
+- **Scheduled in the future**: launches immediately, ignores the scheduled time
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `campaign_not_found` | ID doesn't exist or isn't yours |
+| `campaign_already_completed` | Campaign finished already |
+| `campaign_no_recipients` | Empty recipient list |

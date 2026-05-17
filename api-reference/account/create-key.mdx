@@ -1,0 +1,65 @@
+---
+title: "Create API key"
+description: "POST /v1/keys"
+api: "POST https://api.nixflex.com/v1/keys"
+---
+
+Creates a new API key for your account. Returns both `key_id` and `key_secret` — save the secret immediately, it cannot be retrieved later.
+
+<Note>
+  This endpoint is the only one that doesn't require authentication, because you might be calling it during signup. In practice most developers create keys via the dashboard.
+</Note>
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/keys \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Fahim Mirza",
+    "email": "fahim@example.com"
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | string | No | Account holder name |
+| `email` | string | No | Account email for billing / alerts |
+
+## Response
+
+`201 Created`:
+
+```json
+{
+  "message": "API key created. Save your key_secret — it will not be shown again.",
+  "key_id": "nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "key_secret": "nxfs_x1y2z3..."
+}
+```
+
+## Important
+
+<Warning>
+  `key_secret` is shown **once**. If you lose it, you must create a new key.
+
+  - Store it in a secrets manager immediately
+  - Never commit it to source control
+  - Never include it in client-side JavaScript
+</Warning>
+
+## Rate limit
+
+This endpoint is rate-limited to 10 requests per hour per IP to prevent abuse.
+
+## Using the key
+
+Format the Authorization header for subsequent requests:
+
+```
+Authorization: Bearer nxf_a1b2c3...:nxfs_x1y2z3...
+```
+
+See [Authentication](/authentication) for details.

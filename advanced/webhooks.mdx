@@ -1,0 +1,132 @@
+---
+title: "Webhooks"
+description: "Receive call data in your own systems"
+icon: "webhook"
+---
+
+Configure a webhook URL on an agent and Nixflex will POST the call data to your server after every call. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make.
+
+## Setting a webhook
+
+Set `webhook_url` when creating or updating an agent:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"webhook_url": "https://api.yourapp.com/nixflex/calls"}'
+```
+
+That's it. Every call this agent handles will POST to that URL.
+
+## Payload structure
+
+You receive a JSON body like this:
+
+```json
+{
+  "event": "call.ended",
+  "call_id": "CA1234567890",
+  "agent_id": "agent_125207e452f8714a",
+  "direction": "inbound",
+  "from_number": "+447386172392",
+  "to_number": "+447446466847",
+  "started_at": "2026-05-17T03:45:12Z",
+  "ended_at": "2026-05-17T03:47:38Z",
+  "duration_seconds": 146,
+  "ended_reason": "agent_hangup",
+  "transcript": [
+    { "role": "agent", "text": "Hello, Acme Dental, how can I help?", "timestamp_ms": 1200 },
+    { "role": "caller", "text": "Hi, I'd like to book a check-up.", "timestamp_ms": 3800 }
+  ],
+  "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3",
+  "call_summary": "Caller booked a check-up for Tuesday 8th March at 2pm.",
+  "caller_sentiment": "happy",
+  "call_successful": true,
+  "extracted_data": {
+    "caller_name": "Sarah Johnson",
+    "appointment_date": "2026-03-08",
+    "appointment_time": "14:00"
+  },
+  "metadata": {}
+}
+```
+
+`metadata` echoes whatever you passed when creating an outbound call. Useful for tying calls back to records in your own system (order IDs, customer IDs, etc.).
+
+## Event types
+
+| Event | When |
+|---|---|
+| `call.ended` | After post-call analysis completes |
+| `call.failed` | Call failed before connection (Twilio error, agent not found, etc.) |
+| `sms.delivered` | SMS sent via Nixflex was confirmed delivered by Twilio |
+| `sms.received` | A new SMS came in to one of your numbers |
+
+Most apps only need `call.ended`. Other events are optional — check the `event` field if you want to handle multiple.
+
+## Signing and verification
+
+Every webhook request includes a signature header so you can verify it came from Nixflex:
+
+```
+X-Nixflex-Signature: t=1715900000,v1=abc123...
+```
+
+Verify it like Stripe-style signatures:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyNixflexSignature(rawBody, signatureHeader, secret) {
+  const [timestamp, sig] = signatureHeader.split(',').map(p => p.split('=')[1]);
+  const payload = `${timestamp}.${rawBody}`;
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(sig),
+    Buffer.from(expected)
+  );
+}
+```
+
+The webhook secret is shown in the dashboard when you set the webhook URL. Reject requests where the signature doesn't match — they're not from us.
+
+<Warning>
+  Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
+</Warning>
+
+## Retries
+
+If your endpoint:
+
+- **Returns 2xx** — webhook is considered delivered, no retry
+- **Returns 4xx or 5xx** — Nixflex retries with exponential backoff
+- **Times out** (>10s) — counted as a failure, retried
+
+Retry schedule: 1 minute, 5 minutes, 30 minutes, 2 hours, 12 hours. After 5 failed attempts the webhook is given up on.
+
+You can see delivery attempts in the dashboard under the agent's Webhook tab.
+
+## Idempotency
+
+Each webhook delivery includes a unique `webhook_delivery_id` header. Same `call_id` may arrive twice if a retry succeeds after the original was actually delivered — your endpoint should be idempotent.
+
+Pattern: store the `webhook_delivery_id` and skip if you've seen it before.
+
+## Connecting to Zapier / Make
+
+Both platforms support generic webhook triggers. Point them at the Nixflex webhook URL Zapier/Make gives you, and every call becomes a trigger. From there, send transcripts to:
+
+- Google Sheets
+- HubSpot / Salesforce / GoHighLevel
+- Slack / Discord / Microsoft Teams
+- Notion / Airtable
+- Email (Gmail, Mailgun)
+- Anything else Zapier supports (7,000+ apps)
+
+## Testing your webhook
+
+In the dashboard under your agent's Webhook tab, click **Send test event**. You'll get a synthetic payload at your URL with realistic data so you can verify your handler works before live calls hit it.

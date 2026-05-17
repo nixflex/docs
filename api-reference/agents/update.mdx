@@ -1,0 +1,41 @@
+---
+title: "Update agent"
+description: "PUT /v1/agents/:id"
+api: "PUT https://api.nixflex.com/v1/agents/{agent_id}"
+---
+
+Updates an agent's configuration. Only include fields you want to change — omitted fields keep their current values.
+
+## Request
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "welcome_message": "Hi, Acme Dental, how may I help you today?",
+    "response_length": "short"
+  }'
+```
+
+## Body parameters
+
+Any field from [Create agent](/api-reference/agents/create) can be updated. Pass only the fields you want to change.
+
+## Response
+
+`200 OK` — returns the updated agent object.
+
+## Behaviour
+
+- **Active calls are unaffected.** Updating an agent while a call is in progress doesn't change behaviour mid-call. New calls use the new config.
+- **`agent_id` and `api_key_id` are immutable.** Trying to change them is ignored.
+- **No partial validation.** If you submit an invalid value for any field, the whole update fails.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `agent_not_found` | ID doesn't exist or isn't yours |
+| `prompt_too_long` | New `system_prompt` exceeds limit |
+| `invalid_voice_id` | Voice not supported |

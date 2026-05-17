@@ -1,0 +1,107 @@
+---
+title: "Create outbound call"
+description: "POST /v1/calls/outbound"
+api: "POST https://api.nixflex.com/v1/calls/outbound"
+---
+
+Triggers Nixflex to call a phone number. The agent dials, waits for pickup, runs voicemail detection, and starts the conversation when a human answers.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/outbound \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+447386172392",
+    "from_number": "+447446466847",
+    "dynamic_vars": {
+      "patient_name": "Sarah",
+      "appointment_time": "Tuesday at 2pm"
+    },
+    "metadata": {
+      "internal_lead_id": "lead_abc123"
+    }
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `agent_id` | string | Yes | Agent that will handle this call |
+| `to_number` | string | Yes | Recipient in E.164 format (`+44...`) |
+| `from_number` | string | Yes | Your imported Twilio number to call from |
+| `dynamic_vars` | object | No | Key-value pairs injected into the agent's prompt |
+| `voicemail_message` | string | No | Override agent default; what to leave if voicemail |
+| `voicemail_action` | enum | No | `hangup` (default), `leave_message`, `ignore` |
+| `metadata` | object | No | Free-form data echoed in webhook + call record |
+| `campaign_id` | string | No | Link this call to a batch campaign |
+
+## Dynamic variables
+
+Variables in `dynamic_vars` are interpolated into the system prompt. In your prompt, reference them with curly braces:
+
+```
+You are calling {patient_name} about their appointment on {appointment_time}.
+```
+
+The engine replaces `{patient_name}` with `"Sarah"` before sending to Claude. If a variable referenced in the prompt isn't in `dynamic_vars`, it's left as-is (Claude will see the literal `{patient_name}`).
+
+<Tip>
+  For most outbound calls, you don't need `dynamic_vars` — history-aware outbound automatically gives Claude the recipient's past call summaries, so it already knows context.
+</Tip>
+
+## Response
+
+`201 Created`:
+
+```json
+{
+  "call_id": "CA1234567890",
+  "status": "queued",
+  "agent_id": "agent_125207e452f8714a",
+  "to_number": "+447386172392",
+  "from_number": "+447446466847"
+}
+```
+
+The response returns immediately. Twilio dials within ~5 seconds. The actual call lifecycle (ringing → connected → ended) happens asynchronously — you'll get a webhook when the call ends.
+
+## Validation order
+
+The engine validates in this exact order:
+
+1. `agent_id` and `to_number` are present
+2. `to_number` is E.164 format (e.g. `+447386172392`, not `07386172392`)
+3. Agent belongs to your API key
+4. Agent has at least one phone number attached, OR `from_number` is provided
+5. Twilio credentials exist on the agent's phone number record
+
+If any check fails, you get a 400 with the specific `code`.
+
+## Errors
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `invalid_phone_format` | 400 | `to_number` or `from_number` not E.164 |
+| `agent_not_owned` | 403 | Agent doesn't belong to your API key |
+| `agent_no_phone` | 400 | Agent has no phone number attached |
+| `from_number_not_owned` | 403 | `from_number` not in your account |
+| `outbound_failed` | 502 | Twilio rejected the dial (see `details.twilio_error`) |
+| `concurrent_call_limit` | 429 | Too many calls in flight; back off and retry |
+
+## What happens next
+
+After you trigger the call:
+
+1. Twilio dials the `to_number`
+2. Voicemail detection runs in parallel (AMD + Deepgram patterns)
+3. If voicemail is detected, the engine acts per `voicemail_action` and ends the call
+4. If a human answers, the agent starts the conversation
+5. Call ends naturally or via `[END_CALL]` / timeout
+6. Recording is saved, post-call analysis runs
+7. Webhook fires to your `webhook_url`
+
+See [Outbound calls](/concepts/outbound-calls) for the full conceptual overview.

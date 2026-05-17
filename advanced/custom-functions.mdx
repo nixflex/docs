@@ -1,0 +1,157 @@
+---
+title: "Custom functions"
+description: "Let Claude call your APIs mid-call"
+icon: "wrench"
+---
+
+Custom functions extend the agent beyond built-in actions. Define a function (name, description, parameters, your URL), and Claude can call it during the conversation — to look up customer records, check inventory, book appointments, anything.
+
+## How it works
+
+<Steps>
+  <Step title="Define the function on the agent">
+    Tell Nixflex the function's name, what it does, and what parameters it takes.
+  </Step>
+  <Step title="Claude sees it as a tool">
+    During calls, Claude is aware of available functions and decides when to call them.
+  </Step>
+  <Step title="Engine calls your URL">
+    When Claude triggers a function, the engine makes an HTTP POST to your webhook with the parameters.
+  </Step>
+  <Step title="You return data">
+    Your endpoint returns JSON. The engine feeds it back to Claude as context.
+  </Step>
+  <Step title="Claude responds">
+    Claude uses your data to compose the next reply to the caller.
+  </Step>
+</Steps>
+
+## Defining a function
+
+When you create or update an agent, include a `functions` array:
+
+```json
+{
+  "name": "Acme Dental Receptionist",
+  "system_prompt": "...",
+  "functions": [
+    {
+      "name": "check_availability",
+      "description": "Check if a specific date and time has availability for an appointment",
+      "url": "https://api.acmedental.com/nixflex/availability",
+      "method": "POST",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date in YYYY-MM-DD format"
+          },
+          "time": {
+            "type": "string",
+            "description": "Time in 24-hour HH:MM format"
+          }
+        },
+        "required": ["date", "time"]
+      }
+    }
+  ]
+}
+```
+
+## What your endpoint receives
+
+When Claude calls the function, your URL gets a POST request:
+
+```json
+{
+  "function_name": "check_availability",
+  "call_id": "CA1234567890",
+  "caller_number": "+447386172392",
+  "parameters": {
+    "date": "2026-03-08",
+    "time": "14:00"
+  }
+}
+```
+
+You respond with whatever structured data makes sense:
+
+```json
+{
+  "available": true,
+  "alternatives": ["14:30", "15:00", "15:30"]
+}
+```
+
+The engine feeds your response to Claude, which composes the next reply:
+
+> "Yes, Tuesday the 8th at 2pm is free — would you like me to book that for you?"
+
+## Common use cases
+
+<CardGroup cols={2}>
+  <Card title="Calendar lookups" icon="calendar">
+    Check availability before promising a slot.
+  </Card>
+  <Card title="CRM record fetches" icon="address-book">
+    Pull customer history when they call.
+  </Card>
+  <Card title="Booking creation" icon="calendar-plus">
+    Create the booking in your system once confirmed.
+  </Card>
+  <Card title="Inventory / stock checks" icon="box">
+    Verify a product is available before quoting.
+  </Card>
+  <Card title="Order status" icon="truck">
+    "Where's my order?" — look it up and reply naturally.
+  </Card>
+  <Card title="Payment links" icon="credit-card">
+    Generate a Stripe checkout URL and text it via `[SEND_SMS:]`.
+  </Card>
+</CardGroup>
+
+## Timing constraints
+
+Your endpoint must respond within **3 seconds**. Anything slower and the caller experiences awkward silence.
+
+If your endpoint times out or errors:
+
+- The engine tells Claude "function failed"
+- Claude handles it gracefully ("I'm having trouble reaching the booking system, let me transfer you")
+- The error is logged on the call record
+
+<Tip>
+  For slow operations (sending an email, processing a refund), accept the function call and return immediately with `{ "queued": true }`. Do the actual work in the background. Don't block the call.
+</Tip>
+
+## Authentication
+
+Your endpoint should verify requests come from Nixflex. Each request includes a signature header:
+
+```
+X-Nixflex-Signature: t=1715900000,v1=abc123...
+```
+
+Verify it with your webhook secret (set in the dashboard under your agent's webhook config). See [Webhooks](/advanced/webhooks) for the verification algorithm.
+
+## Mentioning functions in the prompt
+
+Tell Claude when to use each function:
+
+```
+ACTIONS
+- Before promising any appointment time, check availability first: use the check_availability function.
+- Once the caller confirms a time, create the booking: use the create_booking function.
+- For order status questions, look up the order: use the get_order function.
+```
+
+Claude will call the functions in the right order based on conversation flow.
+
+## Limitations
+
+- Functions run on **each turn** as needed; there's no streaming partial results back to Claude
+- The engine doesn't retry failed functions — your endpoint should be idempotent
+- The total context window is finite; large function responses are truncated
+
+For more standardised integrations (Stripe, Salesforce, etc.), MCP server support is on the roadmap.

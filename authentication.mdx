@@ -1,0 +1,89 @@
+---
+title: "Authentication"
+description: "API keys and how to authenticate requests"
+icon: "key"
+---
+
+All Nixflex API requests are authenticated with an **API key pair**: a `key_id` and a `key_secret`.
+
+## API key format
+
+| Part | Prefix | Example |
+|---|---|---|
+| `key_id` | `nxf_` | `nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6` |
+| `key_secret` | `nxfs_` | `nxfs_x1y2z3...` (64 chars) |
+
+The `key_id` identifies your account. The `key_secret` is the password — it is shown **once** at creation and cannot be retrieved later.
+
+## Sending requests
+
+Every API request must include an `Authorization` header in this exact format:
+
+```
+Authorization: Bearer KEY_ID:KEY_SECRET
+```
+
+Both parts joined by a colon. Example:
+
+```bash
+curl https://api.nixflex.com/v1/agents \
+  -H "Authorization: Bearer nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6:nxfs_x1y2z3..."
+```
+
+## Creating keys
+
+In the dashboard:
+
+<Steps>
+  <Step title="Go to API Keys">
+    Open [app.nixflex.com](https://app.nixflex.com) → **API Keys**.
+  </Step>
+  <Step title="Create a new key">
+    Click **Create new key**, name it (e.g. "Production", "Staging").
+  </Step>
+  <Step title="Copy the secret immediately">
+    The full `key_secret` is shown once. Copy it into your secrets manager now — it cannot be recovered.
+  </Step>
+</Steps>
+
+You can also create a key programmatically with `POST /v1/keys`. See [Create API key](/api-reference/account/create-key).
+
+## Security
+
+<Warning>
+  **Never expose `key_secret` in client-side code, mobile apps, or public repositories.** Anyone with the secret can make calls and rack up your bill. Treat it like a database password.
+</Warning>
+
+Best practices:
+
+- Store keys in environment variables or a secrets manager (1Password, AWS Secrets Manager, etc.)
+- Use separate keys for development, staging, and production
+- Rotate keys after team members leave
+- Revoke compromised keys immediately from the dashboard
+
+## Failed authentication
+
+If your key is wrong, missing, or revoked, the API returns `401 Unauthorized`:
+
+```json
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "message": "Invalid or missing API key"
+  }
+}
+```
+
+Check that:
+
+- The `Authorization` header is present
+- The format is `Bearer key_id:key_secret` (note the colon, not a space)
+- The key has not been revoked in the dashboard
+- You are sending it to `api.nixflex.com`, not the engine's internal hostname
+
+## Scoping
+
+Every key is scoped to a single account. All agents, phone numbers, calls, and campaigns created with a key belong to that account and are isolated from other accounts.
+
+You cannot use one account's key to access another account's resources, even by guessing IDs.

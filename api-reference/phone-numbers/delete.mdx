@@ -1,0 +1,72 @@
+---
+title: "Delete phone number"
+description: "DELETE /v1/phone-numbers/:phoneNumber"
+api: "DELETE https://api.nixflex.com/v1/phone-numbers/{phone_number}"
+---
+
+Disconnects a number from your Nixflex account. Clears Twilio webhook config so calls no longer route to the engine, then removes the row from our database.
+
+## Request
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B447446466847`.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "phone_number": {
+    "phone_number": "+447446466847",
+    "deleted": true
+  }
+}
+```
+
+## What this does NOT do
+
+<Warning>
+  This endpoint **does not release the number from Twilio**:
+
+  - ❌ Number stays in your Twilio account
+  - ❌ Twilio billing continues
+  - ❌ Number is not cancelled
+
+  To fully release the number (stop Twilio billing), do that directly via Twilio's API or console. This is intentional — releasing is a permanent billing decision and stays with the account owner.
+</Warning>
+
+## Reversible
+
+Deleting just clears webhooks and the database row. Re-importing the same number with the same data restores everything. Useful for testing.
+
+## Errors
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `number_not_found` | 404 | Number doesn't exist OR belongs to a different account |
+
+## Use case: customer offboarding
+
+```javascript
+// 1. Stop Nixflex from routing calls
+await fetch(
+  `https://api.nixflex.com/v1/phone-numbers/${customerNumber}`,
+  {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${NIXFLEX_KEY_ID}:${NIXFLEX_KEY_SECRET}`
+    }
+  }
+);
+
+// 2. Release the number from Twilio (your responsibility)
+const twilio = require('twilio')(YOUR_TWILIO_SID, YOUR_TWILIO_TOKEN);
+await twilio.incomingPhoneNumbers(numberSid).remove();
+```
+
+Two API calls, clean separation — Nixflex stops routing, you handle Twilio billing.

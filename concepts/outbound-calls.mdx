@@ -1,0 +1,110 @@
+---
+title: "Outbound calls"
+description: "Trigger AI calls programmatically"
+icon: "phone-arrow-up-right"
+---
+
+An outbound call is one where **Nixflex calls a number for you**. Useful for appointment reminders, lead qualification, follow-ups, surveys — anything where the agent reaches out.
+
+## Trigger one call
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/outbound \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+447386172392",
+    "from_number": "+447446466847"
+  }'
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `agent_id` | Yes | Which agent should make the call |
+| `to_number` | Yes | Destination (E.164 format) |
+| `from_number` | Yes | One of your imported Twilio numbers (the caller ID) |
+| `metadata` | No | Object passed through to your webhook |
+
+The response includes a `call_id` immediately. The actual call happens asynchronously — Twilio dials, the agent waits for pickup, and then the conversation runs.
+
+## What happens on the receiving end
+
+<Steps>
+  <Step title="Twilio dials">
+    Using the `from_number` as caller ID. Standard PSTN call.
+  </Step>
+  <Step title="Voicemail detection runs">
+    The engine uses Twilio's AMD + a Deepgram pattern matcher in parallel. If the call hits an answering machine, the engine hangs up — no money wasted talking to voicemail.
+  </Step>
+  <Step title="Human picks up">
+    The agent waits a beat, then speaks. For outbound calls, the agent typically introduces itself before stating the reason.
+  </Step>
+  <Step title="Normal call flow">
+    From here, it behaves exactly like an inbound call — STT, Claude, TTS, interruption handling, the works.
+  </Step>
+</Steps>
+
+## History-aware outbound
+
+This is one of Nixflex's biggest differences from Retell and Vapi.
+
+When you trigger an outbound call, Nixflex auto-fetches the past call history for the `to_number` and injects summaries into Claude's prompt. The agent already knows who it's calling.
+
+**Without history-aware outbound** (other platforms):
+> You upload a CSV with `name`, `appointment_time`, and 12 other variables. You wire each one into your prompt as `{name}` and `{appointment_time}`. If any variable is missing, the prompt breaks.
+
+**With history-aware outbound** (Nixflex):
+> You upload phone numbers and a single prompt: *"Remind the caller about their appointment tomorrow."* Claude reads the past call summary for that number and already knows Sarah booked Tuesday at 2pm.
+
+You don't need to wire variables. The agent has memory.
+
+## Batch campaigns
+
+For calling many numbers at once, use batch campaigns. One API call creates the campaign and queues all the dials with concurrency control.
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/batch \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "from_number": "+447446466847",
+    "name": "Tuesday reminders",
+    "recipients": [
+      { "phone_number": "+447111000001" },
+      { "phone_number": "+447111000002" },
+      { "phone_number": "+447111000003" }
+    ],
+    "schedule_type": "now"
+  }'
+```
+
+If `schedule_type` is `"now"`, the campaign launches immediately. Use `"schedule"` and a `scheduled_at` ISO timestamp to launch later.
+
+Each recipient becomes one outbound call. The engine respects a global concurrency cap so you don't melt your Twilio account.
+
+See [Batch create](/api-reference/calls/batch-create) for the full schema.
+
+## Voicemail behaviour
+
+When voicemail is detected:
+
+- The engine hangs up immediately (does **not** leave a message by default)
+- The call is logged with `voicemail_detected: true`
+- You're not charged for what wasn't a real conversation
+
+To leave a message, configure a voicemail script on the agent (see [Voicemail detection](/advanced/voicemail-detection)).
+
+## Useful for
+
+- Appointment reminders the day before
+- Lead qualification after a form submission
+- Renewal nudges
+- Customer satisfaction follow-ups
+- Debt collection (with proper compliance on your end)
+- Re-engagement of cold contacts
+
+<Warning>
+  Outbound calling has compliance rules — TCPA in the US, Ofcom rules in the UK, and consent requirements elsewhere. Make sure you have the right to call the numbers you upload. Nixflex provides the infrastructure; you're responsible for compliance.
+</Warning>

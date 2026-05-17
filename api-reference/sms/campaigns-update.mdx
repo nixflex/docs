@@ -1,0 +1,43 @@
+---
+title: "Update SMS campaign"
+description: "PATCH /v1/sms/campaigns/:id"
+api: "PATCH https://api.nixflex.com/v1/sms/campaigns/{campaign_id}"
+---
+
+Updates a campaign. Only campaigns with `status: scheduled` can be edited — once running or completed, most fields are locked.
+
+## Request
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "body": "Updated message text",
+    "scheduled_at": "2026-05-20T09:00:00Z"
+  }'
+```
+
+## Editable fields (when scheduled)
+
+- `name`
+- `body`
+- `recipients` (replaces full list)
+- `context_prompt`
+- `scheduled_at`
+- `reply_window_hours`
+
+## Editable fields (when running or completed)
+
+Only `context_prompt` can be updated after the campaign launches — useful if you realise replies need different guidance.
+
+## Response
+
+`200 OK` — returns the updated campaign object.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `campaign_not_found` | ID doesn't exist or isn't yours |
+| `campaign_not_editable` | Trying to edit a locked field on a running/completed campaign |

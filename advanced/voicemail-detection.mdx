@@ -1,0 +1,102 @@
+---
+title: "Voicemail detection"
+description: "Stop wasting outbound calls on answering machines"
+icon: "voicemail"
+---
+
+When you make an outbound call, you don't want the agent to leave a long monologue on a voicemail. Nixflex detects voicemail systems automatically and ends the call early — saving you money and avoiding awkward messages.
+
+## How detection works
+
+Two layers run in parallel from the moment the outbound call connects:
+
+<Steps>
+  <Step title="Layer 1 — Twilio AMD">
+    Twilio's Answering Machine Detection listens to the first few seconds. It distinguishes a human "Hello?" from a long automated voicemail greeting based on speech patterns and timing.
+  </Step>
+  <Step title="Layer 2 — Deepgram pattern matching">
+    The engine runs the live transcript against a library of 36+ voicemail phrases in English, French, Spanish, German, and Arabic — "please leave a message", "you have reached", "is not available right now", etc.
+  </Step>
+  <Step title="Either layer can fire">
+    Whichever detector identifies voicemail first wins. The call is marked `voicemail_detected: true` and the engine hangs up immediately.
+  </Step>
+</Steps>
+
+Detection usually completes within 2-4 seconds of pickup.
+
+## Default behaviour
+
+When voicemail is detected:
+
+1. Engine immediately ends the call
+2. The agent does **not** leave a message
+3. The call record gets `voicemail_detected: true` and `ended_reason: voicemail`
+4. Webhook fires with `event: call.ended` (so you can react in your own system)
+
+You're not charged for the few seconds it took to detect.
+
+## Leaving a voicemail message
+
+If you do want to leave a recorded message when voicemail is detected, configure a `voicemail_message` on the agent:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "voicemail_message": "Hi, this is Acme Dental calling about your appointment tomorrow at 2pm. Please call us back on 020 8760 1234 to confirm. Thanks."
+  }'
+```
+
+When voicemail is detected, the engine waits for the beep (by listening for ~1 second of silence after the greeting), then speaks the configured message, then hangs up.
+
+If `voicemail_message` is empty, the engine just hangs up.
+
+## Per-call override
+
+Override the voicemail behaviour on a single outbound call:
+
+```json
+{
+  "agent_id": "agent_xxx",
+  "to_number": "+447386172392",
+  "from_number": "+447446466847",
+  "voicemail_message": "Custom one-off message for this specific call.",
+  "voicemail_action": "leave_message"
+}
+```
+
+`voicemail_action` can be:
+
+- `hangup` — default; end call immediately on voicemail
+- `leave_message` — speak the message then hang up
+- `ignore` — pretend voicemail wasn't detected, let the agent talk (rarely useful)
+
+## Reliability
+
+Voicemail detection isn't 100% perfect — no system is. Real-world reliability:
+
+| Outcome | Frequency |
+|---|---|
+| Correctly detects voicemail | ~94% |
+| Misses voicemail (agent talks to machine) | ~3% |
+| False positive (hangs up on human) | ~3% |
+
+To reduce false positives that hang up on real people, the engine waits for the AMD result before the agent speaks. The downside is a slight 1–2 second pause at the start of outbound calls.
+
+## Inbound calls
+
+Voicemail detection runs on inbound calls too, though it's rarely needed. The most common case is when an external system forwards calls to your Twilio number and the forwarding lands on a voicemail. The engine catches it and ends cleanly.
+
+## IVR detection (separate)
+
+If an outbound call reaches an IVR ("press 1 for sales..."), that's different from voicemail. By default the engine treats IVRs as "not voicemail" and the agent will start talking — which usually fails.
+
+To detect IVRs and hang up automatically:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+  -d '{"hangup_on_ivr": true}'
+```
+
+For dialling through IVRs (pressing digits to reach a human), see [DTMF support](/advanced/dtmf) — coming soon.

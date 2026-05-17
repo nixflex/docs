@@ -1,0 +1,117 @@
+---
+title: "Send SMS"
+description: "Send text messages via the API"
+icon: "paper-plane"
+---
+
+Beyond mid-call and post-call SMS, you can send standalone messages via the API. Useful for appointment reminders, status updates, follow-ups — anything that doesn't need a phone call.
+
+## Send one message
+
+```bash
+curl -X POST https://api.nixflex.com/v1/sms \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+447386172392",
+    "from_number": "+447446466847",
+    "body": "Reminder: your appointment is tomorrow at 2pm. Reply YES to confirm or NO to reschedule."
+  }'
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `agent_id` | Yes | The agent this SMS belongs to (determines reply behaviour) |
+| `to_number` | Yes | Recipient in E.164 format |
+| `from_number` | Yes | One of your imported Twilio numbers |
+| `body` | Yes | The message text (max 1600 chars; longer is split) |
+| `context_prompt` | No | Custom instruction for the agent if the caller replies |
+
+Response:
+
+```json
+{
+  "message_id": "SM1234567890",
+  "status": "queued",
+  "to_number": "+447386172392",
+  "from_number": "+447446466847"
+}
+```
+
+Status updates flow through Twilio's status callbacks. The final status (`delivered`, `failed`, etc.) will be reflected in the message record within ~30 seconds.
+
+## Reply handling
+
+If the recipient replies to your SMS within **24 hours**, the agent can automatically respond using the conversation context.
+
+The reply window:
+
+- Starts when you send the SMS
+- Counted per recipient number
+- Resets if you send another SMS to the same number
+- Default 24 hours; configurable per agent up to 30 days
+
+When a reply comes in:
+
+1. Nixflex receives it via Twilio's incoming SMS webhook
+2. Looks up the recent SMS to that number
+3. Uses the agent's system prompt + the recent SMS context to compose a reply
+4. Sends the reply automatically
+
+The conversation thread appears in the dashboard and via `GET /v1/sms`.
+
+## Custom reply context
+
+For more control over how the agent replies, pass `context_prompt`:
+
+```json
+{
+  "agent_id": "agent_xxx",
+  "to_number": "+447386172392",
+  "from_number": "+447446466847",
+  "body": "Hi Sarah, this is Acme Dental. Your appointment is tomorrow at 2pm. Reply YES to confirm.",
+  "context_prompt": "The caller is Sarah Johnson, booked for a check-up on Tuesday 8th March at 2pm. If she confirms (YES), respond warmly. If she wants to reschedule, offer Wednesday 9th 10am or 2pm. Anything else, escalate by texting: For other requests, please call us back on 020 8760 1234."
+}
+```
+
+The agent has tighter, more relevant guidance to handle replies.
+
+## Disabling replies
+
+If you want the SMS to be one-way (no auto-replies), set the agent's `enable_sms_reply` to `false`. Inbound replies are still received and logged but no automatic response is sent.
+
+## Tracking
+
+Every SMS gets a `message_id` you can use to fetch status:
+
+```bash
+curl https://api.nixflex.com/v1/sms/SM1234567890 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Response includes `status` (`queued`, `sent`, `delivered`, `failed`), error code if any, and the conversation thread if replies happened.
+
+## Compliance
+
+<Warning>
+  **UK only at launch.** US SMS requires A2P 10DLC registration on your Twilio account. Without it, US messages are rejected by carriers.
+
+  You're responsible for:
+
+  - Opt-in records (you have permission to text these numbers)
+  - Handling STOP / UNSUBSCRIBE keywords (Twilio handles this automatically by default)
+  - Respecting time-of-day rules (no messages 9pm-9am in the recipient's timezone)
+
+  Nixflex provides infrastructure; compliance stays with you.
+</Warning>
+
+## Pricing
+
+SMS uses your Twilio account directly. Twilio charges per message at standard rates:
+
+- UK domestic: ~£0.04 per message
+- US (after A2P): ~$0.0075 per segment
+- International: varies by country
+
+Nixflex doesn't mark up SMS pricing.

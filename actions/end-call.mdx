@@ -1,0 +1,61 @@
+---
+title: "End call"
+description: "Gracefully end the conversation"
+icon: "phone-slash"
+---
+
+The `[END_CALL]` tag tells the engine to end the call after Claude has finished speaking. The agent says its goodbye line first, then the call is terminated.
+
+## Syntax
+
+```
+[END_CALL]
+```
+
+No parameters. Place it anywhere in Claude's reply.
+
+## Example
+
+> *Caller:* "Great, thanks for the help."
+>
+> *Agent:* "You're welcome. Have a lovely day. [END_CALL]"
+
+The caller hears the goodbye. Then the engine ends the call cleanly.
+
+## When to use it
+
+Tell Claude in the system prompt when it should end calls:
+
+```
+ACTIONS
+- End the call when the booking is complete and confirmed: [END_CALL]
+- End the call when the caller says goodbye or signals they're done: [END_CALL]
+- End the call if the caller is being abusive after one warning: [END_CALL]
+```
+
+## Behaviour
+
+When the engine sees `[END_CALL]`:
+
+1. The remaining text in Claude's response is spoken to the caller
+2. The engine waits for the TTS audio to finish playing
+3. Twilio hangs up the call
+4. Post-call processing runs (recording saved, summary generated, webhook fired)
+
+The call ends gracefully — no abrupt cutoff mid-word.
+
+## Other ways calls end
+
+`[END_CALL]` is the **graceful** option. Calls also end automatically when:
+
+- **Caller hangs up** — no action needed; the call object is marked `ended_by: caller`
+- **Silence timeout** — caller is silent for `silence_hangup_seconds` (default 30s)
+- **Max duration** — `max_call_duration_seconds` hard cap is hit (default 300s)
+- **Voicemail detected** on outbound calls — engine hangs up immediately
+- **Error** — provider failure; the engine ends safely and logs the cause
+
+The `ended_reason` field on the call record tells you which one fired.
+
+<Tip>
+  If you want the agent to confirm the booking back to the caller before ending, write that into the prompt. Claude will speak the confirmation, then emit `[END_CALL]`.
+</Tip>

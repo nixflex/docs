@@ -1,0 +1,47 @@
+---
+title: "List SMS campaigns"
+description: "GET /v1/sms/campaigns"
+api: "GET https://api.nixflex.com/v1/sms/campaigns"
+---
+
+Returns all SMS campaigns for your account, newest first.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/sms/campaigns \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Query parameters
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `limit` | int | Default 25, max 100 |
+| `offset` | int | Pagination offset |
+| `agent_id` | string | Filter to one agent |
+| `status` | enum | `scheduled`, `running`, `completed`, `cancelled` |
+
+## Response
+
+```json
+{
+  "campaigns": [
+    {
+      "campaign_id": "smsc_a1b2c3d4",
+      "name": "March promotion",
+      "agent_id": "agent_125207e452f8714a",
+      "status": "completed",
+      "recipients_count": 100,
+      "sent_count": 98,
+      "delivered_count": 95,
+      "failed_count": 3,
+      "replied_count": 24,
+      "created_at": "2026-05-17T03:45:12Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+This is a summary view. Use [Get SMS campaign](/api-reference/sms/campaigns-get) for per-recipient details.

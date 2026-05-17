@@ -1,0 +1,93 @@
+---
+title: "Languages"
+description: "Multi-language voice agents with auto-detection"
+icon: "globe"
+---
+
+Nixflex supports voice agents in 15+ languages. The engine uses a hybrid STT routing strategy and matches the caller's language automatically.
+
+## How language is decided
+
+The agent's `language` field is the **default** — what the agent speaks in if the caller's language can't be inferred.
+
+In practice, language is selected as follows:
+
+<Steps>
+  <Step title="Caller wins">
+    If the caller speaks a language clearly, the agent matches them — even if `language` is set to something else.
+  </Step>
+  <Step title="Country prefix hint">
+    For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to Deepgram for Arabic-first transcription.
+  </Step>
+  <Step title="Multilingual STT">
+    For all other regions, AssemblyAI's multilingual model handles 6 major languages (EN, ES, FR, DE, IT, PT) with auto-detection.
+  </Step>
+  <Step title="Agent default">
+    If detection is ambiguous, the agent's configured `language` is used.
+  </Step>
+</Steps>
+
+## Supported languages
+
+### Voice (TTS)
+
+15 languages via Inworld TTS Max:
+
+| Language | Code | Notes |
+|---|---|---|
+| English (US/UK/AU) | `en` | Multiple voice options |
+| Arabic | `ar` | Modern Standard Arabic |
+| Spanish | `es` | |
+| French | `fr` | |
+| German | `de` | |
+| Italian | `it` | |
+| Portuguese | `pt` | |
+| Dutch | `nl` | |
+| Polish | `pl` | |
+| Russian | `ru` | |
+| Hindi | `hi` | |
+| Korean | `ko` | |
+| Japanese | `ja` | |
+| Chinese | `zh` | Mandarin |
+| Turkish | `tr` | |
+
+### Speech recognition (STT)
+
+- **AssemblyAI multilingual** — 6 languages with real-time auto-detection (EN, ES, FR, DE, IT, PT)
+- **Deepgram Nova 3** — used for GCC region numbers; full Arabic support, 36+ other languages
+
+The engine picks the right STT provider at call start based on the destination number.
+
+## Locking the language
+
+By default the agent matches the caller. To force a specific language regardless of what the caller speaks, add this line to your system prompt:
+
+```
+Always respond in English, even if the caller speaks another language.
+```
+
+Claude will honour the explicit instruction.
+
+<Tip>
+  Locking is useful when your business operates in one language only and you don't want the agent to attempt translations it might get wrong.
+</Tip>
+
+## Backchannels and fillers
+
+The engine speaks small filler words while listening — "mm-hmm", "I see", "right" — to make the call feel natural. These match the caller's language automatically across all 15 supported languages.
+
+## Numbers and pronunciation
+
+Prices, phone numbers, dates, and addresses are normalised before being sent to the TTS. The agent says "twenty-five pounds" rather than spelling "two-five-pound-sign". This works across languages without configuration.
+
+For brand or technical pronunciations the agent gets wrong, you can override them in the system prompt:
+
+```
+Pronunciation: pronounce "Nixflex" as "NIKS-flex". Say "Anthropic" as "an-THROP-ik".
+```
+
+## What's not supported yet
+
+- Voice cloning per language (planned)
+- Per-call language switching mid-conversation (the call locks to one language at start)
+- Languages outside the 15 TTS list above

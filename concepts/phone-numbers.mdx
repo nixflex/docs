@@ -1,0 +1,110 @@
+---
+title: "Phone numbers"
+description: "Bring your own Twilio numbers and attach them to agents"
+icon: "phone"
+---
+
+Nixflex uses a **bring-your-own-Twilio (BYO)** model. You buy and own phone numbers in your Twilio account. Nixflex configures the webhooks on those numbers so calls route to the engine — but the numbers (and Twilio billing) stay with you.
+
+## Why BYO Twilio
+
+<Columns cols={2}>
+  <Card title="You own the numbers" icon="lock">
+    Numbers stay in your Twilio account. If you ever leave Nixflex, you keep them.
+  </Card>
+  <Card title="No platform markup" icon="dollar-sign">
+    You pay Twilio's wholesale prices directly. Nixflex doesn't mark up call or SMS costs.
+  </Card>
+  <Card title="Multi-tenant ready" icon="users">
+    One Nixflex agent can serve unlimited phone numbers — one per end-customer if you resell.
+  </Card>
+  <Card title="Skip A2P 10DLC blocks" icon="shield-check">
+    For US SMS, your A2P registration applies. We don't get in the way.
+  </Card>
+</Columns>
+
+## Importing a number
+
+Import a Twilio number into an agent:
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+447446466847",
+    "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "twilio_token": "your_twilio_auth_token",
+    "agent_id": "agent_125207e452f8714a"
+  }'
+```
+
+What this does, behind the scenes:
+
+1. Validates the phone format and Twilio SID format
+2. Verifies the number exists in **your** Twilio account using the credentials you sent
+3. Confirms the agent belongs to your Nixflex account
+4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
+5. Inserts a `phone_numbers` row linking number → agent → API key
+
+After this, calls to that number land on the agent automatically.
+
+<Warning>
+  Importing a number **overwrites any existing webhooks** on that Twilio number. If you have other systems using the number, they will stop receiving calls.
+</Warning>
+
+## Multi-number, single-agent pattern
+
+A single agent can be attached to many numbers. This is how reseller apps work:
+
+```
+agent_ringback_dental (one prompt, one personality)
+  ├── +442011110001 → Smile Dental Croydon
+  ├── +442011110002 → Pearly Whites Manchester
+  ├── +442011110003 → Bright Bite Leeds
+  └── +442011110004 → ... 200 more
+```
+
+The agent prompt doesn't change per clinic. Per-customer context comes from:
+
+- Which phone number was dialled (engine looks up the row)
+- Any past call history for the caller's number (auto-fetched into Claude's prompt)
+
+This pattern is how Ringback runs 200 dental clinics on one agent template.
+
+## Listing numbers
+
+```bash
+# All numbers
+curl https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+
+# Filter by agent
+curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_xxx" \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Returns numbers sorted by creation date, newest first.
+
+## Removing a number
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+This clears Twilio's webhooks (so calls stop routing to Nixflex) and removes the row from our database.
+
+<Note>
+  Deleting a number from Nixflex does **not** release it from Twilio. The number stays in your Twilio account and continues to bill until you release it via Twilio's API or console. This is intentional — releasing is a permanent billing decision and stays with you.
+</Note>
+
+## Constraints
+
+- **One number, one agent.** A phone number can be attached to only one agent at a time. To move a number to a different agent, delete the existing record first then re-import.
+- **Strict number matching.** Twilio's number search uses prefix matching; Nixflex performs a strict equality check after lookup to prevent accidental imports.
+- **Account scope.** You can only see and manage numbers belonging to your API key. Cross-account access is blocked.
+
+## Errors
+
+See the [Import phone number API reference](/api-reference/phone-numbers/import) for the full list of error codes (`invalid_phone_format`, `agent_not_owned`, `number_already_imported`, etc.).

@@ -1,0 +1,55 @@
+---
+title: "Get SMS campaign"
+description: "GET /v1/sms/campaigns/:id"
+api: "GET https://api.nixflex.com/v1/sms/campaigns/{campaign_id}"
+---
+
+Returns full campaign details including per-recipient status and reply threads.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Response
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "name": "March promotion",
+  "agent_id": "agent_125207e452f8714a",
+  "from_number": "+447446466847",
+  "body": "Hi! 20% off cleanings this month...",
+  "context_prompt": "If they reply YES, offer any weekday...",
+  "status": "completed",
+  "recipients_count": 100,
+  "sent_count": 98,
+  "delivered_count": 95,
+  "failed_count": 3,
+  "replied_count": 24,
+  "created_at": "2026-05-17T03:45:12Z",
+  "completed_at": "2026-05-17T04:05:42Z",
+  "recipients": [
+    {
+      "phone_number": "+447111000001",
+      "status": "delivered",
+      "sent_at": "2026-05-17T03:45:14Z",
+      "delivered_at": "2026-05-17T03:45:18Z",
+      "replied": true,
+      "reply_text": "YES",
+      "replied_at": "2026-05-17T03:48:12Z",
+      "agent_response": "Great! Tuesday 11am or Wednesday 2pm work for you?"
+    }
+  ]
+}
+```
+
+The `recipients` array is paginated separately if there are many — use `?recipients_limit=50&recipients_offset=0`.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `campaign_not_found` | ID doesn't exist or isn't yours |

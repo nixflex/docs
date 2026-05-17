@@ -1,0 +1,99 @@
+---
+title: "Rate limits"
+description: "API request limits and concurrency caps"
+icon: "gauge"
+---
+
+Nixflex applies rate limits to protect the platform and ensure fair use. Most applications stay well under these limits, but if you're building high-volume integrations, plan around them.
+
+## API request limits
+
+Per API key:
+
+| Endpoint group | Limit |
+|---|---|
+| Read operations (`GET`) | 600 requests per minute |
+| Write operations (`POST`, `PUT`, `PATCH`, `DELETE`) | 120 requests per minute |
+| Authentication endpoints (`POST /v1/keys`) | 10 requests per hour |
+
+Headers on every response tell you where you stand:
+
+```
+X-RateLimit-Limit: 600
+X-RateLimit-Remaining: 587
+X-RateLimit-Reset: 1715900060
+```
+
+`X-RateLimit-Reset` is a Unix timestamp when the window resets.
+
+## When you hit the limit
+
+You get a 429 response:
+
+```json
+{
+  "error": {
+    "type": "rate_limit_error",
+    "code": "rate_limit_exceeded",
+    "message": "Rate limit exceeded. Try again in 12 seconds.",
+    "details": {
+      "retry_after": 12
+    }
+  }
+}
+```
+
+`retry_after` tells you how long to wait. Honour it.
+
+## Concurrent call limits
+
+The number of calls running simultaneously per account:
+
+| Tier | Concurrent calls |
+|---|---|
+| Pay-as-you-go | 10 |
+| Starter | 25 |
+| Scale | 100 |
+| Enterprise | Custom |
+
+If you trigger more outbound calls than your concurrency limit allows, they queue automatically. Inbound calls beyond the limit hear a busy signal.
+
+To raise your concurrent call limit, contact [support@nixflex.com](mailto:support@nixflex.com).
+
+## Batch campaign concurrency
+
+Within a batch campaign, the engine launches calls in waves up to your account's concurrent call limit. A 1,000-recipient campaign on a 25-concurrent plan takes roughly the average call duration × (1,000 / 25) to complete.
+
+You can also throttle a campaign deliberately:
+
+```json
+{
+  "agent_id": "agent_xxx",
+  "recipients": [...],
+  "max_concurrent": 5
+}
+```
+
+Useful when you want to keep some headroom for inbound calls.
+
+## SMS rate limits
+
+SMS is rate-limited by Twilio, not Nixflex. Default: 1 message per second per sending number.
+
+For high-volume SMS:
+
+- Add multiple sending numbers (the engine round-robins them)
+- Request a higher Twilio MPS limit from Twilio support
+- Use SMS campaigns, which respect Twilio's pacing automatically
+
+## Webhook delivery limits
+
+Webhooks fire as fast as your endpoint can accept them, with no Nixflex-side throttle. If your server is slow:
+
+- Receive the webhook quickly (return 2xx immediately)
+- Process the data in a background queue
+- Don't do heavy work inside the webhook handler
+
+## When you need more
+
+If you're running into limits regularly, that's a signal you've outgrown the default tier. Email [support@nixflex.com](mailto:support@nixflex.com) and we'll raise your limits or move you to a custom plan.

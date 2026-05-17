@@ -1,0 +1,89 @@
+---
+title: "Create batch campaign"
+description: "POST /v1/calls/batch"
+api: "POST https://api.nixflex.com/v1/calls/batch"
+---
+
+Creates a batch campaign: queues many outbound calls under one campaign ID. Useful for appointment reminders, lead qualification, surveys.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/batch \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "from_number": "+447446466847",
+    "name": "Tuesday appointment reminders",
+    "recipients": [
+      { "phone_number": "+447111000001" },
+      { "phone_number": "+447111000002", "dynamic_vars": { "patient_name": "John" } },
+      { "phone_number": "+447111000003" }
+    ],
+    "schedule_type": "now",
+    "max_concurrent": 5
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `agent_id` | string | Yes | Agent used for all calls in this batch |
+| `from_number` | string | Yes | Your Twilio number to dial from |
+| `name` | string | Yes | Display name for the campaign |
+| `recipients` | array | Yes | Up to 10,000 recipients |
+| `schedule_type` | enum | Yes | `now` (launch immediately) or `schedule` |
+| `scheduled_at` | ISO date | If schedule | When to launch |
+| `max_concurrent` | int | No | Cap concurrent calls (default: account limit) |
+| `metadata` | object | No | Echoed in every call's webhook |
+
+### Recipient object
+
+```json
+{
+  "phone_number": "+447111000001",
+  "dynamic_vars": { "patient_name": "Sarah" },
+  "metadata": { "lead_id": "abc123" }
+}
+```
+
+Per-recipient `dynamic_vars` override batch-level defaults if set.
+
+## Response
+
+`201 Created`:
+
+```json
+{
+  "campaign_id": "camp_a1b2c3d4",
+  "agent_id": "agent_125207e452f8714a",
+  "name": "Tuesday appointment reminders",
+  "status": "running",
+  "recipients_count": 3,
+  "created_at": "2026-05-17T03:45:12Z"
+}
+```
+
+When `schedule_type` is `now`, the campaign launches immediately and the response includes `status: running`. When scheduled, returns `status: scheduled`.
+
+## Behaviour
+
+- Calls are queued in BullMQ and processed respecting your concurrent call limit
+- Each recipient becomes one outbound call with its own `call_id`
+- Failed calls are logged with `ended_reason: error` but don't stop the campaign
+- Voicemail detection runs per call; voicemails count as completed (just not successful)
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `agent_not_owned` | Agent doesn't belong to your account |
+| `from_number_not_owned` | Number not imported to your account |
+| `too_many_recipients` | More than 10,000 recipients |
+| `invalid_schedule` | `schedule_type: schedule` without valid `scheduled_at` |
+
+## Launching a scheduled campaign
+
+If you created a campaign with `schedule_type: schedule`, you can launch it manually with [Launch batch](/api-reference/calls/batch-launch).

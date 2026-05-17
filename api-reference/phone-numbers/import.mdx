@@ -1,0 +1,102 @@
+---
+title: "Import phone number"
+description: "POST /v1/phone-numbers"
+api: "POST https://api.nixflex.com/v1/phone-numbers"
+---
+
+Imports an existing Twilio number under one of your agents. Configures all webhooks (voice, SMS, recording status) to point at Nixflex automatically.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+447446466847",
+    "twilio_sid":   "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "twilio_token": "your_twilio_auth_token",
+    "agent_id":     "agent_125207e452f8714a"
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `phone_number` | string | Yes | E.164 format (`+44...`). Must already exist in your Twilio account |
+| `twilio_sid` | string | Yes | Customer's Twilio Account SID, format `AC` + 32 hex chars |
+| `twilio_token` | string | Yes | Customer's Twilio Auth Token |
+| `agent_id` | string | Yes | Must be an agent you own |
+
+<Note>
+  camelCase versions also work: `phoneNumber`, `twilioSid`, `twilioToken`, `agentId`.
+</Note>
+
+## Response
+
+`201 Created`:
+
+```json
+{
+  "phone_number": {
+    "phone_number": "+447446466847",
+    "agent_id": "agent_125207e452f8714a",
+    "twilio_number_sid": "PN451e0ddf654327e36baab58dfbcd30d6",
+    "inbound_enabled": true,
+    "outbound_enabled": true
+  }
+}
+```
+
+## What this does
+
+1. Validates phone format and Twilio SID format
+2. Verifies the number exists in **your** Twilio account using the credentials
+3. Confirms the agent belongs to your Nixflex account
+4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
+5. Inserts a `phone_numbers` row linking number → agent → API key
+
+<Warning>
+  Importing **replaces all existing webhooks** on the Twilio number. If you have other systems using this number, they will stop receiving calls or SMS.
+</Warning>
+
+## Errors
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `missing_field` | 400 | One of the 4 required fields is empty |
+| `invalid_phone_format` | 400 | Phone number not in E.164 format |
+| `invalid_twilio_sid` | 400 | SID doesn't match `^AC[a-f0-9]{32}$` |
+| `agent_not_found` | 404 | `agent_id` doesn't exist |
+| `agent_not_owned` | 403 | Agent exists but belongs to a different API key |
+| `number_not_in_twilio` | 404 | Number not in customer's Twilio account |
+| `twilio_invalid_credentials` | 401 | SID + token combination rejected by Twilio |
+| `twilio_auth_failed` | 401 | Twilio error code 20003 |
+| `number_already_imported` | 409 | Number already attached to another agent |
+
+## Use case: reseller onboarding
+
+```javascript
+// 1. Buy a Twilio number from your Twilio account
+const twilio = require('twilio')(YOUR_TWILIO_SID, YOUR_TWILIO_TOKEN);
+const available = await twilio.availablePhoneNumbers('GB').local.list({ limit: 1 });
+const purchased = await twilio.incomingPhoneNumbers.create({
+  phoneNumber: available[0].phoneNumber
+});
+
+// 2. Attach it to your Nixflex agent
+await fetch('https://api.nixflex.com/v1/phone-numbers', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${NIXFLEX_KEY_ID}:${NIXFLEX_KEY_SECRET}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    phone_number: purchased.phoneNumber,
+    twilio_sid: YOUR_TWILIO_SID,
+    twilio_token: YOUR_TWILIO_TOKEN,
+    agent_id: 'agent_your_template'
+  })
+});
+```

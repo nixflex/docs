@@ -1,0 +1,80 @@
+---
+title: "Inbound calls"
+description: "How calls reach your agent"
+icon: "phone-arrow-down-left"
+---
+
+An inbound call is a call placed **to** one of your imported Twilio numbers. The flow is automatic — once a number is imported, the agent answers.
+
+## What happens on an inbound call
+
+<Steps>
+  <Step title="Caller dials your Twilio number">
+    A real person picks up the phone and dials.
+  </Step>
+  <Step title="Twilio routes the call to Nixflex">
+    Because the number's voice webhook points at our engine, Twilio opens a WebSocket and starts streaming audio.
+  </Step>
+  <Step title="Engine looks up the agent">
+    The phone number record tells the engine which agent owns this call.
+  </Step>
+  <Step title="Agent says welcome message">
+    The agent's `welcome_message` is spoken first.
+  </Step>
+  <Step title="Conversation runs">
+    STT transcribes the caller, Claude reasons, TTS speaks the reply. Interruptions, silence, and language changes are handled automatically.
+  </Step>
+  <Step title="Call ends">
+    Either the caller hangs up, Claude says `[END_CALL]`, the silence timeout fires, or `max_call_duration_seconds` is hit.
+  </Step>
+  <Step title="Post-call processing">
+    Recording is saved to Supabase storage. Post-call analysis runs (summary, sentiment, custom data extraction). Webhook fires if configured.
+  </Step>
+</Steps>
+
+## Behaviour you get out of the box
+
+You don't have to configure any of this — the engine handles it:
+
+- **Barge-in / interruption** — caller can speak over the agent and the agent will stop
+- **Silence handling** — if the caller goes quiet, the agent gently prompts after a few seconds
+- **Language auto-detection** — backchannels and filler words match the caller's language
+- **Voicemail detection** — if the call somehow lands on a voicemail, the engine hangs up cleanly (rare on inbound, but possible)
+- **Call recording** — dual-channel recording, stored, deleted from Twilio afterwards
+- **Post-call analysis** — every call gets a summary and sentiment automatically
+
+## History-aware behaviour
+
+When an inbound call arrives, Nixflex looks up the caller's number in your past calls. If there are previous conversations, summaries are injected into the agent's prompt as background context.
+
+The agent can naturally reference past interactions without you wiring up any database lookups:
+
+> *Caller:* "Hi, it's Sarah."
+> *Agent:* "Hi Sarah, welcome back. Last time you booked a check-up — were you calling to follow up on that, or is this something new?"
+
+This works because the engine fetched Sarah's call history before Claude generated the first response.
+
+## Reading the call back
+
+After the call:
+
+```bash
+# List recent calls
+curl https://api.nixflex.com/v1/calls?limit=10 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+
+# Fetch one call with full transcript + recording URL
+curl https://api.nixflex.com/v1/calls/CA1234567890 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+The call object includes:
+
+- `transcript` — full conversation, both sides
+- `recording_url` — link to the audio file (signed URL, time-limited)
+- `call_summary` — AI-written summary
+- `caller_sentiment` — `happy`, `neutral`, or `frustrated`
+- `call_successful` — boolean (did the agent achieve the goal)
+- `extracted_data` — any custom fields you defined in post-call analysis
+
+See [Get call](/api-reference/calls/get) for the full schema.

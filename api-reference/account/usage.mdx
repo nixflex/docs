@@ -1,0 +1,66 @@
+---
+title: "Get usage"
+description: "GET /v1/usage"
+api: "GET https://api.nixflex.com/v1/usage"
+---
+
+Returns usage statistics for your account: total minutes, calls, SMS, and current credit balance.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/usage \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Query parameters
+
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `period` | enum | `month_to_date` | `today`, `month_to_date`, `last_30_days`, `all_time` |
+| `since` | ISO date | — | Custom start date (overrides `period`) |
+| `until` | ISO date | now | Custom end date |
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "period": "month_to_date",
+  "since": "2026-05-01T00:00:00Z",
+  "until": "2026-05-17T03:45:12Z",
+  "calls": {
+    "total": 1247,
+    "inbound": 932,
+    "outbound": 315,
+    "minutes": 4218.5,
+    "cost_usd": 337.48
+  },
+  "sms": {
+    "sent": 89,
+    "delivered": 87,
+    "failed": 2,
+    "cost_usd": 0.00
+  },
+  "balance": {
+    "credit_usd": 162.52,
+    "auto_topup_enabled": true,
+    "auto_topup_threshold_usd": 20,
+    "auto_topup_amount_usd": 200
+  }
+}
+```
+
+## Field notes
+
+- `minutes` is fractional — `4218.5` = 4218 minutes 30 seconds
+- `cost_usd` is Nixflex's charge (does not include Twilio costs which billed directly to you)
+- `balance.credit_usd` updates in near-real-time after each call
+
+## Use cases
+
+- Monitor usage in a dashboard or admin panel
+- Trigger alerts before running out of credit
+- Reconcile Nixflex charges against your records
+- Track cost-per-call by date range

@@ -1,0 +1,57 @@
+---
+title: "List calls"
+description: "GET /v1/calls"
+api: "GET https://api.nixflex.com/v1/calls"
+---
+
+Returns calls for your account, newest first.
+
+## Request
+
+```bash
+curl "https://api.nixflex.com/v1/calls?limit=10" \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Query parameters
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `limit` | int | Default 25, max 100 |
+| `offset` | int | Pagination offset |
+| `agent_id` | string | Filter to one agent |
+| `direction` | enum | `inbound` or `outbound` |
+| `since` | ISO date | Calls started after this time |
+| `until` | ISO date | Calls started before this time |
+| `caller_sentiment` | enum | `happy`, `neutral`, `frustrated` |
+| `call_successful` | bool | Filter by success flag |
+| `voicemail_detected` | bool | Filter to/from voicemail calls |
+
+## Response
+
+```json
+{
+  "calls": [
+    {
+      "call_id": "CA1234567890",
+      "agent_id": "agent_125207e452f8714a",
+      "direction": "inbound",
+      "from_number": "+447386172392",
+      "to_number": "+447446466847",
+      "started_at": "2026-05-17T03:45:12Z",
+      "ended_at": "2026-05-17T03:47:38Z",
+      "duration_seconds": 146,
+      "ended_reason": "agent_hangup",
+      "call_summary": "Caller booked a check-up...",
+      "caller_sentiment": "happy",
+      "call_successful": true,
+      "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3"
+    }
+  ],
+  "count": 1,
+  "limit": 25,
+  "offset": 0
+}
+```
+
+The list response **omits the full transcript** for performance. Fetch a single call with [Get call](/api-reference/calls/get) for the transcript.

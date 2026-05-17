@@ -1,133 +1,79 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
-icon: 'star'
+description: "Build voice AI agents that make and receive phone calls"
+icon: "rocket"
 ---
 
-## Setting up
+Nixflex is a real-time voice AI platform. You connect your Twilio number, give Claude a prompt, and your phone agent is live. Inbound and outbound calls, SMS, transfers, post-call analysis, batch campaigns — all behind one API.
 
-Get your documentation site up and running in minutes.
+Built for developers embedding voice agents into SaaS apps.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Why Nixflex
 
 <Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+  <Card title="Sub-second response" icon="bolt">
+    First audio in ~500ms. AssemblyAI / Deepgram for STT, Claude Haiku 4.5 for reasoning, Inworld TTS for voice.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Bring your own Twilio" icon="phone">
+    Multi-tenant from day one. Each customer connects their own Twilio account — you keep full control of phone numbers and billing.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Tag-based actions" icon="tag">
+    Claude triggers transfers, SMS, and call endings through prompt tags. No webhook orchestration needed for built-in actions.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="History-aware calls" icon="clock-rotate-left">
+    Outbound calls automatically pull past call summaries for the recipient and inject them into the agent's prompt. Your agent remembers customers across calls.
   </Card>
 </Columns>
 
-## Create beautiful pages
+## Get started
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Make your first call in under five minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Generate API keys and authenticate requests.
+  </Card>
+  <Card title="Create an agent" icon="user-plus" href="/concepts/agents">
+    Configure prompts, voice, language, and actions.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/introduction">
+    Every endpoint with parameters, examples, and error codes.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## How it works
 
-## Make your content agent ready
+A call moves through the engine like this:
 
-Make your docs work for humans and AI agents alike.
+1. **Caller dials your Twilio number** (or you trigger an outbound call via API).
+2. **Twilio streams audio** to Nixflex over WebSocket.
+3. **Speech-to-text** converts what the caller says into text in real time.
+4. **Claude reasons** over the conversation and decides what to say or do next.
+5. **Text-to-speech** turns the reply into natural voice and streams it back to the caller.
+6. **After the call ends**, Nixflex runs post-call analysis (summary, sentiment, custom data extraction) and fires your webhook.
+
+You configure the agent's behaviour with a system prompt and a handful of settings. Everything else — audio handling, interruption detection, language matching, voicemail filtering — is handled by the engine.
+
+## Built-in capabilities
 
 <Columns cols={2}>
-  <Card
-    title="Prompt component"
-    icon="robot"
-    href="/agent-ready/prompt"
-  >
-    Embed shareable AI prompts readers can copy or open in Cursor.
-  </Card>
-  <Card
-    title="Visibility"
-    icon="eye"
-    href="/agent-ready/visibility"
-  >
-    Show different content to humans and agents reading your docs.
-  </Card>
-  <Card
-    title="Contextual menu"
-    icon="bolt"
-    href="/agent-ready/contextual"
-  >
-    Give readers one-click access to Claude, ChatGPT, Cursor, and more.
-  </Card>
-  <Card
-    title="AI coding tools"
-    icon="wand-magic-sparkles"
-    href="/ai-tools/claude-code"
-  >
-    Set up Claude Code, Cursor, or Windsurf with Mintlify's skill.
-  </Card>
+  <Card title="Inbound + outbound calls" icon="phone-arrow-up-right" />
+  <Card title="Cold and warm transfers" icon="shuffle" />
+  <Card title="Mid-call and post-call SMS" icon="message" />
+  <Card title="Voicemail detection (AMD + Deepgram)" icon="voicemail" />
+  <Card title="Batch voice + SMS campaigns" icon="users" />
+  <Card title="Auto language detection (15+ languages)" icon="globe" />
+  <Card title="Post-call summary, sentiment, data extraction" icon="chart-line" />
+  <Card title="Custom functions (tools Claude can call mid-call)" icon="wrench" />
 </Columns>
 
-## Need inspiration?
+## Pricing
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Pay-as-you-go from **$0.08 per minute** of voice. SMS billed per message at your Twilio rate.
+
+See [pricing details](/reference/pricing) for plans and volume discounts.
+
+## Need help?
+
+Email [support@nixflex.com](mailto:support@nixflex.com) or check the [error reference](/reference/errors) for common issues.

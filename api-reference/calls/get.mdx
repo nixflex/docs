@@ -1,0 +1,76 @@
+---
+title: "Get call"
+description: "GET /v1/calls/:id"
+api: "GET https://api.nixflex.com/v1/calls/{call_id}"
+---
+
+Fetches a single call with full transcript, recording URL, and post-call analysis.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/calls/CA1234567890 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "call_id": "CA1234567890",
+  "agent_id": "agent_125207e452f8714a",
+  "direction": "inbound",
+  "from_number": "+447386172392",
+  "to_number": "+447446466847",
+  "started_at": "2026-05-17T03:45:12Z",
+  "ended_at": "2026-05-17T03:47:38Z",
+  "duration_seconds": 146,
+  "ended_reason": "agent_hangup",
+  "voicemail_detected": false,
+  "transcript": [
+    {
+      "role": "agent",
+      "text": "Hello, Acme Dental, how can I help?",
+      "timestamp_ms": 1200
+    },
+    {
+      "role": "caller",
+      "text": "Hi, I'd like to book a check-up.",
+      "timestamp_ms": 3800
+    }
+  ],
+  "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3",
+  "call_summary": "Caller booked a check-up for Tuesday 8th March at 2pm. Confirmed contact details.",
+  "caller_sentiment": "happy",
+  "call_successful": true,
+  "extracted_data": {
+    "caller_name": "Sarah Johnson",
+    "appointment_date": "2026-03-08",
+    "appointment_time": "14:00"
+  },
+  "metadata": {},
+  "cost_usd": 0.195
+}
+```
+
+## Field reference
+
+| Field | Notes |
+|---|---|
+| `direction` | `inbound` or `outbound` |
+| `ended_reason` | `agent_hangup`, `caller_hangup`, `silence_timeout`, `max_duration`, `voicemail`, `error` |
+| `transcript` | Ordered turns; `role` is `agent` or `caller` |
+| `recording_url` | Signed URL, valid 24 hours; refetch for a fresh URL |
+| `caller_sentiment` | `happy`, `neutral`, `frustrated` |
+| `call_successful` | True if Claude judged the goal achieved |
+| `extracted_data` | Object matching the agent's `extraction_schema` |
+| `metadata` | Custom data passed when triggering an outbound call |
+| `cost_usd` | Total Nixflex charge for this call (excludes Twilio costs) |
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `call_not_found` | ID doesn't exist or belongs to another account |

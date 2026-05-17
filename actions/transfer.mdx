@@ -1,0 +1,104 @@
+---
+title: "Transfer"
+description: "Hand off the caller to a human"
+icon: "shuffle"
+---
+
+The `[TRANSFER:]` tag forwards the active call to a different phone number. Nixflex supports both **cold** and **warm** transfers.
+
+## Cold transfer (default)
+
+The agent says a short handoff line, then connects the caller directly to the destination. Fast, simple.
+
+```
+[TRANSFER:+442087601234]
+```
+
+Flow:
+
+1. Claude says: "Hold on, I'll put you through to our manager now."
+2. Engine closes its audio stream
+3. Twilio dials the destination
+4. When picked up, caller and destination are connected
+5. Nixflex steps out
+
+The destination doesn't hear any context. They pick up a normal call from the caller's number.
+
+## Warm transfer
+
+The agent dials the destination first, **briefs them** in a private voice (the caller can't hear this), then merges everyone into the conversation.
+
+```
+[TRANSFER:+442087601234:warm]
+```
+
+Flow:
+
+1. Claude says: "Let me get the manager on the line for you, one moment."
+2. Engine puts the caller on hold (music or silence)
+3. Engine dials the destination
+4. When the destination picks up, Claude speaks a private briefing — "Hi, I have Sarah on the line. She's asking about a refund for an order placed last Tuesday. Putting her through now."
+5. After the briefing, the caller is merged in and the three-way conversation begins
+6. Engine steps out once everyone is connected
+
+Warm transfers help the human pick up context instantly. Useful for complex handoffs.
+
+## Configuring the destination
+
+Two options for where transfers go:
+
+**Inline in the prompt:**
+
+```
+ACTIONS
+- For refund requests, transfer to the manager: [TRANSFER:+442087601234]
+- For technical questions, transfer to support: [TRANSFER:+442087601235]
+- For clinical questions, warm transfer to the dentist: [TRANSFER:+442087601236:warm]
+```
+
+**Default transfer number on the agent:**
+
+Set `transfer_number` when creating the agent. Then Claude can use the bare tag:
+
+```
+[TRANSFER:default]
+```
+
+The engine substitutes the agent's `transfer_number` field.
+
+## When to use which
+
+<Columns cols={2}>
+  <Card title="Cold transfer" icon="forward-fast">
+    **Use when:** the destination already knows what to expect (a generic support line, a manager who handles all overflow).
+
+    **Faster but less context** for the receiver.
+  </Card>
+  <Card title="Warm transfer" icon="comments">
+    **Use when:** the receiver needs context (a specialist, a senior staff member, complex situations).
+
+    **Slower but higher-quality handoff.**
+  </Card>
+</Columns>
+
+## Failure handling
+
+If the destination doesn't pick up (busy, voicemail, no answer):
+
+- **Cold transfer:** the caller is dropped to voicemail or hangs up
+- **Warm transfer:** the caller stays on the line with Claude, who can say "I couldn't reach them, can I take a message?"
+
+You don't have to script this. Claude handles it naturally.
+
+## Telling Claude when to transfer
+
+Be specific in the prompt about transfer triggers:
+
+```
+RULES
+- Never give medical advice. If the caller has a clinical question, transfer immediately: [TRANSFER:+442087601236:warm]
+- If the caller asks for a manager, transfer: [TRANSFER:+442087601234]
+- If you don't know the answer, transfer rather than guess: [TRANSFER:+442087601234]
+```
+
+Claude reads these rules every turn and applies them automatically.

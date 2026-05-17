@@ -1,33 +1,122 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API reference"
+description: "Complete reference for the Nixflex REST API"
+icon: "code"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+The Nixflex API is REST over HTTPS. All requests use JSON. Authentication is via Bearer token (see [Authentication](/authentication)).
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+```
+https://api.nixflex.com
+```
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+All endpoints in this reference are relative to this base URL.
+
+## Versioning
+
+The current version is **v1**. All paths are prefixed `/v1/`.
+
+When v2 is released, v1 will continue working unchanged for at least 12 months. Breaking changes always live behind a new version.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+Every request requires an `Authorization` header:
+
+```
+Authorization: Bearer key_id:key_secret
+```
+
+The colon between `key_id` and `key_secret` is required. See [Authentication](/authentication) for details.
+
+## Request format
+
+`POST`, `PUT`, and `PATCH` requests must include `Content-Type: application/json` and a JSON body.
+
+`GET` requests use query parameters where applicable.
+
+## Response format
+
+All responses are JSON. Success responses return the resource directly:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "agent_id": "agent_125207e452f8714a",
+  "name": "Test Receptionist",
+  ...
+}
 ```
+
+Error responses follow a consistent envelope (see [Errors](/reference/errors)):
+
+```json
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "invalid_phone_format",
+    "message": "..."
+  }
+}
+```
+
+## Pagination
+
+List endpoints (`GET /v1/agents`, `GET /v1/calls`, etc.) support pagination:
+
+| Parameter | Default | Max |
+|---|---|---|
+| `limit` | 25 | 100 |
+| `offset` | 0 | — |
+
+```bash
+curl "https://api.nixflex.com/v1/calls?limit=50&offset=100" \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Response includes a top-level `count` for total available results.
+
+## Resource list
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="user" href="/api-reference/agents/create">
+    Create and manage AI agents (prompt, voice, behaviour).
+  </Card>
+  <Card title="Calls" icon="phone" href="/api-reference/calls/list">
+    List, fetch, and trigger calls. Outbound + batch.
+  </Card>
+  <Card title="Phone numbers" icon="hash" href="/api-reference/phone-numbers/import">
+    Import Twilio numbers and attach them to agents.
+  </Card>
+  <Card title="SMS" icon="message" href="/api-reference/sms/send">
+    Send individual messages and bulk campaigns.
+  </Card>
+  <Card title="Account" icon="user-shield" href="/api-reference/account/create-key">
+    Manage API keys and view usage.
+  </Card>
+</CardGroup>
+
+## Status codes
+
+| Code | Meaning |
+|---|---|
+| `200` | Success (GET, PUT, PATCH, DELETE) |
+| `201` | Created (POST) |
+| `400` | Invalid request — check parameters |
+| `401` | Not authenticated — check API key |
+| `403` | Authenticated but not permitted |
+| `404` | Resource not found |
+| `409` | Conflict (e.g. number already imported) |
+| `429` | Rate limited — see `Retry-After` header |
+| `500` | Server error — contact support |
+| `502` | Upstream provider error (Twilio, etc.) |
+
+## Idempotency
+
+Mutation endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) accept an optional `Idempotency-Key` header for safe retries:
+
+```
+Idempotency-Key: my-unique-request-id-123
+```
+
+Requests with the same key within 24 hours return the original response. Safe to retry on network failures.

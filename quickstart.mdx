@@ -1,81 +1,119 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
-icon: 'rocket'
+description: "Make your first AI phone call in under five minutes"
+icon: "play"
 ---
 
-## Get started in three steps
+This guide takes you from zero to a working AI agent answering real phone calls.
 
-Get your documentation site running locally and make your first customization.
+You'll need:
+- A [Nixflex account](https://app.nixflex.com/signup)
+- A [Twilio account](https://www.twilio.com/) with at least one phone number
+- A way to make a test call (any mobile phone)
 
-### Step 1: Set up your local environment
+## Step 1 — Get your API key
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Sign in to the dashboard">
+    Open [app.nixflex.com](https://app.nixflex.com) and sign in.
+  </Step>
+  <Step title="Create an API key">
+    Go to **API Keys** → **Create new key**. Copy both the `key_id` and `key_secret` immediately — the secret is shown only once.
+  </Step>
+  <Step title="Format for requests">
+    Authenticate every API call with:
+    ```
+    Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET
+    ```
+  </Step>
+</Steps>
 
-### Step 2: Deploy your changes
+<Warning>
+  Treat `key_secret` like a password. Never commit it to source control or expose it in client-side code.
+</Warning>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+## Step 2 — Create an agent
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+An **agent** is the AI personality that answers calls. Each agent has a prompt, voice, language, and behaviour settings.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash
+curl -X POST https://api.nixflex.com/v1/agents \
+  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Receptionist",
+    "system_prompt": "You are a friendly receptionist for Acme Dental. Greet callers, answer questions about opening hours (Mon-Fri 9am-5pm), and book appointments by collecting name and preferred date.",
+    "welcome_message": "Hello, Acme Dental, how can I help?",
+    "voice_id": "Dennis",
+    "language": "en"
+  }'
+```
 
-### Step 3: Go live
+The response contains your `agent_id`:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+```json
+{
+  "agent_id": "agent_125207e452f8714a",
+  "name": "Test Receptionist",
+  "status": "active"
+}
+```
 
-## Next steps
+Save the `agent_id` — you'll attach a phone number to it next.
 
-Now that you have your docs running, explore these key features:
+## Step 3 — Connect a Twilio number
+
+Nixflex uses a **BYO Twilio** model. You import a number you already own in Twilio, and Nixflex configures the webhooks automatically.
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+447446466847",
+    "twilio_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "twilio_token": "your_twilio_auth_token",
+    "agent_id": "agent_125207e452f8714a"
+  }'
+```
+
+That's it. Nixflex points all webhooks on this Twilio number at the engine. The agent now answers when this number rings.
+
+## Step 4 — Make a test call
+
+Call your Twilio number from any phone. The agent will:
+
+1. Pick up
+2. Say your welcome message
+3. Listen, respond, handle interruptions naturally
+4. Hang up when the conversation ends or when the caller stops talking
+
+After the call, the transcript, recording, summary, and any extracted data become available in the dashboard and via the API.
+
+## Step 5 — Read the call back
+
+Pull the call details:
+
+```bash
+curl https://api.nixflex.com/v1/calls?limit=1 \
+  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET"
+```
+
+The response includes the transcript, recording URL, post-call summary, caller sentiment, and any custom data Claude extracted.
+
+## What's next
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
+    Trigger AI calls programmatically with one API request.
+  </Card>
+  <Card title="Claude actions" icon="tag" href="/actions/overview">
+    Let your agent transfer calls, send SMS, and end calls using prompt tags.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/advanced/webhooks">
+    Receive post-call data in your own systems automatically.
+  </Card>
+  <Card title="Custom functions" icon="wrench" href="/advanced/custom-functions">
+    Let Claude call your APIs mid-call (lookup, booking, payments).
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

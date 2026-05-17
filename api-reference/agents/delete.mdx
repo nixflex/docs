@@ -1,0 +1,42 @@
+---
+title: "Delete agent"
+description: "DELETE /v1/agents/:id"
+api: "DELETE https://api.nixflex.com/v1/agents/{agent_id}"
+---
+
+Removes an agent. Phone numbers attached to this agent become inactive and stop routing calls.
+
+## Request
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "agent_id": "agent_125207e452f8714a",
+  "deleted": true
+}
+```
+
+## Behaviour
+
+- **Calls in progress finish.** Deleting doesn't interrupt active calls.
+- **Phone numbers detach.** Numbers previously attached become orphan — they won't route calls until reassigned to another agent.
+- **Historical data is kept.** Past calls, transcripts, and recordings stay accessible via the API and dashboard.
+- **`agent_id` becomes unusable.** Future requests with this ID return 404.
+
+<Warning>
+  Deletion is permanent. To temporarily disable an agent without losing setup, set `is_active: false` via [Update agent](/api-reference/agents/update) instead.
+</Warning>
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `agent_not_found` | ID doesn't exist or isn't yours |

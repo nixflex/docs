@@ -1,0 +1,98 @@
+---
+title: "Send SMS"
+description: "Text the caller mid-call or after the call ends"
+icon: "message"
+---
+
+The `[SEND_SMS:]` tag sends a text message to the caller from your Twilio number. Useful for booking confirmations, links, references, or anything easier to read than hear.
+
+## Syntax
+
+```
+[SEND_SMS: Your text message goes here]
+```
+
+Everything between the colon and the closing bracket is the SMS body.
+
+## Example
+
+> *Caller:* "Can you send me the address?"
+>
+> *Agent:* "Sure, sending it now. [SEND_SMS: Acme Dental, 12 High Street, Croydon CR0 1AB. See you on Tuesday at 2pm.]"
+
+The SMS goes out instantly. The agent continues the conversation.
+
+## When to use
+
+Tell Claude in the prompt when to text the caller:
+
+```
+ACTIONS
+- Send the address by SMS if the caller asks where you are: [SEND_SMS: 12 High Street, Croydon CR0 1AB]
+- After booking, text confirmation: [SEND_SMS: Your appointment with Acme Dental is confirmed for {date} at {time}.]
+- Send the payment link when collecting deposits: [SEND_SMS: Pay your £20 deposit here: https://pay.acmedental.com/abc123]
+```
+
+## Post-call SMS
+
+Separate from mid-call SMS, you can configure a **post-call SMS template** on the agent. This fires automatically after every successful call:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "post_call_sms_template": "Thanks for calling Acme Dental. Heres a summary of our call: {call_summary}"
+  }'
+```
+
+Variables you can use in the template:
+
+| Variable | Meaning |
+|---|---|
+| `{call_summary}` | AI-generated summary of the call |
+| `{caller_name}` | Caller name if Claude extracted it |
+| `{business_name}` | Your business name |
+| `{agent_name}` | The agent's name |
+
+Post-call SMS only fires if the agent had a meaningful conversation (not for voicemails or 5-second calls).
+
+## Inbound SMS replies
+
+If a caller replies to a Nixflex SMS, the engine can respond automatically using the agent's prompt as context. This works for **24 hours** after the most recent outbound SMS to that number — long enough for natural follow-up, short enough not to feel like a chat agent.
+
+To enable automatic replies, set `enable_sms_reply: true` on the agent.
+
+## Sending SMS via API
+
+You can also send SMS programmatically (no call required):
+
+```bash
+curl -X POST https://api.nixflex.com/v1/sms \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+447386172392",
+    "from_number": "+447446466847",
+    "body": "Just a quick reminder — your appointment is tomorrow at 2pm."
+  }'
+```
+
+See [Send SMS API](/api-reference/sms/send) for the full schema.
+
+## Bulk SMS campaigns
+
+For sending the same message to many numbers, use SMS campaigns. See [SMS campaigns](/sms/sms-campaigns).
+
+## SMS compliance
+
+<Warning>
+  **UK only at launch.** US SMS sending requires A2P 10DLC registration on your Twilio account. Until that's complete, US-bound messages will be rejected by carriers.
+
+  You're responsible for SMS compliance: opt-in records, opt-out handling (STOP/HELP keywords), and timing restrictions. Nixflex provides the infrastructure; the compliance obligation stays with you.
+</Warning>
+
+## Twilio billing
+
+SMS is sent via the customer's Twilio account (the same one attached to the phone number). Twilio charges per message at standard rates. Nixflex doesn't mark up SMS pricing.

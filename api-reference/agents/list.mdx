@@ -1,0 +1,57 @@
+---
+title: "List agents"
+description: "GET /v1/agents"
+api: "GET https://api.nixflex.com/v1/agents"
+---
+
+Returns all agents for your account.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/agents \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Query parameters
+
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | int | 25 | Max 100 |
+| `offset` | int | 0 | For pagination |
+| `is_active` | bool | — | Filter by active status |
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "agents": [
+    {
+      "agent_id": "agent_125207e452f8714a",
+      "name": "Acme Dental Receptionist",
+      "language": "en",
+      "voice_id": "Dennis",
+      "is_active": true,
+      "created_at": "2026-05-17T03:45:12Z"
+    }
+  ],
+  "count": 1,
+  "limit": 25,
+  "offset": 0
+}
+```
+
+Sorted by `created_at` descending.
+
+## Empty result
+
+Returns an empty array (not 404) if you have no agents yet:
+
+```json
+{
+  "agents": [],
+  "count": 0
+}
+```

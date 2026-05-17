@@ -1,0 +1,43 @@
+---
+title: "Delete SMS campaign"
+description: "DELETE /v1/sms/campaigns/:id"
+api: "DELETE https://api.nixflex.com/v1/sms/campaigns/{campaign_id}"
+---
+
+Cancels a scheduled or running campaign. Already-sent messages cannot be recalled.
+
+## Request
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "deleted": true,
+  "cancelled_count": 47
+}
+```
+
+`cancelled_count` is the number of pending recipients that won't be messaged. Sent messages remain delivered.
+
+## Behaviour
+
+- **Scheduled campaign**: cancels before launch. Nothing is sent.
+- **Running campaign**: stops further sends. Already-queued messages may still be sent (Twilio is faster than our cancel).
+- **Completed campaign**: returns 400 — nothing to cancel.
+
+Replies from already-sent messages continue to be handled within the reply window.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `campaign_not_found` | ID doesn't exist or isn't yours |
+| `campaign_already_completed` | Already finished |

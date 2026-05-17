@@ -1,0 +1,62 @@
+---
+title: "Create SMS campaign"
+description: "POST /v1/sms/campaigns"
+api: "POST https://api.nixflex.com/v1/sms/campaigns"
+---
+
+Creates an SMS campaign. Optionally launches it immediately.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/sms/campaigns \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "from_number": "+447446466847",
+    "name": "March promotion",
+    "body": "Hi! 20% off cleanings this month at Acme Dental. Reply YES to book.",
+    "recipients": [
+      { "phone_number": "+447111000001" },
+      { "phone_number": "+447111000002" }
+    ],
+    "context_prompt": "If they reply YES, offer any weekday next week 9am-5pm. If NO or STOP, just thank them.",
+    "schedule_type": "now"
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `agent_id` | string | Yes | Agent handling replies |
+| `from_number` | string | Yes | Your imported Twilio number |
+| `name` | string | Yes | Display name in dashboard |
+| `body` | string | Yes | Message text sent to every recipient |
+| `recipients` | array | Yes | Up to 10,000 |
+| `context_prompt` | string | No | Reply guidance for the agent |
+| `schedule_type` | enum | Yes | `now` or `schedule` |
+| `scheduled_at` | ISO date | If `schedule` | When to launch |
+| `reply_window_hours` | int | No | Hours to listen for replies (default 24, max 720) |
+
+## Response
+
+`201 Created`:
+
+```json
+{
+  "campaign_id": "smsc_a1b2c3d4",
+  "agent_id": "agent_125207e452f8714a",
+  "name": "March promotion",
+  "status": "running",
+  "recipients_count": 2,
+  "created_at": "2026-05-17T03:45:12Z"
+}
+```
+
+When `schedule_type` is `now`, returns `status: running` and sends immediately. With `schedule`, returns `status: scheduled` — launch later with [Launch SMS campaign](/api-reference/sms/campaigns-launch).
+
+## Errors
+
+See [Errors](/reference/errors). Common: `agent_not_owned`, `from_number_not_owned`, `too_many_recipients`, `invalid_schedule`.
