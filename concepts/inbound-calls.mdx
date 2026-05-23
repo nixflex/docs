@@ -40,7 +40,7 @@ You don't have to configure any of this — the engine handles it:
 - **Silence handling** — if the caller goes quiet, the agent gently prompts after a few seconds
 - **Language auto-detection** — backchannels and filler words match the caller's language
 - **Voicemail detection** — if the call somehow lands on a voicemail, the engine hangs up cleanly (rare on inbound, but possible)
-- **Call recording** — dual-channel recording, stored, deleted from Twilio afterwards
+- **Call recording** — dual-channel recording stored on Nixflex; original stays on your Twilio account
 - **Post-call analysis** — every call gets a summary and sentiment automatically
 
 ## History-aware behaviour
@@ -71,7 +71,7 @@ curl https://api.nixflex.com/v1/calls/CA1234567890 \
 The call object includes:
 
 - `transcript` — full conversation, both sides
-- `recording_url` — link to the audio file (signed URL, time-limited)
+- `recording_url` — permanent link to the audio file hosted on Nixflex
 - `call_summary` — AI-written summary
 - `caller_sentiment` — `happy`, `neutral`, or `frustrated`
 - `call_successful` — boolean (did the agent achieve the goal)

@@ -70,21 +70,38 @@ Most apps only need `call.ended`. Other events are optional — check the `event
 Every webhook request includes a signature header so you can verify it came from Nixflex:
 
 ```
-X-Nixflex-Signature: t=1715900000,v1=abc123...
+X-Nixflex-Signature: t=1779500000,v1=abc123...
 ```
 
-Verify it like Stripe-style signatures:
+The signature is HMAC-SHA256 of `<timestamp>.<raw_body>` using your **API key secret** (`key_secret` shown when you created the API key) as the signing secret.
+
+<Warning>
+  Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
+</Warning>
+
+### Verifying in Node.js
 
 ```javascript
 const crypto = require('crypto');
 
 function verifyNixflexSignature(rawBody, signatureHeader, secret) {
-  const [timestamp, sig] = signatureHeader.split(',').map(p => p.split('=')[1]);
-  const payload = `${timestamp}.${rawBody}`;
+  // Parse the header: "t=<ts>,v1=<hex>"
+  const parts = Object.fromEntries(
+    signatureHeader.split(',').map(p => p.split('='))
+  );
+  const timestamp = parts.t;
+  const sig = parts.v1;
+
+  // Reject if older than 5 minutes (replay protection)
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return false;
+  }
+
   const expected = crypto
     .createHmac('sha256', secret)
-    .update(payload)
+    .update(`${timestamp}.${rawBody}`)
     .digest('hex');
+
   return crypto.timingSafeEqual(
     Buffer.from(sig),
     Buffer.from(expected)
@@ -92,29 +109,47 @@ function verifyNixflexSignature(rawBody, signatureHeader, secret) {
 }
 ```
 
-The webhook secret is shown in the dashboard when you set the webhook URL. Reject requests where the signature doesn't match — they're not from us.
+<Note>
+  Always use the **raw request body bytes** when computing the HMAC. If your framework parses JSON before you see it (Express body-parser does this by default), you'll get a signature mismatch. Use `express.raw()` middleware on the webhook route.
+</Note>
 
-<Warning>
-  Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
-</Warning>
+## Delivery and retries
 
-## Retries
+After a call ends, the webhook fires roughly **60 seconds later** — this gives Nixflex time to upload the recording, run post-call analysis, and include everything in one payload.
 
-If your endpoint:
+<Steps>
+  <Step title="2xx or 3xx response">
+    Webhook is considered delivered. No retry.
+  </Step>
+  <Step title="4xx response (except 408, 429)">
+    Treated as a permanent failure — your endpoint has a bug or rejected the request. **No retry.**
+  </Step>
+  <Step title="5xx, 408, 429, or timeout/network error">
+    Retried automatically. Schedule: **5 min, 5 min, 5 min, 60 min** between attempts (5 attempts total).
+  </Step>
+  <Step title="After 5 failed attempts">
+    Given up. Logged in your dashboard so you can investigate.
+  </Step>
+</Steps>
 
-- **Returns 2xx** — webhook is considered delivered, no retry
-- **Returns 4xx or 5xx** — Nixflex retries with exponential backoff
-- **Times out** (>10s) — counted as a failure, retried
+Request timeout is 10 seconds per attempt — keep your handler fast.
 
-Retry schedule: 1 minute, 5 minutes, 30 minutes, 2 hours, 12 hours. After 5 failed attempts the webhook is given up on.
+## Viewing delivery history
 
-You can see delivery attempts in the dashboard under the agent's Webhook tab.
+Go to **Logs → Webhooks** in your dashboard. Every delivery attempt is logged with:
+
+- Status (success / permanent failure / exhausted retries)
+- HTTP status code
+- Attempt count (1/5, 2/5, etc.)
+- Last attempt time
+- The exact URL it was sent to
+- Error message if applicable
+
+Click any row to see the call ID, agent ID, and timestamps.
 
 ## Idempotency
 
-Each webhook delivery includes a unique `webhook_delivery_id` header. Same `call_id` may arrive twice if a retry succeeds after the original was actually delivered — your endpoint should be idempotent.
-
-Pattern: store the `webhook_delivery_id` and skip if you've seen it before.
+Same call may arrive twice if a retry succeeds after the original was actually delivered (rare but possible). Your endpoint should be idempotent — store the `call_id` from each payload and skip if you've already processed it.
 
 ## Connecting to Zapier / Make
 

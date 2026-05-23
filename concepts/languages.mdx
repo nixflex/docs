@@ -17,10 +17,10 @@ In practice, language is selected as follows:
     If the caller speaks a language clearly, the agent matches them — even if `language` is set to something else.
   </Step>
   <Step title="Country prefix hint">
-    For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to Deepgram for Arabic-first transcription.
+    For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to the speech engine for Arabic-first transcription.
   </Step>
   <Step title="Multilingual STT">
-    For all other regions, AssemblyAI's multilingual model handles 6 major languages (EN, ES, FR, DE, IT, PT) with auto-detection.
+    For all other regions, the speech engine's multilingual model handles 6 major languages (EN, ES, FR, DE, IT, PT) with auto-detection.
   </Step>
   <Step title="Agent default">
     If detection is ambiguous, the agent's configured `language` is used.
@@ -31,7 +31,7 @@ In practice, language is selected as follows:
 
 ### Voice (TTS)
 
-15 languages via Inworld TTS Max:
+15 languages via the voice engine:
 
 | Language | Code | Notes |
 |---|---|---|
@@ -53,8 +53,8 @@ In practice, language is selected as follows:
 
 ### Speech recognition (STT)
 
-- **AssemblyAI multilingual** — 6 languages with real-time auto-detection (EN, ES, FR, DE, IT, PT)
-- **Deepgram Nova 3** — used for GCC region numbers; full Arabic support, 36+ other languages
+- **the speech engine multilingual** — 6 languages with real-time auto-detection (EN, ES, FR, DE, IT, PT)
+- **the speech engine** — used for GCC region numbers; full Arabic support, 36+ other languages
 
 The engine picks the right STT provider at call start based on the destination number.
 
@@ -83,7 +83,7 @@ Prices, phone numbers, dates, and addresses are normalised before being sent to 
 For brand or technical pronunciations the agent gets wrong, you can override them in the system prompt:
 
 ```
-Pronunciation: pronounce "Nixflex" as "NIKS-flex". Say "Anthropic" as "an-THROP-ik".
+Pronunciation: pronounce "Nixflex" as "NIKS-flex". Say "the AI provider" as "an-THROP-ik".
 ```
 
 ## What's not supported yet

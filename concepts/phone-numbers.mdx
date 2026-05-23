@@ -99,6 +99,20 @@ This clears Twilio's webhooks (so calls stop routing to Nixflex) and removes the
   Deleting a number from Nixflex does **not** release it from Twilio. The number stays in your Twilio account and continues to bill until you release it via Twilio's API or console. This is intentional — releasing is a permanent billing decision and stays with you.
 </Note>
 
+## Using multiple Twilio accounts
+
+Each phone number stores its own Twilio Account SID and Auth Token. This means a single Nixflex account can serve numbers from **multiple Twilio accounts** — for example:
+
+- A UK Twilio account for `+44` numbers
+- A US Twilio account for `+1` numbers
+- A separate Twilio subaccount per client (recommended for agencies)
+
+When a call comes in or goes out, Nixflex automatically uses the right Twilio credentials based on the phone number involved. No configuration needed.
+
+<Tip>
+  **Best practice**: use a [Twilio Subaccount](https://www.twilio.com/docs/iam/api/subaccount) per client rather than your master account. This limits the blast radius if credentials are ever exposed and gives you per-client billing on Twilio.
+</Tip>
+
 ## Constraints
 
 - **One number, one agent.** A phone number can be attached to only one agent at a time. To move a number to a different agent, delete the existing record first then re-import.

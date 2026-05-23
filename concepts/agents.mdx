@@ -7,7 +7,7 @@ icon: "user"
 An **agent** is the configurable AI personality behind a phone call. One agent owns:
 
 - A system prompt (what the AI says, how it behaves)
-- A voice (Inworld TTS voice ID)
+- A voice ID
 - A language
 - Behaviour settings (response length, interruption sensitivity, silence handling)
 - Action configuration (transfer numbers, SMS templates)
@@ -35,7 +35,7 @@ When you `POST /v1/agents`, you can set:
 | `name` | string | `"Untitled Agent"` | Display name in dashboard |
 | `system_prompt` | string | empty | What Claude should do (see below) |
 | `welcome_message` | string | generic | First thing the agent says on inbound calls |
-| `voice_id` | string | `"Dennis"` | Inworld TTS voice |
+| `voice_id` | string | `"Dennis"` | voice |
 | `language` | string | `"en"` | Default language code |
 | `response_length` | enum | `"medium"` | `short`, `medium`, or `long` |
 | `interruption_sensitivity` | enum | `"medium"` | `low`, `medium`, `high` |
@@ -45,7 +45,7 @@ When you `POST /v1/agents`, you can set:
 | `webhook_url` | string | null | Where to POST post-call data |
 | `transfer_number` | string | null | Default destination for `[TRANSFER:]` |
 | `post_call_sms_template` | string | null | If set, sends this SMS after call ends |
-| `llm_model` | string | `"claude-haiku-4-5"` | LLM used during calls |
+| `llm_model` | string | `"default"` | LLM used during calls |
 | `temperature` | float | `0.7` | Creativity vs predictability |
 | `fallback_message` | string | sensible default | Said when STT confidence is too low |
 

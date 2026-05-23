@@ -1,67 +1,46 @@
 ---
 title: "Pricing"
-description: "Pay-as-you-go and volume plans"
+description: "Simple per-minute pricing — no surprises"
 icon: "dollar-sign"
 ---
 
-Nixflex charges per minute of voice and per SMS message. No setup fees, no minimums, no surprise charges.
+Nixflex charges a flat **$0.08 per minute** of voice. No setup fees, no monthly minimums, no per-feature charges.
 
 ## Voice
 
-| Plan | Per minute | Monthly | Best for |
-|---|---|---|---|
-| Pay-as-you-go | $0.08 | $0 | Testing, small apps |
-| Starter | $0.06 | $99 | Production apps up to ~30k min/month |
-| Scale | $0.05 | $299 | Growing apps, 30k–100k min/month |
-| Enterprise | Custom | Custom | 100k+ min/month, dedicated support |
+| | Per minute |
+|---|---|
+| **Voice (all calls, inbound + outbound)** | **$0.08** |
 
 Voice is billed per second, rounded to the nearest second. A 1m23s call costs `83 × ($0.08 / 60) = $0.111`.
 
 ## What's included in every minute
 
-- Speech-to-text (AssemblyAI / Deepgram)
-- LLM reasoning (Claude Haiku 4.5)
-- Text-to-speech (Inworld TTS Max)
-- Real-time engine processing
-- Call recording (stored 30 days, signed URL access)
+- Real-time speech recognition
+- AI reasoning
+- Natural-sounding voice synthesis
+- Call recording (stored on Nixflex, plus original kept on your Twilio)
 - Post-call analysis (summary, sentiment, custom extraction)
-- Webhooks
-- Dashboard access
+- Webhook delivery with automatic retries
+- Dashboard access and logs
 
 There are no separate per-feature charges. Everything is in the per-minute price.
 
 ## What's not included
 
-You pay these directly to the underlying providers:
+You pay these directly to your Twilio account (Bring Your Own Twilio):
 
 | Cost | Where it's billed |
 |---|---|
-| Phone numbers (Twilio) | Your Twilio account, ~$1/month per number |
-| Voice minutes (Twilio) | Your Twilio account, ~$0.013/min for UK→UK |
-| SMS messages (Twilio) | Your Twilio account, varies by destination |
+| Phone numbers | Your Twilio account |
+| Voice minutes (carrier) | Your Twilio account |
+| SMS messages | Your Twilio account |
 
-Because you BYO Twilio, Nixflex doesn't see or mark up these costs. You get Twilio's wholesale rates.
+Because you BYO Twilio, Nixflex doesn't see or mark up these costs — you get Twilio's wholesale rates directly.
 
 ## SMS
 
-Nixflex doesn't charge for SMS. You pay Twilio directly at their standard rates:
-
-| Region | Per message |
-|---|---|
-| UK domestic | ~£0.04 |
-| US (after A2P 10DLC) | ~$0.0075 per segment |
-| International | Varies by destination |
-
-## Comparing to alternatives
-
-| Provider | Voice per minute |
-|---|---|
-| Retell AI | $0.15 |
-| Vapi | $0.13 |
-| **Nixflex Pay-as-you-go** | **$0.08** |
-| **Nixflex Scale** | **$0.05** |
-
-Same quality (Deepgram, Claude, etc.) at roughly half the price. The savings come from running our own real-time engine rather than reselling someone else's.
+Nixflex doesn't charge for SMS. You pay Twilio directly at their standard rates for your region.
 
 ## How billing works
 
@@ -82,7 +61,7 @@ Same quality (Deepgram, Claude, etc.) at roughly half the price. The savings com
 
 ## Usage tracking
 
-Check current usage:
+Check current usage anytime:
 
 ```bash
 curl https://api.nixflex.com/v1/usage \
@@ -91,12 +70,12 @@ curl https://api.nixflex.com/v1/usage \
 
 Returns total minutes, calls, SMS, and credit balance.
 
-## Volume discounts
+## Volume pricing
 
-Above 100k minutes per month, custom pricing applies. Contact [sales@nixflex.com](mailto:sales@nixflex.com) for a quote.
+High-volume customers get custom pricing. Contact [sales@nixflex.com](mailto:sales@nixflex.com) for a quote.
 
 ## Refunds
 
 If a call fails due to a Nixflex error (not Twilio, not your endpoint), we credit it back automatically. You'll see `refunded` entries in your usage logs.
 
-For larger billing questions, email [support@nixflex.com](mailto:support@nixflex.com).
+For billing questions, email [support@nixflex.com](mailto:support@nixflex.com).
