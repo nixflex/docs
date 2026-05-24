@@ -4,48 +4,49 @@ description: "Make your first AI phone call in under five minutes"
 icon: "play"
 ---
 
-This guide takes you from zero to a working AI agent answering real phone calls.
+This guide takes you from zero to a working AI agent answering and making real phone calls.
 
 You'll need:
 - A [Nixflex account](https://app.nixflex.com/signup)
 - A [Twilio account](https://www.twilio.com/) with at least one phone number
 - A way to make a test call (any mobile phone)
 
-## Step 1 — Get your API key
+## Step 1 - Get your API key
 
 <Steps>
   <Step title="Sign in to the dashboard">
-    Open [app.nixflex.com](https://app.nixflex.com) and sign in.
+    Open [app.nixflex.com](https://app.nixflex.com) and sign in. An API key is created for your account automatically.
   </Step>
-  <Step title="Create an API key">
-    Go to **API Keys** → **Create new key**. Copy both the `key_id` and `key_secret` immediately — the secret is shown only once.
+  <Step title="Reveal your key">
+    Go to **API Keys**, click **Reveal**, and copy the full credential. It looks like:
+    ```
+    nxf_a1b2c3...:nxfs_x1y2z3...
+    ```
   </Step>
-  <Step title="Format for requests">
+  <Step title="Use it in requests">
     Authenticate every API call with:
     ```
-    Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET
+    Authorization: Bearer nxf_xxx:nxfs_xxx
     ```
   </Step>
 </Steps>
 
 <Warning>
-  Treat `key_secret` like a password. Never commit it to source control or expose it in client-side code.
+  Treat your full credential like a password. Never commit it to source control or expose it in client-side code. If it leaks, rotate immediately from the dashboard.
 </Warning>
 
-## Step 2 — Create an agent
+## Step 2 - Create an agent
 
 An **agent** is the AI personality that answers calls. Each agent has a prompt, voice, language, and behaviour settings.
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/agents \
-  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET" \
+  -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Test Receptionist",
     "system_prompt": "You are a friendly receptionist for Acme Dental. Greet callers, answer questions about opening hours (Mon-Fri 9am-5pm), and book appointments by collecting name and preferred date.",
-    "welcome_message": "Hello, Acme Dental, how can I help?",
-    "voice_id": "Dennis",
-    "language": "en"
+    "welcome_message": "Hello, Acme Dental, how can I help?"
   }'
 ```
 
@@ -55,19 +56,25 @@ The response contains your `agent_id`:
 {
   "agent_id": "agent_125207e452f8714a",
   "name": "Test Receptionist",
-  "status": "active"
+  "voice_id": "Ashley",
+  "language": "multi",
+  "is_active": true
 }
 ```
 
-Save the `agent_id` — you'll attach a phone number to it next.
+Save the `agent_id` - you'll attach a phone number to it next.
 
-## Step 3 — Connect a Twilio number
+<Tip>
+  The default voice is **Ashley** and the default language is **multi** (auto-detects 15+ languages including Arabic, French, Spanish, German). Change them later via the dashboard or the [Create agent](/api-reference/agents/create) reference.
+</Tip>
+
+## Step 3 - Connect a Twilio number
 
 Nixflex uses a **BYO Twilio** model. You import a number you already own in Twilio, and Nixflex configures the webhooks automatically.
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/phone-numbers \
-  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET" \
+  -H "Authorization: Bearer YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "phone_number": "+447446466847",
@@ -77,9 +84,9 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-That's it. Nixflex points all webhooks on this Twilio number at the engine. The agent now answers when this number rings.
+Nixflex points all webhooks on this Twilio number at the engine. The agent now answers when this number rings, and can use it to make outbound calls.
 
-## Step 4 — Make a test call
+## Step 4 - Test inbound
 
 Call your Twilio number from any phone. The agent will:
 
@@ -88,15 +95,33 @@ Call your Twilio number from any phone. The agent will:
 3. Listen, respond, handle interruptions naturally
 4. Hang up when the conversation ends or when the caller stops talking
 
-After the call, the transcript, recording, summary, and any extracted data become available in the dashboard and via the API.
+## Step 5 - Test outbound
 
-## Step 5 — Read the call back
+Have the agent call **you**. Replace the `to_number` with your mobile.
 
-Pull the call details:
+```bash
+curl -X POST https://api.nixflex.com/v1/calls/outbound \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+44YOUR_MOBILE"
+  }'
+```
+
+Your phone rings within seconds. Pick up and talk to your agent.
+
+<Note>
+  You don't pass a `from_number`. The engine uses the Twilio number you assigned to the agent in Step 3.
+</Note>
+
+## Step 6 - Read the call back
+
+After the call ends, pull the details:
 
 ```bash
 curl https://api.nixflex.com/v1/calls?limit=1 \
-  -H "Authorization: Bearer YOUR_KEY_ID:YOUR_KEY_SECRET"
+  -H "Authorization: Bearer YOUR_KEY"
 ```
 
 The response includes the transcript, recording URL, post-call summary, caller sentiment, and any custom data Claude extracted.
