@@ -4,7 +4,7 @@ description: "Trigger AI calls programmatically"
 icon: "phone-arrow-up-right"
 ---
 
-An outbound call is one where **Nixflex calls a number for you**. Useful for appointment reminders, lead qualification, follow-ups, surveys — anything where the agent reaches out.
+An outbound call is one where **Nixflex calls a number for you**. Useful for appointment reminders, lead qualification, follow-ups, surveys - anything where the agent reaches out.
 
 ## Trigger one call
 
@@ -14,8 +14,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "agent_125207e452f8714a",
-    "to_number": "+447386172392",
-    "from_number": "+447446466847"
+    "to_number": "+447386172392"
   }'
 ```
 
@@ -23,25 +22,29 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 |---|---|---|
 | `agent_id` | Yes | Which agent should make the call |
 | `to_number` | Yes | Destination (E.164 format) |
-| `from_number` | Yes | One of your imported Twilio numbers (the caller ID) |
-| `metadata` | No | Object passed through to your webhook |
+| `dynamic_vars` | No | Key-value pairs injected into the agent's prompt |
+| `campaign_id` | No | Link this call to a batch campaign |
 
-The response includes a `call_id` immediately. The actual call happens asynchronously — Twilio dials, the agent waits for pickup, and then the conversation runs.
+<Note>
+  You don't pass a `from_number`. The engine uses the Twilio number assigned to your agent via the [phone numbers](/api-reference/phone-numbers/import) endpoint. One agent = one phone identity. Import a number and assign it to the agent before making outbound calls.
+</Note>
+
+The response includes a `call_id` immediately. The actual call happens asynchronously - Twilio dials, the agent waits for pickup, and then the conversation runs.
 
 ## What happens on the receiving end
 
 <Steps>
   <Step title="Twilio dials">
-    Using the `from_number` as caller ID. Standard PSTN call.
+    Using the agent's assigned phone number as caller ID. Standard PSTN call.
   </Step>
   <Step title="Voicemail detection runs">
-    The engine uses Twilio's AMD + a the speech engine pattern matcher in parallel. If the call hits an answering machine, the engine hangs up — no money wasted talking to voicemail.
+    The engine uses Twilio's AMD + a speech-pattern matcher in parallel. If the call hits an answering machine, the engine hangs up - no money wasted talking to voicemail.
   </Step>
   <Step title="Human picks up">
     The agent waits a beat, then speaks. For outbound calls, the agent typically introduces itself before stating the reason.
   </Step>
   <Step title="Normal call flow">
-    From here, it behaves exactly like an inbound call — STT, Claude, TTS, interruption handling, the works.
+    From here, it behaves exactly like an inbound call - STT, Claude, TTS, interruption handling, the works.
   </Step>
 </Steps>
 
@@ -69,7 +72,6 @@ curl -X POST https://api.nixflex.com/v1/calls/batch \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "agent_125207e452f8714a",
-    "from_number": "+447446466847",
     "name": "Tuesday reminders",
     "recipients": [
       { "phone_number": "+447111000001" },
@@ -106,5 +108,5 @@ To leave a message, configure a voicemail script on the agent (see [Voicemail de
 - Re-engagement of cold contacts
 
 <Warning>
-  Outbound calling has compliance rules — TCPA in the US, Ofcom rules in the UK, and consent requirements elsewhere. Make sure you have the right to call the numbers you upload. Nixflex provides the infrastructure; you're responsible for compliance.
+  Outbound calling has compliance rules - TCPA in the US, Ofcom rules in the UK, and consent requirements elsewhere. Make sure you have the right to call the numbers you upload. Nixflex provides the infrastructure; you're responsible for compliance.
 </Warning>
