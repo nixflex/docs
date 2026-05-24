@@ -1,0 +1,64 @@
+---
+title: "Rotate API key"
+description: "POST /v1/keys/rotate"
+api: "POST https://api.nixflex.com/v1/keys/rotate"
+---
+
+Rotates the `key_secret` of your API key. The `key_id` stays the same — only the secret changes. The old secret stops working immediately.
+
+<Note>
+  This is the same model used by Stripe and other major APIs. Your `key_id` acts as a stable account identifier across logs and integrations; only the secret material rotates. Most developers rotate via the dashboard.
+</Note>
+
+## Request
+
+Authenticate with your **current** key. The endpoint returns a new secret paired with the same `key_id`.
+
+```bash
+curl -X POST https://api.nixflex.com/v1/keys/rotate \
+  -H "Authorization: Bearer nxf_a1b2c3...:nxfs_x1y2z3..."
+```
+
+## Body parameters
+
+None. The endpoint identifies the key from the `Authorization` header.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "message": "API key secret rotated. Save your new key_secret - it will not be shown again. Update your applications immediately.",
+  "key_id": "nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+  "key_secret": "nxfs_NEW_SECRET..."
+}
+```
+
+## Important
+
+<Warning>
+  The old `key_secret` stops working **the instant this endpoint returns**. Any application still using the old secret will receive `401 Invalid or missing API key`. Update every deployed app, environment variable, and CI/CD secret before rotating in production.
+</Warning>
+
+<Warning>
+  The new `key_secret` is shown **once**. If you lose it, you must rotate again.
+  - Copy it immediately into your secrets manager
+  - Never commit it to source control
+  - Never include it in client-side JavaScript
+</Warning>
+
+## When to rotate
+
+- A secret was leaked (committed to a public repo, shared in a chat, etc.)
+- Routine security hygiene (every 90 days is a common cadence)
+- An employee with access leaves your team
+
+## What stays the same
+
+Because only the secret changes, these are **not affected** by rotation:
+
+- Existing calls, agents, phone numbers, SMS messages, batch jobs, campaigns
+- Webhook configurations
+- Billing and usage history
+- `key_id` itself (still appears in logs, dashboard, and API responses)
