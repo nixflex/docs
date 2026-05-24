@@ -16,9 +16,8 @@ curl -X POST https://api.nixflex.com/v1/agents \
     "name": "Acme Dental Receptionist",
     "system_prompt": "You are the friendly front-desk assistant at Acme Dental in Croydon...",
     "welcome_message": "Hello, Acme Dental, how can I help?",
-    "voice_id": "Dennis",
-    "language": "en",
-    "response_length": "short",
+    "voice_id": "Ashley",
+    "language": "multi",
     "transfer_number": "+442087601234",
     "webhook_url": "https://api.acmedental.com/nixflex/calls"
   }'
@@ -26,25 +25,57 @@ curl -X POST https://api.nixflex.com/v1/agents \
 
 ## Body parameters
 
+Only `name` is recommended in practice — every other field has a sensible default. You can create a working agent with a one-line payload.
+
+### Core
+
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `name` | string | Yes | — | Display name (max 100 chars) |
-| `system_prompt` | string | Yes | — | Claude's instructions (max ~10k chars) |
-| `welcome_message` | string | No | generic | First line spoken on inbound calls |
-| `voice_id` | string | No | `"Dennis"` | voice |
-| `language` | string | No | `"en"` | Default language code |
-| `response_length` | enum | No | `"medium"` | `short`, `medium`, `long` |
-| `interruption_sensitivity` | enum | No | `"medium"` | `low`, `medium`, `high` |
-| `max_call_duration_seconds` | int | No | `300` | Hard cap on call length |
+| `name` | string | No | `"Untitled Agent"` | Display name (max 100 chars) |
+| `system_prompt` | string | No | friendly assistant | Claude's instructions (max ~10k chars) |
+| `welcome_message` | string | No | `"Hello! How can I help you today?"` | First line spoken on inbound calls |
+| `voice_id` | string | No | `"Ashley"` | Inworld voice. Browse voices in the dashboard |
+| `language` | string | No | `"multi"` | Default language. `multi` auto-detects |
+| `is_active` | bool | No | `true` | Set false to disable without deleting |
+
+### Behaviour
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `temperature` | number | No | `0.3` | Claude temperature, `0`-`1` |
+| `response_length` | enum | No | `"short"` | `short`, `medium`, `long` |
+| `ai_speaks_first` | bool | No | `true` | Agent greets caller immediately |
+| `dynamic_greeting` | bool | No | `false` | AI improvises greeting per call instead of static welcome |
+| `interruption_sensitivity` | int | No | `50` | `0`-`100`. Lower = harder to interrupt |
+| `pickup_delay` | int | No | `10` | Seconds the agent waits after pickup before speaking |
+
+### Call controls
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `max_call_duration_seconds` | int | No | `600` | Hard cap on call length |
 | `silence_hangup_seconds` | int | No | `30` | Hang up if caller silent this long |
-| `record_call` | bool | No | `true` | Save call audio |
-| `webhook_url` | string | No | null | Where to POST post-call data |
-| `transfer_number` | string | No | null | Default destination for `[TRANSFER:]` |
-| `post_call_sms_template` | string | No | null | Auto-SMS after every call |
-| `voicemail_message` | string | No | null | If set, agent leaves this on voicemail |
-| `enable_sms_reply` | bool | No | `true` | Auto-reply to inbound SMS |
-| `extraction_schema` | object | No | null | Custom data to extract post-call |
-| `functions` | array | No | `[]` | Custom function definitions |
+| `record_call` | bool | No | `true` | Save call audio to Supabase Storage |
+| `webhook_url` | string | No | `null` | Where to POST post-call data |
+
+### Functions (tools the agent can call mid-conversation)
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
+| `func_cold_transfer` | bool | No | `false` | Agent can transfer to a human |
+| `func_send_sms` | bool | No | `false` | Agent can send SMS during the call |
+| `transfer_type` | enum | No | `"cold"` | `cold` or `warm` |
+| `transfer_number` | string | No | `null` | Default destination for transfers |
+
+### Other
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `voice_speed` | number | No | `0.85` | `0.5`-`2.0`. Inworld TTS speed |
+| `llm_model` | string | No | `"claude-haiku-4-5"` | LLM used for the conversation |
+| `fallback_message` | string | No | "I am sorry, could you say that again?" | Said when transcription fails |
+| `phone_number` | string | No | `null` | Legacy. Numbers are now managed via `/phone-numbers` |
 
 ## Response
 
@@ -52,27 +83,44 @@ curl -X POST https://api.nixflex.com/v1/agents \
 
 ```json
 {
+  "id": "1083c0db-699e-49ee-aa6c-aab29e2d87cf",
   "agent_id": "agent_125207e452f8714a",
   "api_key_id": "nxf_a1b2c3d4...",
   "name": "Acme Dental Receptionist",
   "system_prompt": "You are the friendly front-desk assistant...",
-  "welcome_message": "Hello, Acme Dental, how can I help?",
-  "voice_id": "Dennis",
-  "language": "en",
+  "welcome_message": "Hello! How can I help you today?",
+  "voice_id": "Ashley",
+  "language": "multi",
+  "temperature": 0.3,
   "response_length": "short",
-  "interruption_sensitivity": "medium",
-  "max_call_duration_seconds": 300,
+  "ai_speaks_first": true,
+  "dynamic_greeting": false,
+  "interruption_sensitivity": 50,
+  "pickup_delay": 10,
+  "max_call_duration_seconds": 600,
   "silence_hangup_seconds": 30,
   "record_call": true,
-  "transfer_number": "+442087601234",
-  "webhook_url": "https://api.acmedental.com/nixflex/calls",
+  "func_end_call": true,
+  "func_cold_transfer": false,
+  "func_send_sms": false,
+  "transfer_type": "cold",
+  "transfer_number": null,
+  "webhook_url": null,
+  "phone_number": null,
+  "voice_speed": 0.85,
+  "llm_model": "claude-haiku-4-5",
+  "fallback_message": "I am sorry, could you say that again?",
   "is_active": true,
-  "created_at": "2026-05-17T03:45:12Z",
-  "updated_at": "2026-05-17T03:45:12Z"
+  "created_at": "2026-05-24T01:48:10Z",
+  "updated_at": "2026-05-24T01:48:10Z"
 }
 ```
 
 Save the `agent_id` — you'll use it for every subsequent operation.
+
+## Next step
+
+Attach a Twilio phone number so the agent can make and receive calls. See [Import phone number](/api-reference/phone-numbers/import).
 
 ## Errors
 
