@@ -1,10 +1,10 @@
----
+﻿---
 title: "Launch SMS campaign"
 description: "POST /v1/sms/campaigns/:id/launch"
 api: "POST https://api.nixflex.com/v1/sms/campaigns/{campaign_id}/launch"
 ---
 
-Launches a scheduled SMS campaign immediately.
+Launches a `draft` or `scheduled` SMS campaign immediately.
 
 ## Request
 
@@ -23,15 +23,20 @@ No request body.
 {
   "campaign_id": "smsc_a1b2c3d4",
   "status": "running",
-  "recipients_count": 100,
-  "queued_count": 100
+  "total_count": 100,
+  "pending_count": 100,
+  "delivered_count": 0,
+  "failed_count": 0
 }
 ```
+
+The campaign transitions to `status: running` and begins sending. Track progress with [Get SMS campaign](/api-reference/sms/campaigns-get).
 
 ## Errors
 
 | Code | Cause |
 |---|---|
-| `campaign_not_found` | ID doesn't exist or isn't yours |
-| `campaign_already_completed` | Already finished |
+| `campaign_not_found` | ID does not exist or is not yours |
+| `campaign_already_running` | Already launched |
+| `campaign_already_done` | Already finished |
 | `campaign_no_recipients` | Empty recipient list |

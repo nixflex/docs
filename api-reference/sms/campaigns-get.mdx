@@ -1,10 +1,10 @@
----
+﻿---
 title: "Get SMS campaign"
 description: "GET /v1/sms/campaigns/:id"
 api: "GET https://api.nixflex.com/v1/sms/campaigns/{campaign_id}"
 ---
 
-Returns full campaign details including per-recipient status and reply threads.
+Returns full campaign details including computed delivery counts and per-recipient status.
 
 ## Request
 
@@ -21,35 +21,65 @@ curl https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
   "name": "March promotion",
   "agent_id": "agent_125207e452f8714a",
   "from_number": "+447446466847",
-  "body": "Hi! 20% off cleanings this month...",
-  "context_prompt": "If they reply YES, offer any weekday...",
-  "status": "completed",
-  "recipients_count": 100,
-  "sent_count": 98,
+  "message_template": "Hi {{first_name}}, 20% off cleanings...",
+  "status": "done",
+  "total_count": 100,
   "delivered_count": 95,
   "failed_count": 3,
-  "replied_count": 24,
+  "pending_count": 2,
+  "source": "dashboard",
+  "scheduled_at": null,
   "created_at": "2026-05-17T03:45:12Z",
-  "completed_at": "2026-05-17T04:05:42Z",
   "recipients": [
     {
-      "phone_number": "+447111000001",
+      "phone": "+447111000001",
+      "variables": { "first_name": "Sarah" },
       "status": "delivered",
-      "sent_at": "2026-05-17T03:45:14Z",
-      "delivered_at": "2026-05-17T03:45:18Z",
-      "replied": true,
-      "reply_text": "YES",
-      "replied_at": "2026-05-17T03:48:12Z",
-      "agent_response": "Great! Tuesday 11am or Wednesday 2pm work for you?"
+      "twilio_sid": "SM1234567890",
+      "rendered_message": "Hi Sarah, 20% off cleanings...",
+      "sent_at": "2026-05-17T03:45:14Z"
+    },
+    {
+      "phone": "+447111000002",
+      "variables": { "first_name": "James" },
+      "status": "failed",
+      "twilio_sid": "SM0987654321",
+      "rendered_message": "Hi James, 20% off cleanings...",
+      "error_message": "Unknown handset",
+      "sent_at": "2026-05-17T03:45:15Z"
     }
   ]
 }
 ```
 
-The `recipients` array is paginated separately if there are many — use `?recipients_limit=50&recipients_offset=0`.
+## How counts are calculated
+
+All counts are computed from per-recipient status — never from cached fields. Same logic in the dashboard and the API.
+
+| Count | Calculation |
+|---|---|
+| `delivered_count` | Recipients with status `delivered` |
+| `failed_count` | Recipients with status `failed`, `undelivered`, or `sent` |
+| `pending_count` | Recipients with status `pending` or `queued` |
+| `total_count` | All recipients |
+
+<Note>
+  Twilio status `sent` means the message was handed to the carrier but never confirmed reaching the handset. Nixflex treats `sent` as a soft failure.
+</Note>
+
+## Per-recipient status values
+
+| Status | Meaning |
+|---|---|
+| `pending` | Just queued by Nixflex |
+| `queued` | Sent to Twilio API |
+| `sent` | Twilio handed to carrier (no delivery confirmation) — counted as failed |
+| `delivered` | Carrier confirmed delivery to handset |
+| `undelivered` | Carrier rejected — counted as failed |
+| `failed` | Twilio itself failed — counted as failed |
 
 ## Errors
 
 | Code | Cause |
 |---|---|
-| `campaign_not_found` | ID doesn't exist or isn't yours |
+| `campaign_not_found` | ID does not exist or is not yours |

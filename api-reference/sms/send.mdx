@@ -1,10 +1,10 @@
----
+﻿---
 title: "Send SMS"
 description: "POST /v1/sms"
 api: "POST https://api.nixflex.com/v1/sms"
 ---
 
-Sends a single SMS via your Twilio number. Useful for one-off messages, status updates, or reminders that don't need a phone call.
+Sends a single SMS via your Twilio number. Useful for one-off messages, status updates, or reminders that do not need a phone call.
 
 ## Request
 
@@ -16,7 +16,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
     "agent_id": "agent_125207e452f8714a",
     "to_number": "+447386172392",
     "from_number": "+447446466847",
-    "body": "Reminder: your appointment is tomorrow at 2pm. Reply YES to confirm."
+    "message": "Reminder: your appointment is tomorrow at 2pm. Reply YES to confirm."
   }'
 ```
 
@@ -24,12 +24,10 @@ curl -X POST https://api.nixflex.com/v1/sms \
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `agent_id` | string | Yes | Agent that this SMS is associated with |
+| `agent_id` | string | Yes | Agent that owns this SMS — its `system_prompt` handles any replies |
 | `to_number` | string | Yes | Recipient in E.164 |
 | `from_number` | string | Yes | Your imported Twilio number |
-| `body` | string | Yes | Message text (max 1600 chars; longer is split) |
-| `context_prompt` | string | No | Custom instruction for the agent if recipient replies |
-| `metadata` | object | No | Echoed in delivery webhook |
+| `message` | string | Yes | Message text (max 1600 chars; longer is split into segments) |
 
 ## Response
 
@@ -45,17 +43,19 @@ curl -X POST https://api.nixflex.com/v1/sms \
 }
 ```
 
-Status updates come asynchronously via Twilio's status callbacks. Final status (`delivered`, `failed`) reflects in the message record within ~30 seconds.
+Status updates come asynchronously via Twilio status callbacks. Final status (`delivered`, `failed`, `undelivered`) reflects in the message record within ~30 seconds.
 
 ## Reply behaviour
 
-If the recipient replies within 24 hours, the agent automatically responds. See [Send SMS concept page](/sms/send-sms) for details on reply windows and context.
+If the recipient replies, the agent automatically answers using its `system_prompt`. There is no separate reply-handling system or context field.
+
+**Best practice:** if recipients might reply to your SMS, include the relevant context (what you sent, what you expect them to ask) in the agent `system_prompt` before sending. See [Send SMS concept page](/sms/send-sms) for details.
 
 ## Errors
 
 | Code | Cause |
 |---|---|
-| `from_number_not_owned` | `from_number` not in your account |
-| `message_too_long` | Body over 1600 chars |
+| `from_number_not_owned` | `from_number` is not in your account |
+| `message_too_long` | Message over 1600 chars |
 | `sms_not_supported_in_region` | US number without A2P 10DLC |
 | `recipient_unsubscribed` | Recipient previously sent STOP |

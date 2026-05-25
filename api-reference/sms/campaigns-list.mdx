@@ -1,10 +1,10 @@
----
+﻿---
 title: "List SMS campaigns"
 description: "GET /v1/sms/campaigns"
 api: "GET https://api.nixflex.com/v1/sms/campaigns"
 ---
 
-Returns all SMS campaigns for your account, newest first.
+Returns all SMS campaigns for your account, newest first. Each campaign includes computed delivery counts.
 
 ## Request
 
@@ -20,7 +20,7 @@ curl https://api.nixflex.com/v1/sms/campaigns \
 | `limit` | int | Default 25, max 100 |
 | `offset` | int | Pagination offset |
 | `agent_id` | string | Filter to one agent |
-| `status` | enum | `scheduled`, `running`, `completed`, `cancelled` |
+| `status` | enum | `draft`, `scheduled`, `running`, `done`, `failed` |
 
 ## Response
 
@@ -31,12 +31,13 @@ curl https://api.nixflex.com/v1/sms/campaigns \
       "campaign_id": "smsc_a1b2c3d4",
       "name": "March promotion",
       "agent_id": "agent_125207e452f8714a",
-      "status": "completed",
-      "recipients_count": 100,
-      "sent_count": 98,
+      "from_number": "+447446466847",
+      "status": "done",
+      "total_count": 100,
       "delivered_count": 95,
       "failed_count": 3,
-      "replied_count": 24,
+      "pending_count": 2,
+      "source": "dashboard",
       "created_at": "2026-05-17T03:45:12Z"
     }
   ],
@@ -45,3 +46,17 @@ curl https://api.nixflex.com/v1/sms/campaigns \
 ```
 
 This is a summary view. Use [Get SMS campaign](/api-reference/sms/campaigns-get) for per-recipient details.
+
+## Campaign status values
+
+| Status | Meaning |
+|---|---|
+| `draft` | Created but not launched |
+| `scheduled` | Will launch at `scheduled_at` |
+| `running` | Currently sending |
+| `done` | All recipients processed |
+| `failed` | All recipients failed at submission |
+
+<Note>
+  Counts are computed live from per-recipient status. Same numbers appear in the dashboard, the list endpoint, and the get-one endpoint.
+</Note>

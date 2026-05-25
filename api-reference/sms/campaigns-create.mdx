@@ -1,10 +1,14 @@
----
+﻿---
 title: "Create SMS campaign"
 description: "POST /v1/sms/campaigns"
 api: "POST https://api.nixflex.com/v1/sms/campaigns"
 ---
 
 Creates an SMS campaign. Optionally launches it immediately.
+
+<Note>
+  Campaigns are one-time broadcasts. Replies are handled by the agent using its `system_prompt` — include any campaign context in the agent's prompt before launching.
+</Note>
 
 ## Request
 
@@ -16,12 +20,11 @@ curl -X POST https://api.nixflex.com/v1/sms/campaigns \
     "agent_id": "agent_125207e452f8714a",
     "from_number": "+447446466847",
     "name": "March promotion",
-    "body": "Hi! 20% off cleanings this month at Acme Dental. Reply YES to book.",
+    "message_template": "Hi {{first_name}}, 20% off cleanings this month at Acme Dental. Reply YES to book.",
     "recipients": [
-      { "phone_number": "+447111000001" },
-      { "phone_number": "+447111000002" }
+      { "phone": "+447111000001", "variables": { "first_name": "Sarah" } },
+      { "phone": "+447111000002", "variables": { "first_name": "James" } }
     ],
-    "context_prompt": "If they reply YES, offer any weekday next week 9am-5pm. If NO or STOP, just thank them.",
     "schedule_type": "now"
   }'
 ```
@@ -30,15 +33,32 @@ curl -X POST https://api.nixflex.com/v1/sms/campaigns \
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `agent_id` | string | Yes | Agent handling replies |
+| `agent_id` | string | Yes | Agent associated with the campaign |
 | `from_number` | string | Yes | Your imported Twilio number |
 | `name` | string | Yes | Display name in dashboard |
-| `body` | string | Yes | Message text sent to every recipient |
-| `recipients` | array | Yes | Up to 10,000 |
-| `context_prompt` | string | No | Reply guidance for the agent |
+| `message_template` | string | Yes | Message text. Supports `{{variable}}` placeholders |
+| `recipients` | array | Yes | Up to 10,000. Each item: `{ phone, variables }` |
 | `schedule_type` | enum | Yes | `now` or `schedule` |
 | `scheduled_at` | ISO date | If `schedule` | When to launch |
-| `reply_window_hours` | int | No | Hours to listen for replies (default 24, max 720) |
+
+### Recipient object
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `phone` | string | Yes | E.164 format, e.g. `+447111000001` |
+| `variables` | object | No | Key-value pairs to fill `{{placeholders}}` in the template |
+
+## Placeholders
+
+Use `{{variable_name}}` in `message_template`. Each recipient's `variables` object fills them.
+
+Template: `Hi {{first_name}}, see you on {{day}}.`
+
+Recipient: `{ "phone": "+44...", "variables": { "first_name": "Sarah", "day": "Tuesday" } }`
+
+Sent SMS: `Hi Sarah, see you on Tuesday.`
+
+Missing variables render as empty strings (no crash).
 
 ## Response
 
@@ -50,7 +70,11 @@ curl -X POST https://api.nixflex.com/v1/sms/campaigns \
   "agent_id": "agent_125207e452f8714a",
   "name": "March promotion",
   "status": "running",
-  "recipients_count": 2,
+  "total_count": 2,
+  "delivered_count": 0,
+  "failed_count": 0,
+  "pending_count": 2,
+  "source": "api",
   "created_at": "2026-05-17T03:45:12Z"
 }
 ```

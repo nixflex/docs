@@ -1,12 +1,28 @@
----
+﻿---
 title: "SMS campaigns"
-description: "Send bulk SMS to many numbers at once"
+description: "Send one-time bulk SMS to many recipients"
 icon: "users"
 ---
 
-SMS campaigns let you send the same message (or templated variations) to many recipients in one API call. Useful for promotions, appointment batches, announcements, and follow-up sequences.
+SMS campaigns send the same message (or templated variations) to many recipients in one API call. Useful for promotions, appointment batches, announcements, and reminders.
 
-## Create a campaign
+<Note>
+  **Campaigns are one-time broadcasts.** They send the message and stop. If a recipient replies, the reply is handled by your agent using its `system_prompt` — not by the campaign itself.
+</Note>
+
+## How replies work
+
+When a recipient replies to a campaign SMS, Twilio routes the message to the agent linked to the sending number. The agent answers using its `system_prompt`.
+
+**This means:** if you want the agent to handle replies intelligently, mention the campaign context in the agent's `system_prompt` *before* you launch.
+
+For example, if the campaign offers 20% off cleanings, add this to the agent system_prompt:
+
+> You are the receptionist at Acme Dental. We are running a March promotion: 20% off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them. If they ask about the promotion, explain it warmly.
+
+Now when someone replies "YES" to the campaign SMS — or even calls in asking about the offer — the agent already knows what to say.
+
+## Create a campaign (API)
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/sms/campaigns \
@@ -16,13 +32,11 @@ curl -X POST https://api.nixflex.com/v1/sms/campaigns \
     "agent_id": "agent_125207e452f8714a",
     "from_number": "+447446466847",
     "name": "March promotion",
-    "body": "Hi! Acme Dental is offering 20% off cleanings this month. Reply YES to book.",
+    "message_template": "Hi {{first_name}}, Acme Dental offering 20% off cleanings this month. Reply YES to book.",
     "recipients": [
-      { "phone_number": "+447111000001" },
-      { "phone_number": "+447111000002" },
-      { "phone_number": "+447111000003" }
+      { "phone": "+447111000001", "variables": { "first_name": "Sarah" } },
+      { "phone": "+447111000002", "variables": { "first_name": "James" } }
     ],
-    "context_prompt": "The campaign is a 20% off cleaning promotion in March. If caller says YES, book them in for any weekday next week 9am-5pm. If NO or STOP, just thank them.",
     "schedule_type": "now"
   }'
 ```
@@ -33,12 +47,43 @@ Response:
 {
   "campaign_id": "smsc_a1b2c3d4",
   "status": "running",
-  "recipients_count": 3,
-  "sent_count": 0
+  "total_count": 2,
+  "delivered_count": 0,
+  "failed_count": 0,
+  "pending_count": 2,
+  "source": "api"
+}
+```
+## Personalization with placeholders
+
+Use `{{variable_name}}` in your `message_template`. Each recipient's `variables` object fills the placeholders.
+
+**Template:**
+**Recipient:**
+
+```json
+{
+  "phone": "+447111000001",
+  "variables": {
+    "first_name": "Sarah",
+    "day": "Tuesday",
+    "time": "2pm"
+  }
 }
 ```
 
-The engine queues all the sends and processes them respecting your Twilio rate limit.
+**Sent SMS:** `Hi Sarah, your appointment is on Tuesday at 2pm.`
+
+If a placeholder has no matching variable, it renders as an empty string (no crash). Same pattern as Twilio, SendGrid, and Mailchimp.
+
+## From the dashboard
+
+In the dashboard, **Outbound → SMS Campaigns → New Campaign**, you can add recipients two ways:
+
+- **Paste numbers:** drop in a list separated by commas, tabs, spaces, or newlines. The form auto-detects phones (E.164 format) and any extra columns become variables.
+- **Upload CSV:** drag-and-drop or browse. The form auto-detects the phone column from headers (`phone`, `number`, `mobile`, `tel`, `telephone`) and treats all other columns as variables.
+
+Either way you get a preview table before sending.
 
 ## Scheduling
 
@@ -47,12 +92,11 @@ Send later instead of now:
 ```json
 {
   "schedule_type": "schedule",
-  "scheduled_at": "2026-05-20T09:00:00Z",
-  ...
+  "scheduled_at": "2026-05-20T09:00:00Z"
 }
 ```
 
-Campaign queues at the scheduled time. You can cancel before then with `DELETE /v1/sms/campaigns/:id`.
+Campaign sits at `status: scheduled` until the time arrives. You can cancel it before then with `DELETE /v1/sms/campaigns/:id`.
 
 ## Tracking delivery
 
@@ -63,41 +107,63 @@ curl https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-Response includes per-recipient delivery status:
+Response:
 
 ```json
 {
   "campaign_id": "smsc_a1b2c3d4",
-  "status": "completed",
-  "recipients_count": 3,
-  "sent_count": 3,
-  "delivered_count": 3,
-  "failed_count": 0,
-  "replied_count": 1,
+  "name": "March promotion",
+  "status": "done",
+  "total_count": 100,
+  "delivered_count": 95,
+  "failed_count": 3,
+  "pending_count": 2,
+  "source": "dashboard",
   "recipients": [
     {
-      "phone_number": "+447111000001",
+      "phone": "+447111000001",
+      "variables": { "first_name": "Sarah" },
       "status": "delivered",
-      "replied": true,
-      "reply_text": "YES",
-      "replied_at": "2026-05-17T03:48:12Z"
+      "twilio_sid": "SM1234567890"
     }
   ]
 }
 ```
+### How counts are calculated
 
-## Handling replies
+Counts come from per-recipient status, not from a cached field. Same logic in the dashboard and the API — they always match.
 
-Replies are handled the same as one-off SMS: within the campaign's reply window (default 24 hours), the agent automatically responds using `context_prompt` for context.
+| Count | Calculation |
+|---|---|
+| `delivered_count` | Recipients with status `delivered` |
+| `failed_count` | Recipients with status `failed`, `undelivered`, or `sent` |
+| `pending_count` | Recipients with status `pending` or `queued` |
+| `total_count` | All recipients |
 
-Each reply triggers the agent to:
+<Note>
+  **Why does `sent` count as failed?** Twilio's `sent` status only means Twilio handed the message off to the carrier — not that it reached the handset. Carrier confirmation comes as `delivered`. We treat anything that did not reach `delivered` as failed, so what you see in the dashboard matches what really happened.
+</Note>
 
-1. Read the campaign's `context_prompt`
-2. Read the agent's `system_prompt`
-3. Read the original campaign message and the recipient's reply
-4. Compose an appropriate response
+## Campaign status
 
-If the reply triggers a booking, custom function, or other action, that runs too. The reply thread is logged as part of the campaign.
+| Status | Meaning |
+|---|---|
+| `draft` | Created but not launched |
+| `scheduled` | Will launch at `scheduled_at` |
+| `running` | Currently sending |
+| `done` | All recipients processed |
+| `failed` | All recipients failed at submission |
+
+## Per-recipient status
+
+| Status | Meaning | Shown in UI as |
+|---|---|---|
+| `pending` | Just queued by Nixflex | Pending |
+| `queued` | Sent to Twilio API | Pending |
+| `sent` | Twilio handed to carrier (no delivery confirmation) | **Failed** |
+| `delivered` | Carrier confirmed delivery to handset | Delivered |
+| `undelivered` | Carrier rejected | Failed |
+| `failed` | Twilio itself failed | Failed |
 
 ## List campaigns
 
@@ -106,42 +172,38 @@ curl https://api.nixflex.com/v1/sms/campaigns \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-Returns all campaigns for your account, newest first.
+Returns all campaigns for your account, newest first. Each one includes computed counts.
 
-## Update or cancel
-
-Before a campaign launches you can edit its `body`, `recipients`, or `scheduled_at`:
+## Cancel a campaign
 
 ```bash
-curl -X PATCH https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
-  -d '{"body": "Updated message text"}'
+curl -X DELETE https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-To cancel:
+Cancels a `scheduled` or `running` campaign. Already-sent messages are not recalled. A `done` campaign cannot be cancelled.
 
-```bash
-curl -X DELETE https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4
-```
+## Source tracking
 
-Cancelling a running campaign stops further sends; already-sent messages are not recalled.
+Every campaign records where it came from in the `source` field: `"dashboard"` or `"api"`. The dashboard shows this as a badge so you can tell at a glance which campaigns came from automation versus manual sends.
 
 ## Rate limiting
 
-Twilio rate-limits SMS at ~1 message per second per number by default. For larger campaigns, the engine paces sends accordingly. A 1,000-recipient campaign takes roughly 20 minutes to send fully.
+Twilio rate-limits SMS at ~1 message per second per number by default. The engine paces sends to respect this. A 1,000-recipient campaign takes roughly 20 minutes to send fully.
 
-Need faster? Request a higher Twilio MPS limit from Twilio support, or add more sending numbers to your account.
+Need faster? Request a higher MPS limit from Twilio support, or add more sending numbers.
 
 ## Compliance
 
 <Warning>
   Bulk SMS has stricter rules than one-off messages.
 
-  - **UK**: Make sure all recipients opted in. Honour STOP keywords. Keep records.
-  - **US**: Requires A2P 10DLC registration. Carriers will block unregistered traffic.
+  - **UK**: All recipients must have opted in. Honour STOP keywords. Keep records of consent.
+  - **US**: Requires A2P 10DLC registration. Unregistered traffic is blocked by carriers.
 
-  Sending without consent risks carrier blocking, fines, and your sending number being marked as spam.
+  Sending without consent risks carrier blocking, fines, and your sending number being flagged as spam.
 </Warning>
 
 ## Costs
 
-Same per-message Twilio billing as one-off SMS. No platform markup. Large campaigns can run into significant costs at scale — budget accordingly.
+Same per-message Twilio billing as one-off SMS. No platform markup. Budget accordingly for large campaigns.
