@@ -1,0 +1,109 @@
+---
+title: "Variables"
+description: "Dynamic placeholders that inject real-time data into your agent prompts"
+icon: "code"
+---
+
+Variables are placeholders like `{{current_date}}` that the engine replaces with real values **once per call**, before sending the prompt to Claude. They let your agent reference dynamic information (date, time, caller, history) without you hardcoding anything.
+
+<Note>
+  Variables are substituted **once at call start**, not per word. They add no latency to the call.
+</Note>
+
+## How it works
+
+Two things happen when an inbound call begins:
+
+1. **The engine builds a "call context" block** with real-time data (date, time, caller phone, timezone, etc.) and prepends it to your system prompt. Claude sees this context automatically — no setup needed.
+2. **If your prompt contains `{{variable}}` placeholders**, the engine substitutes them with values from the same data source. This is optional — useful when you want to phrase something explicitly.
+
+```text
+Your prompt:    "Today is {{current_date}}. We close at 11pm."
+Claude sees:    "Today is Monday, May 25, 2026. We close at 11pm."
+```
+
+Both approaches work. Use placeholders only if explicit phrasing reads better than letting Claude infer from the context block.
+
+## Available variables
+
+### Time & caller (always on)
+
+These are computed every call from the engine clock + your agent's timezone setting. Zero added latency.
+
+| Variable | Example value | Source |
+|---|---|---|
+| `{{current_date}}` | `Monday, May 25, 2026` | Server clock formatted to agent timezone |
+| `{{current_time}}` | `14:32` | 24-hour, agent timezone |
+| `{{current_day_of_week}}` | `Monday` | Agent timezone |
+| `{{tomorrow_date}}` | `Tuesday, May 26, 2026` | Agent timezone |
+| `{{caller_phone}}` | `+447446466847` | Twilio caller ID |
+
+<Tip>
+  Timezones honour DST automatically. Set your agent's timezone in the dashboard toolbar or via `PUT /v1/agents/:id { "timezone": "Europe/London" }`.
+</Tip>
+
+### Smart context (active by default)
+
+| Variable | What it does |
+|---|---|
+| `{{caller_history}}` | Summary of the last 2 calls from this number to this agent |
+
+When a number that has called before dials your agent again, the engine looks up the last 2 calls in parallel with the agent load (overlapping the existing DB wait — adds zero latency). If past calls exist, the engine injects a history block into the prompt along with usage instructions for Claude:
+
+```text
+=== CALLER HISTORY (this number has called you before) ===
+PREVIOUS CALLS FROM THIS NUMBER (most recent first):
+- 2026-05-24 (happy) [resolved]: Booked table for 4 on Friday 7pm. Name on file: John.
+- 2026-05-22 (neutral): Asked about gluten-free menu options.
+
+HOW TO USE THIS HISTORY:
+- Reference past calls only if the caller mentions them OR asks something you can
+  answer from history.
+- Do NOT proactively volunteer "I see you called us X times before".
+- If a name appears in history, you may greet them by name once.
+- Never read the history list aloud — it is for you, not the caller.
+```
+
+This gives Claude enough context to handle returning callers naturally without being intrusive. First-time callers (no past calls) get nothing extra in the prompt — no clutter, no noise.
+
+## When variables fire
+
+| Stage | What happens |
+|---|---|
+| Call starts | Engine loads agent + caller history in parallel |
+| Before greeting | Engine builds final prompt with values substituted and context block prepended |
+| Greeting plays | Claude responds using the merged prompt for the entire call |
+| Call ends | Prompt and context are discarded |
+
+Variables are **read-once**. Their values don't change during the call. If your business hours rotate by minute, don't put them in a variable — put them directly in the prompt.
+
+## What's NOT supported (and why)
+
+We're deliberate about what to add. Each variable is a contract — once shipped, agents depend on it.
+
+| Often-requested | Why we don't have it |
+|---|---|
+| `{{agent_name}}` | You already type the agent's name in your own prompt. A variable just adds indirection. |
+| `{{business_hours}}` | Hours rarely match a single string. Put them in your prompt directly so Claude can reason about edge cases ("closed for lunch", "open on bank holidays"). |
+| `{{caller_name}}` for inbound | Inbound callers are strangers until they identify themselves. After 2 calls, `{{caller_history}}` covers it. |
+| Arbitrary developer-supplied vars per call | Coming later — requires API and webhook changes. |
+
+## Direction support
+
+- **Inbound calls**: full support ✓
+- **Outbound calls**: not yet — variables don't substitute on outbound. See [Outbound calls](/concepts/outbound-calls) for the current capability.
+
+This is on the roadmap.
+
+## Behaviour reference
+
+- If a `{{var}}` has no matching value, the engine leaves it untouched (visible in the prompt as `{{var}}`). Easier to debug than silent removal.
+- Unknown variable names are not errors — they're just passed through.
+- Values are converted to strings. Booleans show as `"true"`/`"false"`.
+- Variables are case-sensitive. `{{Current_date}}` won't match `current_date`.
+
+## See also
+
+- [Agents](/concepts/agents) — writing the system prompt
+- [Inbound calls](/concepts/inbound-calls) — how a call flows through the engine
+- [Post-call analysis](/advanced/post-call-analysis) — how `caller_history` gets its data
