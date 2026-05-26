@@ -1,4 +1,4 @@
-﻿---
+---
 title: "SMS campaigns"
 description: "Send one-time bulk SMS to many recipients"
 icon: "users"
@@ -12,15 +12,15 @@ SMS campaigns send the same message (or templated variations) to many recipients
 
 ## How replies work
 
-When a recipient replies to a campaign SMS, Twilio routes the message to the agent linked to the sending number. The agent answers using its `system_prompt`.
+Replies to a campaign SMS are handled by the agent's `system_prompt` — the same system that handles all inbound SMS. **Mention the campaign context in your agent prompt before launching** so the agent knows what's going on.
 
-**This means:** if you want the agent to handle replies intelligently, mention the campaign context in the agent's `system_prompt` *before* you launch.
+For example:
 
-For example, if the campaign offers 20% off cleanings, add this to the agent system_prompt:
+> You are the receptionist at Acme Dental. We are running a March promotion: 20% off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them.
 
-> You are the receptionist at Acme Dental. We are running a March promotion: 20% off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them. If they ask about the promotion, explain it warmly.
+When someone replies "YES" — or texts asking about the offer — the agent already knows what to say.
 
-Now when someone replies "YES" to the campaign SMS — or even calls in asking about the offer — the agent already knows what to say.
+For the full reply behaviour (caller history, variables, conversation context), see [SMS replies](/sms/sms-replies).
 
 ## Create a campaign (API)
 

@@ -1,0 +1,130 @@
+---
+title: "SMS replies"
+description: "How your agent answers when a customer texts your number"
+icon: "messages"
+---
+
+When a customer texts your business number, the engine routes the message to your agent and the agent replies — using the same `system_prompt` that powers your voice calls. No separate setup, no special "SMS mode". One agent, two channels.
+
+<Note>
+  SMS replies are **automatic for every inbound text**. There's no opt-in window, no campaign linkage required. If a phone number is wired to an agent, that agent answers texts to that number.
+</Note>
+
+## What the agent sees on every reply
+
+Before calling Claude, the engine builds a system prompt with four layers:
+
+<Steps>
+  <Step title="Real-time context">
+    Date, time, day of week, timezone, customer phone, channel — all auto-included.
+    The time is formatted in **your agent's timezone**, not server time.
+  </Step>
+  <Step title="Caller history (if any)">
+    If this phone number has called your agent before, the past 2 call summaries are injected automatically.
+    First-time customers get no history block — clean and short.
+  </Step>
+  <Step title="Your agent's system prompt">
+    Used as-is, with any `{{variables}}` substituted. Same content you wrote for voice.
+  </Step>
+  <Step title="SMS reply rules">
+    Short replies (max ~2 sentences), no emoji, no invented facts, match the customer's language.
+  </Step>
+</Steps>
+
+## Voice and SMS share memory
+
+This is one of the most useful properties of Nixflex: **a customer who called you yesterday can text you today, and the agent remembers them.**
+
+The engine looks up the last 2 voice calls from the customer's number and includes the call summaries plus usage instructions for Claude — the same way it does on inbound voice. Across channels, your AI feels continuous.
+
+Example exchange after a prior call:
+
+> *Customer texts:* "Hey, did I book yet?"
+>
+> *Agent replies:* "Yes — table for 4 on Friday at 7pm. Want me to change the time?"
+
+The customer didn't have to re-introduce themselves. The agent referenced the past call naturally, only because the customer asked something it could answer from history.
+
+<Tip>
+  Caller history is opt-out for the customer in the sense that you control what gets summarised. The summary comes from your existing post-call analysis. See [Post-call analysis](/advanced/post-call-analysis).
+</Tip>
+
+## Variables work the same as voice
+
+Everything in [Variables](/concepts/variables) applies to SMS replies. Use `{{current_date}}`, `{{caller_phone}}`, `{{caller_history}}`, etc. in your agent prompt — the engine substitutes them per message.
+
+```text
+Your prompt:    "It's {{current_day_of_week}}. We open at 9am sharp."
+Customer sees:  "It's Tuesday. We open at 9am sharp."
+```
+
+You can also just write naturally — the engine puts a context block at the top of every prompt, so Claude already knows the date and time without you needing to reference variables explicitly. Variables are for when you want to phrase something precisely.
+
+## Promotions, campaigns, special events
+
+If you're running a promotion (SMS campaign, seasonal offer, anything time-bound), **mention it in your agent's `system_prompt`** so the agent can handle replies intelligently.
+
+```text
+You are the receptionist at Acme Dental.
+
+We are running a March promotion: 20% off cleanings, valid weekdays
+9am-5pm next week. If a customer replies YES, confirm the offer and
+ask which day suits them. If they ask about the offer, explain it warmly.
+```
+
+Now when someone replies to your campaign — or texts asking about the offer — the agent already knows what to say. The agent prompt is the source of truth.
+
+This is also why we don't need a separate "campaign reply window" — the agent is always context-aware as long as you put the context in the prompt.
+
+## Conversation history
+
+The engine loads the **last 10 SMS messages** between this customer and this agent into the prompt as chat history. Claude has full conversational context, so replies feel continuous over time.
+
+If a customer has texted you 50 times over a year, only the most recent 10 are loaded. This keeps prompts small and predictable.
+
+## Channel awareness
+
+The prompt explicitly tells Claude: `Channel: SMS`. This means the AI knows to write for text:
+
+- Shorter sentences than voice
+- No emoji or special characters (carriers can mangle them)
+- No "let me check that for you" pauses
+- Plain text only
+
+You don't need to repeat any of this in your `system_prompt` — it's added automatically by the engine.
+
+## What replies cost
+
+| Cost | Source |
+|---|---|
+| Per-message Twilio fee | Charged directly to your Twilio account (BYO Twilio) |
+| Claude token usage | Charged to your Nixflex usage, same rate as voice |
+
+A typical SMS reply uses ~150–500 input tokens (the prompt) and ~30–80 output tokens. With Claude Haiku 4.5, that's well under a penny per reply.
+
+## When replies don't happen
+
+The engine returns silently (no error to the customer) in these cases:
+
+| Reason | What happened |
+|---|---|
+| Phone number not linked to an agent | The dialled number isn't in `phone_numbers` and has no legacy mapping |
+| Agent has no Twilio credentials | The agent is configured but its `twilio_account_sid` / `twilio_auth_token` are missing |
+| Claude returned an empty response | Rare — usually a transient API issue, no message is sent |
+| Twilio rejected the send | Carrier issue, invalid number format, etc. Logged for review. |
+
+All four show up in your Logs page in the dashboard.
+
+## Customer privacy
+
+Caller history pulls only from calls made by the **same phone number** to **your agent**. It never crosses agents, never crosses developers, never crosses Nixflex tenants. The data lives in your Supabase tenancy.
+
+If a customer asks you to forget them, deleting their rows from `calls` and `sms_messages` removes them from future replies.
+
+## See also
+
+- [Variables](/concepts/variables) — what gets injected into every prompt
+- [SMS campaigns](/sms/sms-campaigns) — bulk one-shot broadcasts
+- [Send SMS](/sms/send-sms) — sending standalone messages via API
+- [Post-call analysis](/advanced/post-call-analysis) — how `caller_history` gets its data
+- [Inbound calls](/concepts/inbound-calls) — voice side of the same agent
