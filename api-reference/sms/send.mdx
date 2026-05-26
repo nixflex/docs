@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Send SMS"
 description: "POST /v1/sms"
 api: "POST https://api.nixflex.com/v1/sms"
@@ -27,7 +27,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
 | `agent_id` | string | Yes | Agent that owns this SMS — its `system_prompt` handles any replies |
 | `to_number` | string | Yes | Recipient in E.164 |
 | `from_number` | string | Yes | Your imported Twilio number |
-| `message` | string | Yes | Message text (max 1600 chars; longer is split into segments) |
+| `message` | string | Yes | Message text. **600 chars recommended** for reliable carrier delivery. Twilio hard cap is 1600. See [SMS length guide](/sms/send-sms#sms-length-and-deliverability). |
 
 ## Response
 

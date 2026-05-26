@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Send SMS"
 description: "Send standalone text messages via the API"
 icon: "paper-plane"
@@ -25,7 +25,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
 | `agent_id` | Yes | The agent this SMS belongs to (determines reply behaviour) |
 | `to_number` | Yes | Recipient in E.164 format |
 | `from_number` | Yes | One of your imported Twilio numbers |
-| `message` | Yes | The message text (max 1600 chars; longer is split into segments) |
+| `message` | Yes | The message text. **600 chars recommended** for reliable delivery. Twilio's hard cap is 1600, but UK carriers often reject longer messages. See [SMS length guide](#sms-length-and-deliverability) below. |
 
 Response:
 
@@ -39,6 +39,30 @@ Response:
 ```
 
 Status updates flow through Twilio's status callbacks. The final status (`delivered`, `failed`, etc.) reflects in the message record within ~30 seconds.
+## SMS length and deliverability
+
+Even though Twilio's API accepts messages up to 1600 characters, real-world delivery is more nuanced. Carriers — especially UK mobile carriers — silently reject long messages without giving an error code.
+
+**Recommended ceiling: 600 characters.** This stays within reliable delivery limits while leaving room for variable expansion in templates.
+
+| Length | Segments | Cost | Reliability |
+|---|---|---|---|
+| 160 chars | 1 | Cheapest | 99%+ delivery |
+| 320 chars | 2 | 2× | 99%+ delivery |
+| 480 chars | 3 | 3× | 95-99% delivery |
+| 600 chars | 4 | 4× | ~95% delivery |
+| 1000+ chars | 7+ | High | Often rejected by UK carriers |
+
+**Each segment costs ~£0.04 to send.** A 600-char message costs ~£0.16 per send, versus £0.04 for 160 chars.
+
+If you need longer content, consider:
+
+- Splitting into multiple SMS
+- Including a link to a webpage
+- Switching to email for that customer
+
+For Post-Call SMS templates configured in the dashboard, the textarea is hard-capped at 600 chars to enforce the safe zone.
+
 ## How replies are handled
 
 When someone replies to your SMS, Twilio routes the inbound message to the agent that owns the `from_number`. The agent answers using its `system_prompt` — the same prompt that drives phone calls.
