@@ -47,14 +47,14 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | `ai_speaks_first` | bool | No | `true` | Agent greets caller immediately |
 | `dynamic_greeting` | bool | No | `false` | AI improvises greeting per call instead of static welcome |
 | `interruption_sensitivity` | int | No | `50` | `0`-`100`. Lower = harder to interrupt |
-| `pickup_delay` | int | No | `10` | Seconds the agent waits after pickup before speaking |
+| `pickup_delay` | int | No | `10` | Seconds the agent waits after pickup before speaking. Range 5–30. |
 
 ### Call controls
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `max_call_duration_seconds` | int | No | `600` | Hard cap on call length |
-| `silence_hangup_seconds` | int | No | `30` | Hang up if caller silent this long |
+| `max_call_duration_seconds` | int | No | `300` | Hard cap on call length. Range 60–1800 (1–30 min). See [End call](/actions/end-call). |
+| `silence_hangup_seconds` | int | No | `10` | Hang up if caller silent this long. Range 5–45. See [End call](/actions/end-call). |
 | `record_call` | bool | No | `true` | Save call audio to Supabase Storage |
 | `webhook_url` | string | No | `null` | Where to POST post-call data |
 
@@ -63,9 +63,10 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
-| `func_cold_transfer` | bool | No | `false` | Agent can transfer to a human |
+| `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, Claude auto-generates from the conversation. | 
+ull | Warm transfer briefing text. If empty, Claude auto-generates from the conversation. |
 | `func_send_sms` | bool | No | `false` | Agent can send SMS during the call |
-| `transfer_type` | enum | No | `"cold"` | `cold` or `warm` |
+| `transfer_type` | enum | No | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls made by this agent. See [Transfer](/actions/transfer). |
 | `transfer_number` | string | No | `null` | Default destination for transfers |
 
 ### Other
@@ -97,11 +98,11 @@ Only `name` is recommended in practice — every other field has a sensible defa
   "dynamic_greeting": false,
   "interruption_sensitivity": 50,
   "pickup_delay": 10,
-  "max_call_duration_seconds": 600,
-  "silence_hangup_seconds": 30,
+  "max_call_duration_seconds": 300,
+  "silence_hangup_seconds": 10,
   "record_call": true,
   "func_end_call": true,
-  "func_cold_transfer": false,
+  "transfer_whisper": null,
   "func_send_sms": false,
   "transfer_type": "cold",
   "transfer_number": null,

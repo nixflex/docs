@@ -1,104 +1,125 @@
----
+﻿---
 title: "Transfer"
 description: "Hand off the caller to a human"
 icon: "shuffle"
 ---
 
-The `[TRANSFER:]` tag forwards the active call to a different phone number. Nixflex supports both **cold** and **warm** transfers.
+The `[TRANSFER:]` tag forwards the active call to a different phone number. Nixflex supports both **cold** and **warm** transfers, controlled per-agent.
 
-## Cold transfer (default)
+## Cold vs warm at a glance
 
-The agent says a short handoff line, then connects the caller directly to the destination. Fast, simple.
+| | Cold transfer | Warm transfer |
+|---|---|---|
+| What the receiver hears first | Their phone rings, they pick up, the caller is there. No warning. | A short whisper from your agent — "A caller is asking about a refund for order 1234." Then the caller joins. |
+| How fast | ~10 seconds | ~15–20 seconds |
+| Whisper voice | N/A | The same voice as your agent |
+| If no answer | Caller reconnects to the AI, which can try another number or take a message | Same |
+| Best for | Simple handoffs, urgent calls | Complex situations, when context matters |
+
+## Configuring transfer type
+
+Transfer type is **set per agent** via the `transfer_type` field on the agent (`cold` or `warm`). It applies to every transfer that agent performs — inbound calls, outbound calls, and batch campaigns all use the same setting.
+
+```json
+{
+  "transfer_type": "warm"
+}
+```
+
+<Note>
+  Each agent has one transfer type. If you need cold for some callers and warm for others, create two agents with the same prompt and voice but different `transfer_type`, then attach them to different phone numbers (or pick the right agent when starting an outbound call).
+</Note>
+
+## How to trigger a transfer
+
+Claude emits the `[TRANSFER:]` tag when the system prompt tells it to. The tag never gets spoken — the engine strips it before audio plays.
 
 ```
 [TRANSFER:+442087601234]
 ```
 
-Flow:
-
-1. Claude says: "Hold on, I'll put you through to our manager now."
-2. Engine closes its audio stream
-3. Twilio dials the destination
-4. When picked up, caller and destination are connected
-5. Nixflex steps out
-
-The destination doesn't hear any context. They pick up a normal call from the caller's number.
-
-## Warm transfer
-
-The agent dials the destination first, **briefs them** in a private voice (the caller can't hear this), then merges everyone into the conversation.
-
-```
-[TRANSFER:+442087601234:warm]
-```
-
-Flow:
-
-1. Claude says: "Let me get the manager on the line for you, one moment."
-2. Engine puts the caller on hold (music or silence)
-3. Engine dials the destination
-4. When the destination picks up, Claude speaks a private briefing — "Hi, I have Sarah on the line. She's asking about a refund for an order placed last Tuesday. Putting her through now."
-5. After the briefing, the caller is merged in and the three-way conversation begins
-6. Engine steps out once everyone is connected
-
-Warm transfers help the human pick up context instantly. Useful for complex handoffs.
-
-## Configuring the destination
-
-Two options for where transfers go:
-
-**Inline in the prompt:**
+You can also list **multiple numbers** in the prompt. Claude will try the first one; if it does not answer, Claude automatically tries the next one without asking the caller for permission.
 
 ```
 ACTIONS
-- For refund requests, transfer to the manager: [TRANSFER:+442087601234]
-- For technical questions, transfer to support: [TRANSFER:+442087601235]
-- For clinical questions, warm transfer to the dentist: [TRANSFER:+442087601236:warm]
+- If the caller asks for a manager: try [TRANSFER:+442087601234] first.
+- If that line does not answer, try the supervisor: [TRANSFER:+442087601299].
+- If neither answers, take a message and end the call.
 ```
 
-**Default transfer number on the agent:**
+This auto-fallback is built into the AI behavior — no extra configuration required.
 
-Set `transfer_number` when creating the agent. Then Claude can use the bare tag:
+## Cold transfer flow
+
+1. Claude says: "Hold on, I'll put you through to our manager now." then emits `[TRANSFER:+44...]`.
+2. The engine waits for the audio to finish, then closes its stream.
+3. The telephony provider dials the destination, 10-second timeout.
+4. **If picked up:** the caller and destination are connected directly. The AI steps out. The call record gets `ended_reason: transferred`.
+5. **If no answer / busy / failed:** the caller reconnects to the AI. Claude is told about the failed attempt and either tries the next number or offers a callback.
+
+## Warm transfer flow
+
+1. Claude says: "Let me get the manager on the line for you, one moment." then emits `[TRANSFER:+44...]`.
+2. The engine puts the caller into a conference room (they hear a brief hold).
+3. The engine calls the destination separately, 15-second timeout.
+4. **When the destination picks up,** they hear a short whisper in your agent's voice — either the static `transfer_whisper` you configured, or an AI-generated 1–2 sentence summary from the conversation.
+5. After the whisper, the destination joins the conference and meets the caller.
+6. **If the destination doesn't answer:** the caller reconnects to the AI. Same fallback behaviour as cold transfer.
+
+## Customizing the warm whisper
+
+By default, Claude auto-generates the whisper from the live conversation. To override with your own briefing, set `transfer_whisper` on the agent:
+
+```json
+{
+  "transfer_type": "warm",
+  "transfer_whisper": "Incoming refund request — please assist."
+}
+```
+
+Leave it `null` (default) for auto-generation. Auto-generation gives the human richer context but adds a couple seconds of latency.
+
+## Telling Claude when to transfer
+
+Be specific in the prompt about transfer triggers and which number maps to which scenario:
 
 ```
-[TRANSFER:default]
+RULES
+- Never give medical advice. If the caller has a clinical question, transfer to the dentist: [TRANSFER:+442087601236].
+- If the caller asks for a manager, transfer: [TRANSFER:+442087601234].
+- If you don't know the answer, transfer rather than guess: [TRANSFER:+442087601234].
 ```
 
-The engine substitutes the agent's `transfer_number` field.
+Claude reads these rules every turn and applies them automatically.
 
-## When to use which
+## When the caller hangs up during transfer
+
+No special handling needed. The call simply ends. The call record reflects what happened:
+
+- Transfer completed and either party hung up → `ended_reason: transferred`
+- Caller hung up while waiting for the destination → `ended_reason: caller_hangup`
+
+## Failure handling — what really happens
+
+Older docs sometimes describe "transfer failed → caller dropped." That is **not** how Nixflex works. On any transfer failure (no answer, busy, invalid number, network error), the caller reconnects to your agent and Claude resumes the conversation. Claude knows the transfer was attempted and can:
+
+- Try another number from the prompt automatically.
+- Apologize and offer a callback.
+- Take a message.
+
+You don't have to script this. Claude handles it conversationally.
+
+## Cold or warm — which to pick
 
 <Columns cols={2}>
   <Card title="Cold transfer" icon="forward-fast">
-    **Use when:** the destination already knows what to expect (a generic support line, a manager who handles all overflow).
+    **Pick when:** the destination already knows what to expect — a generic support line, a manager who handles all overflow, an after-hours line.
 
-    **Faster but less context** for the receiver.
+    **Faster, simpler, no context shared.**
   </Card>
   <Card title="Warm transfer" icon="comments">
-    **Use when:** the receiver needs context (a specialist, a senior staff member, complex situations).
+    **Pick when:** the destination needs context — a specialist, a senior staff member, a high-touch situation.
 
     **Slower but higher-quality handoff.**
   </Card>
 </Columns>
-
-## Failure handling
-
-If the destination doesn't pick up (busy, voicemail, no answer):
-
-- **Cold transfer:** the caller is dropped to voicemail or hangs up
-- **Warm transfer:** the caller stays on the line with Claude, who can say "I couldn't reach them, can I take a message?"
-
-You don't have to script this. Claude handles it naturally.
-
-## Telling Claude when to transfer
-
-Be specific in the prompt about transfer triggers:
-
-```
-RULES
-- Never give medical advice. If the caller has a clinical question, transfer immediately: [TRANSFER:+442087601236:warm]
-- If the caller asks for a manager, transfer: [TRANSFER:+442087601234]
-- If you don't know the answer, transfer rather than guess: [TRANSFER:+442087601234]
-```
-
-Claude reads these rules every turn and applies them automatically.

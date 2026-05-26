@@ -35,14 +35,17 @@ When you `POST /v1/agents`, you can set:
 | `name` | string | `"Untitled Agent"` | Display name in dashboard |
 | `system_prompt` | string | empty | What Claude should do (see below) |
 | `welcome_message` | string | generic | First thing the agent says on inbound calls |
-| `voice_id` | string | `"Dennis"` | voice |
+| `voice_id` | string | `"Ashley"` | voice |
 | `language` | string | `"en"` | Default language code |
 | `response_length` | enum | `"medium"` | `short`, `medium`, or `long` |
 | `interruption_sensitivity` | enum | `"medium"` | `low`, `medium`, `high` |
 | `max_call_duration_seconds` | int | `300` | Hard cap; engine ends call at this |
-| `silence_hangup_seconds` | int | `30` | Hang up if caller silent this long |
+| `silence_hangup_seconds` | int | `10` | Hang up if caller silent this long. Range 5–45. |
+| `pickup_delay` | int | `10` | Seconds to wait after pickup before speaking. Range 5–30. |
 | `record_call` | bool | `true` | Record audio to Supabase bucket |
 | `webhook_url` | string | null | Where to POST post-call data |
+| `transfer_type` | enum | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls. |
+| `transfer_whisper` | string | null | Warm transfer briefing. If empty, AI auto-generates. |
 | `transfer_number` | string | null | Default destination for `[TRANSFER:]` |
 | `post_call_sms_template` | string | null | If set, sends this SMS after call ends |
 | `llm_model` | string | `"default"` | LLM used during calls |

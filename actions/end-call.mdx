@@ -1,10 +1,10 @@
----
+﻿---
 title: "End call"
 description: "Gracefully end the conversation"
 icon: "phone-slash"
 ---
 
-The `[END_CALL]` tag tells the engine to end the call after Claude has finished speaking. The agent says its goodbye line first, then the call is terminated.
+The `[END_CALL]` tag tells the engine to end the call after Claude has finished speaking. The agent says its goodbye line first, then the call is terminated cleanly.
 
 ## Syntax
 
@@ -33,28 +33,42 @@ ACTIONS
 - End the call if the caller is being abusive after one warning: [END_CALL]
 ```
 
-## Behaviour
+## How call ending works
 
-When the engine sees `[END_CALL]`:
+Nixflex uses three layers to make sure every call ends cleanly on the caller's phone. Closing our own audio stream is not enough — we must explicitly tell the telephony provider to terminate the call.
 
-1. The remaining text in Claude's response is spoken to the caller
-2. The engine waits for the TTS audio to finish playing
-3. Twilio hangs up the call
-4. Post-call processing runs (recording saved, summary generated, webhook fired)
+1. **Trigger** — something decides the call should end (`[END_CALL]` tag, silence timeout, max duration reached, etc.).
+2. **Direct telephony hangup** — we call the telephony API to terminate the call leg. The phone disconnects within ~1 second.
+3. **Post-stream safety net** — when our stream closes, the telephony provider asks our engine what to do next. We return a hangup instruction so even if step 2 fails, the call still ends.
 
-The call ends gracefully — no abrupt cutoff mid-word.
+All three layers run in parallel. The caller's phone disconnects, the recording saves, post-call analysis runs, and the webhook fires.
 
 ## Other ways calls end
 
-`[END_CALL]` is the **graceful** option. Calls also end automatically when:
+`[END_CALL]` is the **graceful** option. Calls also end automatically when one of these conditions is met. The exact value is stored on the call record as `ended_reason`.
 
-- **Caller hangs up** — no action needed; the call object is marked `ended_by: caller`
-- **Silence timeout** — caller is silent for `silence_hangup_seconds` (default 30s)
-- **Max duration** — `max_call_duration_seconds` hard cap is hit (default 300s)
-- **Voicemail detected** on outbound calls — engine hangs up immediately
-- **Error** — provider failure; the engine ends safely and logs the cause
+| `ended_reason` | What happened |
+|---|---|
+| `completed` | Claude emitted `[END_CALL]`. Goodbye spoken, call ended. |
+| `caller_hangup` | The caller pressed end on their phone. |
+| `silence_timeout` | The caller stayed silent past `silence_hangup_seconds` (default **10s**, range 5–45s). |
+| `max_duration_reached` | The call exceeded `max_call_duration_seconds` (default **300s**, range 60s–1800s). |
+| `transferred` | The caller was transferred to a human via [`[TRANSFER:]`](/actions/transfer). |
+| `voicemail_detected` | An outbound call hit voicemail. The engine hangs up immediately. |
+| `balance_insufficient` | The developer ran out of credit. Caller hears an apology, call ends. |
 
-The `ended_reason` field on the call record tells you which one fired.
+Use `ended_reason` to filter analytics and identify problem calls.
+
+## Configuration
+
+The two silence/duration thresholds are agent-level fields:
+
+| Field | Default | Range | Notes |
+|---|---|---|---|
+| `silence_hangup_seconds` | `10` | 5–45 | How long the agent waits in silence before ending the call. |
+| `max_call_duration_seconds` | `300` | 60–1800 | Hard cap on call length, whether or not anyone is talking. |
+
+Set them when creating an agent or update them later. See [Create agent](/api-reference/agents/create).
 
 <Tip>
   If you want the agent to confirm the booking back to the caller before ending, write that into the prompt. Claude will speak the confirmation, then emit `[END_CALL]`.
