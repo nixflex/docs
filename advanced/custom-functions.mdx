@@ -4,78 +4,111 @@ description: "Let Claude call your APIs mid-call"
 icon: "wrench"
 ---
 
-Custom functions extend the agent beyond built-in actions. Define a function (name, description, parameters, your URL), and Claude can call it during the conversation — to look up customer records, check inventory, book appointments, anything.
+Custom functions extend the agent beyond built-in actions like SMS and transfer. You define a function in the dashboard (name, description, your URL, what parameters Claude can pass), and Claude can call it during the conversation — to look up customer records, check inventory, book appointments, anything your API can do.
 
 ## How it works
 
 <Steps>
-  <Step title="Define the function on the agent">
-    Tell Nixflex the function's name, what it does, and what parameters it takes.
+  <Step title="Create the function in the dashboard">
+    Open your agent, expand the **Custom Functions** panel, and add a function. You give it a name, a description (Claude reads this every turn), an HTTPS URL, and a parameter schema.
   </Step>
   <Step title="Claude sees it as a tool">
-    During calls, Claude is aware of available functions and decides when to call them.
+    On every conversation turn, Claude is aware of every active function on the agent. Based on the description you wrote, Claude decides when to call it.
   </Step>
   <Step title="Engine calls your URL">
-    When Claude triggers a function, the engine makes an HTTP POST to your webhook with the parameters.
+    When Claude triggers a function, the engine makes an HTTP request to your URL with a JSON body containing the call context, what Claude extracted, and 14 dynamic variables.
   </Step>
-  <Step title="You return data">
-    Your endpoint returns JSON. The engine feeds it back to Claude as context.
+  <Step title="Your endpoint replies with JSON">
+    You return a JSON response. The engine reads the `result` field (if present) and feeds it back to Claude as the tool result.
   </Step>
-  <Step title="Claude responds">
-    Claude uses your data to compose the next reply to the caller.
+  <Step title="Claude responds to the caller">
+    Claude uses the data you returned to compose the next reply, spoken naturally to the caller via TTS.
   </Step>
 </Steps>
 
-## Defining a function
-
-When you create or update an agent, include a `functions` array:
-
-```json
-{
-  "name": "Acme Dental Receptionist",
-  "system_prompt": "...",
-  "functions": [
-    {
-      "name": "check_availability",
-      "description": "Check if a specific date and time has availability for an appointment",
-      "url": "https://api.acmedental.com/nixflex/availability",
-      "method": "POST",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Date in YYYY-MM-DD format"
-          },
-          "time": {
-            "type": "string",
-            "description": "Time in 24-hour HH:MM format"
-          }
-        },
-        "required": ["date", "time"]
-      }
-    }
-  ]
-}
-```
-
 ## What your endpoint receives
 
-When Claude calls the function, your URL gets a POST request:
+Every request from the engine looks like this:
 
 ```json
 {
-  "function_name": "check_availability",
-  "call_id": "CA1234567890",
-  "caller_number": "+447386172392",
-  "parameters": {
+  "name": "check_appointment",
+  "args": {
     "date": "2026-03-08",
     "time": "14:00"
+  },
+  "variables": {
+    "caller_phone": "+447386172392",
+    "business_phone": "+447446466847",
+    "current_date": "Wednesday, May 27, 2026",
+    "current_iso_date": "2026-05-27",
+    "current_time": "14:32",
+    "current_iso_time": "14:32:18",
+    "tomorrow_date": "Thursday, May 28, 2026",
+    "tomorrow_iso_date": "2026-05-28",
+    "current_day_of_week": "Wednesday",
+    "current_timezone": "Europe/London",
+    "call_direction": "inbound",
+    "call_id": "CAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "agent_id": "agent_f2b06c0e0bd877e9",
+    "caller_history": "PREVIOUS CALLS FROM THIS NUMBER..."
   }
 }
 ```
 
-You respond with whatever structured data makes sense:
+Three top-level fields:
+
+| Field | What it is |
+|---|---|
+| `name` | The name of the function being called. |
+| `args` | What Claude extracted from the conversation, matching your parameter schema. |
+| `variables` | All 14 dynamic variables. Sent on **every** request automatically — you do not need to ask for them. |
+
+The only header you receive is `User-Agent: Nixflex-VoiceEngine/1.0`. There is no signature header yet (see [Authentication](#authentication) below).
+
+## The 14 dynamic variables
+
+These are always present in `variables` on every request. They cover everything the engine knows about the call.
+
+| Variable | Description | Example |
+|---|---|---|
+| `caller_phone` | Caller phone in E.164 format | `+447386172392` |
+| `business_phone` | The number the caller dialed | `+447446466847` |
+| `current_date` | Today, human-readable (agent timezone) | `Wednesday, May 27, 2026` |
+| `current_iso_date` | Today, ISO format | `2026-05-27` |
+| `current_time` | Now, 24h `HH:MM` | `14:32` |
+| `current_iso_time` | Now, ISO time format | `14:32:18` |
+| `tomorrow_date` | Tomorrow, human-readable | `Thursday, May 28, 2026` |
+| `tomorrow_iso_date` | Tomorrow, ISO format | `2026-05-28` |
+| `current_day_of_week` | Day name | `Wednesday` |
+| `current_timezone` | Agent timezone setting | `Europe/London` |
+| `call_direction` | `inbound` or `outbound` | `inbound` |
+| `call_id` | The Twilio call SID | `CAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
+| `agent_id` | The agent's ID | `agent_f2b06c0e0bd877e9` |
+| `caller_history` | Summaries of past calls from this number (empty for first-time callers) | `PREVIOUS CALLS FROM THIS NUMBER...` |
+
+<Note>
+  There is no `caller_name` variable. Speech-to-text often mishears names. If a name matters to your flow, instruct the agent in its system prompt to ask the caller to spell it and confirm it back before calling the function.
+</Note>
+
+## What to send back
+
+Your endpoint should respond with JSON. Two valid shapes:
+
+**Recommended — wrap the data in a `result` field:**
+
+```json
+{
+  "result": {
+    "available": true,
+    "alternatives": ["14:30", "15:00", "15:30"]
+  }
+}
+```
+
+The engine extracts `result` and feeds just that to Claude. Cleaner context, faster Claude responses.
+
+**Also accepted — return the data at the top level:**
 
 ```json
 {
@@ -84,9 +117,113 @@ You respond with whatever structured data makes sense:
 }
 ```
 
-The engine feeds your response to Claude, which composes the next reply:
+If there's no `result` field, the engine stringifies the whole body and feeds it to Claude.
 
-> "Yes, Tuesday the 8th at 2pm is free — would you like me to book that for you?"
+### Status codes
+
+| Code | Behaviour |
+|---|---|
+| `200` | Success. Body is parsed and passed to Claude. |
+| `4xx` / `5xx` | Treated as a function error. Claude is told the function failed and can apologise or transfer naturally. |
+| No response within timeout | Treated as a function error. Default timeout is 5 seconds. |
+
+Errors never crash the call — Claude always handles them gracefully.
+
+## Writing a good description
+
+This is the most important field on the whole function. Claude reads your description on **every** conversation turn to decide whether to call the function. A vague description means Claude either never fires it, or fires it at the wrong time.
+
+**Bad:**
+
+```
+Helps the AI know when to call this function
+```
+
+Claude has no idea when this applies. The function effectively doesn't exist.
+
+**Good:**
+
+```
+Check the status of a customer's order. Use when the caller asks about delivery, order status, where their order is, or anything about a previously placed order.
+```
+
+Claude now knows exactly when to fire. Will trigger reliably whenever the conversation matches.
+
+<Tip>
+  Write the description as instructions to Claude, not as a label for humans. Always include the words "Use when..." followed by the conversational cues that should trigger it.
+</Tip>
+
+## URL and header variable substitution
+
+Even though all 14 variables are sent in the request body automatically, sometimes you need them in the URL itself (REST APIs) or in a header (authentication). Use `{{variable_name}}` syntax in the URL or Headers fields.
+
+### URL substitution
+
+```
+https://api.example.com/customers/{{caller_phone}}/orders
+```
+
+Becomes:
+
+```
+https://api.example.com/customers/+447386172392/orders
+```
+
+### Header substitution
+
+Headers also support substitution, useful for passing call context through to upstream services that expect it in headers.
+
+```
+X-Call-Id: {{call_id}}
+X-Caller-Phone: {{caller_phone}}
+```
+
+### When to use which
+
+| Your API style | Where data goes | Use |
+|---|---|---|
+| REST resource (`GET /customers/{id}`) | URL path | `{{variable}}` in URL |
+| REST query (`GET /search?phone=x`) | URL query string | `{{variable}}` in URL |
+| JSON POST endpoint | Request body | Read from `req.body.variables` |
+
+Most modern APIs use the third pattern, so most developers leave the URL static and just read variables from the body. URL substitution is for REST-style and GET endpoints.
+
+<Note>
+  Substitution **only** works in URL and Headers. It does not substitute in the description, name, or parameter schema fields.
+</Note>
+
+## Authentication
+
+Custom function endpoints are public by default — the engine identifies itself with `User-Agent: Nixflex-VoiceEngine/1.0` but does not yet sign requests.
+
+For now, the recommended pattern is a **bearer token in the Headers field**:
+
+```
+Authorization: Bearer your-shared-secret-here
+```
+
+Add it once in the Headers field on the function, and the engine sends it on every request. Verify it on your side before processing.
+
+<Tip>
+  Use a long random shared secret (32+ characters). Treat it like a password — anyone with it can call your function URL pretending to be Nixflex.
+</Tip>
+
+<Note>
+  Request signing (HMAC with rotating secrets) is on the roadmap. When it lands, the engine will send an `X-Nixflex-Signature` header you can verify with a per-agent secret. Until then, use bearer tokens in Headers.
+</Note>
+
+## Mentioning functions in the prompt
+
+You can let Claude discover when to use functions purely from the descriptions, but adding an **Actions** section to the system prompt makes triggering more reliable:
+
+```
+ACTIONS
+- Before promising any appointment time, check availability first using the check_availability function.
+- Once the caller confirms a time, create the booking using the create_booking function.
+- For order status questions, look up the order using the get_order function.
+```
+
+This gives Claude an extra hint about ordering and conditions on top of each function's description.
 
 ## Common use cases
 
@@ -100,8 +237,8 @@ The engine feeds your response to Claude, which composes the next reply:
   <Card title="Booking creation" icon="calendar-plus">
     Create the booking in your system once confirmed.
   </Card>
-  <Card title="Inventory / stock checks" icon="box">
-    Verify a product is available before quoting.
+  <Card title="Inventory checks" icon="box">
+    Verify a product is in stock before quoting.
   </Card>
   <Card title="Order status" icon="truck">
     "Where's my order?" — look it up and reply naturally.
@@ -111,47 +248,38 @@ The engine feeds your response to Claude, which composes the next reply:
   </Card>
 </CardGroup>
 
-## Timing constraints
+## Limits and constraints
 
-Your endpoint must respond within **3 seconds**. Anything slower and the caller experiences awkward silence.
-
-If your endpoint times out or errors:
-
-- The engine tells Claude "function failed"
-- Claude handles it gracefully ("I'm having trouble reaching the booking system, let me transfer you")
-- The error is logged on the call record
-
-<Tip>
-  For slow operations (sending an email, processing a refund), accept the function call and return immediately with `{ "queued": true }`. Do the actual work in the background. Don't block the call.
-</Tip>
-
-## Authentication
-
-Your endpoint should verify requests come from Nixflex. Each request includes a signature header:
-
-```
-X-Nixflex-Signature: t=1715900000,v1=abc123...
-```
-
-Verify it with your webhook secret (set in the dashboard under your agent's webhook config). See [Webhooks](/advanced/webhooks) for the verification algorithm.
-
-## Mentioning functions in the prompt
-
-Tell Claude when to use each function:
-
-```
-ACTIONS
-- Before promising any appointment time, check availability first: use the check_availability function.
-- Once the caller confirms a time, create the booking: use the create_booking function.
-- For order status questions, look up the order: use the get_order function.
-```
-
-Claude will call the functions in the right order based on conversation flow.
+| Limit | Value | Why |
+|---|---|---|
+| Functions per agent | 10 | Keeps Claude's tool list focused. Too many functions and Claude gets confused about which to call. |
+| URL scheme | HTTPS only | Plain HTTP is rejected for security. |
+| Default timeout | 5 seconds | After this, the function is treated as failed. Override per-function if your API is slow. |
+| Response size | 100 KB max | Larger responses are rejected. Big payloads also bloat Claude's context. |
+| Tool rounds per turn | 3 | Stops Claude from looping on the same function indefinitely. |
+| Function name format | snake_case, max 64 chars | Matches Claude's tool name requirements. |
 
 ## Limitations
 
-- Functions run on **each turn** as needed; there's no streaming partial results back to Claude
-- The engine doesn't retry failed functions — your endpoint should be idempotent
-- The total context window is finite; large function responses are truncated
+- Functions are triggered by Claude during conversation — you cannot trigger them externally.
+- The engine does not retry failed functions automatically. Make your endpoint idempotent if Claude might call it twice.
+- Function calls happen **per conversation turn**. There is no streaming partial results back to Claude.
+- The tool-aware Claude path is slightly slower than the no-functions path because it waits for the full Claude response (including tool calls) before speaking.
 
-For more standardised integrations (Stripe, Salesforce, etc.), MCP server support is on the roadmap.
+## Testing your function
+
+The dashboard has a **Test Webhook** button on every function. It sends a request to your URL with:
+
+- Fake `caller_phone` (`+44XXXXXXXXXX`)
+- Fake `business_phone` (`+44XXXXXXXXXX`)
+- Fake `call_id` (`test_<timestamp>`)
+- Real date/time variables (from your agent's timezone setting)
+- Args you type into the **Sample Args** field
+
+Use it to confirm your endpoint is reachable, returns the right shape, and responds within the timeout. The actual production call will use real caller numbers and real `call_id`.
+
+<Tip>
+  The test panel is reachability-focused. To test a complete real-world flow with a real caller number, just make a real call to your agent.
+</Tip>
+
+For more standardised integrations (Stripe, Salesforce, Google Calendar etc.), MCP server support is on the roadmap.
