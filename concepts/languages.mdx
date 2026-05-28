@@ -1,93 +1,96 @@
 ---
 title: "Languages"
-description: "Multi-language voice agents with auto-detection"
+description: "Multi-language voice agents with automatic switching"
 icon: "globe"
 ---
 
-Nixflex supports voice agents in 15+ languages. The engine uses a hybrid STT routing strategy and matches the caller's language automatically.
+Nixflex agents speak 15+ languages. Each agent runs in one of two modes: locked to a single language, or multilingual.
 
-## How language is decided
+## The two modes
 
-The agent's `language` field is the **default** — what the agent speaks in if the caller's language can't be inferred.
+Set the agent's `language` field to control behaviour:
 
-In practice, language is selected as follows:
+| `language` value | Behaviour |
+|---|---|
+| A language code (`en`, `ar`, `fr`, `es`, `de`, ...) | **Locked.** The agent replies only in that language, no matter what the caller speaks. |
+| `multi` (default) | **Multilingual.** The agent starts in one language and can switch if the caller asks. |
+
+## Locked single language
+
+When `language` is a specific code, the agent is hard-locked to it. Even if the caller speaks another language, the agent keeps replying in the set language. The greeting is automatically delivered in that language too.
+
+Use this when your business operates in one language only and the agent must never drift.
+
+## Multilingual mode
+
+When `language` is `multi`, the agent follows these rules:
 
 <Steps>
-  <Step title="Caller wins">
-    If the caller speaks a language clearly, the agent matches them — even if `language` is set to something else.
+  <Step title="Starts in the prompt's language">
+    The agent's starting language is detected from your system prompt. Write the prompt in Arabic and the agent starts in Arabic; write it in English and it starts in English.
   </Step>
-  <Step title="Country prefix hint">
-    For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to the speech engine for Arabic-first transcription.
+  <Step title="Matches the caller on first message">
+    If the caller's first message is in a different language, the agent switches to it and locks it.
   </Step>
-  <Step title="Multilingual STT">
-    For all other regions, the speech engine's multilingual model handles 6 major languages (EN, ES, FR, DE, IT, PT) with auto-detection.
+  <Step title="Switches only on a clear request">
+    Mid-call, the agent stays in the locked language. A single foreign word is treated as a borrowed word. A full foreign sentence prompts the agent to ask whether to continue in that language before switching.
   </Step>
-  <Step title="Agent default">
-    If detection is ambiguous, the agent's configured `language` is used.
+  <Step title="Never mixes languages">
+    The agent never blends two languages or adds bracketed translations.
   </Step>
 </Steps>
 
-## Supported languages
+## Which language does it start in?
 
-### Voice (TTS)
-
-15 languages via the voice engine:
-
-| Language | Code | Notes |
-|---|---|---|
-| English (US/UK/AU) | `en` | Multiple voice options |
-| Arabic | `ar` | Modern Standard Arabic |
-| Spanish | `es` | |
-| French | `fr` | |
-| German | `de` | |
-| Italian | `it` | |
-| Portuguese | `pt` | |
-| Dutch | `nl` | |
-| Polish | `pl` | |
-| Russian | `ru` | |
-| Hindi | `hi` | |
-| Korean | `ko` | |
-| Japanese | `ja` | |
-| Chinese | `zh` | Mandarin |
-| Turkish | `tr` | |
-
-### Speech recognition (STT)
-
-- **the speech engine multilingual** — 6 languages with real-time auto-detection (EN, ES, FR, DE, IT, PT)
-- **the speech engine** — used for GCC region numbers; full Arabic support, 36+ other languages
-
-The engine picks the right STT provider at call start based on the destination number.
-
-## Locking the language
-
-By default the agent matches the caller. To force a specific language regardless of what the caller speaks, add this line to your system prompt:
-
-```
-Always respond in English, even if the caller speaks another language.
-```
-
-Claude will honour the explicit instruction.
+For multilingual agents, the starting language comes from your **system prompt**, not the caller. The engine reads the start of your prompt and detects its language by script (Arabic, Hebrew, Chinese, Japanese, Korean, Hindi, Cyrillic) or by common keywords (French, Spanish, German, Italian, Portuguese, Dutch, Polish). If nothing matches, it defaults to English.
 
 <Tip>
-  Locking is useful when your business operates in one language only and you don't want the agent to attempt translations it might get wrong.
+  To make a multilingual agent start in a specific language, write the opening of your system prompt in that language.
 </Tip>
+
+For outbound calls there is no preset greeting â€” the agent generates its opener live from the call purpose, so the opening language follows your prompt and purpose.
+
+## Caller language detection
+
+Speech recognition listens multilingually, so the agent can always hear what the caller says â€” even a locked single-language agent hears other languages, it just will not reply in them.
+
+For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to Arabic-first transcription. All other regions use a multilingual model covering the major European languages with auto-detection.
+
+## Supported languages (voice)
+
+| Language | Code |
+|---|---|
+| English (US/UK/AU) | `en` |
+| Arabic | `ar` |
+| Spanish | `es` |
+| French | `fr` |
+| German | `de` |
+| Italian | `it` |
+| Portuguese | `pt` |
+| Dutch | `nl` |
+| Polish | `pl` |
+| Russian | `ru` |
+| Hindi | `hi` |
+| Korean | `ko` |
+| Japanese | `ja` |
+| Chinese (Mandarin) | `zh` |
+| Turkish | `tr` |
 
 ## Backchannels and fillers
 
-The engine speaks small filler words while listening — "mm-hmm", "I see", "right" — to make the call feel natural. These match the caller's language automatically across all 15 supported languages.
+The agent speaks small filler words while listening â€” "mm-hmm", "I see", "right" â€” to make the call feel natural. These match the caller's language automatically.
 
 ## Numbers and pronunciation
 
-Prices, phone numbers, dates, and addresses are normalised before being sent to the TTS. The agent says "twenty-five pounds" rather than spelling "two-five-pound-sign". This works across languages without configuration.
+Prices, phone numbers, dates, and addresses are normalised before speech, so the agent says "twenty-five pounds" rather than spelling it out. This works across languages without configuration.
 
-For brand or technical pronunciations the agent gets wrong, you can override them in the system prompt:
+For brand or technical pronunciations, override them in the system prompt:
 
 ```
-Pronunciation: pronounce "Nixflex" as "NIKS-flex". Say "the AI provider" as "an-THROP-ik".
+Pronunciation: pronounce "Nixflex" as "NIKS-flex".
 ```
 
-## What's not supported yet
+## Not supported yet
 
 - Voice cloning per language (planned)
-- Per-call language switching mid-conversation (the call locks to one language at start)
-- Languages outside the 15 TTS list above
+- Languages outside the 15 listed above
