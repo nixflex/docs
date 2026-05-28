@@ -1,0 +1,117 @@
+---
+title: "Data retention"
+description: "How long Nixflex keeps your call data — and what stays on your own Twilio account"
+icon: "shield-check"
+---
+
+Nixflex automatically deletes call data 90 days after the call ends. Account data (your agents, phone numbers, API keys) stays until you delete it manually.
+
+## What gets deleted after 90 days
+
+A scheduled job (`cleanup-old-call-data`) runs every day at **3 AM UTC** and deletes records older than 90 days from the following tables:
+
+<CardGroup cols={2}>
+  <Card title="Calls" icon="phone">
+    Call records, transcripts, summaries, sentiment, extracted data, call duration, recording URL pointers.
+  </Card>
+
+  <Card title="SMS messages" icon="message">
+    Inbound and outbound SMS sent through your agents.
+  </Card>
+
+  <Card title="Webhook deliveries" icon="webhook">
+    Logs of every webhook payload Nixflex sent to your endpoints.
+  </Card>
+
+  <Card title="Batch calls" icon="phone-volume">
+    Batch call campaigns and their recipients.
+  </Card>
+
+  <Card title="SMS campaigns" icon="messages">
+    SMS broadcast campaigns and recipient lists.
+  </Card>
+</CardGroup>
+
+## What stays forever (until you delete it)
+
+<CardGroup cols={2}>
+  <Card title="Your account" icon="user">
+    Login email, name, account creation date.
+  </Card>
+
+  <Card title="Agents" icon="robot">
+    System prompts, voice configuration, all agent settings.
+  </Card>
+
+  <Card title="Phone numbers" icon="phone-arrow-up-right">
+    Numbers you've imported with their Twilio credentials.
+  </Card>
+
+  <Card title="API keys" icon="key">
+    Keys you've created for programmatic access.
+  </Card>
+</CardGroup>
+
+## Audio recordings
+
+This is important to understand:
+
+<Note>
+  **Nixflex does not permanently store your call audio.** When a call ends, Nixflex saves a temporary copy of the recording on your behalf. The actual audio file lives on **your own Twilio account** — under whatever retention policy you've configured there.
+</Note>
+
+When the 90-day cleanup deletes the `calls` row, the `recording_url` pointer goes with it. The audio file on your Twilio remains under your control — Nixflex never had the master copy.
+
+To configure recording retention on Twilio:
+- Log into your Twilio Console
+- Navigate to **Voice → Settings → General**
+- Set your **Recording Retention** policy
+
+## Where the data is stored
+
+All Nixflex data lives in **EU/UK Supabase** (Ireland region). This means:
+
+- **GDPR compliant by default** — data never leaves the EU
+- **UK data residency** for UK businesses
+- **Encrypted at rest** (AES-256) and in transit (TLS 1.3)
+
+## Manual deletion before 90 days
+
+If you need to delete data before the 90-day automatic cleanup runs:
+
+<CardGroup cols={2}>
+  <Card title="Delete a single call" href="/api-reference/calls/delete">
+    Use the API to delete a specific call record.
+  </Card>
+
+  <Card title="Delete a phone number" href="/api-reference/phone-numbers/delete">
+    Removes the number and clears its Twilio webhook.
+  </Card>
+
+  <Card title="Delete an agent" href="/api-reference/agents/delete">
+    Removes the agent and all its configuration.
+  </Card>
+
+  <Card title="Delete an SMS campaign" href="/api-reference/sms/delete-campaign">
+    Removes the campaign and its recipient list.
+  </Card>
+</CardGroup>
+
+## GDPR data subject requests
+
+If one of your end-users requests their data be deleted under GDPR Article 17 (Right to Erasure):
+
+1. Identify all calls and SMS messages from that user's phone number using the API
+2. Delete those records using the endpoints above
+3. Delete the corresponding recordings on your Twilio account
+4. The 90-day cleanup acts as a safety net — even if you miss a record, it auto-deletes
+
+For account-level deletion requests, email [support@nixflex.com](mailto:support@nixflex.com) — we'll delete your entire account and all associated data within 30 days.
+
+## Roadmap
+
+<Card title="Coming soon" icon="hourglass">
+  - Configurable retention windows (30 / 60 / 90 days per agent)
+  - Per-agent PII redaction in transcripts
+  - Automated recording deletion on Twilio via API
+</Card>
