@@ -4,99 +4,56 @@ description: "Stop wasting outbound calls on answering machines"
 icon: "voicemail"
 ---
 
-When you make an outbound call, you don't want the agent to leave a long monologue on a voicemail. Nixflex detects voicemail systems automatically and ends the call early — saving you money and avoiding awkward messages.
+When you make an outbound call, you don't want your agent delivering its opener to an answering machine. Nixflex detects voicemail automatically and ends the call cleanly, marking it as `voicemail_detected`.
 
-## How detection works
+There are two layers of detection. They work independently and complement each other.
 
-Two layers run in parallel from the moment the outbound call connects:
+## Layer 1 — AI detection (always on)
+
+The first thing the other party says is checked by the AI: voicemail greeting, or real person?
 
 <Steps>
-  <Step title="Layer 1 — Twilio AMD">
-    Twilio's Answering Machine Detection listens to the first few seconds. It distinguishes a human "Hello?" from a long automated voicemail greeting based on speech patterns and timing.
+  <Step title="AI evaluates the opening">
+    If it sounds like a voicemail (mentions leaving a message, a beep or tone, "you have reached", "not available", and similar — in any language), the AI ends the call silently.
   </Step>
-  <Step title="Layer 2 — AI pattern matching">
-    The engine runs the live transcript against a library of 36+ voicemail phrases in English, French, Spanish, German, and Arabic — "please leave a message", "you have reached", "is not available right now", etc.
-  </Step>
-  <Step title="Either layer can fire">
-    Whichever detector identifies voicemail first wins. The call is marked `voicemail_detected: true` and the engine hangs up immediately.
+  <Step title="Real person">
+    If a real person answered, the agent delivers its normal outbound opener.
   </Step>
 </Steps>
 
-Detection usually completes within 2-4 seconds of pickup.
+- **Always on** — no setup, runs on every outbound call.
+- **Free** — no extra charge.
+- **Any language.**
+- **Speed:** around 8–9 seconds — it waits for the full greeting before deciding.
+- A transcript of the greeting is saved to the call record.
 
-## Default behaviour
+## Layer 2 — Carrier AMD (optional)
 
-When voicemail is detected:
+AMD (Answering Machine Detection) is a faster, carrier-level check that runs on your own telephony account. It listens to the audio directly and reports human or machine — often within ~3 seconds, before the greeting finishes.
 
-1. Engine immediately ends the call
-2. The agent does **not** leave a message
-3. The call record gets `voicemail_detected: true` and `ended_reason: voicemail`
-4. Webhook fires with `event: call.ended` (so you can react in your own system)
+- **Off by default.** Enable it per agent with the **Voicemail detection** toggle in **Call Settings**.
+- **Speed:** around 3 seconds.
+- **Cost:** roughly $0.0075 per answered call, billed on your telephony account.
+- **Best for:** US and Canada.
+- When AMD ends the call, it happens before the AI is involved, so the call has **no transcript, sentiment, or summary**. This is expected.
 
-You're not charged for the few seconds it took to detect.
+## Comparison
 
-## Leaving a voicemail message
+| | AI detection | Carrier AMD |
+|---|---|---|
+| Default | Always on | Off (toggle) |
+| Speed | ~8–9 sec | ~3 sec |
+| Cost | Free | ~$0.0075 / answered call |
+| Languages | Any | Best in US / CA |
+| Transcript saved | Yes | No |
+| Ended reason | `voicemail_detected` | `voicemail_detected` |
 
-If you do want to leave a recorded message when voicemail is detected, configure a `voicemail_message` on the agent:
+We recommend leaving AI detection on as your free safety net, and enabling AMD only for agents calling US/CA numbers where the extra speed is worth the small per-call cost.
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "voicemail_message": "Hi, this is Acme Dental calling about your appointment tomorrow at 2pm. Please call us back on 020 8760 1234 to confirm. Thanks."
-  }'
-```
+## What happens on detection
 
-When voicemail is detected, the engine waits for the beep (by listening for ~1 second of silence after the greeting), then speaks the configured message, then hangs up.
+Either layer ends the call the same way:
 
-If `voicemail_message` is empty, the engine just hangs up.
-
-## Per-call override
-
-Override the voicemail behaviour on a single outbound call:
-
-```json
-{
-  "agent_id": "agent_xxx",
-  "to_number": "+447386172392",
-  "from_number": "+447446466847",
-  "voicemail_message": "Custom one-off message for this specific call.",
-  "voicemail_action": "leave_message"
-}
-```
-
-`voicemail_action` can be:
-
-- `hangup` — default; end call immediately on voicemail
-- `leave_message` — speak the message then hang up
-- `ignore` — pretend voicemail wasn't detected, let the agent talk (rarely useful)
-
-## Reliability
-
-Voicemail detection isn't 100% perfect — no system is. Real-world reliability:
-
-| Outcome | Frequency |
-|---|---|
-| Correctly detects voicemail | ~94% |
-| Misses voicemail (agent talks to machine) | ~3% |
-| False positive (hangs up on human) | ~3% |
-
-To reduce false positives that hang up on real people, the engine waits for the AMD result before the agent speaks. The downside is a slight 1–2 second pause at the start of outbound calls.
-
-## Inbound calls
-
-Voicemail detection runs on inbound calls too, though it's rarely needed. The most common case is when an external system forwards calls to your Twilio number and the forwarding lands on a voicemail. The engine catches it and ends cleanly.
-
-## IVR detection (separate)
-
-If an outbound call reaches an IVR ("press 1 for sales..."), that's different from voicemail. By default the engine treats IVRs as "not voicemail" and the agent will start talking — which usually fails.
-
-To detect IVRs and hang up automatically:
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
-  -d '{"hangup_on_ivr": true}'
-```
-
-For dialling through IVRs (pressing digits to reach a human), see [DTMF support](/advanced/dtmf) — coming soon.
+1. The call ends immediately — the agent does **not** leave a message.
+2. The call record gets `ended_reason: voicemail_detected`.
+3. Your webhook fires so you can react in your own system.
