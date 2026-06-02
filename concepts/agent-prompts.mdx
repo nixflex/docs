@@ -1,0 +1,109 @@
+---
+title: "Writing a good agent prompt"
+description: "How to write a system prompt your agent will follow reliably"
+icon: "pen-to-square"
+---
+
+The system prompt defines your agent's behaviour, logic, and communication style. A clear prompt leads to consistent, predictable calls across both inbound and outbound agents.
+
+## The golden rule
+
+The prompt must explicitly define the behaviour you expect. If something is not written, do not expect it to happen consistently. Write every important step clearly, especially multi-step flows.
+
+**Less reliable**
+
+> If the caller can't make it, transfer them.
+
+**Reliable**
+
+> If the caller cannot attend, first ask whether they would like to reschedule or be transferred to reception. Only transfer after they confirm.
+
+## You're in control
+
+Your prompt gives you full control over how the agent behaves — its tone, its decisions, how it handles each situation, and when it uses actions. If you want it to do something a specific way, write it in the prompt and the agent will follow your instructions.
+
+## Keep it focused
+
+For best performance, keep prompts structured, clear, and concise.
+
+- Recommended range: **800–1500 tokens**
+- Keep prompts under **~2000 tokens**
+
+Long or repetitive prompts reduce clarity and can lead to inconsistent behaviour. You can use an LLM or internal tool to turn raw user input into a clean, structured prompt before saving it.
+
+<Tip>
+  You don't need to write rules for interruptions, silence, or language switching — the platform handles those automatically. Focus your prompt on your business logic.
+</Tip>
+
+## Actions
+
+Actions are triggered by tags in the agent's reply:
+
+- `[SEND_SMS: message]`
+- `[TRANSFER: number]`
+- `[END_CALL]`
+
+Your prompt decides **when** an action should happen. The platform handles execution. See [Actions](/actions/overview).
+
+## Define behaviour, not assumptions
+
+Always define how the agent should behave in key situations:
+
+- The caller agrees, declines, or changes their mind
+- Requests to speak to a human
+- Asks for information not in the prompt
+- Confusion or missing details
+- Frustration or urgency
+- Off-topic conversation
+
+Write it explicitly. Do not assume.
+
+## Communication style
+
+Define tone and response style simply.
+
+> Friendly, concise, and professional.
+
+Avoid long descriptions of tone rules. Minimal and consistent works best.
+
+## Inbound vs outbound
+
+<Tabs>
+  <Tab title="Inbound">
+    Inbound agents handle incoming calls. Your prompt should define:
+
+    - Greeting behaviour
+    - Common caller intents
+    - How to respond to each intent
+    - Escalation or transfer rules
+  </Tab>
+  <Tab title="Outbound">
+    Outbound agents initiate calls. Your prompt must define:
+
+    - A clear call purpose
+    - The opening line (who is calling and why)
+    - The expected outcome of the call
+    - When and how the call should end
+  </Tab>
+</Tabs>
+
+<Warning>
+  Do not reuse inbound prompts for outbound agents. Inbound agents respond to the caller; outbound agents lead the conversation with a clear purpose.
+</Warning>
+
+## Checklist before going live
+
+- [ ] Agent role is clearly defined
+- [ ] Call purpose or intent is clearly defined
+- [ ] Key scenarios are covered (yes, no, escalation, confusion)
+- [ ] Multi-step flows are explicitly written
+- [ ] SMS / transfer / end-call rules are included where needed
+- [ ] Inbound or outbound behaviour is correctly set
+- [ ] Call ending conditions are clearly defined
+- [ ] Prompt is focused and concise
+
+## Related
+
+- [Agents](/concepts/agents)
+- [Actions](/actions/overview)
+- [Variables](/concepts/variables)
