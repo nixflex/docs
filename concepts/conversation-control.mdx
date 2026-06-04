@@ -1,0 +1,111 @@
+---
+title: "Controlling the conversation"
+description: "Guide your agent through any scenario with simple rules - no flow builder needed"
+---
+
+Most voice platforms make you build a visual flow chart - dragging boxes and drawing arrows for every possible turn in a call. Nixflex does not work that way, and you do not need it to.
+
+You control the entire conversation by writing **scenario rules** in plain English inside your prompt. The agent reads them and follows them. This gives you the same control a flow builder offers, with none of the setup.
+
+## The pattern: "if this, do that"
+
+Every scenario rule follows one simple shape:
+
+> **If** the caller does or says something, **then** respond or act in a specific way.
+
+A few examples:
+
+> If the caller asks about prices, tell them a check-up is 50 pounds and a cleaning is 70 pounds.
+
+> If the caller asks to speak to a person, transfer them to reception.
+
+> If you do not know the answer, say you will have someone call them back. Never make up information.
+
+Each rule is one line. Stack as many as you need, and you have described the whole call - without a single diagram.
+
+## A full example
+
+Here is a complete scenario block for a dental clinic agent. Drop a section like this into your prompt and the agent will handle the call exactly as written:
+
+~~~text
+RULES & SCENARIOS:
+- If the caller wants to book an appointment, collect their full name and
+  preferred day, then use the booking function to reserve the slot.
+- If the caller asks about prices, tell them a check-up is 50 pounds and a
+  cleaning is 70 pounds.
+- If the caller wants to cancel or reschedule, take their full name and the
+  appointment day, then offer to have reception call them back.
+- If the caller asks to speak to a human, or sounds upset, transfer to reception.
+- If the caller asks something not covered here, say you will pass the message
+  on and have someone call them back. Never invent an answer.
+- Before ending any call, confirm any booked day and time back to the caller.
+~~~
+
+That block is a complete conversation flow - written as sentences instead of boxes.
+
+## Multi-step flows
+
+For anything with several steps, write the steps in order. The agent moves through them naturally:
+
+> When booking an appointment:
+> 1. Ask for the caller's full name.
+> 2. Ask which day they would prefer.
+> 3. Repeat the day back to confirm it is correct.
+> 4. Use the booking function to reserve the slot.
+> 5. Tell the caller the appointment is confirmed.
+
+The agent will not skip a step or jump ahead, because you have written the order explicitly.
+
+## Vague rules vs reliable rules
+
+The agent can only follow what you actually write. Be specific.
+
+**Vague (less reliable)**
+
+> Handle cancellations.
+
+**Specific (reliable)**
+
+> If the caller wants to cancel, take their full name and the appointment day,
+> confirm the details back to them, then offer to have reception call to rebook.
+
+If a behaviour matters, spell it out. If it is not written, do not expect it to happen the same way every time.
+
+## Combine rules with actions and functions
+
+Scenario rules become powerful when they trigger your [actions](/actions/overview) and [custom functions](/advanced/custom-functions):
+
+> If the caller confirms the booking, send them a text with the details:
+> [SEND_SMS: Your appointment is confirmed for the date and time we agreed.]
+
+> If the caller asks whether a slot is free, use the availability function to
+> check before answering.
+
+The rule decides *when*; the action or function does the work.
+
+<Tip>
+  You do not need to write rules for interruptions, silence, voicemail, or
+  language switching - the platform handles those for you. Spend your rules on
+  business logic: what to say, what to ask, and what to do.
+</Tip>
+
+## Make your most important rules reliable
+
+The agent follows clear rules almost every time. For the rules you cannot afford to get wrong - a required disclaimer, a "never do X" boundary - give them the best chance to stick:
+
+- State them **explicitly** and keep them **near the top** of your prompt.
+- Keep each critical rule **short and direct** - one instruction, not a paragraph.
+- **Test the scenario** on a real call before going live.
+
+<Warning>
+  A written rule guides the agent; it is not a hard technical lock. For
+  must-never and must-always rules, keep them simple, place them early, and
+  always test them before launch.
+</Warning>
+
+## Related
+
+* [Writing a good agent prompt](/concepts/agent-prompts)
+* [Claude actions overview](/actions/overview)
+* [Custom functions](/advanced/custom-functions)
+* [Variables](/concepts/variables)
