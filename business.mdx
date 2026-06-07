@@ -1,0 +1,96 @@
+---
+title: "For businesses"
+description: "Set up an AI agent to answer your calls — no code required"
+icon: "building"
+---
+
+Nixflex works the same whether you write code or not. Developers use our API; everyone else uses the dashboard. This guide is the no-code path: create an account, connect your phone number, and your AI agent starts answering calls.
+
+## What you'll need
+- A free [Nixflex account](https://dashboard.nixflex.com/login)
+- A [Twilio account](https://www.twilio.com/) with one phone number — the number your customers call
+- About five minutes
+
+<Note>
+Nixflex uses a **bring-your-own-Twilio** model. Your number lives in your own Twilio account, so you stay in full control and Twilio bills your call charges directly. Nixflex never takes over or resells your number.
+</Note>
+
+## Step 1 — Create your account
+Open [dashboard.nixflex.com](https://dashboard.nixflex.com/login) and sign up. New accounts include **$10 of free credit**, so you can test everything before paying anything.
+
+## Step 2 — Create your agent
+An **agent** is your AI receptionist — the voice that answers the phone. You give it a personality and instructions in plain English, and it follows them on every call.
+
+<Steps>
+  <Step title="Open the Agents page">
+    In the dashboard, go to **Agents** and create a new agent.
+  </Step>
+  <Step title="Write what it should say and do">
+    Describe your business and how the agent should behave, for example:
+
+    > You are the receptionist for Bella's Hair Studio. Greet callers warmly, answer questions about opening hours (Tue–Sat, 9am–6pm), and take bookings by collecting the caller's name and preferred day. If you don't know something, offer to take a message.
+
+    Set a **welcome message** too — the first thing callers hear, e.g. "Hello, Bella's Hair Studio, how can I help?"
+  </Step>
+  <Step title="Pick a voice and language (optional)">
+    Every agent uses the **Ashley** voice and **auto-detect** language by default, understanding and replying in 15+ languages including English, Arabic, French, Spanish and German. Change either at any time.
+  </Step>
+</Steps>
+
+<Tip>
+Keep instructions short and clear: what to do, the facts about your business to use, and what to do when unsure. You can edit the prompt any time — changes apply to the next call.
+</Tip>
+
+## Step 3 — Connect your phone number
+This is the important part. You connect a Twilio number you already own, and Nixflex wires it up automatically.
+
+<Steps>
+  <Step title="Get your Twilio details">
+    Sign in to the [Twilio Console](https://console.twilio.com). On the main dashboard you'll find your **Account SID** and **Auth Token** — copy both. You'll also need the **phone number** in full international format, e.g. +447446466847.
+  </Step>
+  <Step title="Import the number in Nixflex">
+    In the dashboard, go to **Phone Numbers** and import a number. Paste your **Twilio Account SID**, **Auth Token**, and the **phone number**, then choose the **agent** that should answer it.
+  </Step>
+  <Step title="Done — Nixflex configures the rest">
+    Nixflex points your Twilio number at the engine automatically. You don't need to change any settings inside Twilio.
+  </Step>
+</Steps>
+
+<Note>
+Each number is answered by **one agent**. To switch a number to a different agent later, remove it and import it again with the new agent selected.
+</Note>
+
+## Step 4 — Receive your first call
+Call your number from any phone. Your agent picks up, plays your welcome message, listens, answers naturally, handles interruptions, and hangs up when the conversation is done.
+
+That's it — you now have a working AI agent answering your calls.
+
+## Everything else works for you too
+The rest of these docs use developer examples (API requests), but **every feature is the same for you** — you just turn it on in the dashboard instead of calling an API. Don't skip a section because it shows code; the capability is yours either way.
+
+A few you'll likely want:
+
+<CardGroup cols={2}>
+  <Card title="Voicemail detection" icon="voicemail" href="/advanced/voicemail-detection">
+    The agent detects answering machines and hangs up instead of talking to voicemail.
+  </Card>
+  <Card title="Call transfers" icon="right-left" href="/actions/transfer">
+    Hand a caller to a real person when they need one.
+  </Card>
+  <Card title="SMS" icon="message" href="/sms/send-sms">
+    Send a text during or after a call — confirmations, links, summaries.
+  </Card>
+  <Card title="Post-call summaries" icon="file-lines" href="/advanced/post-call-analysis">
+    Every call comes with a written summary, caller sentiment, and key details pulled out automatically.
+  </Card>
+  <Card title="Languages" icon="language" href="/concepts/languages">
+    One agent handles 15+ languages and switches automatically to the caller's.
+  </Card>
+  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
+    Have your agent call customers — reminders, follow-ups, confirmations.
+  </Card>
+</CardGroup>
+
+<Info>
+The only real difference between the business and developer paths is *how* you set things up: developers send API requests, you use the dashboard. The AI, voices, languages, and every feature are exactly the same underneath.
+</Info>
