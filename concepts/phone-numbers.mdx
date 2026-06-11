@@ -84,7 +84,7 @@ When a call or SMS arrives, the engine appends the number's `custom_prompt` as a
 This applies to both **inbound calls** and **inbound SMS replies**, so a reseller's end-customer answers consistently across voice and text.
 
 <Note>
-  Today `custom_prompt` is set directly in the database (Supabase table editor or SQL) on the `phone_numbers` row. A dedicated API field is on the roadmap. Outbound calls use the per-call `prompt` instead (see [Create outbound call](/api-reference/calls/create-outbound)).
+  Set `custom_prompt` in the body when [importing a number](/api-reference/phone-numbers/import), or update it anytime with `PATCH /v1/phone-numbers/:phoneNumber` and body `{ "custom_prompt": "..." }` (send `null` or an empty string to clear it - the number then falls back to the agent prompt alone). Maximum 8000 characters. Outbound calls use the per-call `prompt` instead (see [Create outbound call](/api-reference/calls/create-outbound)).
 </Note>
 
 ## Listing numbers
