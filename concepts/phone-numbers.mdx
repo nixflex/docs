@@ -65,12 +65,27 @@ agent_ringback_dental (one prompt, one personality)
   └── +442011110004 → ... 200 more
 ```
 
-The agent prompt doesn't change per clinic. Per-customer context comes from:
+Each number can carry its own `custom_prompt` (a business profile - see below), so the same agent template answers as a different business per number. On top of that, per-customer context also comes from:
 
 - Which phone number was dialled (engine looks up the row)
 - Any past call history for the caller's number (auto-fetched into Claude's prompt)
 
 This pattern is how Ringback runs 200 dental clinics on one agent template.
+
+## Per-number prompt (business profile)
+
+Each `phone_numbers` row can hold a `custom_prompt` - a business profile for that specific number. It layers **on top of** the agent's prompt:
+
+- **Agent prompt** = the shared template (how to behave - e.g. "a friendly receptionist"). Set by you, the developer.
+- **Per-number prompt** = the specific business identity (name, address, hours, services) for that number. Different per end-customer.
+
+When a call or SMS arrives, the engine appends the number's `custom_prompt` as a **BUSINESS PROFILE** section. If it conflicts with the general agent prompt, the number's details win. If a number has no `custom_prompt`, the agent prompt is used alone - so direct single-business agents are unaffected.
+
+This applies to both **inbound calls** and **inbound SMS replies**, so a reseller's end-customer answers consistently across voice and text.
+
+<Note>
+  Today `custom_prompt` is set directly in the database (Supabase table editor or SQL) on the `phone_numbers` row. A dedicated API field is on the roadmap. Outbound calls use the per-call `prompt` instead (see [Create outbound call](/api-reference/calls/create-outbound)).
+</Note>
 
 ## Listing numbers
 
