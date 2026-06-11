@@ -26,6 +26,9 @@ Before calling Claude, the engine builds a system prompt with four layers:
   <Step title="Your agent's system prompt">
     Used as-is, with any `{{variables}}` substituted. Same content you wrote for voice.
   </Step>
+  <Step title="Per-number business profile (if set)">
+    If the dialled number has a `custom_prompt` on its `phone_numbers` row, it is added as a **BUSINESS PROFILE** section - the specific business identity for that number (name, address, hours), overriding any conflicting general details in the agent prompt. Numbers without one fall back to the agent prompt alone. See [Phone numbers](/concepts/phone-numbers).
+  </Step>
   <Step title="SMS reply rules">
     Short replies (max ~2 sentences), no emoji, no invented facts, match the customer's language.
   </Step>
