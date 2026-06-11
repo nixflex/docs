@@ -19,6 +19,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   -d '{
     "agent_id": "agent_125207e452f8714a",
     "to_number": "+447386172392",
+    "prompt": "You are Sarah from Bright Smile Dental. Call to remind {patient_name} about their appointment on {appointment_time} and confirm they can still attend.",
     "dynamic_vars": {
       "patient_name": "Sarah",
       "appointment_time": "Tuesday at 2pm"
@@ -31,6 +32,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `agent_id` | string | Yes | Agent that will handle this call |
+| `prompt` | string | Yes | The call purpose - what the agent should say and why it is calling. Sent fresh per call, stored nowhere. Separate from the agent's own prompt. |
 | `to_number` | string | Yes | Recipient in E.164 format (`+44...`) |
 | `dynamic_vars` | object | No | Key-value pairs injected into the agent's prompt |
 | `campaign_id` | string | No | Link this call to a batch campaign |
@@ -64,7 +66,7 @@ The response returns immediately. Twilio dials within ~5 seconds. The actual cal
 
 The engine validates in this order:
 
-1. `agent_id` and `to_number` are present
+1. `agent_id`, `to_number`, and `prompt` are present
 2. `to_number` is E.164 format (e.g. `+447386172392`, not `07386172392`)
 3. Agent belongs to your API key
 4. Agent has a phone number assigned (via the phone_numbers table)
@@ -76,7 +78,7 @@ If any check fails, you get a 400 with the specific `code`.
 
 | Code | HTTP | Cause |
 |---|---|---|
-| `missing_field` | 400 | `agent_id` or `to_number` missing |
+| `missing_field` | 400 | `agent_id`, `to_number`, or `prompt` missing |
 | `invalid_phone_format` | 400 | `to_number` not E.164 |
 | `agent_missing_phone_number` | 400 | Agent has no phone number assigned. Import one via [Phone numbers](/api-reference/phone-numbers/import) |
 | `agent_missing_twilio_credentials` | 400 | Phone number has no Twilio credentials stored |
