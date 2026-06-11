@@ -1,0 +1,57 @@
+---
+title: "Update phone number"
+description: "PATCH /v1/phone-numbers/:phoneNumber"
+api: "PATCH https://api.nixflex.com/v1/phone-numbers/{phone_number}"
+---
+Updates the `custom_prompt` (business profile) on a number you have already imported. The profile is layered on top of the agent prompt as a **BUSINESS PROFILE** section on inbound calls and SMS replies - see [Phone numbers](/concepts/phone-numbers#per-number-prompt-business-profile).
+## Request
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "custom_prompt": "Business: Smile Dental Croydon. Address: 12 High St. Open Mon-Fri 9am-5pm. Check-up costs 45 pounds."
+  }'
+```
+URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B447446466847`.
+## Body parameters
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `custom_prompt` | string or null | Yes | The business profile for this number. Maximum 8000 characters. Send `null` or an empty string to clear it - the number then falls back to the agent prompt alone. |
+## Response
+`200 OK`:
+```json
+{
+  "phone_number": {
+    "phone_number": "+447446466847",
+    "agent_id": "agent_125207e452f8714a",
+    "custom_prompt": "Business: Smile Dental Croydon. Address: 12 High St. Open Mon-Fri 9am-5pm. Check-up costs 45 pounds."
+  }
+}
+```
+Takes effect on the very next call or text - no deploy, no re-import.
+## Errors
+| Code | HTTP | Cause |
+|---|---|---|
+| `missing_field` | 400 | `custom_prompt` not present in the body (send `null` to clear, not an empty body) |
+| `custom_prompt_too_long` | 400 | Over 8000 characters |
+| `number_not_found` | 404 | Number doesn't exist OR belongs to a different account |
+## Use case: reseller end-customer onboarding
+One agent template, many end-customers - each number carries its own business identity:
+```javascript
+// Customer edits their business details in YOUR app -> you sync to Nixflex
+await fetch(
+  `https://api.nixflex.com/v1/phone-numbers/${clinicNumber}`,
+  {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${NIXFLEX_KEY_ID}:${NIXFLEX_KEY_SECRET}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      custom_prompt: `Business: ${clinic.name}. Address: ${clinic.address}. Open ${clinic.hours}. ${clinic.services}`
+    })
+  }
+);
+```
+The AI answers with the new details on the next call. This is how a 200-location rollout stays one agent + one PATCH per location.
