@@ -4,7 +4,7 @@ description: "Receive call data in your own systems"
 icon: "webhook"
 ---
 
-Configure a webhook URL on an agent and Nixflex will POST the full call data to your server about 60 seconds after every call ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make.
+Configure a webhook URL on an agent and Nixflex will POST a clean, flat JSON payload to your server about 60 seconds after every call ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make.
 
 ## Setting a webhook
 
@@ -21,40 +21,34 @@ Every call this agent handles — inbound, outbound, or batch — will POST to t
 
 ## Payload structure
 
-The body has two top-level keys: `event` and `call`. The `call` object contains the complete call record.
+The body is a **flat JSON object** — every field is at the top level (no nested `call` wrapper). Only a curated, whitelisted set of fields is sent; internal data (your system prompt, API key id, database ids) is never included.
 
 ```json
 {
   "event": "call.completed",
-  "call": {
-    "id": "b46b5f3e-84ee-452e-8eb4-fa47a89cbffa",
-    "call_id": "CA1b5c0bfad4b56635b773938f16db2db7",
-    "agent_id": "agent_f2b06c0e0bd877e9",
-    "from_number": "+447386172392",
-    "to_number": "+447446466847",
-    "call_status": "completed",
-    "call_type": "inbound",
-    "call_direction": "inbound",
-    "start_timestamp": 1779937166296,
-    "end_timestamp": 1779937236410,
-    "duration_ms": 70114,
-    "recording_duration_s": 64,
-    "transcript": "Agent: Hello! How can I help?\nCaller: Hi, my name is Amir...",
-    "recording_url": "https://storage.nixflex.com/recordings/CA1b5c....mp3",
-    "ended_reason": "silence_timeout",
-    "call_summary": "Amir called inquiring about the business and requested a callback.",
-    "caller_sentiment": "neutral",
-    "call_successful": true,
-    "extracted_data": {
-      "caller_name": "Amir",
-      "wants_callback": true
-    },
-    "created_at": "2026-05-28T02:59:26.324836+00:00",
-    "api_key_id": "nxf_xxx",
-    "voicemail_detected": false,
-    "campaign_id": null,
-    "system_prompt_used": "You are Sarah, a friendly barista..."
-  }
+  "call_id": "CA1b5c0bfad4b56635b773938f16db2db7",
+  "agent_id": "agent_f2b06c0e0bd877e9",
+  "direction": "inbound",
+  "from": "+447386172392",
+  "to": "+447446466847",
+  "status": "completed",
+  "ended_reason": "silence_timeout",
+  "started_at": "2026-05-28T02:59:26.296Z",
+  "ended_at": "2026-05-28T03:00:36.410Z",
+  "duration_seconds": 70,
+  "transcript": "Agent: Hello! How can I help?\nCaller: Hi, my name is Amir...",
+  "summary": "Amir called inquiring about the business and requested a callback.",
+  "sentiment": "neutral",
+  "successful": true,
+  "extracted": {
+    "caller_name": "Amir",
+    "wants_callback": true
+  },
+  "recording_url": "https://storage.nixflex.com/recordings/CA1b5c....mp3",
+  "recording_duration_seconds": 64,
+  "voicemail_detected": false,
+  "campaign_id": null,
+  "avg_latency_ms": 901
 }
 ```
 
@@ -62,17 +56,27 @@ The body has two top-level keys: `event` and `call`. The `call` object contains 
 
 | Field | Type | Notes |
 |---|---|---|
+| `event` | string | `call.completed` for finished calls. The dashboard Test button sends `webhook.test`. |
 | `call_id` | string | Twilio call SID. Use this as your idempotency key. |
-| `call_type` / `call_direction` | string | `inbound` or `outbound` |
-| `start_timestamp` / `end_timestamp` | number | Unix epoch in **milliseconds** |
-| `duration_ms` | number | Full connection time in milliseconds (ring/connect to hang-up). Used for billing. |
-| `recording_duration_s` | number | Length of the actual recorded conversation in seconds. Use this to show callers/end-users the real talk time. Populated once the recording is ready (the webhook's ~60s delay ensures it is present). |
+| `agent_id` | string | The agent that handled the call. |
+| `direction` | string | `inbound` or `outbound`. |
+| `from` / `to` | string | Caller's number / number dialled. |
+| `status` | string | Final call status, e.g. `completed`. |
+| `ended_reason` | string | Why the call ended, e.g. `caller_hangup`, `silence_timeout`. |
+| `started_at` / `ended_at` | string | ISO 8601 timestamps (UTC). |
+| `duration_seconds` | number | Full connection time in seconds (ring/connect to hang-up). Used for billing. |
 | `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. |
+| `summary`, `sentiment`, `successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
+| `extracted` | object / null | Your custom extraction fields. `null` if none configured. |
 | `recording_url` | string | Public MP3 link. Populated by the 60s delay (see below). |
-| `call_summary`, `caller_sentiment`, `call_successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
-| `extracted_data` | object | Your custom extraction fields. Empty `{}` if none configured. |
+| `recording_duration_seconds` | number | Length of the recorded conversation in seconds. Use this to show end-users the real talk time. |
+| `voicemail_detected` | boolean | Outbound only — whether the call reached voicemail. |
 | `campaign_id` | string / null | Set if the call was part of a batch campaign. |
-| `system_prompt_used` | string | The raw agent prompt used for this call. |
+| `avg_latency_ms` | number | Average agent response latency for the call, in milliseconds. |
+
+<Warning>
+  The payload contains caller data — the caller's phone number (`from`), the full `transcript`, and any `extracted` fields can include personal information. Store and process it in line with your own privacy policy and applicable law.
+</Warning>
 
 ## Event types
 
@@ -155,7 +159,7 @@ The same call may arrive twice if a retry succeeds after the original was actual
 
 ## Connecting to Zapier / Make
 
-Both platforms support generic webhook triggers. Point them at the URL Zapier/Make gives you, and every call becomes a trigger. From there, send data to Google Sheets, HubSpot, Salesforce, GoHighLevel, Slack, Notion, Airtable, email, or anything else those platforms support.
+Both platforms support generic webhook triggers. Point them at the URL Zapier/Make gives you, and every call becomes a trigger. Because the payload is flat, fields map cleanly — you'll see `Summary`, `Transcript`, `Sentiment`, `Duration Seconds`, etc. directly, with no `Call Call ...` prefixes. From there, send data to Google Sheets, HubSpot, Salesforce, GoHighLevel, Slack, Notion, Airtable, email, or anything else those platforms support.
 
 ## Testing your webhook
 
