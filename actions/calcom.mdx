@@ -1,0 +1,50 @@
+---
+title: "Cal.com Booking"
+description: "Let the agent check availability, book, reschedule, and cancel appointments live during a call"
+icon: "calendar"
+---
+When Cal.com is connected, the agent can manage appointments on your calendar in real time — checking free slots, booking, finding, rescheduling, and cancelling — all while the caller is on the phone. The agent only ever offers times that are actually free, and texts an SMS confirmation whenever a booking changes.
+## Setup
+Connect Cal.com in the dashboard under **Integrations → Cal.com → Configure**. You need three things from your Cal.com account (**Settings → Developer → API keys**):
+- **API key** — your `cal_live_...` key
+- **Username** — your Cal.com username (the part in your booking link)
+- **Event slug** — the event type to book, e.g. `30min`
+Set the calendar **timezone** (e.g. `Europe/London`) and toggle it on. That's it — the agent picks up the booking tools automatically.
+## What the agent can do
+Five booking tools are added to the agent automatically once Cal.com is on. You do not write any prompt for them — the agent uses them when the caller asks.
+| Tool | What it does |
+| --- | --- |
+| Check availability | Finds free slots over a 10-day window from the date the caller asks for |
+| Book appointment | Books a slot, collecting and confirming the caller's name and email |
+| Find booking | Looks up the caller's existing appointment(s) by email |
+| Reschedule | Moves an existing booking to a new time |
+| Cancel | Cancels an existing booking |
+## Example
+> *Caller:* "Can I book a check-up for Monday morning?"
+>
+> *Agent:* "We have nine o'clock or half past nine on Monday. Which works best?"
+>
+> *Caller:* "Nine o'clock."
+>
+> *Agent:* "Lovely. Can I take your name please?" ... "And your email?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
+## Timezone
+Appointments are booked in the **calendar's timezone** — the one you set during setup — not the caller's. When a caller says "nine o'clock", the agent books 9:00 in your business's local time. This is correct for a clinic or office callers physically visit, and works for any region with daylight saving handled automatically.
+<Note>
+  Set the correct timezone for each calendar. UK businesses use `Europe/London`. Set the matching timezone for other regions.
+</Note>
+## SMS confirmation
+The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
+## Per-number calendar
+If you run multiple businesses or locations on one agent, give each phone number its own calendar. A number's own calendar always overrides the agent's default; numbers without one fall back to the agent's calendar.
+    PUT https://api.nixflex.com/v1/integrations/calcom/number/{phone}
+    {
+      "api_key": "cal_live_xxx",
+      "username": "your-username",
+      "event_slug": "30min",
+      "default_timezone": "Europe/London"
+    }
+Use `GET` to read a number's calendar (the API key is never returned — it shows `api_key_set: true`) and `DELETE` to remove it.
+## Tips
+- The agent confirms the caller's name and email one at a time, reading each back before booking.
+- If the name or email is wrong after booking, the agent cancels and rebooks with the corrected details.
+- Your Cal.com API key is stored securely and is never read back through the API.
