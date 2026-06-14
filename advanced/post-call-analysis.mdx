@@ -17,7 +17,7 @@ Every call record has these fields populated automatically:
 | `call_successful` | boolean | Did the caller get what they needed? |
 | `extracted_data` | object | Your custom fields (see below). Empty `{}` if none configured. |
 
-These arrive in the webhook payload and on `GET /v1/calls/:id`.
+These are the field names on the call record returned by [`GET /v1/calls/:id`](/api-reference/calls/get) and [`GET /v1/calls`](/api-reference/calls/list). In the [webhook payload](/advanced/webhooks) the same data is delivered under flat, renamed keys: `summary`, `sentiment`, `successful`, and `extracted`.
 
 ## Custom data extraction
 
@@ -86,6 +86,10 @@ The result lands in `extracted_data`:
   }
 }
 ```
+
+<Note>
+  On the API, your custom fields are keyed under `extracted_data`. In the [webhook payload](/advanced/webhooks) the same fields arrive under `extracted`.
+</Note>
 
 ## When analysis runs
 
