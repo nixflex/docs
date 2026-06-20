@@ -1,0 +1,25 @@
+---
+title: "Slack"
+description: "Post a short call summary to a Slack channel after every call"
+icon: "slack"
+---
+When Slack is connected, Nixflex posts a short summary to your Slack channel after every call on that number — so your team sees what happened without listening back. It posts once, right after the call ends.
+## Setup
+Connect Slack in the dashboard under **Integrations → Slack → Configure**:
+1. Pick the agent and the phone number you want to set up.
+2. In Slack, create an **Incoming Webhook** for the channel you want summaries posted to, and copy its URL — it starts with `https://hooks.slack.com/`.
+3. Paste the webhook URL into the dashboard and click **Save**.
+The card shows **Connected** once saved. You can disconnect any time from the same panel.
+## What gets posted
+After each call on the number, Nixflex posts:
+- The **call summary**
+- The **caller's number**
+- The **outcome**
+It posts **once per call, after it ends**. The full transcript is never sent — only the summary, caller number, and outcome.
+## Per-number channel
+Slack is connected **per phone number**, so each number can post to its own channel. Pick the number first, then paste that channel's webhook URL. Numbers without Slack set up simply do not post.
+## Creating a Slack webhook
+In Slack, go to **Apps → Incoming Webhooks → Add to Slack**, choose the channel, and copy the generated URL. Only a `https://hooks.slack.com/...` URL is accepted — the dashboard rejects anything else.
+## Tips
+- Use a dedicated channel such as `#calls` so summaries are easy to find.
+- Different locations on one agent can each post to their own channel using per-number setup.
