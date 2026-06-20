@@ -1,0 +1,162 @@
+---
+title: "Webhooks"
+description: "Receive call data in your own systems"
+icon: "webhook"
+---
+
+Configure a webhook URL on an agent and Nixflex will POST the full call data to your server about 60 seconds after every call ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make.
+
+## Setting a webhook
+
+Set `webhook_url` when creating or updating an agent:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"webhook_url": "https://api.yourapp.com/nixflex/calls"}'
+```
+
+Every call this agent handles — inbound, outbound, or batch — will POST to that URL.
+
+## Payload structure
+
+The body has two top-level keys: `event` and `call`. The `call` object contains the complete call record.
+
+```json
+{
+  "event": "call.completed",
+  "call": {
+    "id": "b46b5f3e-84ee-452e-8eb4-fa47a89cbffa",
+    "call_id": "CA1b5c0bfad4b56635b773938f16db2db7",
+    "agent_id": "agent_f2b06c0e0bd877e9",
+    "from_number": "+447386172392",
+    "to_number": "+447446466847",
+    "call_status": "completed",
+    "call_type": "inbound",
+    "call_direction": "inbound",
+    "start_timestamp": 1779937166296,
+    "end_timestamp": 1779937236410,
+    "duration_ms": 70114,
+    "recording_duration_s": 64,
+    "transcript": "Agent: Hello! How can I help?\nCaller: Hi, my name is Amir...",
+    "recording_url": "https://storage.nixflex.com/recordings/CA1b5c....mp3",
+    "ended_reason": "silence_timeout",
+    "call_summary": "Amir called inquiring about the business and requested a callback.",
+    "caller_sentiment": "neutral",
+    "call_successful": true,
+    "extracted_data": {
+      "caller_name": "Amir",
+      "wants_callback": true
+    },
+    "created_at": "2026-05-28T02:59:26.324836+00:00",
+    "api_key_id": "nxf_xxx",
+    "voicemail_detected": false,
+    "campaign_id": null,
+    "system_prompt_used": "You are Sarah, a friendly barista..."
+  }
+}
+```
+
+### Key fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `call_id` | string | Twilio call SID. Use this as your idempotency key. |
+| `call_type` / `call_direction` | string | `inbound` or `outbound` |
+| `start_timestamp` / `end_timestamp` | number | Unix epoch in **milliseconds** |
+| `duration_ms` | number | Full connection time in milliseconds (ring/connect to hang-up). Used for billing. |
+| `recording_duration_s` | number | Length of the actual recorded conversation in seconds. Use this to show callers/end-users the real talk time. Populated once the recording is ready (the webhook's ~60s delay ensures it is present). |
+| `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. |
+| `recording_url` | string | Public MP3 link. Populated by the 60s delay (see below). |
+| `call_summary`, `caller_sentiment`, `call_successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
+| `extracted_data` | object | Your custom extraction fields. Empty `{}` if none configured. |
+| `campaign_id` | string / null | Set if the call was part of a batch campaign. |
+| `system_prompt_used` | string | The raw agent prompt used for this call. |
+
+## Event types
+
+The `event` field is currently always `call.completed` for finished calls. The dashboard "Test" button sends a separate `webhook.test` event so you can verify reachability.
+
+## Signing and verification
+
+Every webhook request includes a signature header so you can verify it came from Nixflex:
+
+```
+X-Nixflex-Signature: t=1779500000,v1=abc123...
+```
+
+The signature is HMAC-SHA256 of `<timestamp>.<raw_body>` using the **API key secret** (`key_secret`) tied to the call's API key as the signing secret.
+
+<Warning>
+  Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
+</Warning>
+
+### Verifying in Node.js
+
+```javascript
+const crypto = require('crypto');
+
+function verifyNixflexSignature(rawBody, signatureHeader, secret) {
+  const parts = Object.fromEntries(
+    signatureHeader.split(',').map(p => p.split('='))
+  );
+  const timestamp = parts.t;
+  const sig = parts.v1;
+
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(sig),
+    Buffer.from(expected)
+  );
+}
+```
+
+<Note>
+  Always use the **raw request body bytes** when computing the HMAC. If your framework parses JSON before you see it (Express body-parser does this by default), you'll get a signature mismatch. Use `express.raw()` middleware on the webhook route.
+</Note>
+
+## Delivery and retries
+
+The webhook fires roughly **60 seconds after the call ends** — this gives Nixflex time to upload the recording, run post-call analysis, and include everything in one payload. The worker fetches fresh call data at fire time, so `recording_url` and analysis fields are always current.
+
+<Steps>
+  <Step title="2xx or 3xx response">
+    Delivered. No retry.
+  </Step>
+  <Step title="4xx (except 408, 429)">
+    Treated as a permanent failure — your endpoint has a bug or rejected the request. **No retry.**
+  </Step>
+  <Step title="5xx, 408, 429, or timeout/network error">
+    Retried automatically. Backoff between attempts: **5 min, 5 min, 5 min, 60 min** (5 attempts total over ~76 min).
+  </Step>
+  <Step title="After 5 failed attempts">
+    Given up. Logged in your dashboard so you can investigate.
+  </Step>
+</Steps>
+
+Request timeout is 10 seconds per attempt — keep your handler fast.
+
+## Viewing delivery history
+
+Go to **Logs → Webhooks** in your dashboard. Every delivery is logged with status, HTTP code, attempt count, last attempt time, the URL, and any error message. The last 5,000 successful and 5,000 failed deliveries are retained.
+
+## Idempotency
+
+The same call may arrive twice if a retry succeeds after the original was actually delivered (rare but possible). Store the `call_id` from each payload and skip if you've already processed it.
+
+## Connecting to Zapier / Make
+
+Both platforms support generic webhook triggers. Point them at the URL Zapier/Make gives you, and every call becomes a trigger. From there, send data to Google Sheets, HubSpot, Salesforce, GoHighLevel, Slack, Notion, Airtable, email, or anything else those platforms support.
+
+## Testing your webhook
+
+In the dashboard, open your agent's **Webhook Settings** and click **Test**. Nixflex sends a small `webhook.test` payload to your URL and shows the HTTP status and response time. This only checks that your endpoint is reachable — it does not send a full call payload.

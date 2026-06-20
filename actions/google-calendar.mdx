@@ -1,0 +1,41 @@
+---
+title: "Google Calendar Booking"
+description: "Let the agent check availability, book, reschedule, and cancel appointments live during a call"
+icon: "calendar"
+---
+When Google Calendar is connected, the agent can manage appointments on your calendar in real time — checking free slots, booking, finding, rescheduling, and cancelling — all while the caller is on the phone. The agent only ever offers times that are actually free, and texts an SMS confirmation whenever a booking changes.
+## Setup
+Connect Google Calendar in the dashboard under **Integrations → Google Calendar → Configure**. Unlike most tools, there are no API keys to copy:
+1. Pick the agent and the phone number you want to set up.
+2. Click **Connect Google Calendar**.
+3. You are sent to Google to grant calendar access, then returned to the dashboard.
+We store only a secure token to manage events on your behalf — never your password. Once connected, the card shows **Connected as** your Google account, and the agent picks up the booking tools automatically. You can disconnect or reconnect any time from the same panel.
+## What the agent can do
+Five booking tools are added to the agent automatically once Google Calendar is on. You do not write any prompt for them — the agent uses them when the caller asks.
+| Tool | What it does |
+| --- | --- |
+| Check availability | Finds free slots from the date the caller asks for onward |
+| Book appointment | Books a slot, collecting and confirming the caller's name and email |
+| Find booking | Looks up the caller's existing appointment(s) by email |
+| Reschedule | Moves an existing booking to a new time |
+| Cancel | Cancels an existing booking |
+## Business hours
+The agent offers slots during standard business hours — **Monday to Friday, 9:00am to 5:00pm, in 30-minute slots** — and books on your account's **primary** calendar. It reads your real events first and only offers times that are genuinely free. If a caller asks for a day you are closed (for example a Sunday), the agent says you are closed that day rather than offering times.
+## Example
+> *Caller:* "Can I book a check-up for Monday morning?"
+>
+> *Agent:* "We have nine o'clock or half past nine on Monday. Which works best?"
+>
+> *Caller:* "Nine o'clock."
+>
+> *Agent:* "Lovely. Can I take your name please?" ... "And your email?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
+## Timezone
+When a caller says "nine o'clock", the agent books 9:00 in your business's local time, with daylight saving handled automatically. This is correct for a clinic or office that callers physically visit.
+## SMS confirmation
+The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
+## Per-number calendar
+Google Calendar is connected **per phone number** — each number connects its own Google account. Pick the number first, then connect. This lets you run different locations on one agent, each booking into its own calendar.
+## Tips
+- The agent confirms the caller's name and email one at a time, reading each back before booking.
+- The connection uses Google's secure sign-in (OAuth) — only a token is stored, never your password.
+- Disconnect any time from the same **Configure** panel.
