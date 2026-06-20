@@ -1,0 +1,27 @@
+---
+title: "GoHighLevel"
+description: "Log every call into your GoHighLevel CRM as a contact with a note"
+icon: "users"
+---
+When GoHighLevel is connected, after every call on that number Nixflex finds or creates the caller as a **contact** in your CRM and adds a **note** with the call summary. Ideal for agencies and businesses that run their pipeline in GoHighLevel.
+## Setup
+Connect GoHighLevel in the dashboard under **Integrations → GoHighLevel → Configure**:
+1. Pick the agent and the phone number you want to set up.
+2. In GoHighLevel, go to **Settings → Private Integrations** and create a token with the **Contacts** scope. Copy the token — it starts with `pit-`.
+3. Find your **Location ID** — it is in your sub-account URL.
+4. Paste the **Private Integration Token** and **Location ID** into the dashboard.
+5. *(Optional)* Add **tags** (comma-separated, e.g. `lead, ai-call`) to apply to the contact.
+6. Click **Save**.
+Your token is stored securely. You can disconnect any time from the same panel.
+## What gets logged
+After each call on the number, Nixflex:
+- **Finds or creates** the caller as a contact, matched by phone number
+- Adds a **note** with the call summary
+- Applies any **tags** you set
+It posts **once per call, after it ends** — summary, caller number, and outcome only. The full transcript is never sent.
+## Per-number CRM
+GoHighLevel is connected **per phone number**, so each number can log into its own location. Pick the number first, then enter that location's token and ID — useful for agencies running many clients on one agent.
+## Tips
+- The token must have the **Contacts** scope — without it, contacts and notes cannot be written.
+- Use a tag like `ai-call` to filter AI-handled calls in your CRM.
+- Different clients or locations on one agent each use their own token and Location ID via per-number setup.
