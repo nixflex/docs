@@ -92,6 +92,12 @@ X-Nixflex-Signature: t=1779500000,v1=abc123...
 
 The signature is HMAC-SHA256 of `<timestamp>.<raw_body>` using the **API key secret** (`key_secret`) tied to the call's API key as the signing secret.
 
+Your `key_secret` is the part of your API key **after the colon**. API keys are formatted `nxf_<id>:nxfs_<secret>`, so the signing secret is the `nxfs_...` half only (not the full key, and not the `nxf_` id).
+
+<Note>
+  If signature generation fails on our side, the webhook is still delivered **without** the `X-Nixflex-Signature` header (delivery is never blocked). Treat a missing signature header as unsigned and skip verification for that request rather than erroring.
+</Note>
+
 <Warning>
   Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
 </Warning>
@@ -100,6 +106,10 @@ The signature is HMAC-SHA256 of `<timestamp>.<raw_body>` using the **API key sec
 
 ```javascript
 const crypto = require('crypto');
+
+// The signing secret is the part of your API key AFTER the colon (the nxfs_ half).
+// If your key is nxf_abc:nxfs_xyz, pass "nxfs_xyz" as the secret.
+// e.g. const secret = process.env.NIXFLEX_API_KEY.split(':')[1];
 
 function verifyNixflexSignature(rawBody, signatureHeader, secret) {
   const parts = Object.fromEntries(
