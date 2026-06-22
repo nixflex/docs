@@ -36,13 +36,15 @@ Appointments are booked in the **calendar's timezone** — the one you set durin
 The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
 ## Per-number calendar
 If you run multiple businesses or locations on one agent, give each phone number its own calendar. A number's own calendar always overrides the agent's default; numbers without one fall back to the agent's calendar.
-    PUT https://api.nixflex.com/v1/integrations/calcom/number/{phone}
-    {
-      "api_key": "cal_live_xxx",
-      "username": "your-username",
-      "event_slug": "30min",
-      "default_timezone": "Europe/London"
-    }
+```bash
+PUT https://api.nixflex.com/v1/integrations/calcom/number/{phone}
+{
+  "api_key": "cal_live_xxx",
+  "username": "your-username",
+  "event_slug": "30min",
+  "default_timezone": "Europe/London"
+}
+```
 Use `GET` to read a number's calendar (the API key is never returned — it shows `api_key_set: true`) and `DELETE` to remove it.
 ## Tips
 - The agent confirms the caller's name and email one at a time, reading each back before booking.
