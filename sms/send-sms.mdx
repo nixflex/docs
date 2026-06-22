@@ -14,7 +14,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "agent_125207e452f8714a",
-    "to_number": "+447386172392",
+    "to": "+447386172392",
     "from_number": "+447446466847",
     "message": "Reminder: your appointment is tomorrow at 2pm. Reply YES to confirm or NO to reschedule."
   }'
@@ -23,7 +23,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
 | Field | Required | Notes |
 |---|---|---|
 | `agent_id` | Yes | The agent this SMS belongs to (determines reply behaviour) |
-| `to_number` | Yes | Recipient in E.164 format |
+| `to` | Yes | Recipient in E.164 format |
 | `from_number` | Yes | One of your imported Twilio numbers |
 | `message` | Yes | The message text. **600 chars recommended** for reliable delivery. Twilio's hard cap is 1600, but UK carriers often reject longer messages. See [SMS length guide](#sms-length-and-deliverability) below. |
 
@@ -33,7 +33,7 @@ Response:
 {
   "message_id": "SM1234567890",
   "status": "queued",
-  "to_number": "+447386172392",
+  "to": "+447386172392",
   "from_number": "+447446466847"
 }
 ```
