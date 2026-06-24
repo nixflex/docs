@@ -1,27 +1,82 @@
 ---
 title: "Zapier & Make"
-description: "Send full call data to Zapier or Make after every call, then automate anything"
+description: "Send call data to Zapier or Make, then automate anything — or let the AI call Make live during a call"
 icon: "bolt"
 ---
-Zapier and Make let you push your call data into thousands of other apps without writing code. After every call on a number, Nixflex sends the **full call data** to your Zapier or Make webhook — from there your scenario can create a CRM record, add a spreadsheet row, send a notification, or anything else.
-## Setup
-Connect under **Integrations → Zapier** (or **Make**) **→ Configure**:
-1. Pick the agent and the phone number you want to set up.
-2. Create the webhook trigger in your automation tool:
-   - **Zapier:** add a **Catch Hook** trigger (Webhooks by Zapier) and copy its URL.
-   - **Make:** add a **Custom Webhook** trigger and copy its URL.
-3. Paste the webhook URL into the dashboard and click **Save**.
-The URL must start with `https://`. You can disconnect any time from the same panel.
-## What gets sent
-Unlike Slack or GoHighLevel (which post a short summary), Zapier and Make receive the **full call data**, so your scenario has everything it needs:
-- Call summary, sentiment, and outcome
-- Caller number and call details
-- Transcript and any extracted data
-It fires **once per call, after it ends**, using the same reliable delivery as Webhooks: it **retries on failure** and **stops on a bad URL**.
-## Per-number automation
-Zapier and Make are connected **per phone number**, so each number can trigger its own scenario. Pick the number first, then paste that scenario's webhook URL.
-## Same engine as Webhooks
-Under the hood this is the same post-call delivery as the [Webhooks](/advanced/webhooks) feature — Zapier and Make are simply pre-labelled destinations for it. Use Webhooks directly if you want raw control; use Zapier or Make to chain into other apps with no code.
+
+Zapier and Make let you push call data into thousands of other apps without writing code. Both are configured **per phone number**. They support post-call delivery; **Make** additionally supports an in-call action tool the AI can call mid-conversation.
+
+## Modes
+
+- **Post-call (Zapier and Make):** after a call ends, Nixflex sends the full call data to your webhook. Your scenario then does whatever you build — create a CRM record, add a spreadsheet row, send a notification.
+- **In-call action (Make only):** the AI calls your Make scenario *during* the call and uses the response live (for example, looking something up and reading it back). Zapier cannot return a synchronous response, so in-call is Make only.
+
+## Zapier — post-call
+
+Create a **Catch Hook** trigger (Webhooks by Zapier) and copy its URL, then:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/integrations/zapier/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "post_call_url": "https://hooks.zapier.com/hooks/catch/XXX/YYY" }'
+```
+
+`post_call_url` is required and must be `https://`. **Read** returns `post_call_url_set: true` (the URL itself is not returned); **DELETE** removes it:
+
+```bash
+curl https://api.nixflex.com/v1/integrations/zapier/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+curl -X DELETE https://api.nixflex.com/v1/integrations/zapier/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Make — post-call and/or in-call
+
+Make accepts a post-call URL, an in-call URL, or both. At least one is required.
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/integrations/make/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "post_call_url": "https://hook.make.com/XXXXraw",
+    "in_call_url": "https://hook.make.com/YYYYraw",
+    "tool_name": "lookup_order",
+    "tool_description": "Look up an order by number and return its status.",
+    "parameters": {
+      "type": "object",
+      "properties": { "order_number": { "type": "string" } },
+      "required": ["order_number"]
+    }
+  }'
+```
+
+- **`post_call_url`** — fires after the call (same as Zapier).
+- **`in_call_url`** — the AI calls this during the call. Your Make scenario must end with a **Webhook Response** module returning JSON; the AI uses that response live. `tool_name`, `tool_description`, and `parameters` describe the tool to the AI so it knows what it does and what to send.
+
+For in-call to work, build your Make scenario with a **Custom Webhook** trigger and a **Webhook Response** at the end. Write a clear `tool_description` — the AI decides when to call the tool based on it.
+
+**Read** returns which URLs are set plus the tool fields:
+
+```json
+{ "phone_number": "+447700900123", "is_active": true, "post_call_url_set": true, "in_call_url_set": true, "tool_name": "lookup_order", "tool_description": "...", "parameters": { ... } }
+```
+
+**DELETE** removes the Make config:
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/integrations/make/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## What gets sent (post-call)
+
+Post-call delivery uses the same reliable engine as [Webhooks](/advanced/webhooks) — it retries on failure and stops on a bad URL. Your scenario receives the full call data: summary, sentiment, outcome, caller number, call details, transcript, and any extracted data.
+
+## Connect via dashboard
+
+Prefer the dashboard? Go to **Integrations → Zapier** (or **Make**), pick the agent and number, paste the webhook URL(s), and **Save**.
+
 ## Tips
+
 - Test your Zap or scenario with one real call before relying on it.
-- Map the fields you care about (summary, sentiment, caller number) inside your automation tool.
+- For Make in-call tools, keep the scenario fast — the AI waits for the response during the call (5 second limit).
+- Each number is independent — different numbers can trigger different scenarios via per-number setup.
