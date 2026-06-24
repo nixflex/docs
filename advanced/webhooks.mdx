@@ -4,20 +4,29 @@ description: "Receive call data in your own systems"
 icon: "webhook"
 ---
 
-Configure a webhook URL on an agent and Nixflex will POST a clean, flat JSON payload to your server about 60 seconds after every call ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make.
+Set a webhook URL on a phone number and Nixflex will POST a clean, flat JSON payload to your server about 60 seconds after every call on that number ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make. Webhooks are configured **per phone number**, so each number can send to its own endpoint.
 
 ## Setting a webhook
 
-Set `webhook_url` when creating or updating an agent:
+Set the webhook URL on one of your numbers:
 
 ```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_xxx \
+curl -X PUT https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
   -H "Content-Type: application/json" \
-  -d '{"webhook_url": "https://api.yourapp.com/nixflex/calls"}'
+  -d '{"url": "https://api.yourapp.com/nixflex/calls"}'
 ```
 
-Every call this agent handles — inbound, outbound, or batch — will POST to that URL.
+`url` is required and must be `https://`. Every call on that number — inbound, outbound, or batch — will POST to it.
+
+**Read** the current URL (returned in full, since it is your own endpoint), or **DELETE** to remove it:
+
+```bash
+curl https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "phone_number": "+447700900123", "webhook_url": "https://api.yourapp.com/nixflex/calls", "is_set": true }
+
+curl -X DELETE https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
 
 ## Payload structure
 
@@ -173,4 +182,4 @@ Both platforms support generic webhook triggers. Point them at the URL Zapier/Ma
 
 ## Testing your webhook
 
-In the dashboard, open your agent's **Webhook Settings** and click **Test**. Nixflex sends a small `webhook.test` payload to your URL and shows the HTTP status and response time. This only checks that your endpoint is reachable — it does not send a full call payload.
+In the dashboard, go to **Integrations → Webhooks**, pick the number, and click **Test**. Nixflex sends a small `webhook.test` payload to that number's URL and shows the HTTP status and response time. This only checks that your endpoint is reachable — it does not send a full call payload.
