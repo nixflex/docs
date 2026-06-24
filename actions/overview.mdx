@@ -1,28 +1,28 @@
 ---
-title: "Claude actions overview"
-description: "Built-in actions Claude triggers via prompt tags"
+title: "Actions overview"
+description: "Built-in actions the agent triggers via prompt tags"
 icon: "tag"
 ---
 
-Nixflex agents perform actions during calls — transfers, SMS, ending the call — by emitting special **tags** in Claude's response. The engine watches for these tags, strips them from what the caller hears, and runs the action.
+Nixflex agents perform actions during calls — transfers, SMS, ending the call — by emitting special **tags** in the LLM's response. The engine watches for these tags, strips them from what the caller hears, and runs the action.
 
-You don't have to wire up function calling or webhooks for built-in actions. Just tell Claude to use the tag when appropriate.
+You don't have to wire up function calling or webhooks for built-in actions. Just tell the agent to use the tag when appropriate.
 
 ## How tags work
 
-Claude generates a normal reply. If the reply contains a tag, the engine intercepts it:
+The LLM generates a normal reply. If the reply contains a tag, the engine intercepts it:
 
-> **Claude says:** "Sure, I'll transfer you to our manager now. [TRANSFER:+442087601234]"
+> **The LLM says:** "Sure, I'll transfer you to our manager now. [TRANSFER:+442087601234]"
 >
 > **Caller hears:** "Sure, I'll transfer you to our manager now."
 >
 > **Engine action:** Cold transfer to +442087601234.
 
-The caller never hears the tag itself. It exists only as a signal between Claude and the engine.
+The caller never hears the tag itself. It exists only as a signal between the LLM and the engine.
 
 ## Built-in tags
 
-<Columns cols={2}>
+<Columns cols={3}>
   <Card title="End call" icon="phone-slash" href="/actions/end-call">
     `[END_CALL]` — gracefully end the conversation
   </Card>
@@ -32,14 +32,12 @@ The caller never hears the tag itself. It exists only as a signal between Claude
   <Card title="Send SMS" icon="message" href="/actions/send-sms">
     `[SEND_SMS: text]` — text the caller mid-call
   </Card>
-  <Card title="Wait" icon="hourglass">
-    `[WAIT:X]` — pause for X seconds before continuing
-  </Card>
+
 </Columns>
 
-## Telling Claude when to use them
+## Telling the agent when to use them
 
-Add an **Actions** section to your system prompt with one-line guidance for each tag you want Claude to use:
+Add an **Actions** section to your system prompt with one-line guidance for each tag you want the agent to use:
 
 ```
 ACTIONS
@@ -48,11 +46,11 @@ ACTIONS
 - Text confirmation after booking: [SEND_SMS: Your appointment is confirmed for {date} at {time}. Reply YES to confirm.]
 ```
 
-Claude will use the tags when the conversation calls for them — without you having to script every branch.
+The agent will use the tags when the conversation calls for them — without you having to script every branch.
 
 ## Multiple tags in one response
 
-Claude can use more than one tag in a single reply. Common pattern after a booking:
+The agent can use more than one tag in a single reply. Common pattern after a booking:
 
 > "Perfect, you're booked in for Tuesday at 2pm. I've just sent you a text with the details. [SEND_SMS: Your appointment with Acme Dental is confirmed for Tuesday 5th March at 2pm. Call us if anything changes.] Have a great day. [END_CALL]"
 
@@ -60,4 +58,4 @@ The engine processes them in order: send the SMS, then end the call.
 
 ## Beyond built-in actions
 
-For anything more complex (looking up customer records, booking appointments via Cal.com, processing payments), use [custom functions](/advanced/custom-functions). Those let Claude call your own webhooks during the conversation.
+For anything more complex (looking up customer records, booking appointments, processing payments), the agent can call your own APIs during the conversation. See [Cal.com](/actions/calcom) for live booking, or the integrations section for connecting your own tools.
