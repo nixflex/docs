@@ -53,6 +53,17 @@ The body is a **flat JSON object** — every field is at the top level (no neste
     "caller_name": "Amir",
     "wants_callback": true
   },
+  "bookings": [
+    {
+      "action": "created",
+      "booking_uid": "scf821a4pcuq3oglf8rfh0tc8k",
+      "start": "2026-05-29T09:00:00.000Z",
+      "attendee_name": "Amir",
+      "attendee_email": "amir@example.com",
+      "service": "appointment",
+      "timezone": "Europe/London"
+    }
+  ],
   "recording_url": "https://storage.nixflex.com/recordings/CA1b5c....mp3",
   "recording_duration_seconds": 64,
   "voicemail_detected": false,
@@ -77,6 +88,7 @@ The body is a **flat JSON object** — every field is at the top level (no neste
 | `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. |
 | `summary`, `sentiment`, `successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
 | `extracted` | object / null | Your custom extraction fields. `null` if none configured. |
+| `bookings` | array | Appointments created, rescheduled, or cancelled during the call. Empty array if none. See [Appointment bookings](#appointment-bookings). |
 | `recording_url` | string | Public MP3 link. Populated by the 60s delay (see below). |
 | `recording_duration_seconds` | number | Length of the recorded conversation in seconds. Use this to show end-users the real talk time. |
 | `voicemail_detected` | boolean | Outbound only — whether the call reached voicemail. |
@@ -87,6 +99,43 @@ The body is a **flat JSON object** — every field is at the top level (no neste
   The payload contains caller data — the caller's phone number (`from`), the full `transcript`, and any `extracted` fields can include personal information. Store and process it in line with your own privacy policy and applicable law.
 </Warning>
 
+## Appointment bookings
+
+If the agent books, reschedules, or cancels an appointment during a call (via a connected calendar), each action is captured as a structured object in the `bookings` array. This is the reliable way to know an appointment changed â€” read it directly instead of parsing the transcript or summary.
+
+The array is **per call**: every booking action taken on that one call is listed, in order. A call with no booking activity sends `bookings: []`.
+
+```json
+"bookings": [
+  {
+    "action": "created",
+    "booking_uid": "scf821a4pcuq3oglf8rfh0tc8k",
+    "start": "2026-05-29T09:00:00.000Z",
+    "attendee_name": "Amir",
+    "attendee_email": "amir@example.com",
+    "service": "appointment",
+    "timezone": "Europe/London"
+  }
+]
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `action` | string | `created`, `rescheduled`, or `cancelled`. |
+| `booking_uid` | string | The calendar's own reference for the appointment. Stable across reschedule/cancel, so you can match actions to the same appointment. |
+| `start` | string | ISO 8601 start time of the appointment. Present for `created` and `rescheduled`; omitted for `cancelled`. |
+| `attendee_name` | string | The caller's name as booked. Present when captured (typically on `created`). |
+| `attendee_email` | string | The email the booking is under. |
+| `service` | string | The appointment type. |
+| `timezone` | string | IANA timezone the appointment is scheduled in. |
+
+<Tip>
+  Because each action carries the `booking_uid`, you can mirror these straight into your own appointments table: insert on `created`, update on `rescheduled`, mark cancelled on `cancelled`. Drive your own confirmations and reminders from there.
+</Tip>
+
+<Note>
+  Bookings are also stored on the call record, so if a webhook delivery is missed you can still fetch them later via the call's API record â€” they are never lost.
+</Note>
 ## Event types
 
 The `event` field is currently always `call.completed` for finished calls. The dashboard "Test" button sends a separate `webhook.test` event so you can verify reachability.
