@@ -26,6 +26,12 @@ Agent (template/personality)
 
 The engine identifies which clinic is calling by the phone number that was dialled, not by which agent. The agent prompt stays the same; the per-customer context comes from the phone number record and any history Nixflex finds.
 
+<Warning>
+  **Agent-level settings are shared by every number on the agent.** Fields like `voice_id`, `post_call_sms_template`, and `transfer_number` set on the agent apply to *all* phone numbers using it. If one agent serves many separate businesses, do not rely on agent-level settings for per-business behaviour - they would apply the same voice, SMS, or transfer to every business at once.
+
+  For per-business behaviour, set values **per phone number** where supported (`voice_id` and `custom_prompt` via [Update phone number](/api-reference/phone-numbers/update), plus per-number [integrations](/integrations/slack)), or handle it yourself from the post-call [webhook](/advanced/webhooks). This keeps each business independent while sharing one agent.
+</Warning>
+
 ## Configurable fields
 
 When you `POST /v1/agents`, you can set:
