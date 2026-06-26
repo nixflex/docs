@@ -20,7 +20,7 @@ Before calling Claude, the engine builds a system prompt with four layers:
     The time is formatted in **your agent's timezone**, not server time.
   </Step>
   <Step title="Caller history (if any)">
-    If this phone number has called your agent before, the past 2 call summaries are injected automatically.
+    If this phone number has called your agent before, the most recent call summary is injected automatically.
     First-time customers get no history block — clean and short.
   </Step>
   <Step title="Your agent's system prompt">
@@ -38,7 +38,7 @@ Before calling Claude, the engine builds a system prompt with four layers:
 
 This is one of the most useful properties of Nixflex: **a customer who called you yesterday can text you today, and the agent remembers them.**
 
-The engine looks up the last 2 voice calls from the customer's number and includes the call summaries plus usage instructions for Claude — the same way it does on inbound voice. Across channels, your AI feels continuous.
+The engine looks up the most recent voice call from the customer's number and includes the call summaries plus usage instructions for Claude — the same way it does on inbound voice. Across channels, your AI feels continuous.
 
 Example exchange after a prior call:
 
@@ -123,6 +123,12 @@ All four show up in your Logs page in the dashboard.
 Caller history pulls only from calls made by the **same phone number** to **your agent**. It never crosses agents, never crosses developers, never crosses Nixflex tenants. The data lives in your Supabase tenancy.
 
 If a customer asks you to forget them, deleting their rows from `calls` and `sms_messages` removes them from future replies.
+
+## SMS replies are conversational only
+
+SMS replies are a text conversation - the agent answers questions, gives information, and holds context across messages. They do **not** run booking tools. Unlike a voice call, the agent on SMS cannot check live availability, book, reschedule, cancel, or look up an appointment on a connected calendar.
+
+If a customer texts asking to book or change an appointment, have the agent guide them to call (or to your booking link) in your `system_prompt` - for example: `If a customer asks to book or change an appointment over text, ask them to call us on the number so we can confirm it properly.` Booking actions are reliable on calls, where the agent confirms details live; keeping them off SMS avoids mis-bookings from a missed or ambiguous text.
 
 ## See also
 
