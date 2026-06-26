@@ -34,6 +34,10 @@ Appointments are booked in the **calendar's timezone** — the one you set durin
 </Note>
 ## SMS confirmation
 The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
+## Receiving booking data
+
+When the agent books, reschedules, or cancels an appointment during a call, the action is delivered in your call.completed webhook as a `bookings` array - the reliable way to capture appointments in your own system (insert on created, update on rescheduled, mark cancelled on cancelled). Each entry includes the action, booking_uid, start time, attendee name and email, service, and timezone. See [Webhooks - Appointment bookings](/advanced/webhooks#appointment-bookings).
+
 ## Per-number calendar
 Cal.com is configured per phone number, so each number books into its own calendar. Run as many numbers as you like on one agent - each has its own independent calendar, and numbers without Cal.com set up simply do not offer booking.
 ```bash
