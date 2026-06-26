@@ -4,7 +4,7 @@ description: "Dynamic placeholders that inject real-time data into your agent pr
 icon: "code"
 ---
 
-Variables are placeholders like `{{current_date}}` that the engine replaces with real values **once per call**, before sending the prompt to Claude. They let your agent reference dynamic information (date, time, caller, history) without you hardcoding anything.
+Variables are placeholders like `{{current_date}}` that the engine replaces with real values **once per call**, before sending the prompt to the agent. They let your agent reference dynamic information (date, time, caller, history) without you hardcoding anything.
 
 <Note>
   Variables are substituted **once at call start**, not per word. They add no latency to the call.
@@ -14,15 +14,15 @@ Variables are placeholders like `{{current_date}}` that the engine replaces with
 
 Two things happen when an inbound call begins:
 
-1. **The engine builds a "call context" block** with real-time data (date, time, caller phone, timezone, etc.) and prepends it to your system prompt. Claude sees this context automatically — no setup needed.
+1. **The engine builds a "call context" block** with real-time data (date, time, caller phone, timezone, etc.) and prepends it to your system prompt. The agent sees this context automatically — no setup needed.
 2. **If your prompt contains `{{variable}}` placeholders**, the engine substitutes them with values from the same data source. This is optional — useful when you want to phrase something explicitly.
 
 ```text
 Your prompt:    "Today is {{current_date}}. We close at 11pm."
-Claude sees:    "Today is Monday, May 25, 2026. We close at 11pm."
+The agent sees:    "Today is Monday, May 25, 2026. We close at 11pm."
 ```
 
-Both approaches work. Use placeholders only if explicit phrasing reads better than letting Claude infer from the context block.
+Both approaches work. Use placeholders only if explicit phrasing reads better than letting the agent infer from the context block.
 
 ## Available variables
 
@@ -46,9 +46,9 @@ These are computed every call from the engine clock + your agent's timezone sett
 
 | Variable | What it does |
 |---|---|
-| `{{caller_history}}` | Summary of the last 2 calls from this number to this agent |
+| `{{caller_history}}` | Summary of the most recent call from this number to this agent |
 
-When a number that has called before dials your agent again, the engine looks up the last 2 calls in parallel with the agent load (overlapping the existing DB wait — adds zero latency). If past calls exist, the engine injects a history block into the prompt along with usage instructions for Claude:
+When a number that has called before dials your agent again, the engine looks up the most recent call in parallel with the agent load (overlapping the existing DB wait — adds zero latency). If past calls exist, the engine injects a history block into the prompt along with usage instructions for the agent:
 
 ```text
 === CALLER HISTORY (this number has called you before) ===
@@ -64,7 +64,7 @@ HOW TO USE THIS HISTORY:
 - Never read the history list aloud — it is for you, not the caller.
 ```
 
-This gives Claude enough context to handle returning callers naturally without being intrusive. First-time callers (no past calls) get nothing extra in the prompt — no clutter, no noise.
+This gives the agent enough context to handle returning callers naturally without being intrusive. First-time callers (no past calls) get nothing extra in the prompt — no clutter, no noise.
 
 ## When variables fire
 
@@ -72,7 +72,7 @@ This gives Claude enough context to handle returning callers naturally without b
 |---|---|
 | Call starts | Engine loads agent + caller history in parallel |
 | Before greeting | Engine builds final prompt with values substituted and context block prepended |
-| Greeting plays | Claude responds using the merged prompt for the entire call |
+| Greeting plays | The agent responds using the merged prompt for the entire call |
 | Call ends | Prompt and context are discarded |
 
 Variables are **read-once**. Their values don't change during the call. If your business hours rotate by minute, don't put them in a variable — put them directly in the prompt.
@@ -84,7 +84,7 @@ We're deliberate about what to add. Each variable is a contract — once shipped
 | Often-requested | Why we don't have it |
 |---|---|
 | `{{agent_name}}` | You already type the agent's name in your own prompt. A variable just adds indirection. |
-| `{{business_hours}}` | Hours rarely match a single string. Put them in your prompt directly so Claude can reason about edge cases ("closed for lunch", "open on bank holidays"). |
+| `{{business_hours}}` | Hours rarely match a single string. Put them in your prompt directly so the agent can reason about edge cases ("closed for lunch", "open on bank holidays"). |
 | `{{caller_name}}` for inbound | Inbound callers are strangers until they identify themselves. After 2 calls, `{{caller_history}}` covers it. |
 | Arbitrary developer-supplied vars per call | Coming later — requires API and webhook changes. |
 

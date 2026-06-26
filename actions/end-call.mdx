@@ -1,10 +1,10 @@
-﻿---
+---
 title: "End call"
 description: "Gracefully end the conversation"
 icon: "phone-slash"
 ---
 
-The `[END_CALL]` tag tells the engine to end the call after Claude has finished speaking. The agent says its goodbye line first, then the call is terminated cleanly.
+The `[END_CALL]` tag tells the engine to end the call after the agent has finished speaking. The agent says its goodbye line first, then the call is terminated cleanly.
 
 ## Syntax
 
@@ -12,7 +12,7 @@ The `[END_CALL]` tag tells the engine to end the call after Claude has finished 
 [END_CALL]
 ```
 
-No parameters. Place it anywhere in Claude's reply.
+No parameters. Place it anywhere in the agent's reply.
 
 ## Example
 
@@ -24,7 +24,7 @@ The caller hears the goodbye. Then the engine ends the call cleanly.
 
 ## When to use it
 
-Tell Claude in the system prompt when it should end calls:
+Tell the agent in the system prompt when it should end calls:
 
 ```
 ACTIONS
@@ -49,7 +49,7 @@ All three layers run in parallel. The caller's phone disconnects, the recording 
 
 | `ended_reason` | What happened |
 |---|---|
-| `completed` | Claude emitted `[END_CALL]`. Goodbye spoken, call ended. |
+| `completed` | The agent emitted `[END_CALL]`. Goodbye spoken, call ended. |
 | `caller_hangup` | The caller pressed end on their phone. |
 | `silence_timeout` | The caller stayed silent past `silence_hangup_seconds` (default **10s**, range 5–45s). |
 | `max_duration_reached` | The call exceeded `max_call_duration_seconds` (default **300s**, range 60s–1800s). |
@@ -71,5 +71,5 @@ The two silence/duration thresholds are agent-level fields:
 Set them when creating an agent or update them later. See [Create agent](/api-reference/agents/create).
 
 <Tip>
-  If you want the agent to confirm the booking back to the caller before ending, write that into the prompt. Claude will speak the confirmation, then emit `[END_CALL]`.
+  If you want the agent to confirm the booking back to the caller before ending, write that into the prompt. The agent will speak the confirmation, then emit `[END_CALL]`.
 </Tip>

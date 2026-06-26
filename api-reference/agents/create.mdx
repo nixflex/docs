@@ -32,9 +32,9 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `name` | string | No | `"Untitled Agent"` | Display name (max 100 chars) |
-| `system_prompt` | string | No | friendly assistant | Claude's instructions (max ~10k chars) |
+| `system_prompt` | string | No | friendly assistant | The AI's instructions (max ~10k chars) |
 | `welcome_message` | string | No | `"Hello! How can I help you today?"` | First line spoken on inbound calls |
-| `voice_id` | string | No | `"Ashley"` | Inworld voice. Browse voices in the dashboard |
+| `voice_id` | string | No | `"Ashley"` | Voice name. Browse voices in the dashboard |
 | `language` | string | No | `"multi"` | Default language. `multi` auto-detects |
 | `is_active` | bool | No | `true` | Set false to disable without deleting |
 
@@ -42,7 +42,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `temperature` | number | No | `0.3` | Claude temperature, `0`-`1` |
+| `temperature` | number | No | `0.3` | AI temperature, `0`-`1` |
 | `response_length` | enum | No | `"short"` | `short`, `medium`, `long` |
 | `ai_speaks_first` | bool | No | `true` | Agent greets caller immediately |
 | `dynamic_greeting` | bool | No | `false` | AI improvises greeting per call instead of static welcome |
@@ -63,8 +63,8 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
-| `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, Claude auto-generates from the conversation. | 
-ull | Warm transfer briefing text. If empty, Claude auto-generates from the conversation. |
+| `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. | 
+ull | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. |
 | `func_send_sms` | bool | No | `false` | Agent can send SMS during the call |
 | `transfer_type` | enum | No | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls made by this agent. See [Transfer](/actions/transfer). |
 | `transfer_number` | string | No | `null` | Default destination for transfers |
@@ -73,8 +73,7 @@ ull | Warm transfer briefing text. If empty, Claude auto-generates from the conv
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `voice_speed` | number | No | `0.85` | `0.5`-`2.0`. Inworld TTS speed |
-| `llm_model` | string | No | `"claude-haiku-4-5"` | LLM used for the conversation |
+| `voice_speed` | number | No | `0.85` | `0.5`-`2.0`. Voice speed |
 | `fallback_message` | string | No | "I am sorry, could you say that again?" | Said when transcription fails |
 | `phone_number` | string | No | `null` | Legacy. Numbers are now managed via `/phone-numbers` |
 
@@ -109,7 +108,6 @@ ull | Warm transfer briefing text. If empty, Claude auto-generates from the conv
   "webhook_url": null,
   "phone_number": null,
   "voice_speed": 0.85,
-  "llm_model": "claude-haiku-4-5",
   "fallback_message": "I am sorry, could you say that again?",
   "is_active": true,
   "created_at": "2026-05-24T01:48:10Z",

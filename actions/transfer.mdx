@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Transfer"
 description: "Hand off the caller to a human"
 icon: "shuffle"
@@ -32,13 +32,13 @@ Transfer type is **set per agent** via the `transfer_type` field on the agent (`
 
 ## How to trigger a transfer
 
-Claude emits the `[TRANSFER:]` tag when the system prompt tells it to. The tag never gets spoken — the engine strips it before audio plays.
+The agent emits the `[TRANSFER:]` tag when the system prompt tells it to. The tag never gets spoken — the engine strips it before audio plays.
 
 ```
 [TRANSFER:+442087601234]
 ```
 
-You can also list **multiple numbers** in the prompt. Claude will try the first one; if it does not answer, Claude automatically tries the next one without asking the caller for permission.
+You can also list **multiple numbers** in the prompt. The agent will try the first one; if it does not answer, it automatically tries the next one without asking the caller for permission.
 
 ```
 ACTIONS
@@ -51,15 +51,15 @@ This auto-fallback is built into the AI behavior — no extra configuration requ
 
 ## Cold transfer flow
 
-1. Claude says: "Hold on, I'll put you through to our manager now." then emits `[TRANSFER:+44...]`.
+1. The agent says: "Hold on, I'll put you through to our manager now." then emits `[TRANSFER:+44...]`.
 2. The engine waits for the audio to finish, then closes its stream.
 3. The telephony provider dials the destination, 10-second timeout.
 4. **If picked up:** the caller and destination are connected directly. The AI steps out. The call record gets `ended_reason: transferred`.
-5. **If no answer / busy / failed:** the caller reconnects to the AI. Claude is told about the failed attempt and either tries the next number or offers a callback.
+5. **If no answer / busy / failed:** the caller reconnects to the AI. The agent is told about the failed attempt and either tries the next number or offers a callback.
 
 ## Warm transfer flow
 
-1. Claude says: "Let me get the manager on the line for you, one moment." then emits `[TRANSFER:+44...]`.
+1. The agent says: "Let me get the manager on the line for you, one moment." then emits `[TRANSFER:+44...]`.
 2. The engine puts the caller into a conference room (they hear a brief hold).
 3. The engine calls the destination separately, 15-second timeout.
 4. **When the destination picks up,** they hear a short whisper in your agent's voice — either the static `transfer_whisper` you configured, or an AI-generated 1–2 sentence summary from the conversation.
@@ -68,7 +68,7 @@ This auto-fallback is built into the AI behavior — no extra configuration requ
 
 ## Customizing the warm whisper
 
-By default, Claude auto-generates the whisper from the live conversation. To override with your own briefing, set `transfer_whisper` on the agent:
+By default, the agent auto-generates the whisper from the live conversation. To override with your own briefing, set `transfer_whisper` on the agent:
 
 ```json
 {
@@ -79,7 +79,7 @@ By default, Claude auto-generates the whisper from the live conversation. To ove
 
 Leave it `null` (default) for auto-generation. Auto-generation gives the human richer context but adds a couple seconds of latency.
 
-## Telling Claude when to transfer
+## Telling the agent when to transfer
 
 Be specific in the prompt about transfer triggers and which number maps to which scenario:
 
@@ -90,7 +90,7 @@ RULES
 - If you don't know the answer, transfer rather than guess: [TRANSFER:+442087601234].
 ```
 
-Claude reads these rules every turn and applies them automatically.
+The agent reads these rules every turn and applies them automatically.
 
 ## When the caller hangs up during transfer
 
@@ -101,13 +101,13 @@ No special handling needed. The call simply ends. The call record reflects what 
 
 ## Failure handling — what really happens
 
-Older docs sometimes describe "transfer failed → caller dropped." That is **not** how Nixflex works. On any transfer failure (no answer, busy, invalid number, network error), the caller reconnects to your agent and Claude resumes the conversation. Claude knows the transfer was attempted and can:
+Older docs sometimes describe "transfer failed → caller dropped." That is **not** how Nixflex works. On any transfer failure (no answer, busy, invalid number, network error), the caller reconnects to your agent and the agent resumes the conversation. It knows the transfer was attempted and can:
 
 - Try another number from the prompt automatically.
 - Apologize and offer a callback.
 - Take a message.
 
-You don't have to script this. Claude handles it conversationally.
+You don't have to script this. The agent handles it conversationally.
 
 ## Cold or warm — which to pick
 

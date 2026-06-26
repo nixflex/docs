@@ -22,10 +22,10 @@ An inbound call is a call placed **to** one of your imported Twilio numbers. The
     The agent's `welcome_message` is spoken first.
   </Step>
   <Step title="Conversation runs">
-    STT transcribes the caller, Claude reasons, TTS speaks the reply. Interruptions, silence, and language changes are handled automatically.
+    STT transcribes the caller, the LLM reasons, TTS speaks the reply. Interruptions, silence, and language changes are handled automatically.
   </Step>
   <Step title="Call ends">
-    Either the caller hangs up, Claude says `[END_CALL]`, the silence timeout fires, or `max_call_duration_seconds` is hit.
+    Either the caller hangs up, the agent says `[END_CALL]`, the silence timeout fires, or `max_call_duration_seconds` is hit.
   </Step>
   <Step title="Post-call processing">
     Recording is saved to Supabase storage. Post-call analysis runs (summary, sentiment, custom data extraction). Webhook fires if configured.
@@ -52,7 +52,7 @@ The agent can naturally reference past interactions without you wiring up any da
 > *Caller:* "Hi, it's Sarah."
 > *Agent:* "Hi Sarah, welcome back. Last time you booked a check-up — were you calling to follow up on that, or is this something new?"
 
-This works because the engine fetched Sarah's call history before Claude generated the first response.
+This works because the engine fetched Sarah's call history before the agent generated the first response.
 
 ## Reading the call back
 

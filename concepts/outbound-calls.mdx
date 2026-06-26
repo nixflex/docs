@@ -48,7 +48,7 @@ The response includes a `call_id` immediately. The actual call happens asynchron
     The agent waits a beat, then speaks. For outbound calls, the agent typically introduces itself before stating the reason.
   </Step>
   <Step title="Normal call flow">
-    From here, it behaves exactly like an inbound call - STT, Claude, TTS, interruption handling, the works.
+    From here, it behaves exactly like an inbound call - STT, the LLM, TTS, interruption handling, the works.
   </Step>
 </Steps>
 
@@ -56,13 +56,13 @@ The response includes a `call_id` immediately. The actual call happens asynchron
 
 This is one of Nixflex's biggest differences from Retell and Vapi.
 
-When you trigger an outbound call, Nixflex auto-fetches the past call history for the `to_number` and injects summaries into Claude's prompt. The agent already knows who it's calling.
+When you trigger an outbound call, Nixflex auto-fetches the past call history for the `to_number` and injects summaries into the agent's prompt. The agent already knows who it's calling.
 
 **Without history-aware outbound** (other platforms):
 > You upload a CSV with `name`, `appointment_time`, and 12 other variables. You wire each one into your prompt as `{name}` and `{appointment_time}`. If any variable is missing, the prompt breaks.
 
 **With history-aware outbound** (Nixflex):
-> You upload phone numbers and a single prompt: *"Remind the caller about their appointment tomorrow."* Claude reads the past call summary for that number and already knows Sarah booked Tuesday at 2pm.
+> You upload phone numbers and a single prompt: *"Remind the caller about their appointment tomorrow."* The agent reads the past call summary for that number and already knows Sarah booked Tuesday at 2pm.
 
 You don't need to wire variables. The agent has memory.
 

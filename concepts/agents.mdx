@@ -39,7 +39,7 @@ When you `POST /v1/agents`, you can set:
 | Field | Type | Default | Purpose |
 |---|---|---|---|
 | `name` | string | `"Untitled Agent"` | Display name in dashboard |
-| `system_prompt` | string | empty | What Claude should do (see below) |
+| `system_prompt` | string | empty | What the agent should do (see below) |
 | `welcome_message` | string | generic | First thing the agent says on inbound calls |
 | `voice_id` | string | `"Ashley"` | voice |
 | `language` | string | `"en"` | Default language code |
@@ -62,7 +62,7 @@ See the full [Create Agent API reference](/api-reference/agents/create) for requ
 
 ## Writing a good system prompt
 
-Claude is the brain. The prompt tells it who it is, what to do, and what not to do.
+The agent is the brain. The prompt tells it who it is, what to do, and what not to do.
 
 For a deeper guide - scenarios, style, and inbound vs outbound - see [Writing a good agent prompt](/concepts/agent-prompts).
 
@@ -85,12 +85,12 @@ A solid agent prompt has six sections:
     How to speak. "Warm British accent. Short sentences. One question at a time. No bullet points (you're on a phone call)."
   </Step>
   <Step title="Actions">
-    When to use built-in tags like `[TRANSFER:]`, `[SEND_SMS:]`, `[END_CALL]`. See [Claude actions](/actions/overview).
+    When to use built-in tags like `[TRANSFER:]`, `[SEND_SMS:]`, `[END_CALL]`. See [Agent actions](/actions/overview).
   </Step>
 </Steps>
 
 <Tip>
-  You don't need to teach Claude how to handle interruptions, silence, language switching, or call endings. The engine injects those rules automatically. Just write the business logic.
+  You don't need to teach the agent how to handle interruptions, silence, language switching, or call endings. The engine injects those rules automatically. Just write the business logic.
 </Tip>
 
 ## Example prompt

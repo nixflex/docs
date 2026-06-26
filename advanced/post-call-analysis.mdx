@@ -52,7 +52,7 @@ Beyond the defaults, you define exactly which fields to pull from each call. Set
 }
 ```
 
-For each call, Claude reads the transcript and fills in what it can. Missing fields come back as `null` — Claude won't invent data.
+For each call, the agent reads the transcript and fills in what it can. Missing fields come back as `null` — the agent won't invent data.
 
 ### Field types
 
@@ -69,7 +69,7 @@ For each call, Claude reads the transcript and fills in what it can. Missing fie
 |---|---|---|
 | `type` | yes | One of `text`, `selector`, `boolean`, `number` |
 | `name` | yes | Key used in `extracted_data`. Keep it snake_case. |
-| `description` | yes | What Claude should look for. Be specific — this drives accuracy. |
+| `description` | yes | What the agent should look for. Be specific — this drives accuracy. |
 | `optional` | no | If `true`, the field stays `null` when not mentioned rather than guessed |
 | `choices` | selector only | The allowed values |
 | `format_example` | text only | Example of the expected format, e.g. `name@example.com` |
@@ -101,10 +101,10 @@ The result lands in `extracted_data`:
 
 Analysis runs in two stages:
 
-1. **Base analysis** — always runs. One Claude call returns `call_summary`, `caller_sentiment`, `call_successful`.
-2. **Custom extraction** — only runs if the agent has `data_extraction_fields`. A second Claude call returns your custom fields.
+1. **Base analysis** — always runs. One AI call returns `call_summary`, `caller_sentiment`, `call_successful`.
+2. **Custom extraction** — only runs if the agent has `data_extraction_fields`. A second AI call returns your custom fields.
 
-Both stages use Claude Haiku and add roughly **$0.001** to the call cost. It's included in the per-minute price — no extra charge.
+Both stages use the AI and add roughly **$0.001** to the call cost. It's included in the per-minute price — no extra charge.
 
 ## Configuring in the dashboard
 

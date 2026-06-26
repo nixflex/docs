@@ -12,7 +12,7 @@ When a customer texts your business number, the engine routes the message to you
 
 ## What the agent sees on every reply
 
-Before calling Claude, the engine builds a system prompt with four layers:
+Before calling the agent, the engine builds a system prompt with four layers:
 
 <Steps>
   <Step title="Real-time context">
@@ -38,7 +38,7 @@ Before calling Claude, the engine builds a system prompt with four layers:
 
 This is one of the most useful properties of Nixflex: **a customer who called you yesterday can text you today, and the agent remembers them.**
 
-The engine looks up the most recent voice call from the customer's number and includes the call summaries plus usage instructions for Claude — the same way it does on inbound voice. Across channels, your AI feels continuous.
+The engine looks up the most recent voice call from the customer's number and includes the call summaries plus usage instructions for the agent — the same way it does on inbound voice. Across channels, your AI feels continuous.
 
 Example exchange after a prior call:
 
@@ -61,7 +61,7 @@ Your prompt:    "It's {{current_day_of_week}}. We open at 9am sharp."
 Customer sees:  "It's Tuesday. We open at 9am sharp."
 ```
 
-You can also just write naturally — the engine puts a context block at the top of every prompt, so Claude already knows the date and time without you needing to reference variables explicitly. Variables are for when you want to phrase something precisely.
+You can also just write naturally — the engine puts a context block at the top of every prompt, so the agent already knows the date and time without you needing to reference variables explicitly. Variables are for when you want to phrase something precisely.
 
 ## Promotions, campaigns, special events
 
@@ -81,13 +81,13 @@ This is also why we don't need a separate "campaign reply window" — the agent 
 
 ## Conversation history
 
-The engine loads the **last 10 SMS messages** between this customer and this agent into the prompt as chat history. Claude has full conversational context, so replies feel continuous over time.
+The engine loads the **last 10 SMS messages** between this customer and this agent into the prompt as chat history. The agent has full conversational context, so replies feel continuous over time.
 
 If a customer has texted you 50 times over a year, only the most recent 10 are loaded. This keeps prompts small and predictable.
 
 ## Channel awareness
 
-The prompt explicitly tells Claude: `Channel: SMS`. This means the AI knows to write for text:
+The prompt explicitly tells the agent: `Channel: SMS`. This means the AI knows to write for text:
 
 - Shorter sentences than voice
 - No emoji or special characters (carriers can mangle them)
@@ -101,9 +101,9 @@ You don't need to repeat any of this in your `system_prompt` — it's added auto
 | Cost | Source |
 |---|---|
 | Per-message Twilio fee | Charged directly to your Twilio account (BYO Twilio) |
-| Claude token usage | Charged to your Nixflex usage, same rate as voice |
+| LLM token usage | Charged to your Nixflex usage, same rate as voice |
 
-A typical SMS reply uses ~150–500 input tokens (the prompt) and ~30–80 output tokens. With Claude Haiku 4.5, that's well under a penny per reply.
+A typical SMS reply uses ~150–500 input tokens (the prompt) and ~30–80 output tokens. That's well under a penny per reply.
 
 ## When replies don't happen
 
@@ -113,7 +113,7 @@ The engine returns silently (no error to the customer) in these cases:
 |---|---|
 | Phone number not linked to an agent | The dialled number isn't in `phone_numbers` and has no legacy mapping |
 | Agent has no Twilio credentials | The agent is configured but its `twilio_account_sid` / `twilio_auth_token` are missing |
-| Claude returned an empty response | Rare — usually a transient API issue, no message is sent |
+| The agent returned an empty response | Rare — usually a transient API issue, no message is sent |
 | Twilio rejected the send | Carrier issue, invalid number format, etc. Logged for review. |
 
 All four show up in your Logs page in the dashboard.
