@@ -87,6 +87,19 @@ This applies to both **inbound calls** and **inbound SMS replies**, so a reselle
   Set `custom_prompt` in the body when [importing a number](/api-reference/phone-numbers/import), or update it anytime with `PATCH /v1/phone-numbers/:phoneNumber` and body `{ "custom_prompt": "..." }` (send `null` or an empty string to clear it - the number then falls back to the agent prompt alone). Maximum 8000 characters. Outbound calls use the per-call `prompt` instead (see [Create outbound call](/api-reference/calls/create-outbound)).
 </Note>
 
+## Other per-number settings
+
+The per-number model goes beyond the business profile. Several settings are configured **per phone number**, not per agent - so each number on a shared agent can behave differently:
+
+| Setting | What it does per number | Where |
+| --- | --- | --- |
+| Voice | Each number can use its own voice (inbound and outbound). Falls back to the agent's voice if unset. | [Voices](/concepts/voices) |
+| Webhook | Each number can POST call data to its own endpoint. | [Webhooks](/advanced/webhooks) |
+| Cal.com calendar | Each number books into its own connected calendar. | [Cal.com](/actions/calcom) |
+| Business profile (prompt) | Each number's identity layered over the agent prompt (above). | This page |
+
+The engine resolves all of these from the number involved in the call - the dialled number for inbound, the `from_number` for outbound. A number with none of these set simply uses the agent's defaults. This is what lets one agent serve many end-customers, each with their own voice, calendar, and webhook.
+
 ## Listing numbers
 
 ```bash
