@@ -14,7 +14,9 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "agent_125207e452f8714a",
-    "to_number": "+447386172392"
+    "to_number": "+447386172392",
+    "prompt": "Remind the caller about their appointment tomorrow at 2pm.",
+    "from_number": "+447700900123"
   }'
 ```
 
@@ -22,11 +24,13 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 |---|---|---|
 | `agent_id` | Yes | Which agent should make the call |
 | `to_number` | Yes | Destination (E.164 format) |
+| `prompt` | Yes | The CALL PURPOSE - what the agent should say / why it is calling. Outbound calls are rejected without it. |
+| `from_number` | No | Which of the agent's numbers to call from. Sets the caller ID **and the voice** (per-number voice). Omit to use the agent's first outbound-enabled number. |
 | `dynamic_vars` | No | Key-value pairs injected into the agent's prompt |
 | `campaign_id` | No | Link this call to a batch campaign |
 
 <Note>
-  You don't pass a `from_number`. The engine uses the Twilio number assigned to your agent via the [phone numbers](/api-reference/phone-numbers/import) endpoint. One agent = one phone identity. Import a number and assign it to the agent before making outbound calls.
+  One agent can have many phone numbers. Pass `from_number` to call from a specific one (this also sets the voice - see [Voices](/concepts/voices)). Omit it and the engine uses the agent's first outbound-enabled number. Import and enable numbers on the [phone numbers](/api-reference/phone-numbers/import) endpoint before calling.
 </Note>
 
 The response includes a `call_id` immediately. The actual call happens asynchronously - Twilio dials, the agent waits for pickup, and then the conversation runs.
