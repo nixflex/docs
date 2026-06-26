@@ -30,6 +30,8 @@ curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
 
 A number with its own `voice_id` uses that voice; a number without one falls back to the agent's voice. Changes take effect on the next call — no redeploy. See [Update phone number](/api-reference/phone-numbers/update) for the full endpoint.
 
+Per-number voice applies to **both inbound and outbound** calls. The voice is resolved from the number the call uses: the dialled number for inbound, the from_number for outbound, so a number sounds the same in both directions. Set it once; if it ever gets cleared, set it again before the next call.
+
 <Note>
   `voice_id` must be an exact, valid voice ID (for example `Olivia`, `Craig`, `Ashley`). An unrecognised value falls back to the agent's voice rather than erroring, so if a voice isn't changing, check the value is exact.
 </Note>
