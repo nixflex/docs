@@ -1,0 +1,184 @@
+---
+title: "Pre-call gate"
+description: "Decide whether to connect an inbound call before it is answered"
+icon: "shield-check"
+---
+
+Before Nixflex answers an inbound call, it can ask **your** server whether the call should connect. You reply `accept` (the call connects normally) or `reject` (the caller hears a busy tone and the call is never answered). This lets you gate calls with your own logic — most commonly, blocking an end-user who is out of credit — without Nixflex ever needing to know your billing.
+
+The decision happens **before the call is answered**, so a rejected call is never connected and incurs no Nixflex call charge.
+
+<Note>
+  This is separate from your own Nixflex balance. Nixflex independently checks that **your** account has credit. The pre-call gate is **your** layer, for **your** end-users.
+</Note>
+
+## When to use it
+
+- **Billing gate** — block an end-user who has run out of credit in your system.
+- **Business hours** — refuse calls outside opening times.
+- **Blocklist** — refuse known spam numbers.
+
+## Setting the URL
+
+You can set the URL at two levels. **Agent-level is recommended** — set it once and every number on the agent is gated, including numbers you add later.
+
+### Agent-level (recommended)
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/integrations/precall/agent/agent_f2b06c0e0bd877e9 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://api.yourapp.com/nixflex/precall"}'
+```
+
+### Number-level (optional override)
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/integrations/precall/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://api.yourapp.com/nixflex/precall-special"}'
+```
+
+`url` is required and must be `https://`.
+
+<Note>
+  Use the **full API key** in the `Authorization` header — both halves, `KEY_ID:KEY_SECRET` (the `nxf_...` id, a colon, then the `nxfs_...` secret). Not just the secret.
+</Note>
+
+<Warning>
+  **Resolution order: number URL → agent URL → no gate.** For each call, Nixflex uses the number's own URL if one is set; otherwise it falls back to the agent's URL; if neither is set, there is no gate and the call connects. Only **one** URL is ever called per call — never both. If you set an agent-level URL and a specific number isn't being gated the way you expect, check whether that number has its own number-level URL overriding it.
+</Warning>
+
+## What Nixflex sends
+
+When a call comes in, Nixflex POSTs this to your URL and waits for your reply:
+
+```json
+{
+  "event": "call.inbound",
+  "from": "+447386172392",
+  "to": "+447700900123",
+  "call_id": "CA1b5c0bfad4b56635b773938f16db2db7"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `event` | string | Always `call.inbound`. |
+| `from` | string | The caller's number. |
+| `to` | string | **The number that was dialled.** This identifies which of your end-users the call is for. |
+| `call_id` | string | The Twilio call SID for this call. |
+
+<Tip>
+  **The `to` field is the identity key.** Every inbound call has exactly one `to` number — the line that was dialled. Look your end-user up by this number to decide whether to allow the call. One shared URL handles all your numbers, because `to` tells you which end-user each request is about.
+</Tip>
+
+## What you reply
+
+Respond with `200` and one of these JSON bodies, within **5 seconds**:
+
+```json
+{ "action": "accept" }
+```
+
+```json
+{ "action": "reject", "reason": "no_credit" }
+```
+
+- **`accept`** → the call connects normally.
+- **`reject`** → the caller hears a busy tone. The call is never answered. `reason` is optional and is logged on your call record.
+
+### Example endpoint
+
+```javascript
+// Look the end-user up by the dialled number and decide.
+app.post('/nixflex/precall', async (req, res) => {
+  const { to } = req.body;                 // the dialled number = which end-user
+  const user = await lookupByNumber(to);   // your database
+
+  if (!user || user.credit <= 0) {
+    return res.json({ action: 'reject', reason: 'no_credit' });
+  }
+  return res.json({ action: 'accept' });
+});
+```
+
+## Fail-open behaviour
+
+<Warning>
+  **The gate fails open.** If your server times out (over 5 seconds), errors, returns a non-200 status, or returns anything other than an explicit `{"action":"reject"}`, **the call connects**. A bug or outage on your side never blocks every call — but it does mean calls go through **ungated**. In billing terms, a broken endpoint costs you revenue (free calls get connected), not downtime. **Monitor your endpoint's uptime and latency** — failures here are silent, because by design they let calls through.
+</Warning>
+
+Only an explicit `{"action":"reject"}` blocks a call. Everything else — accept, empty body, malformed JSON, a `500`, a timeout — connects.
+
+<Note>
+  The timeout is **5 seconds**. Keep your endpoint to a single database lookup. If you run it on a serverless platform (Edge Functions, Lambda), watch for **cold starts** — a slow first invocation will silently fall through to connect. Keep the function warm or the logic minimal.
+</Note>
+
+## Reading and removing the URL
+
+```bash
+# Agent-level
+curl https://api.nixflex.com/v1/integrations/precall/agent/agent_f2b06c0e0bd877e9 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "agent_id": "agent_f2b06c0e0bd877e9", "precall_webhook_url": "https://...", "is_set": true }
+
+curl -X DELETE https://api.nixflex.com/v1/integrations/precall/agent/agent_f2b06c0e0bd877e9 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "ok": true, "deleted": true, "agent_id": "agent_f2b06c0e0bd877e9" }
+```
+
+```bash
+# Number-level
+curl https://api.nixflex.com/v1/integrations/precall/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "phone_number": "+447700900123", "precall_webhook_url": "https://...", "is_set": true }
+
+curl -X DELETE https://api.nixflex.com/v1/integrations/precall/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "ok": true, "deleted": true, "phone_number": "+447700900123" }
+```
+
+<Note>
+  The `GET` response field is `precall_webhook_url`, even though you set it with `url` in the `PUT` body. Read `is_set` to check programmatically whether a gate is configured.
+</Note>
+
+## Security
+
+<Warning>
+  The pre-call POST is **not signed yet**. Anyone who learns your URL could POST a fake `call.inbound` payload or hammer the endpoint. Until request signing ships, protect your endpoint with a **shared secret in the URL** — e.g. set the URL to `https://api.yourapp.com/nixflex/precall?token=LONG_RANDOM_STRING` and verify that token on every request.
+</Warning>
+
+Request signing (an `X-Nixflex-Signature` HMAC header, like the [post-call webhook](/advanced/webhooks#signing-and-verification)) is on the roadmap. When it ships, you will be able to verify the pre-call POST the same way.
+
+## Testing it
+
+<Steps>
+  <Step title="Set the URL">
+    Set an agent-level URL pointing at an endpoint that returns `{"action":"reject","reason":"test"}`.
+  </Step>
+  <Step title="Call the number">
+    Call any number on that agent. You should hear a **busy tone** — the call is never answered.
+  </Step>
+  <Step title="Check the logs">
+    Your engine logs show the reject line for that call.
+  </Step>
+  <Step title="Flip to accept">
+    Change your endpoint to return `{"action":"accept"}` and call again. The call connects normally.
+  </Step>
+  <Step title="Test fail-open">
+    Point the URL at a dead endpoint or one that sleeps over 5 seconds, then call. The call should still connect (fail-open).
+  </Step>
+</Steps>
+
+## Limits and notes
+
+- **Inbound only.** Outbound calls are initiated by you, so gate them in your own code before placing the call.
+- **5-second timeout.** Slower than that = fail-open (connect).
+- **Only explicit `reject` blocks.** Everything else connects.
+- **Reject = busy tone, before answer.** No Nixflex call charge for a rejected call, and a busy tone signals "try again later" to the caller.
+
+## Roadmap
+
+`accept` / `reject` covers billing and access gating today. A future version may also let the response inject dynamic variables or override which agent handles the call. The current contract (`accept` / `reject`) will continue to work unchanged.
