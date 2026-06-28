@@ -76,7 +76,7 @@ The body is a **flat JSON object** — every field is at the top level (no neste
 
 | Field | Type | Notes |
 |---|---|---|
-| `event` | string | `call.completed` for finished calls. The dashboard Test button sends `webhook.test`. |
+| `event` | string | `call.started` (call connected) or `call.completed` (call finished). The dashboard Test button sends `webhook.test`. See [Event types](#event-types). |
 | `call_id` | string | Twilio call SID. Use this as your idempotency key. |
 | `agent_id` | string | The agent that handled the call. |
 | `direction` | string | `inbound` or `outbound`. |
@@ -138,7 +138,13 @@ The array is **per call**: every booking action taken on that one call is listed
 </Note>
 ## Event types
 
-The `event` field is currently always `call.completed` for finished calls. The dashboard "Test" button sends a separate `webhook.test` event so you can verify reachability.
+The `event` field tells you which event the payload represents:
+
+- **`call.started`** — fires when a call connects, about 2 seconds after it begins. Use it for live tracking (a call just started on one of your numbers). Only the early fields are populated: `event`, `call_id`, `agent_id`, `direction`, `from`, `to`, `status`, and `started_at`. The post-call fields (`transcript`, `summary`, `sentiment`, `successful`, `extracted`, `recording_url`, `duration_seconds`, `ended_at`, `avg_latency_ms`) are `null`, and `bookings` is an empty array, because the call has not happened yet.
+- **`call.completed`** — fires about 60 seconds after a call ends, with the full payload (transcript, summary, recording, bookings, and analysis).
+- **`webhook.test`** — sent by the dashboard "Test" button so you can verify reachability. Not a real call.
+
+Both `call.started` and `call.completed` are delivered to the same webhook URL. Switch on the `event` field to tell them apart. `call.started` uses the same delivery, retry, and logging as `call.completed`.
 
 ## Signing and verification
 
