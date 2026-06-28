@@ -28,6 +28,29 @@ curl https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Au
 curl -X DELETE https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
+## Second webhook URL (optional)
+
+Each number can have a second webhook URL in addition to the primary one. Both URLs receive the same payload, for both events (`call.started` and `call.completed`). Use it to send call data to a second endpoint — for example, your own system alongside a primary destination.
+
+The second URL is **API-only** (there is no dashboard field for it). It mirrors the primary webhook routes, using `webhook2` in the path:
+
+```bash
+# Set the second URL
+curl -X PUT https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://api.yourapp.com/nixflex/calls-2"}'
+
+# Read it
+curl https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+# -> { "phone_number": "+447700900123", "webhook_url_2": "https://...", "is_set": true }
+
+# Remove it
+curl -X DELETE https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+`url` is required and must be `https://`. The primary webhook (set via `/webhook/number/`) is unaffected — the two URLs are independent. A number with both set delivers to both; with only one set, only that one fires.
+
 ## Payload structure
 
 The body is a **flat JSON object** — every field is at the top level (no nested `call` wrapper). Only a curated, whitelisted set of fields is sent; internal data (your system prompt, API key id, database ids) is never included.
