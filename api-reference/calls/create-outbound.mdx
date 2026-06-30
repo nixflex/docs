@@ -6,8 +6,10 @@ api: "POST https://api.nixflex.com/v1/calls/outbound"
 
 Triggers Nixflex to call a phone number. The agent dials, waits for pickup, runs voicemail detection, and starts the conversation when a human answers.
 
+The call is fire-and-forget: the request returns immediately with a `call_id`, then the actual ringing, conversation, and ending all happen asynchronously. If you want the result, set a `webhook_url` on the agent (or on the number) and you will receive a `call.completed` event when the call ends.
+
 <Note>
-  You don't pass a `from_number`. The engine uses the Twilio number assigned to your agent via the [phone numbers](/api-reference/phone-numbers/import) endpoint. Make sure your agent has a phone number assigned first.
+  The number you dial from must be **outbound-enabled**. A number that only handles inbound calls will not place outbound calls. Enable outbound on the Phone Numbers page (or when you import the number). Inbound working does **not** mean outbound works â€” they are separate switches.
 </Note>
 
 ## Request
@@ -31,21 +33,36 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `agent_id` | string | Yes | Agent that will handle this call |
-| `prompt` | string | Yes | The call purpose - what the agent should say and why it is calling. Sent fresh per call, stored nowhere. Separate from the agent's own prompt. |
-| `to_number` | string | Yes | Recipient in E.164 format (`+44...`) |
-| `dynamic_vars` | object | No | Key-value pairs injected into the agent's prompt |
-| `campaign_id` | string | No | Link this call to a batch campaign |
+| `agent_id` | string | Yes | The agent that will handle this call. Must belong to your API key. |
+| `to_number` | string | Yes | Who to call, in E.164 format (`+447386172392`, not `07386172392`). |
+| `prompt` | string | Yes | The call purpose â€” what the agent should say and why it is calling. Sent fresh per call, stored nowhere. This is separate from the agent's own saved prompt and must not be empty. |
+| `dynamic_vars` | object | No | Key-value pairs injected into the prompt (see below). |
+| `from_number` | string | No | Which of your numbers to dial from. Must be an **outbound-enabled** number on this agent. If you omit it, the engine uses the agent's first outbound-enabled number. |
+| `campaign_id` | string | No | Link this call to a batch campaign for reporting. |
+
+<Warning>
+  The request body uses `to_number` (not `to`). Sending `to` will fail with `missing_field`. (`to` is used by the SMS endpoints, not by outbound calls.)
+</Warning>
+
+## How the dialing number is chosen
+
+You do not have to pass `from_number`. The engine works out which of your numbers to dial from in this order:
+
+1. **You passed `from_number`** â†’ the engine uses exactly that number, but only if it is outbound-enabled and belongs to this agent under your API key. If it is not, you get `from_number_not_found`.
+2. **You omitted `from_number`** â†’ the engine picks the agent's first outbound-enabled number.
+3. **Legacy fallback** â†’ if the agent has no rows in the phone numbers table, it falls back to the single number stored on the agent itself.
+
+If none of these produce a usable number, you get `agent_missing_phone_number`.
 
 ## Dynamic variables
 
-Variables in `dynamic_vars` are interpolated into the system prompt. In your prompt, reference them with curly braces:
+Anything in `dynamic_vars` is interpolated into the prompt. Reference each value with curly braces:
 
 ```
 You are calling {patient_name} about their appointment on {appointment_time}.
 ```
 
-The engine replaces `{patient_name}` with `"Sarah"` before sending to the agent. If a variable referenced in the prompt isn't in `dynamic_vars`, it's left as-is (the agent will see the literal `{patient_name}`).
+The engine replaces `{patient_name}` with `"Sarah"` before the agent speaks. If the prompt references a variable that is not in `dynamic_vars`, it is left as-is â€” the agent will see the literal `{patient_name}` text, so double-check your keys match.
 
 ## Response
 
@@ -60,40 +77,41 @@ The engine replaces `{patient_name}` with `"Sarah"` before sending to the agent.
 }
 ```
 
-The response returns immediately. Twilio dials within ~5 seconds. The actual call lifecycle (ringing -> connected -> ended) happens asynchronously - you'll get a webhook when the call ends if you have `webhook_url` set on the agent.
+The response returns immediately. Twilio dials within ~5 seconds. The actual call lifecycle (ringing â†’ connected â†’ ended) happens asynchronously â€” you will receive a webhook when the call ends if you have a `webhook_url` set.
 
 ## Validation order
 
-The engine validates in this order:
+The engine checks these in order and stops at the first failure:
 
-1. `agent_id`, `to_number`, and `prompt` are present
-2. `to_number` is E.164 format (e.g. `+447386172392`, not `07386172392`)
-3. Agent belongs to your API key
-4. Agent has a phone number assigned (via the phone_numbers table)
-5. Twilio credentials exist for that phone number
+1. `agent_id`, `to_number`, and `prompt` are all present (and `prompt` is not blank).
+2. `to_number` is valid E.164 (e.g. `+447386172392`, not `07386172392`).
+3. The agent exists and belongs to your API key.
+4. The agent has an **outbound-enabled** number assigned. Inbound-only numbers do not count. If you passed a specific `from_number`, it must be outbound-enabled on this agent.
+5. Twilio credentials exist for that number.
 
-If any check fails, you get a 400 with the specific `code`.
+Each failure returns a `400` with a specific `code` (see below).
 
 ## Errors
 
 | Code | HTTP | Cause |
 |---|---|---|
-| `missing_field` | 400 | `agent_id`, `to_number`, or `prompt` missing |
-| `invalid_phone_format` | 400 | `to_number` not E.164 |
-| `agent_missing_phone_number` | 400 | Agent has no phone number assigned. Import one via [Phone numbers](/api-reference/phone-numbers/import) |
-| `agent_missing_twilio_credentials` | 400 | Phone number has no Twilio credentials stored |
+| `missing_field` | 400 | `agent_id`, `to_number`, or `prompt` is missing or empty |
+| `invalid_phone_format` | 400 | `to_number` is not valid E.164 |
+| `from_number_not_found` | 400 | The `from_number` you passed is not an outbound-enabled number on this agent. Import it and enable outbound on the Phone Numbers page. |
+| `agent_missing_phone_number` | 400 | The agent has no number assigned. Import one via [Phone numbers](/api-reference/phone-numbers/import) and enable outbound. |
+| `agent_missing_twilio_credentials` | 400 | The chosen number has no Twilio credentials stored |
 | `outbound_failed` | 502 | Twilio rejected the dial (see `details.twilio_error`) |
 
 ## What happens next
 
 After you trigger the call:
 
-1. Twilio dials the `to_number` using the agent's assigned phone number
-2. Voicemail detection runs (AMD + speech-pattern matching)
-3. If voicemail is detected, the engine ends the call
-4. If a human answers, the agent starts the conversation
-5. Call ends naturally or via `[END_CALL]` / timeout
-6. Recording is saved, post-call analysis runs
-7. Webhook fires to your agent's `webhook_url`
+1. Twilio dials the `to_number` using the chosen outbound number.
+2. Voicemail detection runs (AMD + speech-pattern matching).
+3. If voicemail is detected, the engine ends the call.
+4. If a human answers, the agent starts the conversation using your `prompt`.
+5. The call ends naturally, or via `[END_CALL]`, or on timeout.
+6. The recording is saved and post-call analysis runs.
+7. A `call.completed` webhook fires to your `webhook_url` if one is set.
 
 See [Outbound calls](/concepts/outbound-calls) for the full conceptual overview.
