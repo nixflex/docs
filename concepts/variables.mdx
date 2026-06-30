@@ -46,25 +46,20 @@ These are computed every call from the engine clock + your agent's timezone sett
 
 | Variable | What it does |
 |---|---|
-| `{{caller_history}}` | Summary of the most recent call from this number to this agent |
+| `{{caller_history}}` | The name a returning caller gave on their most recent previous call (name only - no call summaries or booking details) |
 
-When a number that has called before dials your agent again, the engine looks up the most recent call in parallel with the agent load (overlapping the existing DB wait — adds zero latency). If past calls exist, the engine injects a history block into the prompt along with usage instructions for the agent:
+When a number that has called before dials your agent again, the engine looks up the caller's most recent call **that captured a name** - in parallel with the agent load, so it adds zero latency. If a name is on file, the engine injects a short hint at the top of the prompt:
 
 ```text
 === CALLER HISTORY (this number has called you before) ===
-PREVIOUS CALLS FROM THIS NUMBER (most recent first):
-- 2026-05-24 (happy) [resolved]: Booked table for 4 on Friday 7pm. Name on file: John.
-- 2026-05-22 (neutral): Asked about gluten-free menu options.
-
-HOW TO USE THIS HISTORY:
-- Reference past calls only if the caller mentions them OR asks something you can
-  answer from history.
-- Do NOT proactively volunteer "I see you called us X times before".
-- If a name appears in history, you may greet them by name once.
-- Never read the history list aloud — it is for you, not the caller.
+RETURNING CALLER: the name on file for this caller is "John". Greet them by name
+naturally at the start of the call (for example, "Hi John"). If they correct you
+or it is clearly someone else, use the new name instead.
 ```
 
-This gives the agent enough context to handle returning callers naturally without being intrusive. First-time callers (no past calls) get nothing extra in the prompt — no clutter, no noise.
+That's the whole block - **a name and nothing else.** No past summaries, bookings, dates, or sentiment are ever injected into a live call. This is deliberate: injecting past booking details once caused agents to falsely confirm bookings they had not made. The name alone carries no such risk, and it is enough to greet a returning caller naturally.
+
+The name comes from the most recent previous call where one was captured, so a quick call that did not capture a name will not erase a known name. If the caller gives a new name, that becomes the name on file going forward. First-time callers (no name on file) get nothing extra - no clutter.
 
 ## When variables fire
 
@@ -85,7 +80,7 @@ We're deliberate about what to add. Each variable is a contract — once shipped
 |---|---|
 | `{{agent_name}}` | You already type the agent's name in your own prompt. A variable just adds indirection. |
 | `{{business_hours}}` | Hours rarely match a single string. Put them in your prompt directly so the agent can reason about edge cases ("closed for lunch", "open on bank holidays"). |
-| `{{caller_name}}` for inbound | Inbound callers are strangers until they identify themselves. After 2 calls, `{{caller_history}}` covers it. |
+| `{{caller_name}}` for inbound | Inbound callers are strangers until they identify themselves. Once they have given their name on a previous call, `{{caller_history}}` greets them by name. |
 | Arbitrary developer-supplied vars per call | Coming later — requires API and webhook changes. |
 
 ## Direction support
