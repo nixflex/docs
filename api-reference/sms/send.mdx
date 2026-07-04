@@ -6,6 +6,10 @@ api: "POST https://api.nixflex.com/v1/sms"
 
 Sends a single SMS via your Twilio number. Useful for one-off messages, status updates, or reminders that do not need a phone call.
 
+<Warning>
+  This endpoint uses `to` for the recipient. The outbound-call endpoint (`POST /v1/calls/outbound`) uses `to_number` instead. They are different field names for the same idea - sending `to_number` here will fail with a missing-field error. Double-check when copying between the two.
+</Warning>
+
 ## Request
 
 ```bash
@@ -24,10 +28,11 @@ curl -X POST https://api.nixflex.com/v1/sms \
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `agent_id` | string | Yes | Agent that owns this SMS — its `system_prompt` handles any replies |
-| `to` | string | Yes | Recipient in E.164 |
-| `from_number` | string | Yes | Your imported Twilio number |
+| `agent_id` | string | Yes | Agent that owns this SMS - its `system_prompt` handles any replies |
+| `to` | string | Yes | Recipient in E.164 (this endpoint uses `to`, not `to_number`) |
 | `message` | string | Yes | Message text. **600 chars recommended** for reliable carrier delivery. Twilio hard cap is 1600. See [SMS length guide](/sms/send-sms#sms-length-and-deliverability). |
+| `from_number` | string | No | Which of your imported Twilio numbers to send from. If omitted, the agent's own number is used. Required only if the agent has no number of its own. |
+| `context` | object | No | Optional reply context. Pass `{ "reply_context": "..." }` to give the agent extra background for handling replies to this specific message. |
 
 ## Response
 
@@ -45,15 +50,16 @@ Status updates come asynchronously via Twilio status callbacks. Final status (`d
 
 ## Reply behaviour
 
-If the recipient replies, the agent automatically answers using its `system_prompt`. There is no separate reply-handling system or context field.
+If the recipient replies, the agent automatically answers using its `system_prompt`. There is no separate reply-handling system.
 
-**Best practice:** if recipients might reply to your SMS, include the relevant context (what you sent, what you expect them to ask) in the agent `system_prompt` before sending. See [Send SMS concept page](/sms/send-sms) for details.
+For per-message context, pass a `context` object with `reply_context` - the agent uses it when answering replies to that message. Otherwise, put any standing context the agent needs directly in its `system_prompt` before sending. See [Send SMS concept page](/sms/send-sms) for details.
 
 ## Errors
 
-| Code | Cause |
-|---|---|
-| `from_number_not_owned` | `from_number` is not in your account |
-| `message_too_long` | Message over 1600 chars |
-| `sms_not_supported_in_region` | US number without A2P 10DLC |
-| `recipient_unsubscribed` | Recipient previously sent STOP |
+| HTTP | Error message | Cause |
+|---|---|---|
+| 400 | `Required: agent_id, to, message` | One of the required fields is missing |
+| 404 | `Agent not found` | `agent_id` does not exist or is not yours |
+| 400 | `from_number required - this agent has no number of its own, so specify which imported number to send from` | No `from_number` passed and the agent has no number |
+| 400 | (credentials error) | The chosen number has no Twilio credentials stored |
+| 500 | `Failed to send SMS via Twilio` | Twilio rejected the send |
