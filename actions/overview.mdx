@@ -20,6 +20,10 @@ The LLM generates a normal reply. If the reply contains a tag, the engine interc
 
 The caller never hears the tag itself. It exists only as a signal between the LLM and the engine.
 
+<Note>
+  **You control what the agent says.** The tag only triggers the action. The sentence around it is whatever you tell the agent to say in your prompt. Want a specific line before it transfers? Write that line in your prompt, then the tag. The agent speaks your words; the engine runs the action.
+</Note>
+
 ## Built-in tags
 
 <Columns cols={3}>
@@ -34,6 +38,10 @@ The caller never hears the tag itself. It exists only as a signal between the LL
   </Card>
 
 </Columns>
+
+<Note>
+  **You do not have to use `[END_CALL]`.** The agent already ends the call on its own when the conversation naturally finishes. Use `[END_CALL]` only when you want tighter control - for example, end right after a booking is confirmed, or keep the call going until something specific happens. Put the rule in your prompt and the agent follows it.
+</Note>
 
 ## Telling the agent when to use them
 
