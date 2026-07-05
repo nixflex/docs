@@ -112,7 +112,7 @@ The body is a **flat JSON object** — every field is at the top level (no neste
 | `summary`, `sentiment`, `successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
 | `extracted` | object / null | Your custom extraction fields. `null` if none configured. |
 | `bookings` | array | Appointments created, rescheduled, or cancelled during the call. Empty array if none. See [Appointment bookings](#appointment-bookings). |
-| `recording_url` | string | Public MP3 link. Populated by the 60s delay (see below). |
+| `recording_url` | string | Link to the call's MP3 recording, hosted in Nixflex storage. Populated by the 60s delay (see below). The recording is kept in your Nixflex backend and delivered here - it is not retained on your telephony provider. |
 | `recording_duration_seconds` | number | Length of the recorded conversation in seconds. Use this to show end-users the real talk time. |
 | `voicemail_detected` | boolean | Outbound only — whether the call reached voicemail. |
 | `campaign_id` | string / null | Set if the call was part of a batch campaign. |
@@ -121,6 +121,10 @@ The body is a **flat JSON object** — every field is at the top level (no neste
 <Warning>
   The payload contains caller data — the caller's phone number (`from`), the full `transcript`, and any `extracted` fields can include personal information. Store and process it in line with your own privacy policy and applicable law.
 </Warning>
+
+<Note>
+  Call recordings are stored in your Nixflex backend and delivered via `recording_url`. They are not retained on your telephony provider's servers - Nixflex saves its own copy and removes the provider's copy after download. For long-term storage, save the file from `recording_url` into your own backend when you receive the webhook.
+</Note>
 
 ## Appointment bookings
 
