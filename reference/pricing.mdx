@@ -1,10 +1,10 @@
 ---
 title: "Pricing"
-description: "Simple per-minute pricing — no surprises"
+description: "Simple per-minute pricing with no surprises"
 icon: "dollar-sign"
 ---
 
-Nixflex charges a flat **$0.08 per minute** of voice. No setup fees, no monthly minimums, no per-feature charges.
+Nixflex charges a flat **$0.08 per minute** of voice as the standard rate. No setup fees, no monthly minimums, no per-feature charges.
 
 ## Voice
 
@@ -12,70 +12,63 @@ Nixflex charges a flat **$0.08 per minute** of voice. No setup fees, no monthly 
 |---|---|
 | **Voice (all calls, inbound + outbound)** | **$0.08** |
 
-Voice is billed per second, rounded to the nearest second. A 1m23s call costs `83 × ($0.08 / 60) = $0.111`.
+Voice is billed by duration, rounded to the nearest hundredth of a minute. For example, a 1m 23s call is about 1.38 minutes, so at $0.08/min it costs roughly `1.38 x $0.08 = $0.11`.
 
-## What's included in every minute
+<Note>
+  $0.08/min is the standard rate. High-volume accounts can be set to a custom rate - contact [sales@nixflex.com](mailto:sales@nixflex.com).
+</Note>
+
+## What is included in every minute
 
 - Real-time speech recognition
 - AI reasoning
 - Natural-sounding voice synthesis
-- Call recording (stored on Nixflex, plus original kept on your Twilio)
+- Call recording (stored on Nixflex, with the original kept on your Twilio)
 - Post-call analysis (summary, sentiment, custom extraction)
 - Webhook delivery with automatic retries
 - Dashboard access and logs
 
 There are no separate per-feature charges. Everything is in the per-minute price.
 
-## What's not included
+## What you pay Twilio directly
 
-You pay these directly to your Twilio account (Bring Your Own Twilio):
+Because you bring your own Twilio, these costs go straight to your Twilio account - Nixflex never sees or marks them up:
 
-| Cost | Where it's billed |
+| Cost | Where it is billed |
 |---|---|
 | Phone numbers | Your Twilio account |
-| Voice minutes (carrier) | Your Twilio account |
+| Carrier voice minutes | Your Twilio account |
 | SMS messages | Your Twilio account |
-
-Because you BYO Twilio, Nixflex doesn't see or mark up these costs — you get Twilio's wholesale rates directly.
 
 ## SMS
 
-Nixflex doesn't charge for SMS. You pay Twilio directly at their standard rates for your region.
+Nixflex does not charge a separate per-SMS fee. SMS carrier costs are paid to your own Twilio account at their standard rates for your region.
 
 ## How billing works
 
 <Steps>
   <Step title="Top up credit">
-    Add credit to your account from the dashboard. Minimum top-up $20.
+    Add credit to your account from the dashboard. The minimum top-up is $5.
   </Step>
-  <Step title="Calls and SMS deduct from credit">
-    Each call deducts at the end. SMS deducts when sent.
-  </Step>
-  <Step title="Low balance alerts">
-    Email when credit drops below your threshold (default $20).
+  <Step title="Calls deduct from your credit">
+    Each call's cost is deducted from your balance when the call ends.
   </Step>
   <Step title="Auto-top-up (optional)">
-    Set a payment method to auto-top-up when balance falls below a threshold. Never run out mid-call.
+    Save a card and set an amount plus a threshold. When your balance falls below that threshold, Nixflex tops it up automatically so you never run out mid-call. You can also set a monthly cap on auto-top-ups.
   </Step>
 </Steps>
 
 ## Usage tracking
 
-Check current usage anytime:
+Check your current usage and balance anytime:
 
 ```bash
 curl https://api.nixflex.com/v1/usage \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-Returns total minutes, calls, SMS, and credit balance.
-
 ## Volume pricing
 
-High-volume customers get custom pricing. Contact [sales@nixflex.com](mailto:sales@nixflex.com) for a quote.
-
-## Refunds
-
-If a call fails due to a Nixflex error (not Twilio, not your endpoint), we credit it back automatically. You'll see `refunded` entries in your usage logs.
+High-volume customers can be set to a custom per-minute rate. Contact [sales@nixflex.com](mailto:sales@nixflex.com) for a quote.
 
 For billing questions, email [support@nixflex.com](mailto:support@nixflex.com).
