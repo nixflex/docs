@@ -1,150 +1,92 @@
 ---
 title: "Errors"
-description: "Error codes and how to handle them"
+description: "How the API reports errors and what the responses look like"
 icon: "triangle-exclamation"
 ---
 
-All Nixflex API errors follow a consistent shape so you can handle them programmatically.
+The API uses standard HTTP status codes. A `2xx` status means success, a `4xx` status means something was wrong with your request, and a `5xx` status means something went wrong on our side.
 
-## Error response format
+Every error response includes a JSON body with an `error` field describing what happened:
 
 ```json
-{
-  "error": {
-    "type": "invalid_request",
-    "code": "invalid_phone_format",
-    "message": "Invalid phone number format. Use international format like +447446466847.",
-    "doc_url": "https://docs.nixflex.com/reference/errors#invalid_phone_format",
-    "details": {}
-  }
-}
+{ "error": "Invalid or missing API key" }
 ```
 
-| Field | Use it for |
-|---|---|
-| `type` | Broad category — for routing your error handler |
-| `code` | Specific reason — for programmatic logic |
-| `message` | Human-readable explanation — safe to display to users |
-| `doc_url` | Link to this page for more context |
-| `details` | Extra context (which field failed, what was expected) |
+Some errors add a `detail` field with extra context:
 
-Always check `code` for branching logic, not `message` (messages may be reworded).
-
-## Error types
-
-| Type | HTTP status | Meaning |
-|---|---|---|
-| `authentication_error` | 401 | Missing or invalid API key |
-| `permission_error` | 403 | Authenticated but not allowed to access this resource |
-| `invalid_request` | 400 | Malformed or missing parameters |
-| `not_found` | 404 | The resource doesn't exist or doesn't belong to you |
-| `conflict` | 409 | The action conflicts with current state |
-| `rate_limit_error` | 429 | Too many requests; back off and retry |
-| `provider_error` | 502 | An upstream provider failed (telephony, speech, voice, or AI) |
-| `server_error` | 500 | Something went wrong on our end |
-
-## Common error codes
-
-### Authentication
-
-| Code | Cause | Fix |
-|---|---|---|
-| `invalid_api_key` | Wrong, missing, or revoked key | Check the `Authorization` header format and key validity |
-| `key_secret_required` | Header missing the secret half | Format should be `Bearer key_id:key_secret` |
-
-### Agents
-
-| Code | Cause | Fix |
-|---|---|---|
-| `agent_not_found` | `agent_id` doesn't exist | Verify the ID from `GET /v1/agents` |
-| `agent_not_owned` | Agent exists but belongs to another account | Use one of your own agents |
-| `prompt_too_long` | System prompt exceeds limit | Trim to under ~10,000 chars |
-| `invalid_voice_id` | Voice ID not recognised | Use a voice from the supported list |
-
-### Phone numbers
-
-| Code | Cause | Fix |
-|---|---|---|
-| `invalid_phone_format` | Number not in E.164 (`+CC...`) | Format as `+447446466847` |
-| `invalid_twilio_sid` | SID doesn't match `AC` + 32 hex chars | Get the right SID from Twilio console |
-| `number_not_in_twilio` | Number doesn't exist in the Twilio account given | Confirm the number is in that account |
-| `twilio_invalid_credentials` | Twilio SID + token combo rejected | Verify token isn't expired or wrong |
-| `twilio_auth_failed` | Twilio returned error code 20003 | Same as above — wrong creds |
-| `number_already_imported` | Number is already on a different agent | Delete first, then re-import |
-
-### Calls
-
-| Code | Cause | Fix |
-|---|---|---|
-| `call_not_found` | `call_id` doesn't exist or isn't yours | Verify with `GET /v1/calls` |
-| `outbound_failed` | Twilio couldn't place the call | Check `details.twilio_error` |
-| `from_number_not_owned` | The `from_number` isn't imported to your account | Import it first |
-| `agent_no_phone` | Outbound call but agent has no phone numbers attached | Attach a number to the agent |
-
-### SMS
-
-| Code | Cause | Fix |
-|---|---|---|
-| `sms_not_supported_in_region` | US number without A2P 10DLC | Register A2P with Twilio |
-| `message_too_long` | Body over 1600 chars | Split or shorten |
-| `recipient_unsubscribed` | Recipient previously sent STOP | They opted out; can't message them |
-
-### Rate limits
-
-| Code | Cause | Fix |
-|---|---|---|
-| `rate_limit_exceeded` | Too many API requests | See [rate limits](/reference/rate-limits); back off |
-| `concurrent_call_limit` | Too many simultaneous calls | Reduce campaign concurrency or contact us |
-
-## Handling errors in code
-
-A clean handler pattern:
-
-```javascript
-async function callNixflex(path, options) {
-  const res = await fetch(`https://api.nixflex.com${path}`, {
-    ...options,
-    headers: {
-      'Authorization': `Bearer ${process.env.NIXFLEX_KEY_ID}:${process.env.NIXFLEX_KEY_SECRET}`,
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!res.ok) {
-    const { error } = await res.json();
-
-    switch (error.code) {
-      case 'rate_limit_exceeded':
-        // Wait then retry
-        await sleep(2000);
-        return callNixflex(path, options);
-
-      case 'twilio_invalid_credentials':
-      case 'number_not_in_twilio':
-        // Show user-facing error
-        throw new Error(`Twilio setup issue: ${error.message}`);
-
-      case 'agent_not_owned':
-      case 'invalid_api_key':
-        // Auth issue — log and alert
-        await alertOps(error);
-        throw new Error('Auth failed');
-
-      default:
-        throw new Error(`Nixflex error: ${error.message}`);
-    }
-  }
-
-  return res.json();
-}
+```json
+{ "error": "delete_failed", "detail": "login user could not be removed" }
 ```
 
-## When to contact support
+<Note>
+  Check the HTTP status code first to decide how to react, then read the `error` message to see what to fix. The `error` field is a plain-language message, not a fixed machine code.
+</Note>
 
-If you get a `server_error` or repeated `provider_error` for the same operation, something's wrong on our end. Email [support@nixflex.com](mailto:support@nixflex.com) with:
+## Status codes
 
-- The `call_id` or `message_id` if applicable
-- The full error response (`type`, `code`, `details`)
-- Approximate timestamp
-- What you were trying to do
+| Code | Meaning | What to do |
+| --- | --- | --- |
+| `200` | Success | Use the response. |
+| `201` | Created - a new resource was made | Use the returned resource. |
+| `400` | Bad request - a field in your request was invalid | Read the `error` message and fix the request. |
+| `401` | Unauthorized - your API key is missing or invalid | Check your API key. See [Authentication](/authentication). |
+| `404` | Not found - the agent, call, or resource does not exist | Check the ID in your request. |
+| `500` | Server error - something went wrong on our side | Safe to retry, ideally with a short backoff. |
+
+## Common errors
+
+Missing or invalid API key:
+
+```json
+// 401
+{ "error": "Invalid or missing API key" }
+```
+
+A field is too long:
+
+```json
+// 400
+{ "error": "system_prompt too long. Maximum is 8000 characters (about 2000 tokens)." }
+```
+
+Agent not found:
+
+```json
+// 404
+{ "error": "Agent not found" }
+```
+
+Call not found:
+
+```json
+// 404
+{ "error": "Call not found" }
+```
+
+## The Web Assistant endpoint is different
+
+The public widget endpoint (`POST /v1/widget/message`) never returns a hard error to the visitor's browser. It always responds with `200` and an `ok` flag:
+
+```json
+{ "ok": true, "reply": "We are open Mon to Fri, 8:30am to 5:30pm." }
+```
+
+If something goes wrong, it still returns `200` with `ok: false` and a short reason, so your widget can show a friendly fallback instead of breaking:
+
+```json
+{ "ok": false, "reason": "server_error" }
+```
+
+## Handling errors well
+
+<Steps>
+  <Step title="Check the status code">
+    A `4xx` means fix your request. A `5xx` means our side - safe to retry.
+  </Step>
+  <Step title="Read the error message">
+    The `error` field tells you what went wrong in plain language.
+  </Step>
+  <Step title="Retry 5xx with a short backoff">
+    For a `500`, wait a moment and try again. Do not retry in a tight loop.
+  </Step>
+</Steps>
