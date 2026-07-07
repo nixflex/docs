@@ -1,0 +1,107 @@
+---
+title: "Web Assistant"
+description: "Add a call and chat widget to any website, powered by your agent"
+icon: "window"
+---
+
+The Web Assistant is a small **call and chat widget** you paste onto any website. Visitors can call the business or chat with the AI right there in the corner of the page. The chat uses the same agent brain as your phone line, so answers stay consistent.
+
+<Note>
+  The widget is **inbound only**. It handles the visitor calling or messaging in. There is no browser microphone and no outbound calling from the widget.
+</Note>
+
+## The one rule to understand
+
+The design is chosen by the **snippet**, not saved to the number. Every phone number that has an agent can power a widget in any of the ready designs. Which design shows is decided by the attributes in the script tag - nothing is "installed" onto the number.
+
+This means one number can appear in Design 1 on one site and Design 7 on another. The number only tells the engine which agent answers. The look is chosen in the tag.
+
+## Add it to a website
+
+Paste this one line before the closing `</body>` tag:
+
+```html
+<script src="https://nixflex.com/button.js"
+  data-number="+441234567890"
+  data-design="7"
+  data-color="#25D366"
+  data-name="Bright Smile Dental"></script>
+```
+
+That is all. The widget appears in the corner, and the visitor can call or chat. No build step, no account needed on the page.
+
+## Attributes
+
+<Steps>
+  <Step title="data-number (required)">
+    The business phone number that has the agent. This decides which agent answers.
+  </Step>
+  <Step title="data-design">
+    Which look, `1` to `10`. See the design list in your dashboard. Default `1`.
+  </Step>
+  <Step title="data-color">
+    The accent colour, any hex value (for example `#25D366`).
+  </Step>
+  <Step title="data-name">
+    The display name shown on the widget. Defaults to the agent name.
+  </Step>
+  <Step title="data-icon">
+    The assistant icon from the preset set: `sparkle`, `robot`, `wave`, `mic`, `headset`, `chatbot`, `brain`, `bolt`, `chat`.
+  </Step>
+  <Step title="data-chips">
+    The quick-reply buttons, separated by a pipe. Example: `data-chips="Book appointment|Opening hours|Prices"`. Set `data-chips=""` to remove them.
+  </Step>
+  <Step title="data-position">
+    `left` or `right`. Default `right`.
+  </Step>
+  <Step title="data-greeting">
+    The little greeting bubble text, or `off` to hide it.
+  </Step>
+</Steps>
+
+## Offer the widget to your own customers
+
+If you build a product on top of Nixflex and want your own customers to use the widget, you do **not** rebuild the designs - they already live in `button.js`. You choose how much control to give your customers.
+
+<CardGroup cols={2}>
+  <Card title="Pick one design for everyone" icon="lock">
+    You decide, for example, that all your customers use Design 7 in your brand colour. For each customer you generate the same snippet, only changing `data-number`. No picker needed.
+  </Card>
+  <Card title="Let each customer choose" icon="grip">
+    You show your customers a small design picker inside your own app (a few of the ten designs, or all of them). When a customer picks one, your app writes that design number into their snippet. You are only choosing which number goes into `data-design` - not rebuilding anything.
+  </Card>
+</CardGroup>
+
+## Build a fully custom widget
+
+If the ready designs are not enough and you want a completely custom look, you do not use `button.js` at all. You build your own widget front-end (your own HTML, CSS, launcher) and call the chat endpoint for the AI replies. The engine fully supports this - it does not care what the widget looks like.
+
+```json
+POST https://api.nixflex.com/v1/widget/message
+Content-Type: application/json
+
+{
+  "number": "+441234567890",
+  "history": [
+    { "role": "user", "content": "What time do you open?" }
+  ]
+}
+```
+
+Response:
+
+```json
+{ "ok": true, "reply": "We are open Mon to Fri, 8:30am to 5:30pm." }
+```
+
+<Note>
+  The endpoint is public - no API key is needed for the widget, so it works from any visitor's browser. Hold the conversation history in the visitor's browser and send it each time; the engine is stateless for chat. For calling, use a normal `tel:` link to the business number.
+</Note>
+
+## Cost
+
+The `button.js` file is static, so loading it and showing the widget costs nothing and adds no load to the engine. Only real chats cost anything - when a visitor sends a message, that is one AI reply, billed like any other usage. Showing the widget, the greeting bubble, and tapping to open are all free. Calls from the widget are normal inbound calls, billed the same as any call.
+
+## Privacy
+
+Each visitor's chat lives only in their own browser, so two visitors never see each other's conversation. The agent prompt is shared by all visitors of that business, which is correct - they are all contacting the same business.
