@@ -23,13 +23,18 @@ Voice is billed by duration, rounded to the nearest hundredth of a minute. For e
 - Real-time speech recognition
 - AI reasoning
 - Natural-sounding voice synthesis
-- Call recording (stored on Nixflex, with the original kept on your Twilio)
+- Call recording (stored on Nixflex; the Twilio copy is deleted automatically - see below)
 - Post-call analysis (summary, sentiment, custom extraction)
 - Webhook delivery with automatic retries
 - Dashboard access and logs
 
 There are no separate per-feature charges. Everything is in the per-minute price.
 
+## Call recordings
+
+When call recording is on, the engine saves the recording to Nixflex storage and then **deletes the copy on Twilio automatically**. This is deliberate: it avoids ongoing Twilio storage charges and means your call audio is not retained on Twilio.
+
+You get your recording as a `recording_url` in the post-call webhook (and on the call record). To keep a recording long-term, **download it and store it in your own backend** - Nixflex hosts the file but does not keep it forever (see [Data retention](/concepts/data-retention)).
 ## What you pay Twilio directly
 
 Because you bring your own Twilio, these costs go straight to your Twilio account - Nixflex never sees or marks them up:
