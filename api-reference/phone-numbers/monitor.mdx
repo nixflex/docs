@@ -1,0 +1,78 @@
+---
+title: "Live monitor toggle"
+description: "Turn live call monitoring on or off for a single phone number."
+---
+
+## Overview
+
+Live monitoring lets an authorised listener hear a live call on a number and, in later stages, take over the call. This is controlled **per phone number** and is **off by default**.
+
+Turning it on does not change how calls behave on its own — it only marks the number as eligible for monitoring. The actual listen and take-over features consume this flag.
+
+<Note>
+Monitoring is off by default. A number with monitoring off behaves exactly as a normal call.
+</Note>
+
+## Turn monitoring on or off
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format (for example `+447446466847`), passed in the URL.
+</ParamField>
+
+<ParamField body="enabled" type="boolean" required>
+  `true` to enable monitoring, `false` to disable it.
+</ParamField>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/monitor/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true}'
+```
+
+```json
+{
+  "ok": true,
+  "phone_number": "+447446466847",
+  "monitor_enabled": true
+}
+```
+
+## Check the current state
+
+Returns whether monitoring is currently on for the number.
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/monitor/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+```json
+{
+  "phone_number": "+447446466847",
+  "monitor_enabled": true
+}
+```
+
+## Reset to off
+
+Disables monitoring and returns the number to its default state.
+
+```bash
+curl -X DELETE "https://api.nixflex.com/v1/integrations/monitor/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+```json
+{
+  "ok": true,
+  "monitor_enabled": false,
+  "phone_number": "+447446466847"
+}
+```
+
+## Notes
+
+- The number must belong to your account (matched on your API key). A number you do not own returns `404`.
+- This setting is stored on the phone number itself, so it persists across calls until you change it.
+- Enabling monitoring alone does not start listening — it makes the number eligible. See the monitoring guide for how to listen and take over.
