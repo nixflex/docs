@@ -1,0 +1,99 @@
+---
+title: "Live Monitor"
+description: "Listen to a live AI call in real time from a phone or tablet."
+icon: "headphones"
+---
+
+## What is Live Monitor?
+
+Live Monitor lets an authorised person **listen to an AI call as it happens** - in real time, from a phone or tablet. When your AI agent answers a call for a business, the business owner (or you) can open the monitor app, see the calls happening live, and tap to listen in. You hear both sides: the caller speaking, and the AI replying, in sync.
+
+This is useful when a business owner is nervous about letting AI handle their calls. They can listen in, hear that the AI is doing a good job, and build trust - or catch a problem early. It is also handy for quality control and improving your prompts.
+
+<Note>
+Live Monitor is **listen-only** today. Taking over a live call and transferring a call to a device are planned for later stages. This page covers listening.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Enable monitoring on a number">
+    Monitoring is controlled **per phone number** and is **off by default**. You turn it on with a single API call (see below). You can do this from your own application - for example, enable it automatically when a business upgrades to a premium plan.
+  </Step>
+  <Step title="A call comes in">
+    When a caller reaches a monitored number, the AI answers exactly as normal. Monitoring does not change how the call behaves.
+  </Step>
+  <Step title="Listen live">
+    The authorised listener opens the monitor app, sees the live calls on numbers they own, and taps Listen. They hear the full call - caller and AI - in real time.
+  </Step>
+</Steps>
+
+## Enabling monitoring (API)
+
+Monitoring is turned on and off through the API, so you can automate it from your own app. Full request and response details are on the [Live monitor toggle](/api-reference/phone-numbers/monitor) API page. In short:
+
+```bash
+# Turn ON for a number
+curl -X PUT "https://api.nixflex.com/v1/integrations/monitor/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true}'
+```
+
+```bash
+# Turn OFF for a number
+curl -X DELETE "https://api.nixflex.com/v1/integrations/monitor/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+Because this is a normal API call, you can wire it into your own product - enable monitoring when a customer subscribes to a plan that includes it, and disable it when they downgrade. The setting is stored on the number and persists across calls until you change it.
+
+## Isolation and privacy
+
+- A listener can only see and hear calls on numbers **they own** (matched on the API key). One account can never monitor another account's calls.
+- Enabling monitoring on a number does not, by itself, start any listening or recording - it only marks the number as eligible. Audio only flows while someone is actively listening.
+- Monitoring never affects the call itself. If monitoring fails for any reason, the call continues normally.
+
+## Pricing
+
+Live Monitor is billed as a small add-on to the standard voice rate, and **only on the calls you can actually listen to** (inbound calls on monitored numbers).
+
+| | Per minute |
+|---|---|
+| Standard voice | $0.08 |
+| **Inbound call on a monitor-enabled number** | **$0.09** |
+| Outbound call (any number) | $0.08 |
+
+- The extra **$0.01/min** applies only to **inbound** calls on a number that has monitoring enabled - the calls a listener can tune into.
+- **Outbound calls are always billed at the standard $0.08/min**, even on a monitored number, because outbound calls are not monitored.
+- If you turn monitoring **off**, the number returns to the standard $0.08/min immediately.
+
+<Note>
+You are charged the small add-on on every inbound minute of a monitored number, whether or not anyone actually listened. This keeps billing simple and predictable - one clear rate per number - rather than trying to measure exact listen time.
+</Note>
+
+## Common questions
+
+<AccordionGroup>
+  <Accordion title="Can I enable monitoring automatically from my app?">
+    Yes. Enabling and disabling monitoring is a standard API call, so you can automate it - for example, turn it on when a customer upgrades to a plan that includes live monitoring, and off when they downgrade.
+  </Accordion>
+  <Accordion title="Does enabling monitoring change how calls work?">
+    No. A monitored number answers and behaves exactly like any other number. Monitoring only marks the number as eligible to be listened to, and adds the small per-minute charge on inbound calls.
+  </Accordion>
+  <Accordion title="Am I charged if nobody listens?">
+    On a monitored number, inbound minutes are billed at $0.09/min whether or not anyone listened, to keep billing simple. If you do not want the add-on on a number, turn monitoring off and it returns to $0.08/min.
+  </Accordion>
+  <Accordion title="Are outbound calls monitored or charged extra?">
+    No. Outbound calls are not monitored and are always billed at the standard $0.08/min, even on a number that has monitoring enabled.
+  </Accordion>
+  <Accordion title="Can two accounts see each other's calls?">
+    No. Listeners only ever see and hear calls on numbers they own, matched on their API key. Calls are fully isolated per account.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Live monitor toggle (API)](/api-reference/phone-numbers/monitor) - full request/response reference
+- [Pricing](/reference/pricing) - full pricing details
+- [Phone numbers](/concepts/phone-numbers) - how numbers work on Nixflex
