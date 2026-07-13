@@ -1,12 +1,12 @@
 ---
 title: "Introduction"
-description: "Build voice AI agents that make and receive phone calls"
+description: "Nixflex is an AI voice platform for building real-time AI phone agents."
 icon: "rocket"
 ---
 
-Nixflex is a real-time voice AI platform. You connect your Twilio number, give the agent a prompt, and your phone agent is live. Inbound and outbound calls, SMS, transfers, post-call analysis, batch campaigns — all behind one API.
+Nixflex is an **AI voice platform for building real-time AI phone agents**. You connect your Twilio number, give the agent a prompt, and your phone agent is live. Inbound and outbound calls, SMS, transfers, bookings, post-call analysis, and batch campaigns - all behind one API.
 
-Built for developers embedding voice agents into SaaS apps.
+Built for developers embedding voice agents into SaaS apps - and for businesses that want a phone agent without the plumbing.
 
 ## Why Nixflex
 
@@ -15,7 +15,13 @@ Built for developers embedding voice agents into SaaS apps.
     The speech engine handles STT, the AI handles reasoning, and the voice engine speaks the reply - fast enough for a natural back-and-forth.
   </Card>
   <Card title="Bring your own Twilio" icon="phone">
-    Multi-tenant from day one. Each customer connects their own Twilio account — you keep full control of phone numbers and billing.
+    Multi-tenant from day one. Each customer connects their own Twilio account - you keep full control of phone numbers and billing.
+  </Card>
+  <Card title="Live Monitor" icon="headphones">
+    Listen to a live AI call in real time from a phone or tablet. Because we run our own engine, we can tap the audio - something closed platforms cannot easily offer.
+  </Card>
+  <Card title="One number, voice + SMS" icon="messages">
+    The same number is a call agent and a chat agent. When someone texts, your AI replies automatically - no separate chat bot to build.
   </Card>
   <Card title="Tag-based actions" icon="tag">
     The agent triggers transfers, SMS, and call endings through prompt tags. No webhook orchestration needed for built-in actions.
@@ -24,6 +30,22 @@ Built for developers embedding voice agents into SaaS apps.
     Outbound calls automatically pull past call summaries for the recipient and inject them into the agent's prompt. Your agent remembers customers across calls.
   </Card>
 </Columns>
+
+## Your first agent
+
+Create an AI phone agent with a single API call:
+
+```bash
+curl -X POST "https://api.nixflex.com/v1/agents" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Front desk",
+    "system_prompt": "You are the friendly receptionist for Bella Hair Studio. Greet callers, answer questions, and book appointments."
+  }'
+```
+
+Then attach a phone number, and the agent answers calls and texts on it. See the [quickstart](/quickstart) for the full flow.
 
 ## Get started
 
@@ -53,7 +75,7 @@ A call moves through the engine like this:
 5. **Text-to-speech** turns the reply into natural voice and streams it back to the caller.
 6. **After the call ends**, Nixflex runs post-call analysis (summary, sentiment, custom data extraction) and fires your webhook.
 
-You configure the agent's behaviour with a system prompt and a handful of settings. Everything else — audio handling, interruption detection, language matching, voicemail filtering — is handled by the engine.
+You configure the agent's behaviour with a system prompt and a handful of settings. Everything else - audio handling, interruption detection, language matching, voicemail filtering - is handled by the engine.
 
 ## Built-in capabilities
 
@@ -61,6 +83,8 @@ You configure the agent's behaviour with a system prompt and a handful of settin
   <Card title="Inbound + outbound calls" icon="phone-arrow-up-right" />
   <Card title="Cold and warm transfers" icon="shuffle" />
   <Card title="Mid-call and post-call SMS" icon="message" />
+  <Card title="AI SMS replies (chat agent)" icon="comments" />
+  <Card title="Live call monitoring" icon="headphones" />
   <Card title="Voicemail detection (AMD + the speech engine)" icon="voicemail" />
   <Card title="Batch voice + SMS campaigns" icon="users" />
   <Card title="Auto language detection (15+ languages)" icon="globe" />
@@ -68,9 +92,22 @@ You configure the agent's behaviour with a system prompt and a handful of settin
   <Card title="Custom functions (tools the agent can call mid-call)" icon="wrench" />
 </Columns>
 
+## Integrations
+
+Connect your agents to the tools you already use - calendars, CRMs, messaging, and automation - configured per phone number.
+
+<CardGroup cols={2}>
+  <Card title="Integrations overview" icon="puzzle" href="/integrations/overview">
+    Cal.com, Google Calendar, Slack, GoHighLevel, Zapier, Make, and webhooks.
+  </Card>
+  <Card title="Bookings during a call" icon="calendar" href="/actions/calcom">
+    The agent checks availability and books live while the caller is on the line.
+  </Card>
+</CardGroup>
+
 ## Pricing
 
-Pay-as-you-go from **$0.08 per minute** of voice. SMS billed per message at your Twilio rate.
+Pay-as-you-go from **$0.08 per minute** of voice. SMS billed per message at your Twilio rate. Numbers with [Live Monitor](/concepts/live-monitor) enabled bill inbound minutes at $0.09.
 
 See [pricing details](/reference/pricing) for plans and volume discounts.
 
