@@ -1,0 +1,41 @@
+---
+title: "Webhook integration"
+description: "Send call events to your own webhook - per phone number."
+---
+
+Send call events to your own HTTPS endpoint after each call. Configured **per phone number**. A second webhook slot is also available for a second destination.
+
+## Set the webhook
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="url" type="string" required>
+  Your webhook endpoint. Must be an `https` URL.
+</ParamField>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/webhook/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-app.com/nixflex-webhook"}'
+```
+
+## Second webhook
+
+A second destination is available at the same shape under `/integrations/webhook2/number/:phoneNumber`.
+
+## Check / remove
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/webhook/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+
+curl -X DELETE "https://api.nixflex.com/v1/integrations/webhook/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For the webhook payload details, see [Webhooks](/advanced/webhooks).

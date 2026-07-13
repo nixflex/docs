@@ -1,0 +1,44 @@
+---
+title: "Make integration"
+description: "Send call data to Make - post-call and/or in-call - per phone number."
+---
+
+Connect Make to a phone number. Make supports **two modes**: a post-call webhook (after the call) and an in-call webhook (the AI calls it mid-conversation and waits for a response). You can set either or both. Configured **per phone number**.
+
+## Set the Make webhooks
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="post_call_url" type="string">
+  Make webhook called after the call ends. `https` only.
+</ParamField>
+<ParamField body="in_call_url" type="string">
+  Make webhook the AI calls during the call and waits for a JSON response. `https` only.
+</ParamField>
+
+<Note>
+At least one of `post_call_url` or `in_call_url` is required.
+</Note>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/make/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"post_call_url": "https://hook.make.com/xxxx", "in_call_url": "https://hook.make.com/yyyy"}'
+```
+
+## Check / remove
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/make/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+
+curl -X DELETE "https://api.nixflex.com/v1/integrations/make/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For the feature guide, see [Zapier & Make](/integrations/zapier-make).

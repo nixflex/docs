@@ -1,0 +1,41 @@
+---
+title: "Pre-call gate"
+description: "Screen or route calls before the AI answers - per phone number or per agent."
+---
+
+Set a pre-call webhook that Nixflex calls before the AI answers, so you can screen or route the call. Configured **per phone number** (or per agent).
+
+## Set the pre-call webhook (per number)
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="url" type="string" required>
+  Your pre-call webhook endpoint. Must be an `https` URL.
+</ParamField>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/precall/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-app.com/precall"}'
+```
+
+## Per agent
+
+The same shape is available per agent at `/integrations/precall/agent/:agentId`.
+
+## Check / remove
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/precall/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+
+curl -X DELETE "https://api.nixflex.com/v1/integrations/precall/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For how the pre-call gate works, see [Pre-call gate](/advanced/precall-gate).

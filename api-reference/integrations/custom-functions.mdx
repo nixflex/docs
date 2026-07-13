@@ -1,0 +1,46 @@
+---
+title: "Custom functions"
+description: "Give an agent a custom tool it can call during a call - per phone number."
+---
+
+Add a custom function (tool) to a phone number so the AI can call your own HTTPS endpoint during a call and use the result. Configured **per phone number**.
+
+## Add a custom function
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="name" type="string" required>
+  Tool name in `snake_case` (lowercase letters, numbers, underscores), max 64 characters.
+</ParamField>
+<ParamField body="url" type="string" required>
+  Your HTTPS endpoint the AI will call. `https` only.
+</ParamField>
+
+```bash
+curl -X POST "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "check_order_status", "url": "https://your-app.com/order-status"}'
+```
+
+## List custom functions
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Remove a custom function
+
+Delete a specific function by its `id`:
+
+```bash
+curl -X DELETE "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847/FUNCTION_ID" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For how custom functions work in a call, see [Custom functions](/advanced/custom-functions).

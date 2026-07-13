@@ -1,0 +1,43 @@
+---
+title: "Cal.com integration"
+description: "Connect Cal.com so the agent can book during calls - per phone number."
+---
+
+Connect a Cal.com account to a phone number so your agent can check availability and book, reschedule, or cancel appointments live during a call. Configured **per phone number**.
+
+## Connect Cal.com
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="api_key" type="string" required>
+  Your Cal.com API key.
+</ParamField>
+<ParamField body="username" type="string" required>
+  Your Cal.com username.
+</ParamField>
+<ParamField body="event_slug" type="string" required>
+  The Cal.com event type slug to book into.
+</ParamField>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/calcom/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"api_key": "cal_xxx", "username": "your-name", "event_slug": "30min"}'
+```
+
+## Check / remove
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/calcom/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+
+curl -X DELETE "https://api.nixflex.com/v1/integrations/calcom/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For the feature guide, see [Cal.com](/actions/calcom).

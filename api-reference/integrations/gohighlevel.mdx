@@ -1,0 +1,44 @@
+---
+title: "GoHighLevel integration"
+description: "Send caller contact + call summary to GoHighLevel - per phone number."
+---
+
+Connect GoHighLevel to a phone number so Nixflex sends the caller's contact details and a call summary to your GoHighLevel account after each call. Configured **per phone number**.
+
+## Connect GoHighLevel
+
+<ParamField path="phoneNumber" type="string" required>
+  The phone number in E.164 format, passed in the URL.
+</ParamField>
+<ParamField body="pit" type="string" required>
+  Your GoHighLevel Private Integration Token (PIT).
+</ParamField>
+<ParamField body="location_id" type="string" required>
+  Your GoHighLevel location ID.
+</ParamField>
+
+```bash
+curl -X PUT "https://api.nixflex.com/v1/integrations/gohighlevel/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"pit": "pit-xxxx", "location_id": "loc-xxxx"}'
+```
+
+## Check the current state
+
+```bash
+curl -X GET "https://api.nixflex.com/v1/integrations/gohighlevel/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Remove the integration
+
+```bash
+curl -X DELETE "https://api.nixflex.com/v1/integrations/gohighlevel/number/+447446466847" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+## Notes
+
+- The number must belong to your account. A number you do not own returns `404`.
+- For the feature guide, see [GoHighLevel](/integrations/gohighlevel).
