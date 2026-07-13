@@ -86,9 +86,11 @@ We're deliberate about what to add. Each variable is a contract — once shipped
 ## Direction support
 
 - **Inbound calls**: full support ✓
-- **Outbound calls**: not yet — variables don't substitute on outbound. See [Outbound calls](/concepts/outbound-calls) for the current capability.
+- **Outbound calls**: the engine injects the same real-time context block (date, time, day of week, timezone, the number being called, business number, call direction, and more) at the top of the prompt automatically. For **batch campaigns**, every column from your recipient CSV is also injected as context for that call, so you can write a natural prompt and the agent receives each recipient's details without needing placeholders. See [Outbound calls](/concepts/outbound-calls).
 
-This is on the roadmap.
+<Tip>
+On outbound campaigns you do not need to add placeholders for your CSV columns - the engine passes every column to the agent as context automatically.
+</Tip>
 
 ## Behaviour reference
 
