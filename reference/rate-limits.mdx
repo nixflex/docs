@@ -33,17 +33,9 @@ By default your account can run **up to 10 concurrent calls**, and this can be r
 
 ## Batch campaign concurrency
 
-Within a batch campaign, calls are dialled in waves so you never launch everything at once. You can also throttle a campaign deliberately with `max_concurrent`, which is useful when you want to keep some headroom free for inbound calls:
+A batch campaign does not need its own throttle. Every recipient is queued, and calls dial only as slots free up under your account's concurrency limit. A large campaign simply takes longer to work through - it never overloads your account.
 
-```json
-{
-  "agent_id": "agent_xxx",
-  "recipients": [ ... ],
-  "max_concurrent": 5
-}
-```
-
-A large campaign simply takes longer to work through at a lower `max_concurrent` - it never overloads your account.
+Because inbound and outbound share the same limit, a large campaign can use up slots an inbound caller would otherwise get. If you run big campaigns and take inbound calls on the same key, ask us to raise your limit.
 
 ## SMS pacing
 
