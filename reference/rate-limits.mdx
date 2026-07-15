@@ -20,8 +20,11 @@ By default your account can run **up to 10 concurrent calls**, and this can be r
   <Step title="Outbound calls queue when the limit is reached">
     If you trigger more outbound calls than your concurrency allows, the extra calls wait in a queue and dial automatically as slots free up. Nothing is dropped.
   </Step>
-  <Step title="Inbound calls are answered as capacity allows">
-    Incoming calls are answered as long as there is capacity. Outbound is capped first so inbound always has room.
+  <Step title="Inbound calls get a busy signal at the limit">
+    Your limit is a single pool shared by inbound and outbound calls. If an inbound call arrives while you are at your limit, the caller gets a busy signal. The call is never answered, so **you are not billed for it** and it does not appear in your call history.
+  </Step>
+  <Step title="You can see when this happens">
+    The **API Keys** page in the dashboard shows your peak concurrent calls this month, and warns you if any calls were turned away. If you see that warning, it is time to raise your limit.
   </Step>
   <Step title="Raising your limit">
     Email [support@nixflex.com](mailto:support@nixflex.com) with the concurrency you need and we will raise it.
