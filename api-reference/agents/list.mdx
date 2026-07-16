@@ -4,7 +4,7 @@ description: "GET /v1/agents"
 api: "GET https://api.nixflex.com/v1/agents"
 ---
 
-Returns all agents for your account.
+Returns your active agents. Inactive agents are not included.
 
 ## Request
 
@@ -15,43 +15,67 @@ curl https://api.nixflex.com/v1/agents \
 
 ## Query parameters
 
-| Parameter | Type | Default | Notes |
-|---|---|---|---|
-| `limit` | int | 25 | Max 100 |
-| `offset` | int | 0 | For pagination |
-| `is_active` | bool | — | Filter by active status |
+None. This endpoint takes no filters and is not paginated.
 
 ## Response
 
-`200 OK`:
+`200 OK` returns a JSON array:
 
 ```json
-{
-  "agents": [
-    {
-      "agent_id": "agent_125207e452f8714a",
-      "name": "Acme Dental Receptionist",
-      "language": "en",
-      "voice_id": "Dennis",
-      "is_active": true,
-      "created_at": "2026-05-17T03:45:12Z"
-    }
-  ],
-  "count": 1,
-  "limit": 25,
-  "offset": 0
-}
+[
+  {
+    "agent_id": "agent_125207e452f8714a",
+    "name": "Acme Dental Receptionist",
+    "system_prompt": "You are the receptionist for...",
+    "welcome_message": "Good morning, Acme Dental.",
+    "voice_id": "Dennis",
+    "language": "en",
+    "voice_speed": 1,
+    "temperature": 0.7,
+    "max_call_duration_seconds": 600,
+    "silence_hangup_seconds": 20,
+    "record_call": true,
+    "webhook_url": null,
+    "transfer_number": null,
+    "fallback_message": "Sorry, could you say that again?",
+    "post_call_sms_enabled": false,
+    "post_call_sms_template": null,
+    "data_extraction_fields": [],
+    "is_active": true,
+    "created_at": "2026-05-17T03:45:12Z",
+    "updated_at": "2026-05-17T03:45:12Z"
+  }
+]
 ```
 
-Sorted by `created_at` descending.
+## Response fields
 
-## Empty result
+| Field | Type | Notes |
+|---|---|---|
+| `agent_id` | string | Unique ID for the agent |
+| `name` | string | Display name |
+| `system_prompt` | string | The agent's instructions |
+| `welcome_message` | string | What the agent says first |
+| `voice_id` | string | The voice the agent speaks with |
+| `language` | string | Language code, e.g. `en` |
+| `voice_speed` | number | Speaking rate multiplier |
+| `temperature` | number | How much the agent's wording varies |
+| `max_call_duration_seconds` | int | Hard cap on call length |
+| `silence_hangup_seconds` | int | Hang up after this much silence |
+| `record_call` | boolean | Whether calls are recorded |
+| `webhook_url` | string | Agent-level webhook, or `null` |
+| `transfer_number` | string | Default transfer destination, or `null` |
+| `fallback_message` | string | Said when the agent cannot answer |
+| `post_call_sms_enabled` | boolean | Whether an SMS is sent after the call |
+| `post_call_sms_template` | string | Template for that SMS, or `null` |
+| `data_extraction_fields` | array | Fields to pull from each call |
+| `is_active` | boolean | Always `true` in this response |
+| `created_at` | string | ISO 8601 |
+| `updated_at` | string | ISO 8601 |
 
-Returns an empty array (not 404) if you have no agents yet:
+<Note>
+  Result order is not guaranteed. Sort client-side on `created_at` if order
+  matters.
+</Note>
 
-```json
-{
-  "agents": [],
-  "count": 0
-}
-```
+Fetch one agent by ID with [Get agent](/api-reference/agents/get).

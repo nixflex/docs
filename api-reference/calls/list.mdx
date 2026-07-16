@@ -4,54 +4,81 @@ description: "GET /v1/calls"
 api: "GET https://api.nixflex.com/v1/calls"
 ---
 
-Returns calls for your account, newest first.
+Returns the 50 most recent calls for your account, newest first.
 
 ## Request
 
 ```bash
-curl "https://api.nixflex.com/v1/calls?limit=10" \
+curl https://api.nixflex.com/v1/calls \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
 ## Query parameters
 
-| Parameter | Type | Notes |
-|---|---|---|
-| `limit` | int | Default 25, max 100 |
-| `offset` | int | Pagination offset |
-| `agent_id` | string | Filter to one agent |
-| `direction` | enum | `inbound` or `outbound` |
-| `since` | ISO date | Calls started after this time |
-| `until` | ISO date | Calls started before this time |
-| `caller_sentiment` | enum | `happy`, `neutral`, `frustrated` |
-| `call_successful` | bool | Filter by success flag |
-| `voicemail_detected` | bool | Filter to/from voicemail calls |
+None. This endpoint takes no filters and is not paginated.
 
 ## Response
 
+`200 OK` returns a JSON array:
+
 ```json
-{
-  "calls": [
-    {
-      "call_id": "CA1234567890",
-      "agent_id": "agent_125207e452f8714a",
-      "direction": "inbound",
-      "from_number": "+447386172392",
-      "to_number": "+447446466847",
-      "started_at": "2026-05-17T03:45:12Z",
-      "ended_at": "2026-05-17T03:47:38Z",
-      "duration_seconds": 146,
-      "ended_reason": "agent_hangup",
-      "call_summary": "Caller booked a check-up...",
-      "caller_sentiment": "happy",
-      "call_successful": true,
-      "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3"
-    }
-  ],
-  "count": 1,
-  "limit": 25,
-  "offset": 0
-}
+[
+  {
+    "call_id": "CA1234567890",
+    "agent_id": "agent_125207e452f8714a",
+    "call_direction": "inbound",
+    "from_number": "+447386172392",
+    "to_number": "+447446466847",
+    "call_status": "completed",
+    "start_timestamp": "2026-05-17T03:45:12Z",
+    "end_timestamp": "2026-05-17T03:47:38Z",
+    "duration_ms": 146000,
+    "ended_reason": "agent_hangup",
+    "transcript": "AI: Good morning...",
+    "call_summary": "Caller booked a check-up",
+    "caller_sentiment": "happy",
+    "call_successful": true,
+    "extracted_data": {},
+    "bookings": [],
+    "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3",
+    "voicemail_detected": false,
+    "created_at": "2026-05-17T03:45:12Z"
+  }
+]
 ```
 
-The list response **omits the full transcript** for performance. Fetch a single call with [Get call](/api-reference/calls/get) for the transcript.
+## Response fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `call_id` | string | Unique ID for the call |
+| `agent_id` | string | The agent that handled the call |
+| `call_direction` | string | `inbound` or `outbound` |
+| `from_number` | string | Caller's number, E.164 |
+| `to_number` | string | Number that was called, E.164 |
+| `call_status` | string | Final status of the call |
+| `start_timestamp` | string | ISO 8601 |
+| `end_timestamp` | string | ISO 8601 |
+| `duration_ms` | int | Call length in **milliseconds** |
+| `ended_reason` | string | Why the call ended |
+| `transcript` | string | Full transcript. Included in this response |
+| `call_summary` | string | AI-written summary |
+| `caller_sentiment` | string | `happy`, `neutral`, or `frustrated` |
+| `call_successful` | boolean | Whether the call met its goal |
+| `extracted_data` | object | Fields pulled from the call, per your agent's extraction settings |
+| `bookings` | array | Appointments booked during the call |
+| `recording_url` | string | Link to the MP3, or `null` if recording is off |
+| `recording_duration_s` | int | Recording length in seconds |
+| `voicemail_detected` | boolean | Whether the call reached a voicemail |
+| `campaign_id` | string | Outbound campaign this call belongs to, or `null` |
+| `avg_latency_ms` | int | Average response latency during the call |
+| `created_at` | string | ISO 8601 |
+
+<Note>
+  This endpoint returns only the 50 most recent calls and cannot reach older
+  records. To keep full call history, subscribe to the `call.completed`
+  [webhook](/advanced/webhooks) and store each call in your own backend as it
+  arrives.
+</Note>
+
+Fetch one call by ID with [Get call](/api-reference/calls/get).

@@ -22,9 +22,7 @@ curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_125207e452f8714a" 
 
 | Parameter | Type | Notes |
 |---|---|---|
-| `agent_id` | string | Filter numbers attached to one agent |
-| `limit` | int | Default 25, max 100 |
-| `offset` | int | Pagination offset |
+| `agent_id` | string | Optional. Only return numbers attached to this agent |
 
 ## Response
 
@@ -36,9 +34,11 @@ curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_125207e452f8714a" 
     {
       "phone_number": "+447446466847",
       "agent_id": "agent_125207e452f8714a",
+      "provider": "twilio",
       "twilio_number_sid": "PN451e0ddf654327e36baab58dfbcd30d6",
       "inbound_enabled": true,
       "outbound_enabled": true,
+      "custom_prompt": null,
       "created_at": "2026-05-03T01:59:31.548911+00:00"
     }
   ],
@@ -46,4 +46,22 @@ curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_125207e452f8714a" 
 }
 ```
 
-Sorted by `created_at` descending. Returns an empty array (not 404) if no numbers exist.
+## Response fields
+
+| Field | Type | Notes |
+|---|---|---|
+| `phone_number` | string | E.164 format |
+| `agent_id` | string | The agent this number answers with |
+| `provider` | string | The carrier this number is on: `twilio` or `telnyx` |
+| `twilio_number_sid` | string | Twilio numbers only. `null` on numbers from other carriers |
+| `inbound_enabled` | boolean | Whether the number accepts incoming calls |
+| `outbound_enabled` | boolean | Whether the number can place outgoing calls |
+| `custom_prompt` | string | Per-number prompt override, or `null` if unset |
+| `created_at` | string | ISO 8601 timestamp |
+
+Sorted by `created_at` descending. Returns an empty array (not `404`) if no numbers exist.
+
+<Note>
+  This endpoint is not paginated and returns up to 1,000 numbers in a single
+  response. If you hold more than 1,000, use `agent_id` to narrow the result.
+</Note>

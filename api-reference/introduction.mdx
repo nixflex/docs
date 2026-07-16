@@ -60,21 +60,28 @@ Error responses follow a consistent envelope (see [Errors](/reference/errors)):
 }
 ```
 
-## Pagination
+## Result limits
 
-List endpoints (`GET /v1/agents`, `GET /v1/calls`, etc.) support pagination:
+Nixflex does not currently support offset-based pagination. Each list endpoint returns a fixed set of results:
 
-| Parameter | Default | Max |
+| Endpoint | Returns | `limit` supported |
 |---|---|---|
-| `limit` | 25 | 100 |
-| `offset` | 0 | — |
+| `GET /v1/calls` | The 50 most recent calls | No |
+| `GET /v1/agents` | All active agents | No |
+| `GET /v1/phone-numbers` | All numbers (up to 1,000) | No |
+| `GET /v1/campaigns` | All campaigns | Yes |
+| `GET /v1/sms/campaigns` | All campaigns | Yes |
 
 ```bash
-curl "https://api.nixflex.com/v1/calls?limit=50&offset=100" \
+curl "https://api.nixflex.com/v1/campaigns?limit=10" \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-Response includes a top-level `count` for total available results.
+<Note>
+  `GET /v1/calls` returns only the 50 most recent calls and cannot reach older
+  records. To keep full call history, subscribe to the `call.completed` webhook
+  and store each call in your own backend as it arrives.
+</Note>
 
 ## Resource list
 

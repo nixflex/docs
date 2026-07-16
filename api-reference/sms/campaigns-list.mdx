@@ -1,4 +1,4 @@
-﻿---
+---
 title: "List SMS campaigns"
 description: "GET /v1/sms/campaigns"
 api: "GET https://api.nixflex.com/v1/sms/campaigns"
@@ -11,18 +11,22 @@ Returns all SMS campaigns for your account, newest first. Each campaign includes
 ```bash
 curl https://api.nixflex.com/v1/sms/campaigns \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+
+# Only campaigns with a given status
+curl "https://api.nixflex.com/v1/sms/campaigns?status=done" \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
 ## Query parameters
 
 | Parameter | Type | Notes |
 |---|---|---|
-| `limit` | int | Default 25, max 100 |
-| `offset` | int | Pagination offset |
-| `agent_id` | string | Filter to one agent |
-| `status` | enum | `draft`, `scheduled`, `running`, `done`, `failed` |
+| `status` | enum | Filter by status. See values below |
+| `limit` | int | Optional. Return at most this many campaigns. No default and no cap |
 
 ## Response
+
+`200 OK`:
 
 ```json
 {
@@ -40,8 +44,7 @@ curl https://api.nixflex.com/v1/sms/campaigns \
       "source": "dashboard",
       "created_at": "2026-05-17T03:45:12Z"
     }
-  ],
-  "count": 1
+  ]
 }
 ```
 
@@ -58,5 +61,6 @@ This is a summary view. Use [Get SMS campaign](/api-reference/sms/campaigns-get)
 | `failed` | All recipients failed at submission |
 
 <Note>
-  Counts are computed live from per-recipient status. Same numbers appear in the dashboard, the list endpoint, and the get-one endpoint.
+  Counts are computed live from per-recipient status. The same numbers appear in
+  the dashboard, the list endpoint, and the get-one endpoint.
 </Note>
