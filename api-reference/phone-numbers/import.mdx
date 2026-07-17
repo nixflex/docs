@@ -4,9 +4,16 @@ description: "POST /v1/phone-numbers"
 api: "POST https://api.nixflex.com/v1/phone-numbers"
 ---
 
-Imports an existing Twilio number under one of your agents. Configures all webhooks (voice, SMS, recording status) to point at Nixflex automatically.
+Attaches a phone number you already own to one of your agents. Nixflex supports **Twilio** and **Telnyx**.
 
-## Request
+You do not choose the carrier with a field — it is inferred from the credentials you send. Send Twilio credentials and the number is imported as a Twilio number; send a Telnyx API key and it is imported as a Telnyx number.
+
+<Note>
+  Existing integrations need no changes. If you only ever send `twilio_sid` and
+  `twilio_token`, nothing about this endpoint has changed for you.
+</Note>
+
+## Twilio
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/phone-numbers \
@@ -20,18 +27,84 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-## Body parameters
-
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `phone_number` | string | Yes | E.164 format (`+44...`). Must already exist in your Twilio account |
-| `twilio_sid` | string | Yes | Customer's Twilio Account SID, format `AC` + 32 hex chars |
-| `twilio_token` | string | Yes | Customer's Twilio Auth Token |
+| `twilio_sid` | string | Yes | Your Twilio Account SID, format `AC` + 32 hex characters |
+| `twilio_token` | string | Yes | Your Twilio Auth Token |
 | `agent_id` | string | Yes | Must be an agent you own |
+| `custom_prompt` | string | No | Per-number prompt override. Max 8000 characters |
+
+Nixflex points the number's voice, SMS and status webhooks at the engine for you.
+
+<Warning>
+  Importing **replaces the existing webhooks** on the Twilio number. If another
+  system uses this number, it will stop receiving calls and SMS.
+</Warning>
+
+## Telnyx
+
+Telnyx works differently, and the difference matters.
+
+On Twilio, the webhook URL lives **on the number**. On Telnyx, the webhook lives on a **TeXML Application**, and numbers are assigned to that application. Nixflex never creates the application — you create it once in your Telnyx portal, then every number you assign to it is handled by Nixflex.
+
+<Steps>
+  <Step title="Create a TeXML Application in your Telnyx portal">
+    Set its voice webhook URL to `https://api.nixflex.com/telnyx-voice`, method **POST**, webhook API version **2**. Copy the application's ID — that is your `telnyx_connection_id`.
+  </Step>
+  <Step title="Check the codec settings">
+    Enable **G711U**. Turn **G722 / HD Voice** off. The engine speaks mu-law only; a call that negotiates another codec will connect but carry no usable audio.
+  </Step>
+  <Step title="Import the number">
+    Nixflex assigns the number to your TeXML application for you.
+  </Step>
+</Steps>
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number":         "+443301901028",
+    "telnyx_api_key":       "KEY0123456789...",
+    "telnyx_connection_id": "2512345678901234567",
+    "agent_id":             "agent_125207e452f8714a"
+  }'
+```
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `phone_number` | string | Yes | E.164 format. Must already exist in your Telnyx account |
+| `telnyx_api_key` | string | Yes | A Telnyx API key with access to the number |
+| `telnyx_connection_id` | string | Yes | The ID of your TeXML Application |
+| `agent_id` | string | Yes | Must be an agent you own |
+| `custom_prompt` | string | No | Per-number prompt override. Max 8000 characters |
 
 <Note>
-  camelCase versions also work: `phoneNumber`, `twilioSid`, `twilioToken`, `agentId`.
+  camelCase works everywhere too: `phoneNumber`, `twilioSid`, `twilioToken`,
+  `telnyxApiKey`, `telnyxConnectionId`, `agentId`, `customPrompt`.
 </Note>
+
+### What Telnyx numbers support today
+
+| | Status |
+|---|---|
+| Inbound calls | Yes |
+| Recording | Yes |
+| Cold and warm transfer | Yes |
+| Concurrency limits | Yes |
+| Booking, custom functions, analysis, webhooks | Yes |
+| Live Monitor | Yes |
+| Inbound SMS and auto-reply | Yes |
+| Sending SMS | Yes |
+| **SMS delivery status** | **Not yet** — sent messages stay at `sent` and never move to `delivered` |
+| **Outbound calls** | **Not yet** — use a Twilio number to make calls |
+| **Carrier voicemail detection (AMD)** | **Not yet** — Twilio only. The built-in detection works on both |
+
+<Warning>
+  Telnyx numbers cannot make outbound calls yet. If you import a Telnyx number
+  and use it as a campaign's **From** number, the call will not be placed.
+</Warning>
 
 ## Response
 
@@ -42,6 +115,7 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   "phone_number": {
     "phone_number": "+447446466847",
     "agent_id": "agent_125207e452f8714a",
+    "provider": "twilio",
     "twilio_number_sid": "PN451e0ddf654327e36baab58dfbcd30d6",
     "inbound_enabled": true,
     "outbound_enabled": true
@@ -49,36 +123,43 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 }
 ```
 
-## What this does
-
-1. Validates phone format and Twilio SID format
-2. Verifies the number exists in **your** Twilio account using the credentials
-3. Confirms the agent belongs to your Nixflex account
-4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
-5. Inserts a `phone_numbers` row linking number → agent → API key
-
-<Warning>
-  Importing **replaces all existing webhooks** on the Twilio number. If you have other systems using this number, they will stop receiving calls or SMS.
-</Warning>
+A Telnyx import returns `"provider": "telnyx"` and `telnyx_number_id` instead of `twilio_number_sid`.
 
 ## Errors
 
+**Both carriers**
+
 | Code | HTTP | Cause |
 |---|---|---|
-| `missing_field` | 400 | One of the 4 required fields is empty |
-| `invalid_phone_format` | 400 | Phone number not in E.164 format |
-| `invalid_twilio_sid` | 400 | SID doesn't match `^AC[a-f0-9]{32}$` |
-| `agent_not_found` | 404 | `agent_id` doesn't exist |
-| `agent_not_owned` | 403 | Agent exists but belongs to a different API key |
-| `number_not_in_twilio` | 404 | Number not in customer's Twilio account |
-| `twilio_invalid_credentials` | 401 | SID + token combination rejected by Twilio |
-| `twilio_auth_failed` | 401 | Twilio error code 20003 |
-| `number_already_imported` | 409 | Number already attached to another agent |
+| `missing_field` | 400 | A required field is empty |
+| `invalid_phone_format` | 400 | Not E.164 format |
+| `custom_prompt_too_long` | 400 | Over 8000 characters |
+| `agent_not_found` | 404 | `agent_id` does not exist |
+| `agent_not_owned` | 403 | The agent belongs to a different API key |
+| `number_already_imported` | 409 | Already attached to an agent |
+
+**Twilio**
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `invalid_twilio_sid` | 400 | SID does not match `AC` + 32 hex |
+| `twilio_invalid_credentials` | 401 | SID and token rejected by Twilio |
+| `twilio_auth_failed` | 401 | Twilio authentication error |
+| `number_not_in_twilio` | 404 | Number not in your Twilio account |
+
+**Telnyx**
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `telnyx_invalid_credentials` | 401 | API key rejected by Telnyx |
+| `number_not_in_telnyx` | 404 | Number not in your Telnyx account |
+| `telnyx_assign_failed` | 400 | Could not assign the number to that TeXML application — check the ID |
+| `telnyx_error` | 500 | Telnyx returned an unexpected error |
 
 ## Use case: reseller onboarding
 
 ```javascript
-// 1. Buy a Twilio number from your Twilio account
+// 1. Buy a number from your Twilio account
 const twilio = require('twilio')(YOUR_TWILIO_SID, YOUR_TWILIO_TOKEN);
 const available = await twilio.availablePhoneNumbers('GB').local.list({ limit: 1 });
 const purchased = await twilio.incomingPhoneNumbers.create({
