@@ -42,7 +42,7 @@ The response includes a `call_id` immediately. The actual call happens asynchron
     Using the agent's assigned phone number as caller ID. Standard PSTN call.
   </Step>
   <Step title="Voicemail detection runs">
-    The engine uses Twilio's AMD + a speech-pattern matcher in parallel. If the call hits an answering machine, the engine hangs up - no money wasted talking to voicemail.
+    The AI reads the first thing it hears. If the call hits an answering machine, the agent leaves a short message built from your prompt and ends the call - no money wasted holding a conversation with voicemail.
   </Step>
   <Step title="Human picks up">
     The agent waits a beat, then speaks. For outbound calls, the agent typically introduces itself before stating the reason.
@@ -100,7 +100,7 @@ When voicemail is detected:
 - The call is logged with `voicemail_detected: true`
 - You're not charged for what wasn't a real conversation
 
-To leave a message, configure a voicemail script on the agent (see [Voicemail detection](/advanced/voicemail-detection)).
+The message comes from your prompt - see [Voicemail detection](/advanced/voicemail-detection) for how to control what it says, or to have the agent hang up without leaving anything.
 
 ## Useful for
 

@@ -1,59 +1,108 @@
 ---
 title: "Voicemail detection"
-description: "Stop wasting outbound calls on answering machines"
+description: "Detect answering machines and choose what your agent does"
 icon: "voicemail"
 ---
 
-When you make an outbound call, you don't want your agent delivering its opener to an answering machine. Nixflex detects voicemail automatically and ends the call cleanly, marking it as `voicemail_detected`.
+On an outbound call, Nixflex detects when an answering machine picks up instead of a person. By default the agent leaves a short message and ends the call. You control what it says — or whether it says anything — from your prompt.
 
-There are two layers of detection. They work independently and complement each other.
+Every detected call is marked `voicemail_detected` and your webhook fires as normal.
 
-## Layer 1 — AI detection (always on)
-
-The first thing the other party says is checked by the AI: voicemail greeting, or real person?
+## How it works
 
 <Steps>
-  <Step title="AI evaluates the opening">
-    If it sounds like a voicemail (mentions leaving a message, a beep or tone, "you have reached", "not available", and similar — in any language), the AI ends the call silently.
+  <Step title="The AI reads the first thing it hears">
+    A voicemail greeting mentions leaving a message, a beep or tone, "you have reached", "not available", or the equivalent in any language. The AI recognises it from the transcript, not from the audio, so it works in every supported language.
   </Step>
-  <Step title="Real person">
-    If a real person answered, the agent delivers its normal outbound opener.
+  <Step title="It leaves a short message">
+    The agent says who is calling and why, in one or two sentences, taken from your prompt. It waits for the greeting to finish first, so the message lands after the beep.
+  </Step>
+  <Step title="The call ends">
+    No conversation, no waiting for an answer. The call is recorded as `voicemail_detected`.
   </Step>
 </Steps>
 
-- **Always on** — no setup, runs on every outbound call.
-- **Free** — no extra charge.
-- **Any language.**
-- **Speed:** around 8–9 seconds — it waits for the full greeting before deciding.
-- A transcript of the greeting is saved to the call record.
+Detection is always on, free, and needs no setup.
 
-## Layer 2 — Carrier AMD (optional)
+## Control it from your prompt
 
-AMD (Answering Machine Detection) is a faster, carrier-level check that runs on your own telephony account. It listens to the audio directly and reports human or machine — often within ~3 seconds, before the greeting finishes.
+The message is built from your prompt. There is no separate voicemail field — anything the agent should say on a machine goes in the prompt like everything else.
 
-- **Off by default.** Enable it per agent with the **Voicemail detection** toggle in **Call Settings**.
-- **Speed:** around 3 seconds.
-- **Cost:** roughly $0.0075 per answered call, billed on your telephony account.
-- **Best for:** US and Canada.
-- When AMD ends the call, it happens before the AI is involved, so the call has **no transcript, sentiment, or summary**. This is expected.
+**Leave a message with a callback number:**
 
-## Comparison
+```text
+You are calling from Bella Hair Studio to remind the customer about their
+appointment on Friday at 2pm.
 
-| | AI detection | Carrier AMD |
+If you reach a voicemail, ask them to call back on 020 8555 0199.
+```
+
+**Hang up without leaving anything:**
+
+```text
+If you reach a voicemail, do not leave any message. Reply with only
+[VOICEMAIL] and nothing else.
+```
+
+The `[VOICEMAIL]` tag is what marks the call as voicemail. Keep it in, or the
+call is recorded as a silence timeout instead and your campaign counts are wrong.
+
+**Say nothing about the reason for the call:**
+
+```text
+If you reach a voicemail, only say who is calling and ask them to call us
+back. Do not mention the account or the balance.
+```
+
+<Warning>
+  The agent builds the voicemail message from your prompt, so anything in your
+  prompt can end up spoken onto a machine that other people in the household can
+  play back. If your call involves health, financial or other private details,
+  say in your prompt what the agent may and may not mention on a voicemail.
+</Warning>
+
+If your prompt has no clear purpose, there is nothing to say and the agent ends the call silently.
+
+## Carrier AMD — faster, but no message
+
+AMD (Answering Machine Detection) is a carrier-level check that listens to the audio and reports human or machine within a few seconds, before the greeting finishes.
+
+<Warning>
+  **AMD ends the call — it never leaves a message.** If you turn AMD on, your
+  agent hangs up around 4 seconds in and your voicemail message is never
+  spoken, whatever your prompt says. AMD is for campaigns that want to skip
+  machines cheaply, not for leaving messages.
+</Warning>
+
+- **Off by default.** Enable it per agent with the **Voicemail detection** toggle under **Call Controls**.
+- **Twilio numbers only** today.
+- **Speed:** around 4 seconds, versus around 10 for the built-in detection.
+- **Cost:** roughly $0.0075 per answered call, billed on your own telephony account.
+- When AMD ends the call, it happens before the agent speaks, so the call has **no transcript, sentiment, or summary**. This is expected.
+
+If both are active, AMD wins — it is faster, and the call is over before the built-in detection reaches a decision.
+
+## Which to use
+
+| | Built-in | Carrier AMD |
 |---|---|---|
 | Default | Always on | Off (toggle) |
-| Speed | ~8–9 sec | ~3 sec |
+| Leaves your message | Yes | **No** |
+| Speed | ~10 sec | ~4 sec |
 | Cost | Free | ~$0.0075 / answered call |
 | Languages | Any | Best in US / CA |
 | Transcript saved | Yes | No |
+| Carriers | All | Twilio only |
 | Ended reason | `voicemail_detected` | `voicemail_detected` |
 
-We recommend leaving AI detection on as your free safety net, and enabling AMD only for agents calling US/CA numbers where the extra speed is worth the small per-call cost.
+Leave AMD off unless you have a reason to want a fast hang-up. The built-in detection is free, works on every carrier and language, and is the only way to leave a message.
 
-## What happens on detection
+## On the call record
 
-Either layer ends the call the same way:
+| Field | Value |
+|---|---|
+| `ended_reason` | `voicemail_detected` |
+| `voicemail_detected` | `true` |
+| `voicemail_detection_method` | `llm_transcript` or `twilio_amd` |
 
-1. The call ends immediately — the agent does **not** leave a message.
-2. The call record gets `ended_reason: voicemail_detected`.
-3. Your webhook fires so you can react in your own system.
+Use `voicemail_detection_method` to tell a free detection from a paid one when reviewing a campaign.

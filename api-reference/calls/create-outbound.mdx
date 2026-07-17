@@ -107,8 +107,8 @@ Each failure returns a `400` with a specific `code` (see below).
 After you trigger the call:
 
 1. Twilio dials the `to_number` using the chosen outbound number.
-2. Voicemail detection runs (AMD + speech-pattern matching).
-3. If voicemail is detected, the engine ends the call.
+2. Voicemail detection runs - the AI reads the first thing it hears.
+3. If voicemail is detected, the agent leaves a short message from your prompt and ends the call. See [Voicemail detection](/advanced/voicemail-detection).
 4. If a human answers, the agent starts the conversation using your `prompt`.
 5. The call ends naturally, or via `[END_CALL]`, or on timeout.
 6. The recording is saved and post-call analysis runs.
