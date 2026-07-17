@@ -1,19 +1,21 @@
 ---
 title: "Phone numbers"
-description: "Bring your own Twilio numbers and attach them to agents"
+description: "Bring your own Twilio or Telnyx numbers and attach them to agents"
 icon: "phone"
 ---
 
-Nixflex uses a **bring-your-own-Twilio (BYO)** model. You buy and own phone numbers in your Twilio account. Nixflex configures the webhooks on those numbers so calls route to the engine — but the numbers (and Twilio billing) stay with you.
+Nixflex uses a **bring-your-own-carrier (BYO)** model. You buy and own phone numbers in your own **Twilio** or **Telnyx** account. Nixflex points those numbers at the engine — but the numbers, and the carrier billing, stay with you.
 
-## Why BYO Twilio
+You never pick the carrier with a setting. It is inferred from the credentials you send when you import, and every feature below works the same either way.
+
+## Why BYO
 
 <Columns cols={2}>
   <Card title="You own the numbers" icon="lock">
-    Numbers stay in your Twilio account. If you ever leave Nixflex, you keep them.
+    Numbers stay in your own carrier account. If you ever leave Nixflex, you keep them.
   </Card>
   <Card title="No platform markup" icon="dollar-sign">
-    You pay Twilio's wholesale prices directly. Nixflex doesn't mark up call or SMS costs.
+    You pay your carrier's wholesale prices directly. Nixflex doesn't mark up call or SMS costs.
   </Card>
   <Card title="Multi-tenant ready" icon="users">
     One Nixflex agent can serve unlimited phone numbers — one per end-customer if you resell.
@@ -25,7 +27,7 @@ Nixflex uses a **bring-your-own-Twilio (BYO)** model. You buy and own phone numb
 
 ## Importing a number
 
-Import a Twilio number into an agent:
+A Twilio number needs your Account SID and Auth Token:
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/phone-numbers \
@@ -47,7 +49,28 @@ What this does, behind the scenes:
 4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
 5. Inserts a `phone_numbers` row linking number → agent → API key
 
+A Telnyx number needs an API key and the ID of a **TeXML Application** you created in your Telnyx portal. The difference matters: on Twilio the webhook lives on the number, on Telnyx it lives on the application and numbers are assigned to it. See [Import phone number](/api-reference/phone-numbers/import) for the full setup.
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number":         "+443301901028",
+    "telnyx_api_key":       "KEY0123456789...",
+    "telnyx_connection_id": "2512345678901234567",
+    "agent_id":             "agent_125207e452f8714a"
+  }'
+```
+
 After this, calls to that number land on the agent automatically.
+
+<Warning>
+  **Telnyx numbers are inbound only today.** They cannot place outbound calls,
+  and SMS delivery status is not tracked yet. Everything else — recording,
+  transfers, booking, analysis, webhooks, inbound SMS — works on both carriers.
+  Use a Twilio number for outbound campaigns.
+</Warning>
 
 <Warning>
   Importing a number **overwrites any existing webhooks** on that Twilio number. If you have other systems using the number, they will stop receiving calls.
@@ -121,21 +144,21 @@ curl -X DELETE https://api.nixflex.com/v1/phone-numbers/+447446466847 \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-This clears Twilio's webhooks (so calls stop routing to Nixflex) and removes the row from our database.
+For a Twilio number this clears the webhooks; for a Telnyx number it unassigns the number from your TeXML application. Either way calls stop routing to Nixflex and the row is removed from our database. If the carrier call fails, the number is still removed here and the response tells you to clear it manually.
 
 <Note>
-  Deleting a number from Nixflex does **not** release it from Twilio. The number stays in your Twilio account and continues to bill until you release it via Twilio's API or console. This is intentional — releasing is a permanent billing decision and stays with you.
+  Deleting a number from Nixflex does **not** release it from your carrier. The number stays in your Twilio or Telnyx account and continues to bill until you release it there. This is intentional — releasing is a permanent billing decision and stays with you.
 </Note>
 
-## Using multiple Twilio accounts
+## Using multiple carrier accounts
 
-Each phone number stores its own Twilio Account SID and Auth Token. This means a single Nixflex account can serve numbers from **multiple Twilio accounts** — for example:
+Each phone number stores its own credentials. A single Nixflex account can serve numbers from **multiple Twilio accounts, multiple Telnyx accounts, or a mix of both** — for example:
 
 - A UK Twilio account for `+44` numbers
 - A US Twilio account for `+1` numbers
 - A separate Twilio subaccount per client (recommended for agencies)
 
-When a call comes in or goes out, Nixflex automatically uses the right Twilio credentials based on the phone number involved. No configuration needed.
+When a call comes in or goes out, Nixflex automatically uses the right carrier and the right credentials, based on the phone number involved. No configuration needed.
 
 <Tip>
   **Best practice**: use a [Twilio Subaccount](https://www.twilio.com/docs/iam/api/subaccount) per client rather than your master account. This limits the blast radius if credentials are ever exposed and gives you per-client billing on Twilio.
@@ -144,7 +167,7 @@ When a call comes in or goes out, Nixflex automatically uses the right Twilio cr
 ## Constraints
 
 - **One number, one agent.** A phone number can be attached to only one agent at a time. To move a number to a different agent, delete the existing record first then re-import.
-- **Strict number matching.** Twilio's number search uses prefix matching; Nixflex performs a strict equality check after lookup to prevent accidental imports.
+- **Strict number matching.** Carrier number search uses prefix matching; Nixflex performs a strict equality check after lookup to prevent accidental imports.
 - **Account scope.** You can only see and manage numbers belonging to your API key. Cross-account access is blocked.
 
 ## Errors
