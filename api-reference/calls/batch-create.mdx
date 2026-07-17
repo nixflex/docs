@@ -33,7 +33,7 @@ curl -X POST https://api.nixflex.com/v1/calls/batch \
 | `agent_id` | string | Yes | Agent used for all calls in this batch |
 | `prompt` | string | Yes | The call purpose for every call in the campaign - what the agent should say and why it is calling. Per-recipient `prompt_override` replaces it for that recipient. |
 | `name` | string | No | Display name for the campaign |
-| `from_number` | string | See note | Your Twilio number to dial from. Optional only when the agent has exactly one outbound-enabled number (it auto-resolves). If the agent has multiple numbers attached, this field is required - the launch fails otherwise. |
+| `from_number` | string | Yes | The number to dial from. Must be a Twilio number you have imported and attached to this agent. Telnyx numbers cannot place outbound calls yet. |
 | `recipients` | array | Yes | Recipient objects (see below) |
 | `skip_invalid` | bool | No | Default `false`: reject the whole request if any phone is invalid. `true`: dial valid numbers only; invalid ones are listed in the response. |
 | `schedule_type` | enum | No | `now` (launch immediately, default) or `schedule` |
@@ -77,12 +77,45 @@ With `schedule_type: schedule` the response returns `status: scheduled` and the 
 - Calls are queued and processed respecting your per-key concurrent call limit
 - Each recipient becomes one outbound call with its own `call_id`
 - Failed calls are logged but do not stop the campaign
-- Voicemail detection runs per call; detected voicemails end cleanly with `ended_reason: voicemail_detected`
+- Voicemail detection runs per call. The agent leaves a short message built from your `prompt`, then ends the call with `ended_reason: voicemail_detected`. See [Voicemail detection](/advanced/voicemail-detection) to control or disable the message.
 ## Errors
 | Code | Cause |
 |---|---|
 | `missing_field` | `prompt` missing - every campaign needs a call purpose |
-| `invalid_phone_format` | One or more recipient phones invalid (response lists them; resend with `skip_invalid: true` to dial valid only) |
-| `campaign_creation_failed` | Includes `invalid_timezone` (bad IANA value) and `from_number` ownership failures - the message states the exact reason |
+| `invalid_phone_format` | One or more recipient phones are invalid. `error.details.invalid` lists each one with the reason. Resend with `skip_invalid: true` to dial the valid ones only. |
+| `campaign_creation_failed` | `from_number` missing, not registered to your account, attached to a different agent, or a Telnyx number. Also `invalid_timezone` (bad IANA value). The message states the exact reason. |
+| `campaign_launch_failed` | The campaign passed validation but could not be launched - usually no carrier credentials for the `from_number`. The campaign is marked `failed`. |
+### Error response shape
+
+Every error follows the same shape. On a rejected batch, `error.details.invalid` names each bad number and why, so you can show it to your own users:
+
+```json
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "invalid_phone_format",
+    "message": "1 recipient(s) have invalid phone numbers. Fix them or pass skip_invalid=true to dial only valid ones.",
+    "doc_url": "https://docs.nixflex.com/errors/invalid_phone_format",
+    "details": {
+      "total": 2,
+      "valid_count": 1,
+      "invalid_count": 1,
+      "invalid": [
+        {
+          "phone": "+44745357377",
+          "reason": "not a real number for that country code - check the digits (wrong length, or an area/mobile prefix that does not exist)",
+          "row_index": 0
+        }
+      ],
+      "hint": "Fix the numbers or resend with skip_invalid=true to dial only the valid ones."
+    }
+  }
+}
+```
+
+<Note>
+  Numbers are checked against real numbering rules, not just E.164 shape. `+44745357377` looks like a UK mobile but is one digit short, so it can never connect - it is rejected here rather than accepted and lost.
+</Note>
+
 ## Launching a scheduled campaign
 A `schedule_type: schedule` campaign fires automatically inside its window. You can also launch it manually with [Launch batch](/api-reference/calls/batch-launch).
