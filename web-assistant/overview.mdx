@@ -46,7 +46,7 @@ The widget is fully inbound and stateless - the browser sends the number and the
 | Attribute | Required | Default | Description |
 |---|---|---|---|
 | `data-number` | Yes | - | The phone number (with an agent attached) the widget calls and chats with. |
-| `data-design` | No | `1` | Which of the 10 preset designs to use (`1`-`10`). |
+| `data-design` | No | `1` | Which preset design to use. Browse the designs in your dashboard and use the number shown there. |
 | `data-color` | No | `#25D366` | Accent colour (hex) for the launcher and buttons. |
 | `data-name` | No | agent name | The name shown on the widget. |
 | `data-position` | No | `right` | Corner for the launcher: `right` or `left`. |
@@ -57,7 +57,7 @@ The widget is fully inbound and stateless - the browser sends the number and the
 
 ## Designs
 
-Ten preset looks are built in. Set `data-design` to the number:
+Several preset looks are built in - browse them with live previews in your dashboard, where each shows its number. Set `data-design` to that number:
 
 | # | Name | Good for |
 |---|---|---|
@@ -79,7 +79,7 @@ Ten preset looks are built in. Set `data-design` to the number:
 - `data-greeting="true"` (or `on`, `yes`, `1`) - show the default greeting ("Need help? Call or chat with us").
 - `data-greeting="false"` (or `off`, `no`, `0`) - hide it.
 - `data-greeting="Book your table today"` - show that exact custom text.
-- If you omit it, designs 9 and 10 show the greeting by default; designs 1-8 do not.
+- If you omit it, some designs show a default greeting and others do not - the dashboard preview shows which.
 
 The greeting is visual only - it does not start a chat or cost anything.
 
@@ -109,6 +109,40 @@ So the widget never shows a hard error to a visitor. This endpoint is public and
 <Note>
   **CORS:** the chat endpoint allows requests from any origin, so the widget works on any customer website with no domain whitelisting.
 </Note>
+
+## Teaching the assistant what to say
+
+The web assistant answers using the **same knowledge as your phone agent** - it already knows your business, services, hours, and prices from the agent's main prompt. You do not re-enter any of that.
+
+What you *can* add is a short set of **web-only instructions**: how the assistant should behave in chat. In your dashboard, on the Web Assistant page, pick the agent and number, then click **Set up agent**. A box opens where you write rules like:
+
+```
+Keep replies under two sentences.
+Always mention our free first check-up for new patients.
+If someone asks about parking, tell them we have free spaces on Oak Lane.
+```
+
+These rules apply only to web chat - your phone calls are unaffected. Leave it blank and the assistant just uses the agent's main knowledge with sensible chat defaults.
+
+<Note>
+  There is no separate "knowledge base" to fill in and no file upload. The assistant already has your business knowledge from the agent. If you want it to know something extra, paste the text straight into the box - you can extract text from a PDF using any AI tool and paste it here.
+</Note>
+
+There is a limit of about **5,000 tokens** (~20,000 characters) on these instructions. The dashboard shows a live counter and the engine enforces the same cap, so a very long prompt is trimmed rather than slowing every reply.
+
+## What the web assistant will and will not do
+
+The web assistant is **answer-only by design**. It will:
+
+- Answer questions about your business from the agent's knowledge
+- Follow your web-only instructions
+- Remember the current conversation (see below)
+
+It will **not** book, reschedule, cancel, or change appointments over web chat - even if your main agent prompt says it can. This boundary is enforced in the engine, not left to the prompt, so it always holds. When a visitor wants to book or needs a person, the assistant tells them to call the business. Voice calls remain where bookings and other actions happen.
+
+## Memory
+
+Each visitor's browser keeps their own conversation and sends the recent history with every message, so the assistant remembers what was said earlier in the same chat (roughly the last 20 back-and-forth exchanges). Because each browser holds only its own history, two visitors chatting at the same time never see each other's messages - conversations are isolated by design. There is no shared server-side web memory, so nothing carries over between different visitors or between separate visits.
 
 ## Offering the widget to your users
 
