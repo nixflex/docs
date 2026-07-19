@@ -7,21 +7,14 @@ icon: "users"
 SMS campaigns send the same message (or templated variations) to many recipients in one API call. Useful for promotions, appointment batches, announcements, and reminders.
 
 <Note>
-  **Campaigns are one-time broadcasts.** They send the message and stop. If a recipient replies, the reply is handled by your agent using its `system_prompt` — not by the campaign itself.
+  **Campaigns are one-time broadcasts.** They send the message and stop. When a recipient replies, the reply is handled by the [SMS agent](/sms/sms-agent) on that number - not by the campaign itself.
 </Note>
-
 ## How replies work
-
-Replies to a campaign SMS are handled by the agent's `system_prompt` — the same system that handles all inbound SMS. **Mention the campaign context in your agent prompt before launching** so the agent knows what's going on.
-
-For example:
-
-> You are the receptionist at Acme Dental. We are running a March promotion: 20% off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them.
-
-When someone replies "YES" — or texts asking about the offer — the agent already knows what to say.
-
-For the full reply behaviour (caller history, variables, conversation context), see [SMS replies](/sms/sms-replies).
-
+A campaign only sends. When a recipient texts back, the reply is answered by the [SMS agent](/sms/sms-agent) on that number, using that number's own SMS instructions (its sms_prompt) - the same agent that answers every inbound text. The campaign message is not carried into the reply automatically.
+If you want the agent to handle replies about a promotion, put the promotion details in the number's sms_prompt before you launch. Otherwise the agent does not know the campaign went out.
+For example, add to the number's sms_prompt:
+> We are running a March promotion: 20 percent off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them.
+Then when someone replies YES - or asks about the offer - the SMS agent already knows what to say, and can even book them in if the number has a booking calendar connected. See the [SMS agent](/sms/sms-agent) page for the full reply behaviour.
 ## Create a campaign (API)
 
 ```bash

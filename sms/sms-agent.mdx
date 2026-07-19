@@ -1,0 +1,153 @@
+---
+title: "SMS agent"
+description: "An AI SMS agent that answers texts, holds a conversation, and books appointments - one agent per phone number."
+icon: "message-dots"
+---
+
+The **SMS agent** answers inbound text messages automatically. A customer texts your business number, and the agent replies in a natural back-and-forth - answering questions, and booking, rescheduling, or cancelling appointments when a calendar is connected.
+
+It is a separate channel from phone calls and from [SMS campaigns](/sms/sms-campaigns): campaigns *send* bulk texts, the SMS agent *answers* the texts people send back.
+
+<Note>
+  **One agent per number.** Each phone number carries its own SMS instructions (`sms_prompt`) and its own on/off switch (`sms_reply_enabled`). A number only auto-replies when you turn it on - it is off by default.
+</Note>
+
+## How it works
+
+1. A customer texts your business number.
+2. If auto-reply is on for that number, the agent reads the message.
+3. The agent replies using **that number's `sms_prompt`** - the instructions you wrote for texting.
+4. If the number has a booking calendar connected (Cal.com or Google Calendar), the agent can check availability and book, reschedule, or cancel - right inside the text conversation.
+5. Every message is stored, so you can read the full conversation later.
+
+The SMS agent is **independent from phone calls**. It uses only the `sms_prompt`, never the call prompt - so you can give it short, text-friendly instructions without affecting how the number answers calls.
+
+## Turn it on
+
+Auto-reply is off by default. Turn it on per number - in the dashboard, or via the API.
+
+**Dashboard:** go to **SMS Agent**, find the number, and flip its toggle on.
+
+**API:**
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "sms_reply_enabled": true }'
+```
+
+Send `false` to turn it off again. See [Update phone number](/api-reference/phone-numbers/update) for the full endpoint.
+
+## Write the instructions (`sms_prompt`)
+
+The `sms_prompt` is the only thing the SMS agent knows about your business. Put your hours, prices, address, services, and how to behave right here. Keep it text-friendly - short replies save money and read better on a phone.
+
+**Dashboard:** on the **SMS Agent** page, select the number and click **Set up agent**. Write the instructions in the box (up to ~5,000 tokens) and save.
+
+**API:**
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sms_prompt": "You are the text assistant for Smile Dental. Open Mon-Fri 9am-5pm. A check-up is 45 pounds. You can book, reschedule and cancel appointments. Keep replies short."
+  }'
+```
+
+Send an empty string to clear it. The maximum is 20,000 characters.
+
+<Note>
+  The `sms_prompt` is for **text replies only**. It does not change how the number answers phone calls (calls use their own prompt) and it does not change your [web agent](/web-assistant/overview).
+</Note>
+
+## Booking over text
+
+If the number has **Cal.com** or **Google Calendar** connected on the [Integrations](/concepts/phone-numbers) page, the SMS agent can book straight from a text conversation - the same calendar and tools your phone calls use. No separate setup.
+
+A typical flow:
+
+> **Customer:** Can I book an appointment Monday at 2pm?
+> **Agent:** 2pm Monday is available. What is your name and email?
+> **Customer:** Sarah Jones, sarah@example.com
+> **Agent:** Booked for Monday 20 Jul at 2pm. See you then.
+
+The agent always checks the live calendar before it confirms - it never says something is booked unless the booking actually went through. It can also **reschedule** and **cancel** existing appointments the same way.
+
+<Note>
+  Connect **one** booking provider per number (Cal.com *or* Google Calendar). That same connection powers booking on calls, on the web agent, and here on SMS.
+</Note>
+
+## What the agent remembers
+
+The SMS agent remembers the **current conversation** so it can follow context across a few messages. A conversation resets after about 12 hours of silence - the next text starts fresh. This keeps each session focused and avoids old messages confusing a new request.
+
+It does not carry information between different customers - each person's conversation is private to them.
+
+## Get notified on booking (webhook)
+
+When the SMS agent books, reschedules, or cancels an appointment, it can fire a **webhook** to your systems - so you can log the booking, update a CRM, or trigger an automation in Zapier, Make, or GoHighLevel.
+
+Set a `webhook_url` (and optionally a second `webhook_url_2`) on the number. When a booking happens over SMS, Nixflex POSTs an `sms.booking` event containing the whole text conversation and the booking details:
+
+```json
+{
+  "event": "sms.booking",
+  "from": "+447386172392",
+  "to": "+447446466847",
+  "agent_id": "agent_125207e452f8714a",
+  "conversation": [
+    { "role": "user", "text": "Can I book Monday 2pm?" },
+    { "role": "assistant", "text": "2pm Monday is available. Your name and email?" },
+    { "role": "user", "text": "Sarah Jones, sarah@example.com" },
+    { "role": "assistant", "text": "Booked for Monday 20 Jul at 2pm." }
+  ],
+  "booking": {
+    "action": "created",
+    "booking_uid": "jPASdMswVGMZQFh6d8J1d4",
+    "start": "2026-07-20T14:00:00.000Z",
+    "attendee_name": "Sarah Jones",
+    "attendee_email": "sarah@example.com",
+    "service": "30min",
+    "timezone": "Europe/London"
+  },
+  "at": "2026-07-19T00:18:24.185Z"
+}
+```
+
+The `action` is `created`, `rescheduled`, or `cancelled`. Delivery uses the same reliable retry system as call webhooks (five attempts over ~76 minutes). See [Webhooks](/advanced/webhooks) for the retry and delivery detail.
+
+## Manage everything via the API
+
+Everything on this page can be driven by the API, so a platform managing many numbers (for example a reseller onboarding hundreds of clinics) can set each number up in code:
+
+```javascript
+await fetch(
+  `https://api.nixflex.com/v1/phone-numbers/${clinicNumber}`,
+  {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${KEY_ID}:${KEY_SECRET}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      sms_reply_enabled: true,
+      sms_prompt: `You are the text assistant for ${clinic.name}. ${clinic.details}. You can book, reschedule and cancel. Keep replies short.`
+    })
+  }
+);
+```
+
+Takes effect on the very next text - no deploy, no re-import. See [Update phone number](/api-reference/phone-numbers/update) for every field.
+
+## Costs
+
+Each text (in and out) is billed at the normal per-message rate - the agent is told to keep replies short to save you money. Booking over SMS has no extra charge beyond the messages themselves.
+
+## Related
+
+- [SMS campaigns](/sms/sms-campaigns) - send one-time bulk texts (replies come back here)
+- [Web agent](/web-assistant/overview) - the same idea for website chat
+- [Update phone number](/api-reference/phone-numbers/update) - the API fields
+- [Webhooks](/advanced/webhooks) - delivery and retries
