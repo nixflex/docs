@@ -6,21 +6,47 @@ icon: "triangle-exclamation"
 
 The API uses standard HTTP status codes. A `2xx` status means success, a `4xx` status means something was wrong with your request, and a `5xx` status means something went wrong on our side.
 
-Every error response includes a JSON body with an `error` field describing what happened:
+Every error response has the **same shape**: a JSON body with an `error` object. This is consistent across every endpoint, so you can parse errors the same way everywhere.
 
 ```json
-{ "error": "Invalid or missing API key" }
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "invalid_url",
+    "message": "webhook_url must be an https URL",
+    "doc_url": "https://docs.nixflex.com/errors/invalid_url",
+    "details": {}
+  }
+}
 ```
 
-Some errors add a `detail` field with extra context:
+## The error object
 
-```json
-{ "error": "delete_failed", "detail": "login user could not be removed" }
-```
+| Field | Description |
+| --- | --- |
+| `type` | The broad category of error, derived from the HTTP status (see below). Useful for grouping. |
+| `code` | A stable, machine-readable code for the specific error (e.g. `invalid_url`, `not_found`). **Branch on this in your code** rather than matching the message text. |
+| `message` | A plain-language description of what went wrong. Safe to show to a human; do not match on it programmatically as wording may change. |
+| `doc_url` | A link to documentation about this error code. |
+| `details` | An optional object with extra context about the error. May be empty. |
 
 <Note>
-  Check the HTTP status code first to decide how to react, then read the `error` message to see what to fix. The `error` field is a plain-language message, not a fixed machine code.
+  Branch on `error.code` (stable) or `error.type` (broad), never on `error.message` (the wording can change). Check the HTTP status code first to decide how to react.
 </Note>
+
+## Error types
+
+The `type` field is derived from the HTTP status code:
+
+| Status | `type` |
+| --- | --- |
+| `400`, `422` | `invalid_request` |
+| `401` | `authentication_error` |
+| `402` | `payment_required` |
+| `403` | `permission_denied` |
+| `404` | `not_found` |
+| `409` | `conflict` |
+| `5xx` | `server_error` |
 
 ## Status codes
 
@@ -28,9 +54,11 @@ Some errors add a `detail` field with extra context:
 | --- | --- | --- |
 | `200` | Success | Use the response. |
 | `201` | Created - a new resource was made | Use the returned resource. |
-| `400` | Bad request - a field in your request was invalid | Read the `error` message and fix the request. |
+| `400` | Bad request - a field in your request was invalid | Read `error.code` and `error.message` and fix the request. |
 | `401` | Unauthorized - your API key is missing or invalid | Check your API key. See [Authentication](/authentication). |
+| `402` | Payment required - insufficient balance | Top up your credit. |
 | `404` | Not found - the agent, call, or resource does not exist | Check the ID in your request. |
+| `409` | Conflict - the resource already exists | Read the message; you may be creating a duplicate. |
 | `500` | Server error - something went wrong on our side | Safe to retry, ideally with a short backoff. |
 
 ## Common errors
@@ -39,28 +67,60 @@ Missing or invalid API key:
 
 ```json
 // 401
-{ "error": "Invalid or missing API key" }
+{
+  "error": {
+    "type": "authentication_error",
+    "code": "unauthorized",
+    "message": "Invalid or missing API key",
+    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+    "details": {}
+  }
+}
 ```
 
 A field is too long:
 
 ```json
 // 400
-{ "error": "system_prompt too long. Maximum is 8000 characters (about 2000 tokens)." }
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "prompt_too_long",
+    "message": "system_prompt too long. Maximum is 8000 characters (about 2000 tokens).",
+    "doc_url": "https://docs.nixflex.com/errors/prompt_too_long",
+    "details": {}
+  }
+}
 ```
 
-Agent not found:
+Resource not found:
 
 ```json
 // 404
-{ "error": "Agent not found" }
+{
+  "error": {
+    "type": "not_found",
+    "code": "not_found",
+    "message": "Agent not found",
+    "doc_url": "https://docs.nixflex.com/errors/not_found",
+    "details": {}
+  }
+}
 ```
 
-Call not found:
+Server error:
 
 ```json
-// 404
-{ "error": "Call not found" }
+// 500
+{
+  "error": {
+    "type": "server_error",
+    "code": "server_error",
+    "message": "An unexpected error occurred",
+    "doc_url": "https://docs.nixflex.com/errors/server_error",
+    "details": {}
+  }
+}
 ```
 
 ## The Web agent endpoint is different
@@ -83,8 +143,8 @@ If something goes wrong, it still returns `200` with `ok: false` and a short rea
   <Step title="Check the status code">
     A `4xx` means fix your request. A `5xx` means our side - safe to retry.
   </Step>
-  <Step title="Read the error message">
-    The `error` field tells you what went wrong in plain language.
+  <Step title="Branch on error.code">
+    The `code` is stable and machine-readable. Use it to decide how your app reacts. Show `error.message` to a human if needed.
   </Step>
   <Step title="Retry 5xx with a short backoff">
     For a `500`, wait a moment and try again. Do not retry in a tight loop.
