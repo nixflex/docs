@@ -3,7 +3,7 @@ title: "Custom functions"
 description: "Give an agent a custom tool it can call during a call - per phone number."
 ---
 
-Add a custom function (tool) to a phone number so the AI can call your own HTTPS endpoint during a call and use the result. Configured **per phone number**.
+Add a custom function (tool) to a phone number so the AI can call your own HTTPS endpoint during a call and use the result. Configured **per phone number**. Up to **15** functions per number.
 
 ## Add a custom function
 
@@ -11,18 +11,48 @@ Add a custom function (tool) to a phone number so the AI can call your own HTTPS
   The phone number in E.164 format, passed in the URL.
 </ParamField>
 <ParamField body="name" type="string" required>
-  Tool name in `snake_case` (lowercase letters, numbers, underscores), max 64 characters.
+  Tool name in `snake_case` (lowercase letters, numbers, underscores), max 64 characters. Must be unique on the number.
 </ParamField>
 <ParamField body="url" type="string" required>
   Your HTTPS endpoint the AI will call. `https` only.
+</ParamField>
+<ParamField body="description" type="string">
+  Tells the AI **when** to call this tool. A clear, specific description is how the AI picks the right tool.
+</ParamField>
+<ParamField body="method" type="string" default="POST">
+  HTTP method: `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.
+</ParamField>
+<ParamField body="parameters" type="object">
+  JSON Schema for the arguments the AI collects. Defaults to an empty object schema.
+</ParamField>
+<ParamField body="headers" type="object">
+  Optional headers sent with the request (for example an API key). Values support `{{variable}}` substitution.
+</ParamField>
+<ParamField body="speak_during" type="string">
+  What the AI says out loud while the function runs. Prevents silence on slow calls. Optional.
+</ParamField>
+<ParamField body="timeout_ms" type="integer" default="5000">
+  How long to wait for your endpoint, in milliseconds. Clamped to **1000-45000** (1-45 seconds).
+</ParamField>
+<ParamField body="is_active" type="boolean" default="true">
+  Whether the function is available on calls.
 </ParamField>
 
 ```bash
 curl -X POST "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847" \
   -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
   -H "Content-Type: application/json" \
-  -d '{"name": "check_order_status", "url": "https://your-app.com/order-status"}'
+  -d '{
+    "name": "check_order_status",
+    "description": "Check an order status when the caller asks about delivery.",
+    "url": "https://your-app.com/order-status",
+    "method": "POST",
+    "speak_during": "One moment while I check that for you.",
+    "timeout_ms": 10000
+  }'
 ```
+
+Returns `409` if a function with that name already exists on the number, or a `limit_reached` error if the number already has 15 functions.
 
 ## List custom functions
 
@@ -30,6 +60,19 @@ curl -X POST "https://api.nixflex.com/v1/integrations/custom-functions/number/+4
 curl -X GET "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847" \
   -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
 ```
+
+## Edit a custom function
+
+Update one or more fields of an existing function by its `id`. Only the fields you send are changed; everything else stays the same.
+
+```bash
+curl -X PATCH "https://api.nixflex.com/v1/integrations/custom-functions/number/+447446466847/FUNCTION_ID" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{"speak_during": "Bear with me one moment.", "timeout_ms": 15000}'
+```
+
+Editable fields: `name`, `description`, `url`, `method`, `headers`, `parameters`, `speak_during`, `timeout_ms`, `is_active`. Returns `404` if the function `id` is not found on the number, or `409` if the new name clashes with an existing function on that number.
 
 ## Remove a custom function
 
