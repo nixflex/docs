@@ -48,10 +48,9 @@ These are computed every call from the engine clock + your agent's timezone sett
 |---|---|
 | `{{caller_history}}` | The name a returning caller gave on their most recent previous call (name only - no call summaries or booking details) |
 
-When a number that has called before dials your agent again, the engine looks up the caller's most recent call **that captured a name** - in parallel with the agent load, so it adds zero latency. If a name is on file, the engine injects a short hint at the top of the prompt:
+When a number that has called before dials your agent again, the engine looks up the caller's most recent call **that captured a name** - in parallel with the agent load, so it adds zero latency. If a name is on file, the engine passes a short hint to the agent, and places it in the greeting instruction itself so a scripted opening line cannot override it:
 
 ```text
-=== CALLER HISTORY (this number has called you before) ===
 RETURNING CALLER: the name on file for this caller is "John". Greet them by name
 naturally at the start of the call (for example, "Hi John"). If they correct you
 or it is clearly someone else, use the new name instead.
