@@ -56,12 +56,30 @@ These voices work well for phone receptionists and business calls — warm, clea
 
 Some voices speak several languages while keeping the same identity. For example, Olivia can speak English, German, Spanish, and Arabic. Set the `language` field to choose which language the voice speaks on a call.
 
-## Voice settings
+## Speaking speed
 
-You can fine-tune how any voice sounds:
+How fast the agent talks. `1.0` is normal, `0.5` is half speed, and `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected.
 
-- **Speed** — how fast the voice talks. `1.0` is normal, `0.5` is slower, `1.5` is faster.
-- **Expressiveness** — how much natural variation the voice has. Lower is steadier, higher is livelier.
+Like the voice, speed can be set at two levels.
+
+**Agent default** — set it on the agent in the dashboard. Every number on that agent speaks at this speed unless the number overrides it.
+
+**Per-number override** — set `speaking_rate` on the number:
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "speaking_rate": 0.9 }'
+```
+
+A number with its own speed uses it. A number without one falls back to the agent. An agent without one speaks at normal speed. Send `null` to clear an override.
+
+Speed applies to **both inbound and outbound** calls and takes effect on the next call, like the voice itself.
+
+<Note>
+  Small steps go a long way on a phone line. `0.9` already sounds noticeably more measured and `1.1` noticeably brisker, so adjust a step at a time rather than jumping to the limits.
+</Note>
 
 ## Preview before you go live
 
