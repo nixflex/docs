@@ -37,7 +37,7 @@ URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B44744646
 | `sms_reply_enabled` | boolean | No | Turns the SMS agent (auto-reply) on or off for this number. `false` by default - a number only replies to texts when you turn this on. Accepts `true`/`false`. |
 | `sms_prompt` | string or null | No | Instructions for the [SMS agent](/sms/sms-agent) on this number. Independent of `custom_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
 | `web_prompt` | string or null | No | Instructions for the [Web agent](/web-assistant/overview) on this number. Independent of `custom_prompt` and `sms_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
-| `speaking_rate` | number or null | No | How fast this number speaks on calls, overriding the agent's speed. `1.0` is normal, `0.5` is half speed, `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected. Send `null` to clear the override and fall back to the agent. |
+| `speaking_rate` | number or null | No | How fast this number speaks on calls, overriding the agent's speed. `1.0` is normal, `0.5` is half speed, `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected. `null` means **not set** - the number inherits the agent's speed, so a `null` number under a `1.5` agent still speaks at `1.5`. To make one number normal while the agent stays fast, send `1`, not `null`. See [Voices](/concepts/voices). |
 
 Send at least one field. An empty body is rejected.
 

@@ -73,7 +73,18 @@ curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
   -d '{ "speaking_rate": 0.9 }'
 ```
 
-A number with its own speed uses it. A number without one falls back to the agent. An agent without one speaks at normal speed. Send `null` to clear an override.
+A number with its own speed uses it. A number without one falls back to the agent. An agent without one speaks at normal speed.
+
+So if you set the agent to `1.5`, **every number on that agent speaks at 1.5** - including numbers you have never touched. Only a number with its own `speaking_rate` is exempt.
+
+<Warning>
+  `null` and `1` are not the same thing.
+
+  - `null` means **not set**. The number inherits the agent's speed, so a number set to `null` under a `1.5` agent still speaks at `1.5`.
+  - `1` means **explicitly normal**. It overrides the agent, so a number set to `1` under a `1.5` agent speaks at normal speed.
+
+  To bring one number back to normal while the rest of the agent stays fast, send `1` - not `null`.
+</Warning>
 
 Speed applies to **both inbound and outbound** calls and takes effect on the next call, like the voice itself.
 
