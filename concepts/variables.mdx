@@ -46,19 +46,21 @@ These are computed every call from the engine clock + your agent's timezone sett
 
 | Variable | What it does |
 |---|---|
-| `{{caller_history}}` | The name a returning caller gave on their most recent previous call (name only - no call summaries or booking details) |
+| `{{caller_history}}` | A returning caller's name, and in one short line what they wanted last time (no summaries, outcomes or booking details) |
 
 When a number that has called before dials your agent again, the engine looks up the caller's most recent call **that captured a name** - in parallel with the agent load, so it adds zero latency. If a name is on file, the engine passes a short hint to the agent, and places it in the greeting instruction itself so a scripted opening line cannot override it:
 
 ```text
-RETURNING CALLER: the name on file for this caller is "John". Greet them by name
-naturally at the start of the call (for example, "Hi John"). If they correct you
-or it is clearly someone else, use the new name instead.
+PREVIOUS CALL FROM THIS NUMBER
+Name: John. Last time they called about: wanted to book a check-up.
+Greet them by name. If the caller asks about their last call, you MAY tell them what
+they wanted - the line above is accurate. What you do NOT know is what happened next:
+never state or imply that anything was agreed, booked, changed or resolved.
 ```
 
-That's the whole block - **a name and nothing else.** No past summaries, bookings, dates, or sentiment are ever injected into a live call. This is deliberate: injecting past booking details once caused agents to falsely confirm bookings they had not made. The name alone carries no such risk, and it is enough to greet a returning caller naturally.
+That's the whole block - **a name and one line of intent.** No summaries, outcomes, dates, bookings or sentiment are ever injected into a live call. This is deliberate: injecting past booking details once caused agents to confirm bookings they had never made. The reason line records only what the caller **wanted** ("wanted to book a check-up"), never what happened, so it carries no such risk.
 
-The name comes from the most recent previous call where one was captured, so a quick call that did not capture a name will not erase a known name. If the caller gives a new name, that becomes the name on file going forward. First-time callers (no name on file) get nothing extra - no clutter.
+The name and the reason both come from the most recent previous call where a name was captured, so they always describe the same visit, and a quick call that captured no name will not erase a known name. Both are extracted automatically on every call - there is nothing to configure. If the caller gives a new name, that becomes the name on file going forward. First-time callers (no name on file) get nothing extra - no clutter.
 
 ## When variables fire
 
