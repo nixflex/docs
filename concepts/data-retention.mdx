@@ -1,18 +1,18 @@
 ---
 title: "Data retention"
-description: "How long Nixflex keeps your call data — and what stays on your own Twilio account"
+description: "How long Nixflex keeps your call data, transcripts and recordings"
 icon: "shield-check"
 ---
 
-Nixflex automatically deletes call data 90 days after the call ends. Account data (your agents, phone numbers, API keys) stays until you delete it manually.
+Nixflex automatically deletes call data 90 days after the call ends. Account data (your agents, phone numbers, API keys) stays until you delete it.
 
 ## What gets deleted after 90 days
 
-A scheduled job (`cleanup-old-call-data`) runs every day at **3 AM UTC** and deletes records older than 90 days from the following tables:
+A scheduled job runs every day at **3 AM UTC** and deletes records older than 90 days:
 
 <CardGroup cols={2}>
   <Card title="Calls" icon="phone">
-    Call records, transcripts, summaries, sentiment, extracted data, call duration, recording URL pointers.
+    Call records, transcripts, summaries, sentiment, extracted data, duration - and the audio recording itself.
   </Card>
 
   <Card title="SMS messages" icon="message">
@@ -23,8 +23,8 @@ A scheduled job (`cleanup-old-call-data`) runs every day at **3 AM UTC** and del
     Logs of every webhook payload Nixflex sent to your endpoints.
   </Card>
 
-  <Card title="Batch calls" icon="phone-volume">
-    Batch call campaigns and their recipients.
+  <Card title="Outbound campaigns" icon="phone-volume">
+    Campaigns and their recipient lists.
   </Card>
 
   <Card title="SMS campaigns" icon="messages">
@@ -32,7 +32,7 @@ A scheduled job (`cleanup-old-call-data`) runs every day at **3 AM UTC** and del
   </Card>
 </CardGroup>
 
-## What stays forever (until you delete it)
+## What stays until you delete it
 
 <CardGroup cols={2}>
   <Card title="Your account" icon="user">
@@ -40,78 +40,79 @@ A scheduled job (`cleanup-old-call-data`) runs every day at **3 AM UTC** and del
   </Card>
 
   <Card title="Agents" icon="robot">
-    System prompts, voice configuration, all agent settings.
+    Prompts, voice configuration, all agent settings.
   </Card>
 
   <Card title="Phone numbers" icon="phone-arrow-up-right">
-    Numbers you've imported with their Twilio credentials.
+    Numbers you have imported, with their carrier credentials.
   </Card>
 
   <Card title="API keys" icon="key">
-    Keys you've created for programmatic access.
+    Keys you have created for programmatic access.
   </Card>
 </CardGroup>
 
 ## Audio recordings
 
-This is important to understand:
+**Nixflex holds the recording.** When a call ends, Nixflex downloads the audio from your carrier, stores it in EU (Ireland) storage, and then **deletes the carrier's copy**. The file is removed with the rest of the call record after 90 days.
 
 <Note>
-  **Nixflex does not permanently store your call audio.** When a call ends, Nixflex saves a temporary copy of the recording on your behalf. The actual audio file lives on **your own Twilio account** — under whatever retention policy you've configured there.
+  This is what both carriers recommend. Twilio charges for recording storage and documents downloading recordings to avoid those charges. Telnyx keeps recordings for up to a year and advises fetching what you need in good time. Holding the file in the EU also keeps recordings inside the EU for GDPR purposes, rather than wherever your carrier account happens to be.
 </Note>
 
-When the 90-day cleanup deletes the `calls` row, the `recording_url` pointer goes with it. The audio file on your Twilio remains under your control — Nixflex never had the master copy.
+<Tip>
+  **Need recordings for longer than 90 days?** Download the file from `recording_url` when the `call.completed` [webhook](/advanced/webhooks) fires and keep it in your own storage. That also gives you your own retention policy.
+</Tip>
 
-To configure recording retention on Twilio:
-- Log into your Twilio Console
-- Navigate to **Voice → Settings → General**
-- Set your **Recording Retention** policy
+You can switch recording off entirely, per agent or per number - see [Call recording](/advanced/call-recording). With it off, no audio is captured anywhere, and the transcript is still produced.
 
 ## Where the data is stored
 
-All Nixflex data lives in **EU/UK Supabase** (Ireland region). This means:
+All Nixflex data lives in **EU/UK Supabase** (Ireland region):
 
-- **GDPR compliant by default** — data never leaves the EU
+- **GDPR compliant by default** - data does not leave the EU
 - **UK data residency** for UK businesses
 - **Encrypted at rest** (AES-256) and in transit (TLS 1.3)
 
 ## Manual deletion before 90 days
 
-If you need to delete data before the 90-day automatic cleanup runs:
-
 <CardGroup cols={2}>
-  <Card title="Delete a single call" href="/api-reference/calls/delete">
-    Use the API to delete a specific call record.
-  </Card>
-
   <Card title="Delete a phone number" href="/api-reference/phone-numbers/delete">
-    Removes the number and clears its Twilio webhook.
+    Removes the number from your account.
   </Card>
 
   <Card title="Delete an agent" href="/api-reference/agents/delete">
     Removes the agent and all its configuration.
   </Card>
 
-  <Card title="Delete an SMS campaign" href="/api-reference/sms/delete-campaign">
+  <Card title="Delete an SMS campaign" href="/api-reference/sms/campaigns-delete">
     Removes the campaign and its recipient list.
   </Card>
 </CardGroup>
 
+<Warning>
+  **There is no endpoint to delete a single call record yet.** Call records, transcripts and recordings are removed by the 90-day cleanup. If you need a specific call erased sooner - for example a GDPR Article 17 request - email [support@nixflex.com](mailto:support@nixflex.com) with the call ID. A delete-call endpoint is on the roadmap.
+</Warning>
+
 ## GDPR data subject requests
 
-If one of your end-users requests their data be deleted under GDPR Article 17 (Right to Erasure):
+If one of your end-users asks for their data to be deleted under Article 17:
 
-1. Identify all calls and SMS messages from that user's phone number using the API
-2. Delete those records using the endpoints above
-3. Delete the corresponding recordings on your Twilio account
-4. The 90-day cleanup acts as a safety net — even if you miss a record, it auto-deletes
+1. Find their calls and SMS messages by phone number through the API
+2. Email [support@nixflex.com](mailto:support@nixflex.com) with the call IDs for erasure, until the delete-call endpoint ships
+3. Delete any copies you downloaded and stored in your own system
+4. The 90-day cleanup acts as a backstop - anything missed is deleted automatically
 
-For account-level deletion requests, email [support@nixflex.com](mailto:support@nixflex.com) — we'll delete your entire account and all associated data within 30 days.
+<Note>
+  Because Nixflex deletes the carrier's copy of each recording after downloading it, there is normally nothing left to erase on your Twilio or Telnyx account. Check there anyway if you have your own recording configured directly on the carrier, outside Nixflex.
+</Note>
+
+For account-level deletion, email [support@nixflex.com](mailto:support@nixflex.com) - your account and all associated data are deleted within 30 days.
 
 ## Roadmap
 
 <Card title="Coming soon" icon="hourglass">
+  - Delete a single call record through the API
   - Configurable retention windows (30 / 60 / 90 days per agent)
   - Per-agent PII redaction in transcripts
-  - Automated recording deletion on Twilio via API
 </Card>

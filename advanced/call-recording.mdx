@@ -1,0 +1,107 @@
+---
+title: "Call recording"
+description: "Record call audio, and switch it off per agent or per number"
+icon: "microphone"
+---
+
+Nixflex records the audio of every call and keeps it alongside the transcript, so you can listen back to anything your agent handled. Recording is **on by default** and can be switched off for an agent, or for a single number.
+
+<Note>
+  Switching recording off does not affect the transcript. Speech recognition runs independently, so you still get the full transcript, summary, sentiment and extracted data - just no audio file.
+</Note>
+
+## Turning it off
+
+### Per agent (dashboard)
+
+Open the agent, find **Call actions**, and switch off **Call recording**. Every number on that agent stops recording from the next call onwards.
+
+### Per number (API)
+
+A single number can override its agent - useful when one client's privacy policy forbids recording but the rest of your numbers are fine.
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"record_call": false}'
+```
+
+| Value | Meaning |
+|---|---|
+| `true` | This number records, whatever the agent says |
+| `false` | This number does not record, whatever the agent says |
+| `null` | **Not set** - the number inherits the agent's setting |
+
+<Warning>
+  `null` is not the same as `false`. `null` means "no opinion, follow the agent", so a `null` number under an agent with recording **on** will still record. To switch one number off while the agent keeps recording, send `false`, not `null`.
+</Warning>
+
+Agent-level can also be set through the API with `record_call` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update).
+
+## What happens when it is off
+
+- **No audio is captured at all.** Nixflex never asks the carrier to record, so there is no file anywhere - not on your carrier, not with us.
+- **`recording_url` is `null`** on the call record and in the `call.completed` webhook. If your code reads that field, handle `null`.
+- **Past recordings are untouched.** Switching off applies to future calls only.
+- **You are not charged by your carrier** for recording those calls.
+
+## Where the audio is stored
+
+When a call ends, Nixflex downloads the file from your carrier, stores it in **EU (Ireland)** storage, and **deletes the carrier's copy**.
+
+<Note>
+  This is what both carriers recommend. Twilio charges for recording storage and documents downloading recordings to avoid those charges. Telnyx keeps recordings for up to a year and advises fetching what you need in good time. Pulling the file to EU storage also keeps recordings inside the EU, which matters if your end-customers are covered by GDPR.
+</Note>
+
+Recordings are deleted automatically after 90 days along with the rest of the call record - see [Data retention](/concepts/data-retention).
+
+## Reading a recording
+
+The URL arrives in two places:
+
+- On the call record: `GET /v1/calls/:id` returns `recording_url`
+- In the [post-call webhook](/advanced/webhooks): `call.completed` includes `recording_url`
+
+<Tip>
+  If you need recordings for longer than 90 days, download the file from `recording_url` when the `call.completed` webhook fires and store it in your own system.
+</Tip>
+
+## Audio format
+
+| | Channels |
+|---|---|
+| Inbound calls | Mono - caller and agent mixed into one track |
+| Outbound calls | Dual - caller and agent on separate tracks |
+
+Dual-channel audio is easier to analyse per speaker. This difference is long-standing behaviour and is kept as-is so existing integrations are not changed.
+
+## Consent
+
+<Warning>
+  Recording calls is regulated, and the rules differ by country and by state. In many places you must tell the caller the call is recorded, and in some you need their explicit consent. Nixflex does not announce recording for you - if you need an announcement, put it in your agent prompt or your greeting.
+</Warning>
+
+## Testing it
+
+<Steps>
+  <Step title="Switch it off">
+    Turn off **Call recording** on the agent, or PATCH `record_call: false` on the number.
+  </Step>
+  <Step title="Make a call">
+    Call the number and talk for a few seconds, then hang up.
+  </Step>
+  <Step title="Check the call record">
+    `GET /v1/calls/:id` - `recording_url` should be `null`, while the transcript and summary are still there.
+  </Step>
+  <Step title="Switch it back on">
+    Set it back to `true`, or `null` on the number to inherit the agent again, and call once more. `recording_url` should be populated.
+  </Step>
+</Steps>
+
+## Related
+
+- [Update phone number](/api-reference/phone-numbers/update) - the `record_call` field
+- [Data retention](/concepts/data-retention) - how long recordings are kept
+- [Webhooks](/advanced/webhooks) - `recording_url` in `call.completed`
+- [Keypad input](/advanced/keypad-input) - the other per-number call setting
