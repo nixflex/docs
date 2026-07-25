@@ -55,7 +55,9 @@ Only `name` is recommended in practice — every other field has a sensible defa
 |---|---|---|---|---|
 | `max_call_duration_seconds` | int | No | `600` | Hard cap on call length. Range 60–1800 (1–30 min). See [End call](/actions/end-call). |
 | `silence_hangup_seconds` | int | No | `30` | Hang up if caller silent this long. Range 5–45. See [End call](/actions/end-call). |
-| `record_call` | bool | No | `true` | Save call audio to Supabase Storage |
+| `record_call` | bool | No | `true` | Save call audio to Supabase Storage. Recordings are deleted after 90 days, and a number can override this. See [Call recording](/advanced/call-recording). |
+| `amd_enabled` | bool | No | `false` | Ask the carrier to detect an answering machine and hang up about 4 seconds in. Costs extra per answered call on your own carrier bill. With it OFF the agent detects voicemail from the first thing it hears and can leave a message, so ON means a fast hangup and NO message. See [Voicemail detection](/advanced/voicemail-detection). |
+| `dtmf_enabled` | bool or null | No | `null` | Let callers type digits on their phone keypad instead of saying them. `null` means not set, and a number can override it. See [Keypad input](/advanced/keypad-input). |
 | `webhook_url` | string | No | `null` | Where to POST post-call data |
 
 ### Functions (tools the agent can call mid-conversation)
@@ -64,15 +66,35 @@ Only `name` is recommended in practice — every other field has a sensible defa
 |---|---|---|---|---|
 | `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
 | `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. | 
-| `func_send_sms` | bool | No | `false` | Agent can send SMS during the call |
+| `func_send_sms` | bool | No | `false` | **Not enforced.** Accepted and returned, but the engine does not read it, so the agent can text mid-call whichever way this is set. Control it in your prompt - see the note below. |
+| `func_cold_transfer` | bool | No | `false` | **Not enforced.** Same as above - accepted, returned, and not read. Transfer is controlled by your prompt and by `transfer_number`. |
 | `transfer_type` | enum | No | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls made by this agent. See [Transfer](/actions/transfer). |
 | `transfer_number` | string | No | `null` | Default destination for transfers |
+
+
+<Note>
+  **How to stop the agent texting or transferring.** These two are controlled by your
+  **prompt**, not by a flag. The engine's own rules tell the model to text only if the
+  developer prompt asks it to, and the same holds for transfers - so a prompt that
+  never mentions texting produces an agent that never texts. `func_send_sms` and
+  `func_cold_transfer` are kept because removing a field developers may already send
+  would break them silently, but they have no effect.
+</Note>
+
+<Warning>
+  A prompt instruction is reliable but not absolute - a language model can still
+  ignore one. If you need a hard guarantee that a number never texts or never
+  transfers, do not rely on the prompt alone. Get in touch: a per-number switch is on
+  the roadmap and is worth building against a real requirement rather than a guess.
+</Warning>
 
 ### Other
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `voice_speed` | number | No | `0.85` | `0.5`-`2.0`. Voice speed |
+| `voice_speed` | number | No | `0.85` | **Ignored.** Accepted and returned for backwards compatibility, but nothing in the engine reads it. Use `speaking_rate` below. |
+| `speaking_rate` | number or null | No | `null` | How fast the agent talks. `1` is normal, `0.5` is half speed, `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected. `null` means normal speed, which is not the same as sending `1`. A number can override this. See [Voices](/concepts/voices). |
+| `greet_by_name` | bool | No | `true` | When a returning caller is recognised, greet them by the name on file (for example, Hi John). Set `false` for a neutral greeting. |
 | `fallback_message` | string | No | "I am sorry, could you say that again?" | Said when transcription fails |
 | `phone_number` | string | No | `null` | Legacy. Numbers are now managed via `/phone-numbers` |
 
@@ -107,6 +129,11 @@ Only `name` is recommended in practice — every other field has a sensible defa
   "webhook_url": null,
   "phone_number": null,
   "voice_speed": 0.85,
+  "speaking_rate": null,
+  "dtmf_enabled": null,
+  "amd_enabled": false,
+  "greet_by_name": true,
+  "transfer_whisper": null,
   "fallback_message": "I am sorry, could you say that again?",
   "is_active": true,
   "created_at": "2026-05-24T01:48:10Z",
