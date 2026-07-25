@@ -97,13 +97,18 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 | Live Monitor | Yes |
 | Inbound SMS and auto-reply | Yes |
 | Sending SMS | Yes |
-| **SMS delivery status** | **Not yet** — sent messages stay at `sent` and never move to `delivered` |
-| **Outbound calls** | **Not yet** — use a Twilio number to make calls |
-| **Carrier voicemail detection (AMD)** | **Not yet** — Twilio only. The built-in detection works on both |
+| **SMS delivery status** | **Not yet** - sent messages stay at `sent` and never move to `delivered` |
+| **SMS campaigns** | **Not yet** - single sends work, but a Telnyx number cannot be a campaign's From number |
+| Outbound calls | Yes |
+| Outbound recording | Yes |
+| Keypad input (DTMF) | Yes |
+| Carrier voicemail detection (AMD) | Yes |
 
 <Warning>
-  Telnyx numbers cannot make outbound calls yet. If you import a Telnyx number
-  and use it as a campaign's **From** number, the call will not be placed.
+  A Telnyx number cannot be a campaign's **From** number yet. The request is rejected
+  when you create the SMS campaign, with a clear error - nothing is half-sent. Single
+  messages through `POST /v1/sms` work normally, and voice campaigns work on Telnyx.
+  Use a Twilio number for SMS campaigns.
 </Warning>
 
 ## Response
