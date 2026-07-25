@@ -62,7 +62,20 @@ How fast the agent talks. `1.0` is normal, `0.5` is half speed, and `1.5` is hal
 
 Like the voice, speed can be set at two levels.
 
-**Agent default** — set it on the agent in the dashboard. Every number on that agent speaks at this speed unless the number overrides it.
+**Agent default** — set it in the dashboard, or send `speaking_rate` when you create or update the agent. Every number on that agent speaks at this speed unless the number overrides it.
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "speaking_rate": 1.1 }'
+```
+
+<Note>
+  `speaking_rate` is the field that controls speed. The older `voice_speed` field on
+  the agent is still accepted and returned for backwards compatibility, but nothing
+  reads it - setting it has no effect. See [Create agent](/api-reference/agents/create).
+</Note>
 
 **Per-number override** — set `speaking_rate` on the number:
 

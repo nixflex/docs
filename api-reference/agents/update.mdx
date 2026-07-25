@@ -22,6 +22,22 @@ curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
 
 Any field from [Create agent](/api-reference/agents/create) can be updated. Pass only the fields you want to change.
 
+### Field behaviour worth knowing
+
+| Field | Behaviour on update |
+|---|---|
+| `speaking_rate` | Clamped to the supported range rather than rejected, so `9` is stored as the maximum. Send `null` to clear it and go back to normal speed - `null` is not the same as `1`. See [Voices](/concepts/voices). |
+| `dtmf_enabled` | Three-state. `true` and `false` are explicit; `null` means **not set**, which lets a phone number's own setting decide. |
+| `system_prompt` | Maximum 8000 characters, about 2000 tokens. Over that the whole update is rejected with `prompt_too_long`. |
+| `voice_speed` | Accepted and saved, but **nothing reads it**. Use `speaking_rate`. |
+| `func_send_sms`, `func_cold_transfer` | Accepted and saved, but **not enforced** - the agent texts and transfers regardless. Control them in your prompt. See [Create agent](/api-reference/agents/create). |
+
+<Note>
+  Fields not listed in [Create agent](/api-reference/agents/create) are ignored rather
+  than rejected. If a setting is not taking effect, check the field name against that
+  page first - an unrecognised name returns `200` and changes nothing.
+</Note>
+
 ## Response
 
 `200 OK` — returns the updated agent object.
@@ -37,5 +53,5 @@ Any field from [Create agent](/api-reference/agents/create) can be updated. Pass
 | Code | Cause |
 |---|---|
 | `agent_not_found` | ID doesn't exist or isn't yours |
-| `prompt_too_long` | New `system_prompt` exceeds limit |
+| `prompt_too_long` | New `system_prompt` exceeds 8000 characters |
 | `invalid_voice_id` | Voice not supported |
