@@ -1,0 +1,107 @@
+---
+title: "Telnyx"
+description: "Bring your own Telnyx account for phone numbers and carrier connectivity."
+icon: "phone"
+---
+
+Nixflex uses a **bring-your-own-carrier** model. You connect your own Telnyx account, so you keep full control of your phone numbers, carrier costs, and billing - Nixflex never marks up your Telnyx usage.
+
+<Note>
+  Because you own the Telnyx account, all carrier costs (number rental, call minutes, SMS, recording) are billed directly to you by Telnyx at their standard rates. Nixflex only charges its per-minute voice rate on top.
+</Note>
+
+## Why bring your own Telnyx
+
+<CardGroup cols={2}>
+  <Card title="You own your numbers" icon="phone">
+    Your numbers live in your Telnyx account. If you ever leave, they stay with you.
+  </Card>
+  <Card title="No marked-up carrier fees" icon="dollar-sign">
+    You pay Telnyx directly at their standard rates. Nixflex adds no margin on carrier costs.
+  </Card>
+  <Card title="Full control" icon="sliders">
+    Manage provisioning, geographic permissions, and compliance from your own Telnyx portal.
+  </Card>
+  <Card title="One number, voice and SMS" icon="messages">
+    The same Telnyx number handles calls and inbound SMS through your Nixflex agent.
+  </Card>
+</CardGroup>
+
+## The one thing that works differently from Twilio
+
+This is where most setups go wrong, so it is worth understanding before you start.
+
+On **Twilio**, the webhook lives **on the number**. You import a number and Nixflex points that number's webhooks at the engine.
+
+On **Telnyx**, the webhook lives on a **TeXML Application**, and numbers are *assigned* to that application. Nixflex never creates the application - **you** create it once in your Telnyx portal, and then every number you assign to it is handled by Nixflex. That is why importing a Telnyx number needs a `telnyx_connection_id` (the application's ID) as well as an API key.
+
+The upside: create the application once, and adding your tenth or two-hundredth number is just an assignment.
+
+## Setup
+
+<Steps>
+  <Step title="Create a TeXML Application in your Telnyx portal">
+    Set its **voice webhook URL** to `https://api.nixflex.com/telnyx-voice`, the method to **POST**, and the **webhook API version** to **2**.
+
+    Copy the application's ID when you are done - that is your `telnyx_connection_id`.
+  </Step>
+  <Step title="Assign your number to that application">
+    In **Numbers**, set the number's voice connection to the TeXML Application you just created.
+  </Step>
+  <Step title="Create an API key">
+    In the portal, create an API key with access to the number. That is your `telnyx_api_key`.
+  </Step>
+  <Step title="Import the number into Nixflex">
+    Send the number, the API key and the connection ID to [Import phone number](/api-reference/phone-numbers/import). Nixflex works out the carrier from the credentials you send - there is no provider field to set.
+
+    ```bash
+    curl -X POST https://api.nixflex.com/v1/phone-numbers \
+      -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "phone_number": "+443301901028",
+        "telnyx_api_key": "KEY0123456789...",
+        "telnyx_connection_id": "2512345678901234567",
+        "agent_id": "agent_125207e452f8714a"
+      }'
+    ```
+  </Step>
+  <Step title="Call the number">
+    Your agent answers. Nothing else to configure.
+  </Step>
+</Steps>
+
+## What Telnyx numbers support
+
+Telnyx numbers do inbound and outbound calls, recording in both directions, cold and warm transfer, booking, custom functions, post-call analysis, webhooks, Live Monitor, keypad input, carrier voicemail detection, and inbound SMS with auto-reply.
+
+For the current support table, including the two remaining gaps, see [Import phone number](/api-reference/phone-numbers/import). It is kept in one place so it cannot go stale in two.
+
+## If the audio sounds wrong
+
+<Note>
+  Nixflex streams **G711U (PCMU) at 8 kHz**, which is what phone networks use. If a call connects but the audio is distorted or silent, check the codec settings on your Telnyx connection: **G711U enabled**, and **HD Voice / G722 disabled**. A connection offering only wideband codecs cannot negotiate with the media stream.
+</Note>
+
+## What you pay Telnyx directly
+
+These go straight to your Telnyx account - Nixflex never sees or marks them up:
+
+| Cost | Billed by |
+|---|---|
+| Phone number rental | Telnyx |
+| Call minutes (inbound and outbound) | Telnyx |
+| SMS messages | Telnyx |
+| Call recording | Telnyx |
+
+<Note>
+  Nixflex downloads each recording and **deletes the copy on Telnyx**, so you are not charged for storing recordings twice. Telnyx keeps recordings for up to a year if you leave them there; Nixflex holds its copy in EU (Ireland) storage for 90 days. See [Data retention](/concepts/data-retention).
+</Note>
+
+For Nixflex's own per-minute pricing, see [Pricing](/reference/pricing).
+
+## Related
+
+- [Import phone number](/api-reference/phone-numbers/import) - the endpoint and the support table
+- [Phone numbers](/concepts/phone-numbers) - how numbers and agents fit together
+- [Twilio](/integrations/twilio) - the other supported carrier
