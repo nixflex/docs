@@ -13,6 +13,8 @@ Each channel is independent:
 - `web_prompt` is the **web agent** ([Web agent](/web-assistant/overview)) - it does not affect calls or SMS.
 - `sms_reply_enabled` turns SMS auto-reply on or off for the number.
 - `speaking_rate` sets how fast this number talks, overriding the agent's speed.
+- `dtmf_enabled` lets callers type digits on their keypad instead of saying them.
+- `record_call` controls whether calls on this number are recorded.
 
 ## Request
 
@@ -38,6 +40,8 @@ URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B44744646
 | `sms_prompt` | string or null | No | Instructions for the [SMS agent](/sms/sms-agent) on this number. Independent of `custom_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
 | `web_prompt` | string or null | No | Instructions for the [Web agent](/web-assistant/overview) on this number. Independent of `custom_prompt` and `sms_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
 | `speaking_rate` | number or null | No | How fast this number speaks on calls, overriding the agent's speed. `1.0` is normal, `0.5` is half speed, `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected. `null` means **not set** - the number inherits the agent's speed, so a `null` number under a `1.5` agent still speaks at `1.5`. To make one number normal while the agent stays fast, send `1`, not `null`. See [Voices](/concepts/voices). |
+| `dtmf_enabled` | boolean or null | No | Whether callers on this number can type digits on their phone keypad instead of speaking them. `null` means **not set**, so the number inherits the agent's setting - a `null` number under an agent with keypad input on still accepts keypad entry. Send `false` to switch one number off while the agent stays on. See [Keypad input](/advanced/keypad-input). |
+| `record_call` | boolean or null | No | Whether calls on this number are recorded. Recording is **on** unless switched off. `null` means **not set**, so the number inherits the agent's setting. Send `false` to stop recording one number while the agent keeps recording. The transcript is unaffected either way, and `recording_url` on the call record becomes `null`. See [Call recording](/advanced/call-recording). |
 
 Send at least one field. An empty body is rejected.
 
@@ -55,7 +59,9 @@ Send at least one field. An empty body is rejected.
     "sms_reply_enabled": true,
     "sms_prompt": "You are the text assistant for Smile Dental...",
     "web_prompt": null,
-    "speaking_rate": 0.9
+    "speaking_rate": 0.9,
+    "dtmf_enabled": null,
+    "record_call": false
   }
 }
 ```
@@ -106,3 +112,5 @@ The changes take effect on the next call or text. This is how a 200-location rol
 - [Web agent](/web-assistant/overview) - the `web_prompt` feature
 - [Import phone number](/api-reference/phone-numbers/import)
 - [Voices](/concepts/voices) - the `voice_id` and `speaking_rate` settings
+- [Keypad input](/advanced/keypad-input) - the `dtmf_enabled` setting
+- [Call recording](/advanced/call-recording) - the `record_call` setting
