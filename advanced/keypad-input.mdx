@@ -1,0 +1,118 @@
+---
+title: "Keypad input"
+description: "Let callers type digits instead of saying them"
+icon: "hash"
+---
+
+Callers can type on their phone keypad instead of speaking. The digits arrive as a normal caller turn, so your agent handles them with the same prompt it uses for speech - no extra configuration, no separate flow.
+
+Reading numbers aloud is where speech recognition fails worst. A mis-heard account number sends the caller round the loop, and a stray word can cut the agent off mid-sentence. A keypad press is exact.
+
+<Note>
+  Keypad input is **off by default**. Turn it on per agent in the dashboard, or per number through the API.
+</Note>
+
+## Turning it on
+
+### Per agent (dashboard)
+
+Open the agent, find **Call actions**, and switch on **Keypad input**. Every number on that agent accepts keypad entry from the next call onwards.
+
+### Per number (API)
+
+A single number can override its agent - useful when one line needs keypad entry and the rest do not.
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447700900123 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"dtmf_enabled": true}'
+```
+
+| Value | Meaning |
+|---|---|
+| `true` | This number accepts keypad entry, whatever the agent says |
+| `false` | This number does not, whatever the agent says |
+| `null` | **Not set** - the number inherits the agent's setting |
+
+<Warning>
+  `null` is not the same as `false`. `null` means "no opinion, follow the agent", so a `null` number under an agent with keypad input **on** will accept keypad entry. To switch one number off while the agent stays on, send `false`, not `null`.
+</Warning>
+
+See [Update phone number](/api-reference/phone-numbers/update).
+
+## What your agent receives
+
+Digits are handed to the model as a caller turn, tagged so it knows they were typed rather than spoken:
+
+```
+[Caller pressed on keypad: 5869]
+```
+
+That tag matters. The model should read a typed account number back to confirm it, and it should not treat a lone `1` as the caller saying the word "one" mid-sentence.
+
+<Tip>
+  Ask for keypad entry in your prompt and the model will use it naturally: *"If the caller needs to give a reference number, ask them to type it on the keypad and then read it back to confirm."*
+</Tip>
+
+## When an entry is finished
+
+Two things end an entry:
+
+| Trigger | Behaviour |
+|---|---|
+| The caller presses `#` | Sent immediately. The `#` is **not** part of the value |
+| Three seconds pass with no further press | Sent automatically |
+
+The three-second timer **restarts on every press**, so a caller slowly reading a long card number is never cut in half. There is no maximum length.
+
+<Note>
+  The three-second pause and the `#` send key are fixed and not configurable today.
+</Note>
+
+`*` is accepted as an ordinary key and comes through as part of the value.
+
+## Where it works
+
+| | Supported |
+|---|---|
+| Inbound calls | Yes |
+| Outbound calls | Yes |
+| Both carriers | Yes - keypad presses are translated to one shape internally, so behaviour is identical whichever carrier the number is on |
+
+## Behaviour you can rely on
+
+- **The agent never waits for speech to process digits.** Once an entry is finished it goes straight to the model - a caller who types ten digits and says nothing still gets a reply.
+- **Typing does not trigger the silence hang-up.** The inactivity timer resets on every entry, so a slow typer is not cut off.
+- **A half-typed entry is discarded when the call ends.** Digits can never arrive after hangup.
+- **Junk is ignored, never fatal.** Anything that is not a single `0-9`, `*` or `#` is dropped rather than raising an error, so a malformed frame cannot take down a live call.
+
+## Common uses
+
+- **Account or reference numbers** - exact where speech is not
+- **Menu choices** - "press 1 for sales, 2 for support"
+- **Postcodes and card numbers** - long strings that speech recognition mangles
+- **Dates of birth** - digits with no spelling ambiguity
+
+## Testing it
+
+<Steps>
+  <Step title="Turn it on">
+    Switch on **Keypad input** for the agent, or PATCH `dtmf_enabled: true` on the number.
+  </Step>
+  <Step title="Call the number">
+    Ask the agent something, then type a few digits on your keypad.
+  </Step>
+  <Step title="Press hash">
+    The entry is sent the moment you press `#`. Without `#`, it sends about three seconds after your last press.
+  </Step>
+  <Step title="Check the transcript">
+    The call transcript shows the entry as a caller turn: `[Caller pressed on keypad: 5869]`.
+  </Step>
+</Steps>
+
+## Related
+
+- [Update phone number](/api-reference/phone-numbers/update) - the `dtmf_enabled` field
+- [Agent prompts](/concepts/agent-prompts) - asking for keypad entry in your prompt
+- [Conversation control](/concepts/conversation-control) - how caller turns are handled
