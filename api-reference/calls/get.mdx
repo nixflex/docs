@@ -4,7 +4,7 @@ description: "GET /v1/calls/:id"
 api: "GET https://api.nixflex.com/v1/calls/{call_id}"
 ---
 
-Fetches a single call with full transcript, recording URL, and post-call analysis.
+Fetches a single call: transcript, recording URL, and post-call analysis.
 
 ## Request
 
@@ -15,62 +15,69 @@ curl https://api.nixflex.com/v1/calls/CA1234567890 \
 
 ## Response
 
-`200 OK`:
+`200 OK` returns **one call object with exactly the same shape** as an entry in [List calls](/api-reference/calls/list) - both endpoints return the full call record.
 
 ```json
 {
   "call_id": "CA1234567890",
   "agent_id": "agent_125207e452f8714a",
-  "direction": "inbound",
+  "call_direction": "inbound",
+  "call_type": "inbound",
   "from_number": "+447386172392",
   "to_number": "+447446466847",
-  "started_at": "2026-05-17T03:45:12Z",
-  "ended_at": "2026-05-17T03:47:38Z",
-  "duration_seconds": 146,
-  "ended_reason": "agent_hangup",
-  "voicemail_detected": false,
-  "transcript": [
-    {
-      "role": "agent",
-      "text": "Hello, Acme Dental, how can I help?",
-      "timestamp_ms": 1200
-    },
-    {
-      "role": "caller",
-      "text": "Hi, I'd like to book a check-up.",
-      "timestamp_ms": 3800
-    }
-  ],
-  "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3",
-  "call_summary": "Caller booked a check-up for Tuesday 8th March at 2pm. Confirmed contact details.",
+  "call_status": "completed",
+  "start_timestamp": 1784987006751,
+  "answered_at": 1784987011051,
+  "end_timestamp": 1784987048847,
+  "duration_ms": 37796,
+  "ended_reason": "caller_hangup",
+  "transcript": "AI: Hello, Acme Dental, how can I help?\nCaller: Hi, I'd like to book a check-up.",
+  "call_summary": "Caller booked a check-up for Tuesday at 2pm.",
   "caller_sentiment": "happy",
   "call_successful": true,
   "extracted_data": {
     "caller_name": "Sarah Johnson",
-    "appointment_date": "2026-03-08",
     "appointment_time": "14:00"
   },
-  "metadata": {},
-  "cost_usd": 0.195
+  "bookings": [],
+  "recording_url": "https://storage.nixflex.com/recordings/CA1234567890.mp3",
+  "recording_duration_s": 37,
+  "voicemail_detected": false,
+  "voicemail_detection_method": null,
+  "amd_result": null,
+  "campaign_id": null,
+  "avg_latency_ms": 780,
+  "caller_name": null,
+  "call_reason": null,
+  "created_at": "2026-07-25T03:45:12Z"
 }
 ```
 
 ## Field reference
 
+Every field is described once, in [List calls](/api-reference/calls/list#response-fields). The two endpoints return the same object, so there is deliberately no second table here to fall out of date.
+
+Three worth repeating:
+
 | Field | Notes |
 |---|---|
-| `direction` | `inbound` or `outbound` |
-| `ended_reason` | `agent_hangup`, `caller_hangup`, `silence_timeout`, `max_duration`, `voicemail`, `error` |
-| `transcript` | Ordered turns; `role` is `agent` or `caller` |
-| `recording_url` | Permanent URL hosted on Nixflex; original is also kept on your Twilio account |
-| `caller_sentiment` | `happy`, `neutral`, `frustrated` |
-| `call_successful` | True if the AI judged the goal achieved |
-| `extracted_data` | Object matching the agent's `extraction_schema` |
-| `metadata` | Custom data passed when triggering an outbound call |
-| `cost_usd` | Total Nixflex charge for this call (excludes Twilio costs) |
+| `duration_ms` | **Time connected**, from answer to hangup - the number you are billed on. Ring time is excluded, so it will not equal `end_timestamp - start_timestamp` on an outbound call. |
+| `transcript` | A single **string**, with each turn on its own line - not an array of turn objects. |
+| `recording_url` | The MP3 in Nixflex storage, or `null` if [recording](/advanced/call-recording) was off for this call. The copy on your carrier is deleted after Nixflex downloads it, so this is the only copy - see [Data retention](/concepts/data-retention). |
+
+<Note>
+  Timestamps `start_timestamp`, `answered_at` and `end_timestamp` are epoch
+  **milliseconds** as numbers. Only `created_at` is an ISO 8601 string.
+</Note>
 
 ## Errors
 
 | Code | Cause |
 |---|---|
 | `call_not_found` | ID doesn't exist or belongs to another account |
+
+## Related
+
+- [List calls](/api-reference/calls/list) - the full field reference, plus paging
+- [Webhooks](/advanced/webhooks) - get this object pushed to you when a call ends
+- [Call recording](/advanced/call-recording) - why `recording_url` may be `null`

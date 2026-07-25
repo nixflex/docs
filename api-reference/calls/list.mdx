@@ -4,7 +4,7 @@ description: "GET /v1/calls"
 api: "GET https://api.nixflex.com/v1/calls"
 ---
 
-Returns the 50 most recent calls for your account, newest first.
+Returns your calls, newest first. 50 per page by default - page through the rest with `limit` and `offset`.
 
 ## Request
 
@@ -15,7 +15,25 @@ curl https://api.nixflex.com/v1/calls \
 
 ## Query parameters
 
-None. This endpoint takes no filters and is not paginated.
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | int | `50` | How many calls to return. Hard-capped at **200** per request - a higher value is reduced to 200 rather than rejected. |
+| `offset` | int | `0` | How many calls to skip. Combine with `limit` to page back through older calls. |
+
+```bash
+# the 50 most recent
+curl https://api.nixflex.com/v1/calls \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+
+# calls 101-200, newest first
+curl "https://api.nixflex.com/v1/calls?limit=100&offset=100" \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+<Note>
+  The response is a **bare array**, not an object with a `total` or `has_more`. Page
+  until you get fewer rows back than you asked for.
+</Note>
 
 ## Response
 
@@ -30,8 +48,9 @@ None. This endpoint takes no filters and is not paginated.
     "from_number": "+447386172392",
     "to_number": "+447446466847",
     "call_status": "completed",
-    "start_timestamp": "2026-05-17T03:45:12Z",
-    "end_timestamp": "2026-05-17T03:47:38Z",
+    "start_timestamp": 1784987006751,
+    "end_timestamp": 1784987048847,
+    "answered_at": 1784987011051,
     "duration_ms": 146000,
     "ended_reason": "agent_hangup",
     "transcript": "AI: Good morning...",
@@ -57,9 +76,15 @@ None. This endpoint takes no filters and is not paginated.
 | `from_number` | string | Caller's number, E.164 |
 | `to_number` | string | Number that was called, E.164 |
 | `call_status` | string | Final status of the call |
-| `start_timestamp` | string | ISO 8601 |
-| `end_timestamp` | string | ISO 8601 |
-| `duration_ms` | int | Call length in **milliseconds** |
+| `start_timestamp` | int | When the call was created, epoch **milliseconds**. On an outbound call this is when the carrier was asked to dial, BEFORE the phone rang. |
+| `end_timestamp` | int | When the call ended, epoch **milliseconds**. |
+| `answered_at` | int or null | When the call was ANSWERED, epoch milliseconds. `null` on inbound calls and on calls that predate this field - see the note under `duration_ms`. |
+| `duration_ms` | int | **Time connected**, in milliseconds - measured from answer to hangup, and the number you are billed on. Ring time is NOT included, so this will not equal `end_timestamp` minus `start_timestamp` on an outbound call. |
+| `call_type` | string | `inbound` or `outbound`. Same meaning as `call_direction`; both are returned. |
+| `voicemail_detection_method` | string or null | Which detector found the voicemail: `twilio_amd`, `telnyx_amd` or `llm_transcript`. |
+| `amd_result` | string or null | What the carrier's machine detection reported, e.g. `human` or `machine_start`. Only present when machine detection is enabled. |
+| `call_reason` | string or null | Reason extracted from the conversation, when the agent captures one. |
+| `caller_name` | string or null | Caller's name, when known. |
 | `ended_reason` | string | Why the call ended |
 | `transcript` | string | Full transcript. Included in this response |
 | `call_summary` | string | AI-written summary |
@@ -75,10 +100,26 @@ None. This endpoint takes no filters and is not paginated.
 | `created_at` | string | ISO 8601 |
 
 <Note>
-  This endpoint returns only the 50 most recent calls and cannot reach older
-  records. To keep full call history, subscribe to the `call.completed`
-  [webhook](/advanced/webhooks) and store each call in your own backend as it
-  arrives.
+  **`duration_ms` is time CONNECTED, not dial-to-hangup.** Ring time is excluded, so
+  it matches what your carrier bills you and it matches the recording length. On an
+  outbound call `start_timestamp` is when dialling began, so
+  `end_timestamp - start_timestamp` will be LARGER than `duration_ms` by however long
+  the phone rang. Use `answered_at` if you want the ring time:
+  `answered_at - start_timestamp`.
+</Note>
+
+<Note>
+  **The response includes internal fields that are not part of this contract.** You
+  will see `id`, `api_key_id` and `system_prompt_used` in the JSON. They are yours,
+  but they are engine plumbing rather than API surface - do not build against them, as
+  they may change or be removed without a version bump.
+</Note>
+
+<Note>
+  Older calls stay reachable with `offset`, but call data is deleted after 90 days -
+  see [Data retention](/concepts/data-retention). To keep full history, subscribe to
+  the `call.completed` [webhook](/advanced/webhooks) and store each call in your own
+  backend as it arrives.
 </Note>
 
 Fetch one call by ID with [Get call](/api-reference/calls/get).
