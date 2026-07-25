@@ -32,7 +32,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
 | `name` | string | No | `"Untitled Agent"` | Display name (max 100 chars) |
-| `system_prompt` | string | No | friendly assistant | The AI's instructions (max ~10k chars) |
+| `system_prompt` | string | No | friendly assistant | The AI's instructions (max 8000 chars, about 2000 tokens) |
 | `welcome_message` | string | No | `"Hello! How can I help you today?"` | First line spoken on inbound calls |
 | `voice_id` | string | No | `"Ashley"` | Voice name. Browse voices in the dashboard |
 | `language` | string | No | `"multi"` | Default language. `multi` auto-detects |
@@ -53,8 +53,8 @@ Only `name` is recommended in practice — every other field has a sensible defa
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `max_call_duration_seconds` | int | No | `300` | Hard cap on call length. Range 60–1800 (1–30 min). See [End call](/actions/end-call). |
-| `silence_hangup_seconds` | int | No | `10` | Hang up if caller silent this long. Range 5–45. See [End call](/actions/end-call). |
+| `max_call_duration_seconds` | int | No | `600` | Hard cap on call length. Range 60–1800 (1–30 min). See [End call](/actions/end-call). |
+| `silence_hangup_seconds` | int | No | `30` | Hang up if caller silent this long. Range 5–45. See [End call](/actions/end-call). |
 | `record_call` | bool | No | `true` | Save call audio to Supabase Storage |
 | `webhook_url` | string | No | `null` | Where to POST post-call data |
 
@@ -64,7 +64,6 @@ Only `name` is recommended in practice — every other field has a sensible defa
 |---|---|---|---|---|
 | `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
 | `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. | 
-ull | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. |
 | `func_send_sms` | bool | No | `false` | Agent can send SMS during the call |
 | `transfer_type` | enum | No | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls made by this agent. See [Transfer](/actions/transfer). |
 | `transfer_number` | string | No | `null` | Default destination for transfers |
@@ -125,7 +124,7 @@ Attach a Twilio phone number so the agent can make and receive calls. See [Impor
 
 | Code | Cause |
 |---|---|
-| `prompt_too_long` | `system_prompt` exceeds 10,000 characters |
+| `prompt_too_long` | `system_prompt` exceeds 8000 characters |
 | `invalid_voice_id` | Voice not in supported list |
 | `invalid_language` | Language code not supported |
 | `invalid_request` | Missing required field or bad format |
