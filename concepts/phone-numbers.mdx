@@ -65,15 +65,22 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 
 After this, calls to that number land on the agent automatically.
 
-<Warning>
-  **Telnyx numbers are inbound only today.** They cannot place outbound calls,
-  and SMS delivery status is not tracked yet. Everything else — recording,
-  transfers, booking, analysis, webhooks, inbound SMS — works on both carriers.
-  Use a Twilio number for outbound campaigns.
-</Warning>
+<Note>
+  **Telnyx numbers now do almost everything Twilio numbers do** - inbound and outbound
+  calls, recording in both directions, cold and warm transfer, booking, custom
+  functions, analysis, webhooks, keypad input, carrier voicemail detection, and inbound
+  SMS with auto-reply.
+
+  Two gaps remain. SMS delivery status is not tracked, so a sent message stays at
+  `sent` and never moves to `delivered`. And a Telnyx number cannot be an SMS
+  campaign's **From** number - single sends through `POST /v1/sms` work normally, and
+  voice campaigns work on both carriers. See
+  [Import phone number](/api-reference/phone-numbers/import) for the current support
+  table.
+</Note>
 
 <Warning>
-  Importing a number **overwrites any existing webhooks** on that Twilio number. If you have other systems using the number, they will stop receiving calls.
+  Importing a number **overwrites any existing webhooks** on that number. On Twilio the number's own webhooks are replaced; on Telnyx the number is reassigned to the TeXML application you nominated. If you have other systems using the number, they will stop receiving calls.
 </Warning>
 
 ## Multi-number, single-agent pattern
