@@ -10,7 +10,7 @@ Custom functions extend the agent beyond built-in actions like SMS and transfer.
 
 <Steps>
   <Step title="Create the function in the dashboard">
-    Open the **Integrations** tab, choose the phone number, open **Custom Functions**, and add a function. Custom functions are configured per phone number. You give it a name, a description (the agent reads this every turn), an HTTPS URL, and a parameter schema.
+    Open your agent, expand the **Custom Functions** panel, and add a function. You give it a name, a description (the agent reads this every turn), an HTTPS URL, and a parameter schema.
   </Step>
   <Step title="The agent sees it as a tool">
     On every conversation turn, the agent is aware of every active function on the agent. Based on the description you wrote, the agent decides when to call it.
@@ -83,7 +83,7 @@ These are always present in `variables` on every request. They cover everything 
 | `current_day_of_week` | Day name | `Wednesday` |
 | `current_timezone` | Agent timezone setting | `Europe/London` |
 | `call_direction` | `inbound` or `outbound` | `inbound` |
-| `call_id` | The carrier's call ID - a Twilio Call SID, or a Telnyx call control ID | `CAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
+| `call_id` | The Twilio call SID | `CAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `agent_id` | The agent's ID | `agent_f2b06c0e0bd877e9` |
 | `caller_history` | Summaries of past calls from this number (empty for first-time callers) | `PREVIOUS CALLS FROM THIS NUMBER...` |
 
@@ -248,25 +248,15 @@ This gives the agent an extra hint about ordering and conditions on top of each 
   </Card>
 </CardGroup>
 
-## Speak while running
-
-Some functions call a slow API, or the agent may call one without saying anything first. To avoid the caller hearing silence during the wait, set a **Speak while running** line (`speak_during`) on the function - a short phrase the engine speaks as the function runs.
-
-```
-One moment while I check that for you.
-```
-
-If you leave it empty the agent will usually say something natural on its own, but a set phrase guarantees the caller is never left in silence - especially important on functions with a long timeout.
-
 ## Limits and constraints
 
 | Limit | Value | Why |
 |---|---|---|
-| Functions per number | 15 | Keeps the tool list focused. Too many functions and the agent gets confused about which to call. |
+| Functions per agent | 10 | Keeps the agent's tool list focused. Too many functions and the agent gets confused about which to call. |
 | URL scheme | HTTPS only | Plain HTTP is rejected for security. |
-| Default timeout | 5 seconds | After this, the function is treated as failed. Set the timeout per function, from 1 to 45 seconds, if your API is slow. |
+| Default timeout | 5 seconds | After this, the function is treated as failed. Override per-function if your API is slow. |
 | Response size | 100 KB max | Larger responses are rejected. Big payloads also bloat the agent's context. |
-| Tool rounds per turn | Capped | The engine limits how many times functions run in a single turn, so the agent cannot loop on the same function. |
+| Tool rounds per turn | 3 | Stops the agent from looping on the same function indefinitely. |
 | Function name format | snake_case, max 64 chars | Matches the agent's tool name requirements. |
 
 ## Limitations

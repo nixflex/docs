@@ -86,7 +86,7 @@ AMD (Answering Machine Detection) is a carrier-level check that listens to the a
 </Warning>
 
 - **Off by default.** Enable it per agent with the **Voicemail detection** toggle under **Call Controls**.
-- **Twilio numbers only** today.
+- Works on **both carriers**. Twilio and Telnyx each provide their own machine detection, and Nixflex treats the result identically.
 - **Speed:** around 4 seconds, versus around 10 for the built-in detection.
 - **Cost:** roughly $0.0075 per answered call, billed on your own telephony account.
 - When AMD ends the call, it happens before the agent speaks, so the call has **no transcript, sentiment, or summary**. This is expected.
@@ -103,7 +103,7 @@ If both are active, AMD wins — it is faster, and the call is over before the b
 | Cost | Free | ~$0.0075 / answered call |
 | Languages | Any | Best in US / CA |
 | Transcript saved | Yes | No |
-| Carriers | All | Twilio only |
+| Carriers | All | Twilio and Telnyx |
 | Ended reason | `voicemail_detected` | `voicemail_detected` |
 
 Leave AMD off unless you have a reason to want a fast hang-up. The built-in detection is free, works on every carrier and language, and is the only way to leave a message.
@@ -114,6 +114,6 @@ Leave AMD off unless you have a reason to want a fast hang-up. The built-in dete
 |---|---|
 | `ended_reason` | `voicemail_detected` |
 | `voicemail_detected` | `true` |
-| `voicemail_detection_method` | `llm_transcript` or `twilio_amd` |
+| `voicemail_detection_method` | `llm_transcript`, `twilio_amd` or `telnyx_amd` |
 
 Use `voicemail_detection_method` to tell a free detection from a paid one when reviewing a campaign.

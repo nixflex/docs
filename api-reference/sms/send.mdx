@@ -4,7 +4,7 @@ description: "POST /v1/sms"
 api: "POST https://api.nixflex.com/v1/sms"
 ---
 
-Sends a single SMS via your Twilio number. Useful for one-off messages, status updates, or reminders that do not need a phone call.
+Sends a single SMS from one of your imported numbers. Works on Twilio and Telnyx. Useful for one-off messages, status updates, or reminders that do not need a phone call.
 
 <Warning>
   This endpoint uses `to` for the recipient. The outbound-call endpoint (`POST /v1/calls/outbound`) uses `to_number` instead. They are different field names for the same idea - sending `to_number` here will fail with a missing-field error. Double-check when copying between the two.
@@ -30,8 +30,8 @@ curl -X POST https://api.nixflex.com/v1/sms \
 |---|---|---|---|
 | `agent_id` | string | Yes | Agent that owns this SMS - its `system_prompt` handles any replies |
 | `to` | string | Yes | Recipient in E.164 (this endpoint uses `to`, not `to_number`) |
-| `message` | string | Yes | Message text. **600 chars recommended** for reliable carrier delivery. Twilio hard cap is 1600. See [SMS length guide](/sms/send-sms#sms-length-and-deliverability). |
-| `from_number` | string | No | Which of your imported Twilio numbers to send from. If omitted, the agent's own number is used. Required only if the agent has no number of its own. |
+| `message` | string | Yes | Message text. **600 chars recommended** for reliable carrier delivery. Carrier hard caps are typically 1600. See [SMS length guide](/sms/send-sms#sms-length-and-deliverability). |
+| `from_number` | string | No | Which of your imported numbers to send from, on either carrier. If omitted, the agent's own number is used. Required only if the agent has no number of its own. |
 | `context` | object | No | Optional reply context. Pass `{ "reply_context": "..." }` to give the agent extra background for handling replies to this specific message. |
 
 ## Response
@@ -46,7 +46,7 @@ curl -X POST https://api.nixflex.com/v1/sms \
 }
 ```
 
-Status updates come asynchronously via Twilio status callbacks. Final status (`delivered`, `failed`, `undelivered`) reflects in the message record within ~30 seconds.
+Status updates come asynchronously via your carrier's status callbacks. Telnyx does not report delivery status yet, so a message sent from a Telnyx number stays at `sent`. Final status (`delivered`, `failed`, `undelivered`) reflects in the message record within ~30 seconds.
 
 ## Reply behaviour
 
@@ -61,5 +61,5 @@ For per-message context, pass a `context` object with `reply_context` - the agen
 | 400 | `Required: agent_id, to, message` | One of the required fields is missing |
 | 404 | `Agent not found` | `agent_id` does not exist or is not yours |
 | 400 | `from_number required - this agent has no number of its own, so specify which imported number to send from` | No `from_number` passed and the agent has no number |
-| 400 | (credentials error) | The chosen number has no Twilio credentials stored |
+| 400 | (credentials error) | The chosen number has no carrier credentials stored |
 | 500 | `Failed to send SMS via Twilio` | Twilio rejected the send |

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Create SMS campaign"
 description: "POST /v1/sms/campaigns"
 api: "POST https://api.nixflex.com/v1/sms/campaigns"
@@ -34,7 +34,7 @@ curl -X POST https://api.nixflex.com/v1/sms/campaigns \
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `agent_id` | string | Yes | Agent associated with the campaign |
-| `from_number` | string | Yes | Your imported Twilio number |
+| `from_number` | string | Yes | Your imported **Twilio** number. SMS campaigns do not support Telnyx numbers yet - the request is rejected at create. Single sends via [POST /v1/sms](/api-reference/sms/send) work on both. |
 | `name` | string | Yes | Display name in dashboard |
 | `message_template` | string | Yes | Message text. Supports `{{variable}}` placeholders |
 | `recipients` | array | Yes | Up to 10,000. Each item: `{ phone, variables }` |

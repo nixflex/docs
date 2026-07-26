@@ -68,7 +68,7 @@ When a call comes in, Nixflex POSTs this to your URL and waits for your reply:
 | `event` | string | Always `call.inbound`. |
 | `from` | string | The caller's number. |
 | `to` | string | **The number that was dialled.** This identifies which of your end-users the call is for. |
-| `call_id` | string | The Twilio call SID for this call. |
+| `call_id` | string | The carrier's call ID for this call - a Twilio Call SID, or a Telnyx call control ID. |
 
 <Tip>
   **The `to` field is the identity key.** Every inbound call has exactly one `to` number — the line that was dialled. Look your end-user up by this number to decide whether to allow the call. One shared URL handles all your numbers, because `to` tells you which end-user each request is about.

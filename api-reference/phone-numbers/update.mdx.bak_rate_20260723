@@ -1,0 +1,103 @@
+---
+title: "Update phone number"
+description: "PATCH /v1/phone-numbers/:phoneNumber"
+api: "PATCH https://api.nixflex.com/v1/phone-numbers/{phone_number}"
+---
+
+Update the per-number settings on a number you have already imported: the call business profile, the voice, and the SMS and web agent instructions. Every field is optional - send only what you want to change. Any field left out is untouched.
+
+Each channel is independent:
+
+- `custom_prompt` shapes **phone calls** (layered on top of the agent prompt).
+- `sms_prompt` is the **SMS agent** ([SMS agent](/sms/sms-agent)) - it does not affect calls.
+- `web_prompt` is the **web agent** ([Web agent](/web-assistant/overview)) - it does not affect calls or SMS.
+- `sms_reply_enabled` turns SMS auto-reply on or off for the number.
+
+## Request
+
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sms_reply_enabled": true,
+    "sms_prompt": "You are the text assistant for Smile Dental. Open Mon-Fri 9am-5pm. A check-up is 45 pounds. You can book, reschedule and cancel. Keep replies short."
+  }'
+```
+
+URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B447446466847`.
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `custom_prompt` | string or null | No | The business profile layered on top of the agent prompt on **phone calls**. Maximum 8000 characters. Send `null` or an empty string to clear it - the number then falls back to the agent prompt alone. Does **not** affect SMS or web chat. |
+| `voice_id` | string or null | No | The voice this number speaks with on calls, overriding the agent's voice (e.g. `Craig`, `Eleanor`, `Ashley`). Send `null` or empty to fall back to the agent's voice. Must be an exact, valid voice ID. |
+| `sms_reply_enabled` | boolean | No | Turns the SMS agent (auto-reply) on or off for this number. `false` by default - a number only replies to texts when you turn this on. Accepts `true`/`false`. |
+| `sms_prompt` | string or null | No | Instructions for the [SMS agent](/sms/sms-agent) on this number. Independent of `custom_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
+| `web_prompt` | string or null | No | Instructions for the [Web agent](/web-assistant/overview) on this number. Independent of `custom_prompt` and `sms_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
+
+Send at least one field. An empty body is rejected.
+
+## Response
+
+`200 OK` returns the updated number:
+
+```json
+{
+  "phone_number": {
+    "phone_number": "+447446466847",
+    "agent_id": "agent_125207e452f8714a",
+    "custom_prompt": "Business: Smile Dental Croydon...",
+    "voice_id": "Craig",
+    "sms_reply_enabled": true,
+    "sms_prompt": "You are the text assistant for Smile Dental...",
+    "web_prompt": null
+  }
+}
+```
+
+Takes effect on the very next call or text - no deploy, no re-import.
+
+## Errors
+
+| Code | HTTP | Cause |
+|---|---|---|
+| `missing_field` | 400 | Empty body - no updatable field present (send `null` to clear a field, not an empty body) |
+| `custom_prompt_too_long` | 400 | `custom_prompt` over 8000 characters |
+| `sms_prompt_too_long` | 400 | `sms_prompt` over 20000 characters |
+| `web_prompt_too_long` | 400 | `web_prompt` over 20000 characters |
+| `number_not_found` | 404 | Number doesn't exist OR belongs to a different account |
+
+## Use case: reseller end-customer onboarding
+
+One agent template, many end-customers - each number carries its own call profile, SMS agent, and web agent:
+
+```javascript
+// Customer edits their business details in YOUR app -> you sync to Nixflex
+await fetch(
+  `https://api.nixflex.com/v1/phone-numbers/${clinicNumber}`,
+  {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${NIXFLEX_KEY_ID}:${NIXFLEX_KEY_SECRET}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      custom_prompt: `Business: ${clinic.name}. Address: ${clinic.address}. Open ${clinic.hours}. ${clinic.services}`,
+      voice_id: clinic.voice_id,
+      sms_reply_enabled: true,
+      sms_prompt: `You are the text assistant for ${clinic.name}. ${clinic.details}. You can book, reschedule and cancel. Keep replies short.`,
+      web_prompt: `You are the online assistant for ${clinic.name}. ${clinic.details}. If someone wants to book, tell them to call.`
+    })
+  }
+);
+```
+
+The changes take effect on the next call or text. This is how a 200-location rollout stays one agent + one PATCH per location - across calls, SMS, and web.
+
+## Related
+
+- [SMS agent](/sms/sms-agent) - the `sms_prompt` + `sms_reply_enabled` feature
+- [Web agent](/web-assistant/overview) - the `web_prompt` feature
+- [Import phone number](/api-reference/phone-numbers/import)

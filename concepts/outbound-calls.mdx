@@ -33,12 +33,12 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   One agent can have many phone numbers. Pass `from_number` to call from a specific one (this also sets the voice - see [Voices](/concepts/voices)). Omit it and the engine uses the agent's first outbound-enabled number. Import and enable numbers on the [phone numbers](/api-reference/phone-numbers/import) endpoint before calling.
 </Note>
 
-The response includes a `call_id` immediately. The actual call happens asynchronously - Twilio dials, the agent waits for pickup, and then the conversation runs.
+The response includes a `call_id` immediately. The actual call happens asynchronously - your carrier dials, the agent waits for pickup, and then the conversation runs.
 
 ## What happens on the receiving end
 
 <Steps>
-  <Step title="Twilio dials">
+  <Step title="Your carrier dials">
     Using the agent's assigned phone number as caller ID. Standard PSTN call.
   </Step>
   <Step title="Voicemail detection runs">
@@ -88,7 +88,7 @@ curl -X POST https://api.nixflex.com/v1/calls/batch \
 
 If `schedule_type` is `"now"`, the campaign launches immediately. Use `"schedule"` and a `scheduled_at` ISO timestamp to launch later.
 
-Each recipient becomes one outbound call. The engine respects a global concurrency cap so you don't melt your Twilio account.
+Each recipient becomes one outbound call. The engine respects a global concurrency cap so you don't overload your carrier account.
 
 See [Batch create](/api-reference/calls/batch-create) for the full schema.
 

@@ -33,7 +33,7 @@ curl -X POST https://api.nixflex.com/v1/calls/batch \
 | `agent_id` | string | Yes | Agent used for all calls in this batch |
 | `prompt` | string | Yes | The call purpose for every call in the campaign - what the agent should say and why it is calling. Per-recipient `prompt_override` replaces it for that recipient. |
 | `name` | string | No | Display name for the campaign |
-| `from_number` | string | Yes | The number to dial from. Must be a Twilio number you have imported and attached to this agent. Telnyx numbers cannot place outbound calls yet. |
+| `from_number` | string | Yes | The number to dial from. Must be a number you have imported and attached to this agent. Works on Twilio and Telnyx. |
 | `recipients` | array | Yes | Recipient objects (see below) |
 | `skip_invalid` | bool | No | Default `false`: reject the whole request if any phone is invalid. `true`: dial valid numbers only; invalid ones are listed in the response. |
 | `schedule_type` | enum | No | `now` (launch immediately, default) or `schedule` |

@@ -4,7 +4,7 @@ description: "DELETE /v1/phone-numbers/:phoneNumber"
 api: "DELETE https://api.nixflex.com/v1/phone-numbers/{phone_number}"
 ---
 
-Disconnects a number from your Nixflex account. Clears Twilio webhook config so calls no longer route to the engine, then removes the row from our database.
+Disconnects a number from your Nixflex account. Clears the carrier configuration so calls no longer route to the engine - on Twilio the number's webhooks, on Telnyx the assignment to your TeXML application, then removes the row from our database.
 
 ## Request
 
@@ -31,13 +31,13 @@ URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B44744646
 ## What this does NOT do
 
 <Warning>
-  This endpoint **does not release the number from Twilio**:
+  This endpoint **does not release the number from your carrier**:
 
-  - ❌ Number stays in your Twilio account
-  - ❌ Twilio billing continues
+  - ❌ Number stays in your carrier account
+  - ❌ Carrier billing continues
   - ❌ Number is not cancelled
 
-  To fully release the number (stop Twilio billing), do that directly via Twilio's API or console. This is intentional — releasing is a permanent billing decision and stays with the account owner.
+  To fully release the number and stop carrier billing, do that directly in your Twilio or Telnyx account. This is intentional — releasing is a permanent billing decision and stays with the account owner.
 </Warning>
 
 ## Reversible

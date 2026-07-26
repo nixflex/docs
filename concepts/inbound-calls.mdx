@@ -4,16 +4,16 @@ description: "How calls reach your agent"
 icon: "phone-arrow-down-left"
 ---
 
-An inbound call is a call placed **to** one of your imported Twilio numbers. The flow is automatic — once a number is imported, the agent answers.
+An inbound call is a call placed **to** one of your imported numbers. The flow is automatic — once a number is imported, the agent answers.
 
 ## What happens on an inbound call
 
 <Steps>
-  <Step title="Caller dials your Twilio number">
+  <Step title="Caller dials your number">
     A real person picks up the phone and dials.
   </Step>
-  <Step title="Twilio routes the call to Nixflex">
-    Because the number's voice webhook points at our engine, Twilio opens a WebSocket and starts streaming audio.
+  <Step title="Your carrier routes the call to Nixflex">
+    Because the number's voice webhook points at our engine, your carrier opens a WebSocket and starts streaming audio. This works the same on Twilio and Telnyx.
   </Step>
   <Step title="Engine looks up the agent">
     The phone number record tells the engine which agent owns this call.
@@ -40,7 +40,7 @@ You don't have to configure any of this — the engine handles it:
 - **Silence handling** — if the caller goes quiet, the agent gently prompts after a few seconds
 - **Language auto-detection** — backchannels and filler words match the caller's language
 - **Voicemail detection** — if the call somehow lands on a voicemail, the engine hangs up cleanly (rare on inbound, but possible)
-- **Call recording** — dual-channel recording stored on Nixflex; original stays on your Twilio account
+- **Call recording** — stored on Nixflex; the copy on your carrier is deleted once Nixflex has it
 - **Post-call analysis** — every call gets a summary and sentiment automatically
 
 ## History-aware behaviour

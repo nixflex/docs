@@ -24,7 +24,7 @@ Voice is billed by duration, rounded to the nearest hundredth of a minute. For e
 - Real-time speech recognition
 - AI reasoning
 - Natural-sounding voice synthesis
-- Call recording (stored on Nixflex; the Twilio copy is deleted automatically - see below)
+- Call recording (stored on Nixflex; the copy on your carrier is deleted automatically - see below)
 - Post-call analysis (summary, sentiment, custom extraction)
 - Webhook delivery with automatic retries
 - Dashboard access and logs
@@ -33,22 +33,22 @@ Everything above is included in the standard per-minute price. The only optional
 
 ## Call recordings
 
-When call recording is on, the engine saves the recording to Nixflex storage and then **deletes the copy on Twilio automatically**. This is deliberate: it avoids ongoing Twilio storage charges and means your call audio is not retained on Twilio.
+When call recording is on, the engine saves the recording to Nixflex storage and then **deletes the copy on your carrier automatically**. This is deliberate: it avoids ongoing carrier storage charges and means your call audio is not retained there. Twilio charges for recording storage; Telnyx keeps recordings for up to a year. Either way, Nixflex holds the only copy after upload.
 
 You get your recording as a `recording_url` in the post-call webhook (and on the call record). To keep a recording long-term, **download it and store it in your own backend** - Nixflex hosts the file but does not keep it forever (see [Data retention](/concepts/data-retention)).
-## What you pay Twilio directly
+## What you pay your carrier directly
 
-Because you bring your own Twilio, these costs go straight to your Twilio account - Nixflex never sees or marks them up:
+Because you bring your own carrier, these costs go straight to your Twilio or Telnyx account - Nixflex never sees or marks them up:
 
 | Cost | Where it is billed |
 |---|---|
-| Phone numbers | Your Twilio account |
-| Carrier voice minutes | Your Twilio account |
-| SMS messages | Your Twilio account |
+| Phone numbers | Your carrier account |
+| Carrier voice minutes | Your carrier account |
+| SMS messages | Your carrier account |
 
 ## SMS
 
-Nixflex does not charge a separate per-SMS fee. SMS carrier costs are paid to your own Twilio account at their standard rates for your region.
+Nixflex does not charge a separate per-SMS fee. SMS carrier costs are paid to your own carrier account at their standard rates for your region.
 
 ## How billing works
 
