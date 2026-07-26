@@ -8,8 +8,12 @@ This guide takes you from zero to a working AI agent answering and making real p
 
 You'll need:
 - A [Nixflex account](https://dashboard.nixflex.com/login)
-- A [Twilio account](https://www.twilio.com/) with at least one phone number
+- A [Twilio](https://www.twilio.com/) or [Telnyx](https://telnyx.com/) account with at least one phone number
 - A way to make a test call (any mobile phone)
+
+<Note>
+  Nixflex is **bring your own carrier**. Your numbers stay in your own Twilio or Telnyx account, you pay the carrier directly, and Nixflex never marks up or resells them. Everything below works the same on either carrier.
+</Note>
 
 ## Step 1 - Get your API key
 
@@ -68,9 +72,24 @@ Save the `agent_id` - you'll attach a phone number to it next.
   The default voice is **Ashley** and the default language is **multi** (auto-detects 15+ languages including Arabic, French, Spanish, German). Change them later via the dashboard or the [Create agent](/api-reference/agents/create) reference.
 </Tip>
 
-## Step 3 - Connect a Twilio number
+## Step 3 - Connect a phone number
 
-Nixflex uses a **BYO Twilio** model. You import a number you already own in Twilio, and Nixflex configures the webhooks automatically.
+You import a number you already own. Nixflex works out which carrier it is from the credentials you send - there is no provider field to set.
+
+<Warning>
+  **Set the number up in your carrier account first.** Nixflex cannot fix a number that
+  is not provisioned, not voice-enabled, or blocked from your destination countries. If
+  a call fails, the error usually names the carrier setting to change.
+
+  Carrier consoles also change. Twilio and Telnyx both redesign screens and update
+  policies from time to time, so field names may not match this page exactly. The values
+  Nixflex needs do not change - if a screen looks different, follow your carrier's own
+  current documentation.
+</Warning>
+
+### Twilio
+
+Buy a voice-enabled number in your Twilio console, then import it with your Account SID and Auth Token:
 
 ```bash
 curl -X POST https://api.nixflex.com/v1/phone-numbers \
@@ -84,11 +103,46 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-Nixflex points all webhooks on this Twilio number at the engine. The agent now answers when this number rings, and can use it to make outbound calls.
+Nixflex points that number's webhooks at the engine. Nothing else to configure.
+
+<Note>
+  Full guide: [Twilio](/integrations/twilio).
+</Note>
+
+### Telnyx
+
+Telnyx needs three things set up in your portal first, because its webhook lives on an **application** rather than on the number:
+
+1. Buy or port a voice-enabled number.
+2. Create a **TeXML Application** - set its voice webhook to `https://api.nixflex.com/telnyx-voice`, method **POST**, webhook API version **2**. Copy the application ID.
+3. Assign your number to that application, and enable the **G711U** codec on it (disable HD Voice / G722).
+4. Create an **API key** with access to the number.
+
+Then import, using the API key and the application ID:
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+443301901028",
+    "telnyx_api_key": "KEY0123456789...",
+    "telnyx_connection_id": "2512345678901234567",
+    "agent_id": "agent_125207e452f8714a"
+  }'
+```
+
+<Note>
+  Full guide, with the reasoning behind each step: [Telnyx](/integrations/telnyx).
+</Note>
+
+<Tip>
+  Prefer clicking to curl? The dashboard does the same thing under **Phone Numbers**, with a Twilio / Telnyx toggle.
+</Tip>
 
 ## Step 4 - Test inbound
 
-Call your Twilio number from any phone. The agent will:
+Call your number from any phone. The agent will:
 
 1. Pick up
 2. Say your welcome message
@@ -112,7 +166,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 Your phone rings within seconds. Pick up and talk to your agent.
 
 <Note>
-  You don't pass a `from_number`. The engine uses the Twilio number you assigned to the agent in Step 3.
+  You don't pass a `from_number`. The engine uses the number you assigned to the agent in Step 3. Outbound works on both carriers.
 </Note>
 
 ## Step 6 - Read the call back
@@ -124,13 +178,13 @@ curl https://api.nixflex.com/v1/calls \
   -H "Authorization: Bearer YOUR_KEY"
 ```
 
-The response includes the transcript, recording URL, post-call summary, caller sentiment, and any custom data the agent extracted.
+The response includes the transcript, recording URL, post-call summary, caller sentiment, and any custom data the agent extracted. See [List calls](/api-reference/calls/list) for every field.
 
 ## What's next
 
 <CardGroup cols={2}>
-  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
-    Trigger AI calls programmatically with one API request.
+  <Card title="Telephony setup" icon="phone" href="/integrations/twilio">
+    Full carrier guides for Twilio and Telnyx, including what each one supports.
   </Card>
   <Card title="Agent actions" icon="tag" href="/actions/overview">
     Let your agent transfer calls, send SMS, and end calls using prompt tags.
