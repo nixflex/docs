@@ -24,8 +24,8 @@ curl -X POST https://api.nixflex.com/v1/sms \
 |---|---|---|
 | `agent_id` | Yes | The agent this SMS belongs to (determines reply behaviour) |
 | `to` | Yes | Recipient in E.164 format |
-| `from_number` | Yes | One of your imported Twilio numbers |
-| `message` | Yes | The message text. **600 chars recommended** for reliable delivery. Twilio's hard cap is 1600, but UK carriers often reject longer messages. See [SMS length guide](#sms-length-and-deliverability) below. |
+| `from_number` | Yes | One of your imported numbers, on either carrier |
+| `message` | Yes | The message text. **600 chars recommended** for reliable delivery. Carrier hard caps are typically 1600, but UK carriers often reject longer messages. See [SMS length guide](#sms-length-and-deliverability) below. |
 
 Response:
 
@@ -38,7 +38,7 @@ Response:
 }
 ```
 
-Status updates flow through Twilio's status callbacks. The final status (`delivered`, `failed`, etc.) reflects in the message record within ~30 seconds.
+Status updates flow through your carrier's status callbacks. The final status (`delivered`, `failed`, etc.) reflects in the message record within ~30 seconds.
 ## SMS length and deliverability
 
 Even though Twilio's API accepts messages up to 1600 characters, real-world delivery is more nuanced. Carriers — especially UK mobile carriers — silently reject long messages without giving an error code.
@@ -65,15 +65,44 @@ For Post-Call SMS templates configured in the dashboard, the textarea is hard-ca
 
 ## How replies are handled
 
-When someone replies to your SMS, Twilio routes the inbound message to the agent that owns the `from_number`. The agent answers using its `system_prompt` — the same prompt that drives phone calls.
+When someone replies, your carrier routes the message to Nixflex and the [SMS agent](/sms/sms-agent) on that number answers it.
 
-**This means:** if you expect customers might reply with questions about what you sent, mention the context in the agent's `system_prompt` *before* you send the SMS.
+<Warning>
+  **Replies use the number's `sms_prompt`, not the agent's `system_prompt`.** SMS is an
+  independent channel: the call prompt and the number's `custom_prompt` are deliberately
+  not used. Put your reply instructions in the call prompt and the SMS agent will never
+  see them - it falls back to a short default that knows nothing about your business.
+</Warning>
 
-For example, if you're sending appointment reminders, add this to the agent system_prompt:
+So if you expect replies, set the number's `sms_prompt` **before** you send:
 
-> You are the receptionist at Acme Dental. If a customer replies to an appointment reminder with YES, confirm the booking. If they reply NO or want to reschedule, offer alternative slots. If they ask any question about their appointment, answer warmly using the information you have.
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sms_reply_enabled": true,
+    "sms_prompt": "You are the text assistant for Acme Dental. If a customer replies YES to an appointment reminder, confirm the booking. If they reply NO or want to reschedule, offer alternative slots. Keep replies short."
+  }'
+```
 
-Now whether the customer replies to the SMS, sends a fresh text later, or calls in — the agent is ready.
+<Note>
+  **Auto-reply is off by default.** A number only answers texts once
+  `sms_reply_enabled` is `true`. Without it, replies arrive and are stored but nothing
+  is sent back. See [SMS agent](/sms/sms-agent) for the full reply behaviour, including
+  booking over text.
+</Note>
+
+## Carrier support
+
+Sending works on **both carriers**. Nixflex applies no geographic limit of its own - coverage is whatever your own Twilio or Telnyx account permits, and if your carrier refuses a destination the error tells you which setting to change.
+
+<Warning>
+  **Telnyx: delivery status is not tracked yet.** A message sent from a Telnyx number
+  goes out normally, but its status stays at `sent` and never moves to `delivered` or
+  `failed`. Use a Twilio number if you need delivery confirmation. Everything else -
+  sending, receiving, auto-reply - works on both.
+</Warning>
 
 ## Tracking
 
@@ -87,7 +116,7 @@ curl https://api.nixflex.com/v1/sms/SM1234567890 \
 Response includes `status` (`queued`, `sent`, `delivered`, `failed`, `undelivered`), error code if any, and the conversation thread if replies happened.
 
 <Note>
-  **Twilio status meanings:** `delivered` means the carrier confirmed delivery to the handset. `sent` means Twilio handed off to the carrier but never got confirmation — we treat this as a soft failure in the dashboard. `failed` and `undelivered` are hard failures.
+  **Status meanings:** `delivered` means the carrier confirmed delivery to the handset. `sent` means Twilio handed off to the carrier but never got confirmation — we treat this as a soft failure in the dashboard. `failed` and `undelivered` are hard failures.
 </Note>
 
 ## Mid-call and post-call SMS
@@ -100,7 +129,7 @@ For sending the same message to many recipients in one call, use [SMS campaigns]
 ## Compliance
 
 <Warning>
-  **UK only at launch.** US SMS requires A2P 10DLC registration on your Twilio account. Without it, US messages are rejected by carriers.
+  **UK only at launch.** US SMS requires A2P 10DLC registration on your carrier account - this is a US carrier requirement, not a Nixflex one. Without it, US messages are rejected by carriers.
 
   You're responsible for:
 
@@ -113,7 +142,7 @@ For sending the same message to many recipients in one call, use [SMS campaigns]
 
 ## Pricing
 
-SMS uses your Twilio account directly. Twilio charges per message at standard rates:
+SMS goes through your own carrier account. Your carrier charges per message at their standard rates:
 
 - UK domestic: ~£0.04 per message
 - US (after A2P): ~$0.0075 per segment
