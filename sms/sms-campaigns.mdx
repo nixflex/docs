@@ -15,12 +15,10 @@ If you want the agent to handle replies about a promotion, put the promotion det
 For example, add to the number's sms_prompt:
 > We are running a March promotion: 20 percent off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them.
 Then when someone replies YES - or asks about the offer - the SMS agent already knows what to say, and can even book them in if the number has a booking calendar connected. See the [SMS agent](/sms/sms-agent) page for the full reply behaviour.
-<Warning>
-  **A Telnyx number cannot be a campaign's From number yet.** The request is rejected
-  when you create the campaign, with a clear error - nothing is half-sent. Single messages
-  through [`POST /v1/sms`](/sms/send-sms) work from Telnyx numbers normally, and voice
-  campaigns run on both carriers. Use a Twilio number for SMS campaigns.
-</Warning>
+<Note>
+  Campaigns run from Twilio and Telnyx numbers alike. The **From** number decides which
+  of your carrier accounts sends the messages and which one bills you for them.
+</Note>
 
 ## Create a campaign (API)
 
