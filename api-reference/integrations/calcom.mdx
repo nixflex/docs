@@ -27,6 +27,12 @@ curl -X PUT "https://api.nixflex.com/v1/integrations/calcom/number/+447446466847
   -d '{"api_key": "cal_xxx", "username": "your-name", "event_slug": "30min"}'
 ```
 
+<Warning>
+  **One booking calendar per phone number.** If Google Calendar is already connected to this number, the request is rejected with `409 booking_provider_conflict` and nothing is changed. Disconnect the other calendar first.
+
+  This is deliberate: with two calendars connected the agent is given both sets of booking tools and consistently uses only one, so appointments land in a calendar nobody is watching - and every part of it reports success.
+</Warning>
+
 ## Check / remove
 
 ```bash
@@ -40,4 +46,6 @@ curl -X DELETE "https://api.nixflex.com/v1/integrations/calcom/number/+447446466
 ## Notes
 
 - The number must belong to your account. A number you do not own returns `404`.
+- Only one booking calendar can be connected to a number at a time. Connecting a second returns `409 booking_provider_conflict`.
+- Google Calendar connects through an authorisation flow in the dashboard rather than the API, so it has no endpoint of its own. The same one-calendar rule applies to it.
 - For the feature guide, see [Cal.com](/actions/calcom).
