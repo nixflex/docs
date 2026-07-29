@@ -30,6 +30,7 @@ Any field from [Create agent](/api-reference/agents/create) can be updated. Pass
 | `dtmf_enabled` | Three-state. `true` and `false` are explicit; `null` means **not set**, which lets a phone number's own setting decide. |
 | `system_prompt` | Maximum 16000 characters, about 4000 tokens. Over that the whole update is rejected with `prompt_too_long`. |
 | `voice_speed` | Accepted and saved, but **nothing reads it**. Use `speaking_rate`. |
+| `boosted_keywords` | Comma-separated words to boost in transcription - staff names, treatments, products, place names. **Keep it under 50.** The API does not reject a longer list, but too many terms are rejected at transcription time and the agent hears nothing for that call. |
 | `func_send_sms`, `func_cold_transfer` | Accepted and saved, but **not enforced** - the agent texts and transfers regardless. Control them in your prompt. See [Create agent](/api-reference/agents/create). |
 
 <Note>

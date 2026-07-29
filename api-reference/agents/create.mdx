@@ -35,7 +35,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | `system_prompt` | string | No | friendly assistant | The AI's instructions (max 16000 chars, about 4000 tokens) |
 | `welcome_message` | string | No | `"Hello! How can I help you today?"` | First line spoken on inbound calls |
 | `voice_id` | string | No | `"Ashley"` | Voice name. Browse voices in the dashboard |
-| `language` | string | No | `"multi"` | Default language. `multi` auto-detects |
+| `language` | string | No | `"multi"` | Default language. `multi` follows the caller across English, Spanish, French, German, Italian, Portuguese, Dutch, Hindi, Russian and Japanese. Arabic, Hebrew, Korean, Chinese and Polish need their own code. See [Languages](/concepts/languages) |
 | `is_active` | bool | No | `true` | Set false to disable without deleting |
 
 ### Behaviour
@@ -46,7 +46,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | `response_length` | enum | No | `"short"` | `short`, `medium`, `long` |
 | `ai_speaks_first` | bool | No | `true` | Agent greets caller immediately |
 | `dynamic_greeting` | bool | No | `false` | AI improvises greeting per call instead of static welcome |
-| `interruption_sensitivity` | int | No | `50` | `0`-`100`. Lower = harder to interrupt |
+| `interruption_sensitivity` | int | No | `50` | `0`-`100`. Lower = harder to interrupt |`n| `boosted_keywords` | string | No | `null` | Comma-separated words your callers say that speech recognition might mishear - staff names, treatments, products, place names. Up to 50. Example: `Dr Patel, hygienist, root canal, Meadow Lane` |
 | `pickup_delay` | int | No | `10` | Seconds the agent waits after pickup before speaking. Range 5–30. |
 
 ### Call controls
