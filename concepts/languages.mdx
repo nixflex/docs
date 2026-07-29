@@ -4,7 +4,7 @@ description: "Multi-language voice agents with automatic switching"
 icon: "globe"
 ---
 
-Nixflex agents speak 15+ languages. Each agent runs in one of two modes: locked to a single language, or multilingual.
+Nixflex agents speak 15 languages. Each agent runs in one of two modes: locked to a single language, or multilingual.
 
 ## The two modes
 
@@ -21,64 +21,73 @@ When `language` is a specific code, the agent is hard-locked to it. Even if the 
 
 Use this when your business operates in one language only and the agent must never drift.
 
+<Note>
+  A locked agent also gives the most accurate transcription in that language, because the engine tunes speech recognition to it. If your callers all speak one language, lock it.
+</Note>
+
 ## Multilingual mode
 
 When `language` is `multi`, the agent follows these rules:
 
 <Steps>
   <Step title="Starts in the prompt's language">
-    The agent's starting language is detected from your system prompt. Write the prompt in Arabic and the agent starts in Arabic; write it in English and it starts in English.
+    The agent's starting language is detected from your system prompt. Write the prompt in French and the agent starts in French; write it in English and it starts in English.
   </Step>
-  <Step title="Matches the caller on first message">
-    If the caller's first message is in a different language, the agent switches to it and locks it.
-  </Step>
-  <Step title="Switches only on a clear request">
-    Mid-call, the agent stays in the locked language. A single foreign word is treated as a borrowed word. A full foreign sentence prompts the agent to ask whether to continue in that language before switching.
+  <Step title="Follows the caller">
+    If the caller speaks a different language, the agent switches to it.
   </Step>
   <Step title="Never mixes languages">
     The agent never blends two languages or adds bracketed translations.
   </Step>
 </Steps>
 
+### What multilingual mode covers
+
+Automatic switching between these ten:
+
+English &middot; Spanish &middot; French &middot; German &middot; Italian &middot; Portuguese &middot; Dutch &middot; Hindi &middot; Russian &middot; Japanese
+
+<Warning>
+  **Arabic, Hebrew, Korean, Chinese and Polish are not part of automatic switching.** They are fully supported, but the agent must be **locked** to them with the `language` field. A multilingual agent will not understand a caller who speaks one of these five.
+
+  If your callers speak Arabic, set `language` to `ar`. The same applies to `he`, `ko`, `zh` and `pl`.
+</Warning>
+
 ## Which language does it start in?
 
-For multilingual agents, the starting language comes from your **system prompt**, not the caller. The engine reads the start of your prompt and detects its language by script (Arabic, Hebrew, Chinese, Japanese, Korean, Hindi, Cyrillic) or by common keywords (French, Spanish, German, Italian, Portuguese, Dutch, Polish). If nothing matches, it defaults to English.
+For multilingual agents, the starting language comes from your **system prompt**, not the caller. The engine reads the start of your prompt and detects its language by script or by common keywords. If nothing matches, it defaults to English.
 
 <Tip>
   To make a multilingual agent start in a specific language, write the opening of your system prompt in that language.
 </Tip>
 
-For outbound calls there is no preset greeting â€” the agent generates its opener live from the call purpose, so the opening language follows your prompt and purpose.
+For outbound calls there is no preset greeting - the agent generates its opener live from the call purpose, so the opening language follows your prompt and purpose.
 
-## Caller language detection
+## Supported languages
 
-Speech recognition listens multilingually, so the agent can always hear what the caller says â€” even a locked single-language agent hears other languages, it just will not reply in them.
+All 15 work end to end: the agent understands the caller and replies in a native voice.
 
-For inbound calls from GCC region numbers (+971, +966, +974, +965, +973, +968), the engine routes to Arabic-first transcription. All other regions use a multilingual model covering the major European languages with auto-detection.
-
-## Supported languages (voice)
-
-| Language | Code |
-|---|---|
-| English (US/UK/AU) | `en` |
-| Arabic | `ar` |
-| Spanish | `es` |
-| French | `fr` |
-| German | `de` |
-| Italian | `it` |
-| Portuguese | `pt` |
-| Dutch | `nl` |
-| Polish | `pl` |
-| Russian | `ru` |
-| Hindi | `hi` |
-| Korean | `ko` |
-| Japanese | `ja` |
-| Chinese (Mandarin) | `zh` |
-| Turkish | `tr` |
+| Language | Code | Automatic switching |
+|---|---|---|
+| English (US/UK/AU) | `en` | Yes |
+| Spanish | `es` | Yes |
+| French | `fr` | Yes |
+| German | `de` | Yes |
+| Italian | `it` | Yes |
+| Portuguese | `pt` | Yes |
+| Dutch | `nl` | Yes |
+| Hindi | `hi` | Yes |
+| Russian | `ru` | Yes |
+| Japanese | `ja` | Yes |
+| Arabic | `ar` | Lock the agent to it |
+| Hebrew | `he` | Lock the agent to it |
+| Korean | `ko` | Lock the agent to it |
+| Chinese (Mandarin) | `zh` | Lock the agent to it |
+| Polish | `pl` | Lock the agent to it |
 
 ## Backchannels and fillers
 
-The agent speaks small filler words while listening â€” "mm-hmm", "I see", "right" â€” to make the call feel natural. These match the caller's language automatically.
+The agent speaks small filler words while listening - "mm-hmm", "I see", "right" - to make the call feel natural. These match the caller's language automatically.
 
 ## Numbers and pronunciation
 
@@ -89,6 +98,16 @@ For brand or technical pronunciations, override them in the system prompt:
 ```
 Pronunciation: pronounce "Nixflex" as "NIKS-flex".
 ```
+
+## Improving accuracy for your business
+
+If callers use names or terms the agent mishears - staff names, treatments, products, street names - list them in the agent's **Keyterms** field. Up to 50, comma separated:
+
+```
+Dr Patel, hygienist, root canal, Invisalign, Meadow Lane, MOT
+```
+
+Keep it to words that actually get misheard. A long list makes recognition force terms onto audio that did not contain them.
 
 ## Not supported yet
 
