@@ -1,0 +1,122 @@
+---
+title: "Listening to live calls"
+description: "See live calls and listen in real time - from the dashboard or your own app."
+icon: "ear-listen"
+---
+
+## Who this is for
+
+There are two ways to listen to a live call:
+
+- **Business owners** - open the dashboard, see your live calls, tap Listen. No code.
+- **Developers** - build listening into your own product with the API below. Your customers listen inside *your* app, on your brand.
+
+Only **inbound** calls can be listened to, and only on numbers that have [monitoring enabled](/api-reference/phone-numbers/monitor). Everything is isolated per account: you can only ever see and hear calls on numbers you own.
+
+## Listening from the dashboard
+
+Open **Live Monitor** in the dashboard, pick a number, and any live call on it appears in the list. Tap Listen and you hear both sides in real time - the caller and the AI - in sync. When the call ends, the player tells you.
+
+That is all a business owner needs. The rest of this page is for developers.
+
+## Building listening into your own app
+
+The flow has three steps: list the live calls, open the listen socket, then join the audio stream.
+
+### 1. List live calls
+
+```bash
+curl "https://api.nixflex.com/v1/monitor/calls" \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx"
+```
+
+```json
+{
+  "calls": [
+    {
+      "call_id": "CAxxxxxxxxxxxxxxxx",
+      "number": "+447446466847",
+      "caller": "+447453573770",
+      "direction": "inbound",
+      "state": "LISTENING",
+      "started_at": 1753970000000
+    }
+  ]
+}
+```
+
+Only live calls on numbers your key owns **and** that have monitoring enabled are returned. Poll this to show a live-calls list in your UI.
+
+<Note>
+Optional query parameter `?source=dashboard` narrows the list to numbers added through the dashboard. Without it, every monitored number on your key is included - which is what you want when you manage numbers through the API.
+</Note>
+
+### 2. Open the listen socket
+
+Connect a WebSocket with the call id and your API key:
+
+```
+wss://api.nixflex.com/monitor/listen?callId=CAxxxxxxxxxxxxxxxx&key=nxf_xxx:nxfs_xxx
+```
+
+The engine verifies the call is live, the number is yours, and monitoring is on. On success you receive one message with everything needed to join the audio:
+
+```json
+{
+  "event": "connected",
+  "callId": "CAxxxxxxxxxxxxxxxx",
+  "livekit": {
+    "url": "wss://....livekit.cloud",
+    "token": "eyJhbGci...",
+    "room": "call-CAxxxxxxxxxxxxxxxx"
+  }
+}
+```
+
+If a check fails, you receive an error message and the socket closes:
+
+| Code | Meaning |
+|---|---|
+| `missing_call_id` / `missing_key` | A required query parameter was not sent |
+| `call_not_found` | That call is not live right now |
+| `invalid_key` / `key_inactive` | The API key was not recognised or is disabled |
+| `not_your_number` | The call is not on a number this key owns |
+| `monitor_disabled` | Monitoring is not enabled for this number |
+| `audio_unavailable` | The audio stream could not be started - try again |
+
+Keep the socket open while listening. It carries control messages - most importantly:
+
+```json
+{ "event": "call_ended", "reason": "caller_hangup" }
+```
+
+### 3. Join the audio
+
+Audio streams over managed WebRTC, not the WebSocket. Join with the standard `livekit-client` library using the `url`, `token`, and `room` from the connected message:
+
+```javascript
+import { Room, RoomEvent } from 'livekit-client';
+
+const room = new Room();
+room.on(RoomEvent.TrackSubscribed, (track) => {
+  // Two audio tracks arrive: the caller and the AI.
+  document.body.appendChild(track.attach());
+});
+await room.connect(livekit.url, livekit.token);
+```
+
+The call is published as **two separate audio tracks** - `customer-audio` (the caller) and `ai-audio` (the agent) - which your player mixes automatically when both are attached. Two tracks means you could also show separate volume meters, or mute one side.
+
+The token is **listen-only**: it cannot publish audio into the call, and it only works for that one room.
+
+## Behaviour and guarantees
+
+- **Zero effect on the call.** The audio stream only opens while someone is actually listening. If anything in the monitoring path fails, the call continues normally - the caller never notices.
+- **Isolation.** Ownership is checked when listing calls *and* again when the listen socket connects. One account can never hear another account's calls.
+- **Multiple listeners** can join the same call at once.
+- **Listen-only today.** Speaking into the call and taking over from the AI are planned for a later stage.
+
+## Related
+
+- [Live Monitor overview](/concepts/live-monitor) - what monitoring is, pricing, enabling it from your app
+- [Live monitor toggle (API)](/api-reference/phone-numbers/monitor) - turn monitoring on or off per number
