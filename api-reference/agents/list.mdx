@@ -4,7 +4,7 @@ description: "GET /v1/agents"
 api: "GET https://api.nixflex.com/v1/agents"
 ---
 
-Returns your active agents. Inactive agents are not included.
+Returns your active agents, newest first. Inactive agents are not included. 100 per page by default - page with `limit` and `offset`.
 
 ## Request
 
@@ -15,7 +15,10 @@ curl https://api.nixflex.com/v1/agents \
 
 ## Query parameters
 
-None. This endpoint takes no filters and is not paginated.
+| Parameter | Type | Default | Notes |
+|---|---|---|---|
+| `limit` | int | `100` | How many agents to return. Hard-capped at **200** per request - a higher value is reduced to 200 rather than rejected. |
+| `offset` | int | `0` | How many agents to skip. Combine with `limit` to page through. |
 
 ## Response
 
@@ -74,8 +77,7 @@ None. This endpoint takes no filters and is not paginated.
 | `updated_at` | string | ISO 8601 |
 
 <Note>
-  Result order is not guaranteed. Sort client-side on `created_at` if order
-  matters.
+  Results are ordered newest first (`created_at` descending).
 </Note>
 
 Fetch one agent by ID with [Get agent](/api-reference/agents/get).
