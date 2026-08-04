@@ -1,0 +1,81 @@
+---
+title: "Web Calls"
+description: "Let visitors talk to your AI agent from the browser - no phone number dialled, no carrier involved."
+---
+
+Web calls let a visitor speak to your AI agent **directly from a web page**, using their microphone. Same agent, same prompt, same tools and booking - but the audio travels over the internet instead of a phone line. No carrier minutes are used, and it works from any country with zero telephony setup.
+
+<Info>
+  A web call **is** an inbound call to the number's agent. It appears in call history, is recorded, analysed, billed, and fires webhooks exactly like a phone call. The caller shows as `web`.
+</Info>
+
+## Enabling web calls on a number
+
+Web calls are **off by default** on every number. Turn them on per number:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/integrations/web-calls/number/+441234567890 \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true}'
+```
+
+`GET` the same path to read the flag, `DELETE` to force it off. Turning the flag off is the kill switch - every start request for that number is refused from that moment.
+
+## Pricing
+
+Calls on a number with web calls enabled bill at **$0.09 per minute** - the same rate as [Live Monitor](/concepts/live-monitor). The two switches are independent, but the price is one rule: **either** feature enabled on a number means that number's calls bill at $0.09/min. Both enabled is still $0.09 - never more.
+
+Web calls use no carrier, so there are no Twilio/Telnyx charges at all on these calls.
+
+## Starting a call from your own page
+
+The start endpoint is public - the **number is the identity**. No API key ever reaches the browser; the engine verifies the flag, the owner's balance, the agent, and concurrency on every single request.
+
+```bash
+POST https://api.nixflex.com/web-call/start
+Content-Type: application/json
+
+{"number": "+441234567890"}
+```
+
+Success returns the visitor's audio credentials:
+
+```json
+{
+  "ok": true,
+  "call_id": "WEB...",
+  "livekit": { "url": "wss://...", "token": "...", "room": "webcall-WEB..." }
+}
+```
+
+Join with [livekit-client](https://www.npmjs.com/package/livekit-client), publish the microphone, and the agent answers:
+
+```js
+const room = new LivekitClient.Room();
+await room.connect(res.livekit.url, res.livekit.token);
+room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+  if (track.kind === 'audio') document.body.appendChild(track.attach());
+});
+await room.localParticipant.setMicrophoneEnabled(true);
+```
+
+<Tip>
+  Ask for microphone permission **before** calling the start endpoint. If you start the call first, the agent greets while your visitor is still looking at the permission popup.
+</Tip>
+
+A refused start returns `{"ok": false, "reason": "..."}` - `unavailable` (number unknown, feature off, or owner unfunded), `busy` (concurrency cap), or `bad_number`.
+
+## Behaviour and guarantees
+
+- **Inbound only.** A web call always rings *in* to the number's agent.
+- **Everything is inherited.** Voice, prompt, language, booking tools, custom functions, transfers, webhooks, post-call analysis - whatever the number's agent does on the phone, it does on the web.
+- **Interruptions work.** Visitors can talk over the agent and it stops, like a phone call.
+- **Recording included.** If recording is on for the number/agent, web calls are recorded - and an interrupted sentence is recorded only up to the moment it was cut, exactly as the visitor heard it.
+- **Caller identity is `web`.** Every visitor arrives as the same caller, so caller history and greet-by-name are deliberately skipped on web calls.
+- **No SMS destination.** A browser visitor has no phone number, so `[SEND_SMS]` and booking confirmation texts cannot be delivered. Tell your agent in its prompt not to offer texts on web calls - or have it collect a mobile number first.
+
+## Related
+
+- [Web Agent widget](/web-assistant/overview) - the embeddable Call + Chat launcher
+- [Live Monitor](/concepts/live-monitor) - listen to calls live at the same $0.09 rate

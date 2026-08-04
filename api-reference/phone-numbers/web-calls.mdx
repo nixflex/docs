@@ -1,0 +1,36 @@
+---
+title: "Web calls toggle"
+api: "PUT https://api.nixflex.com/v1/integrations/web-calls/number/{phoneNumber}"
+description: "Enable or disable browser (web) calls for one of your numbers."
+---
+
+Web calls are **off by default**. This endpoint flips the per-number flag. See the [Web Calls concept](/concepts/web-calls) for how calls are started and billed.
+
+### Path
+
+<ParamField path="phoneNumber" type="string" required>
+  The number, E.164 (`+44...`). Must belong to your account.
+</ParamField>
+
+### Body
+
+<ParamField body="enabled" type="boolean" required>
+  `true` to allow web calls to this number's agent, `false` to refuse them.
+</ParamField>
+
+```bash Request
+curl -X PUT https://api.nixflex.com/v1/integrations/web-calls/number/+441234567890 \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": true}'
+```
+
+```json Response
+{ "ok": true, "phone_number": "+441234567890", "web_calls_enabled": true }
+```
+
+`GET` the same path returns `{ "phone_number": "...", "web_calls_enabled": true|false }`. `DELETE` forces the flag off. All three are scoped to your key - you can never read or change another account's numbers.
+
+<Note>
+  Enabling web calls bills that number's calls at **$0.09/min** (same rate and rule as Live Monitor - either feature on means 0.09, both on is still 0.09).
+</Note>
