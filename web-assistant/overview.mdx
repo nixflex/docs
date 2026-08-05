@@ -1,126 +1,168 @@
 ---
 title: "Web agent"
-description: "Add an AI Call + Chat widget to any website. The web agent answers visitor questions in text - one script tag, no build step."
+description: "Add an AI Call + Chat widget to any website with one script tag. Visitors chat in text or talk live by voice - conversations are stored, viewable in the dashboard, and billed at $0.01 per chat message."
 icon: "comment-dots"
 ---
 
-The **web agent** is an embeddable widget that puts a floating **Call + Chat** launcher on any website. Visitors can call your AI phone number, or chat in text with an assistant you control. It is a single `<script>` tag - no build step, no dependencies.
+The **web agent** puts a floating **Call + Chat** launcher on any website. Visitors can chat in text with an assistant you control, or start a **live voice call** in the browser - no phone needed. It is a single `<script>` tag: no build step, no dependencies, works on any site (WordPress, Shopify, plain HTML, React - anything that can include a script).
+
+Every conversation is saved and readable in your dashboard, so a visitor who types "call me back on 07700 900123" is never lost.
 
 <Note>
-  Everything about the widget's look and behaviour is controlled by `data-*` attributes on the script tag. The design lives in the snippet, not in the number - so any number with an agent can power any design.
+  One phone number = one web agent (one brain, one knowledge base, one conversation inbox). The visual design lives in the embed snippet, so the SAME number can wear different designs on different websites - all their chats land in the one inbox for that number.
 </Note>
 
 ## Quick start
 
 <Steps>
-  <Step title="Copy the snippet">
-    Grab the embed code from your dashboard (**Web Agent** tab), or use the example below.
+  <Step title="Open the dashboard">
+    Go to **Web Agent** in your dashboard and press **Create web agent**.
   </Step>
-  <Step title="Set your number">
-    Put one of your numbers (with an agent attached) in `data-number`.
+  <Step title="Configure">
+    Pick the agent, the number, a display name, optional quick questions, and a design + colour.
   </Step>
-  <Step title="Paste it before the closing body tag">
-    Drop the script just before `</body>` on any page. The launcher appears in the corner.
+  <Step title="Set the web instructions">
+    Press **Set up agent** and write the web-chat instructions (this is the ONLY knowledge the web agent uses - see below).
+  </Step>
+  <Step title="Copy the code">
+    Press **Get code** and paste the snippet before `</body>` on the website. Done.
   </Step>
 </Steps>
 
 ```html
-<script
-  src="https://nixflex.com/button.js"
-  data-number="+441234567890"
-  data-design="1"
-  data-color="#25D366"
-  data-name="Acme Coffee">
-</script>
+<script src="https://nixflex.com/button.js"
+  data-number="+447460044516"
+  data-design="10"
+  data-color="#7C6BEF"
+  data-name="Basilo Pizza"
+  data-chips="Book a table, Opening hours, Prices"></script>
 ```
 
-## How it works
+## Script attributes
 
-- **Call** is a `tel:` link that dials `data-number` - it opens the phone dialer (shows "Call now" on mobile). No browser audio is used.
-- Want visitors to talk to the agent **in the browser** instead of dialling? That is [Web Calls](/concepts/web-calls) - a separate per-number feature.
-- **Chat** sends the visitor's message to the widget endpoint, and the web agent replies in text using **that number's web instructions** (see below).
+Everything about the widget is controlled by `data-*` attributes on the script tag.
 
-<Note>
-  The chat endpoint allows requests from any origin, so the widget works on any customer website with no domain whitelisting.
-</Note>
+| Attribute | Required | Example | What it does |
+| --------- | -------- | ------- | ------------ |
+| `data-number` | Yes | `+447460044516` | The Nixflex number this widget belongs to. Its web instructions answer the chat, its voice agent answers calls, and its dashboard inbox receives the conversations. |
+| `data-design` | No (default `1`) | `10` | Which launcher design to show. See the design list below. |
+| `data-color` | No | `#7C6BEF` | Brand colour. The launcher, chat panel gradient, buttons, and the call screen all tint themselves from this one value. |
+| `data-name` | No | `Basilo Pizza` | The business name visitors see in the chat panel header. |
+| `data-chips` | No | `Book a table, Opening hours` | Comma-separated **quick questions** - tappable suggestion chips. One tap sends the question. Leave the attribute off to show no chips. Unlimited count. |
 
 ## Designs
 
-The widget ships with several ready-made designs (different launcher shapes, colours, and open-panel styles). Browse them in the dashboard **Web Agent** tab, preview each one, and copy the snippet for the design you like. Set the one you want with `data-design` and tint it with `data-color`.
+Eight launcher designs are available. The design is only the *clothing* - the number is the *brain*, so switching designs never changes what the assistant knows or where conversations go.
 
-## Teaching the web agent what to say
+| # | Name | Look |
+| - | ---- | ---- |
+| 1 | Modern AI | Sleek round launcher. Tech and startups. |
+| 2 | Classic Support | Friendly "Chat with us" pill. Clinics and services. |
+| 3 | Salon & Beauty | Soft, elegant. Salons and spas. |
+| 4 | Real Estate | Premium banner. Property and agencies. |
+| 5 | Gym & Fitness | Bold, high energy. |
+| 6 | Hotel & Concierge | Refined, premium. Hospitality. |
+| 9 | Voice Orb | Animated glowing orb. Voice-first. |
+| 10 | Aurora Bubble | Rotating colour halo. Premium and futuristic. |
 
-The web agent answers **only from its own web instructions** - the `web_prompt` you set for that number. It does **not** borrow your phone agent's prompt or knowledge. If you leave the box empty, the agent knows nothing about your business and simply tells visitors to call.
+All designs open the **same chat panel**: a centred modal (bottom sheet on mobile) with a gradient header in your colour, a "Talk to us live" voice-call card, the chat, your quick questions, and the composer.
 
-So put everything the agent should know right in the box: your services, hours, prices, address, and how to behave in chat. For example:
+## How the chat behaves
 
-```
-You are the online assistant for Acme Dental in Leeds.
-Open Mon-Fri 9am-5pm. A check-up is 45 pounds, a clean is 60 pounds.
-Free parking on Oak Lane. Keep replies under two sentences.
-If someone wants to book, tell them to call us.
-```
+- **Knowledge**: the web agent answers ONLY from the number's **web instructions** (`web_prompt`). It does not use the voice agent's call prompt. Empty instructions = a safe minimal fallback that tells visitors to call the business. Cap: 5,000 tokens (about 20,000 characters).
+- **Greeting**: when the panel opens, the assistant sends one live greeting ("Hi there! How can I help you today?") after a short typing animation.
+- **Memory**: the visitor's browser keeps the conversation and sends the last 20 messages with each request, so the assistant remembers context within and across visits on the same browser.
+- **Booking**: the web agent cannot book, cancel, or change appointments. It tells visitors to call for those - the voice agent handles booking.
+- **Failed replies**: network or server problems show a polite retry message; the visitor's page is never affected.
 
-**Dashboard:** on the **Web Agent** page, pick the number and click **Set up agent**. Write the instructions in the box and save - a live counter shows how much room you have.
+## Web calls (voice in the browser)
 
-<Note>
-  This box controls **web chat only**. It does not change your phone calls (they use their own prompt) and it does not change your [SMS agent](/sms/sms-agent) (which has its own `sms_prompt`). Each channel is independent.
-</Note>
+The chat panel's **"Talk to us live"** card starts a real voice call in the browser - same AI, same knowledge, same billing as a phone call to that number. Web calls must be enabled per number first. See [Web calls](/concepts/web-calls) for the toggle API and full behaviour.
 
-There is a limit of about **5,000 tokens** (~20,000 characters). The dashboard shows a live counter and the engine enforces the same cap, so a very long prompt is rejected rather than slowing every reply.
+## Conversations in the dashboard
 
-## Set it up with the API
+Every chat is stored and shown at **Dashboard -> Web Agent**:
 
-You can manage the web agent per number from the API instead of the dashboard - useful for a platform onboarding many websites. Set `web_prompt` with a PATCH:
+- **One inbox per number.** All websites using that number feed the same inbox - the design used does not matter.
+- **Visitor identity**: visitors are anonymous. Each browser gets a stable id, shown as a friendly number like **Visitor 4821**. The same browser stays the same visitor across visits (id lives in the browser's localStorage). A different browser, device, or private window is a new visitor - that is normal for anonymous web chat.
+- **If a visitor leaves a name or phone number in the chat, it is right there in the messages** - that is how you capture leads.
+- **Order**: newest conversation first. Click any visitor to read the full thread (visitor left, agent right).
+- **Retention**: conversations are kept for **90 days**, then deleted automatically every night. There is no manual delete - the retention window is the lifecycle.
+
+## Managing by API
+
+Developers can manage the web agent per number without the dashboard.
+
+**Set / update / clear the web instructions** (and optionally SMS instructions) via the phone-numbers API:
 
 ```bash
-curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447460044516 \
+  -H "Authorization: Bearer nxf_xxx:nxfs_xxx" \
   -H "Content-Type: application/json" \
-  -d '{
-    "web_prompt": "You are the online assistant for Acme Dental. Open Mon-Fri 9am-5pm. A check-up is 45 pounds. If someone wants to book, tell them to call."
-  }'
+  -d '{"web_prompt": "You are the web assistant for Basilo Pizza. Opening hours: ..."}'
 ```
 
-Send an empty string to clear it. The maximum is 20,000 characters. See [Update phone number](/api-reference/phone-numbers/update) for the full endpoint.
+Send `"web_prompt": ""` to clear. Over 20,000 characters returns `web_prompt_too_long`.
 
-## What the web agent will and will not do
+**The chat endpoint the widget calls** (public, no API key - it is what the embed uses):
 
-The web agent is **answer-only by design**. It will:
+```bash
+POST https://api.nixflex.com/v1/widget/message
+Content-Type: application/json
 
-- Answer questions from its web instructions
-- Remember the current conversation (see below)
+{
+  "number": "+447460044516",
+  "history": [
+    { "role": "user", "content": "What time do you open?" }
+  ],
+  "session_id": "wsmsgd6m4tt9e1hi12"
+}
+```
 
-It will **not** book, reschedule, cancel, or change appointments over web chat - even if the instructions say it can. This boundary is enforced in the engine, not left to the prompt, so it always holds. When a visitor wants to book or needs a person, the agent tells them to call the business. Voice calls (and the [SMS agent](/sms/sms-agent)) are where bookings happen.
+Response:
 
-## Memory
+```json
+{ "ok": true, "reply": "We open Mon to Fri, 9am to 6pm. Want to give us a call?" }
+```
 
-Each visitor's browser keeps their own conversation and sends the recent history with every message, so the agent remembers what was said earlier in the same chat (roughly the last 20 back-and-forth exchanges). Because each browser holds only its own history, two visitors chatting at the same time never see each other's messages - conversations are isolated by design. There is no shared server-side web memory, so nothing carries over between different visitors or between separate visits.
+- `history` is the running conversation (`user` / `assistant` roles), newest last. Send the last 20 messages.
+- `session_id` is any stable per-visitor string. It groups messages into one conversation in the dashboard. Omit it and the chat still works, but the conversation is not stored.
+- Failures return `{ "ok": false, "reason": "..." }` with HTTP 200 - reasons include `unavailable` (no credit or number not found) and `server_error`.
 
-## Offering the widget to your users
+## Pricing
 
-If you run a platform and want to give the widget to your own end-users (each on their own website), you do not rebuild the designs - they already exist in `button.js`. You just choose which design each user gets and supply their number. Three ways:
+Web agent billing is pay-as-you-go from the **same credit balance as your call minutes** - one balance, everything deducts from it:
 
-<CardGroup cols={3}>
-  <Card title="One design for all" icon="1">
-    Hard-code a single `data-design` and only swap `data-number` per user. Simplest.
-  </Card>
-  <Card title="Let users pick" icon="2">
-    Show a small design picker in your own app; write the chosen `data-design` into each user's snippet. Recommended.
-  </Card>
-  <Card title="Fully custom" icon="3">
-    Build your own widget front-end and call `POST /v1/widget/message` directly with the user's number. Total control.
-  </Card>
-</CardGroup>
+| What | Price |
+| ---- | ----- |
+| Chat message (each assistant reply) | **$0.01** |
+| Web voice call | Same per-minute rate as a phone call to that number |
 
-## Notes
+Free credit is spent first, exactly like calls. When the balance reaches zero, the widget politely tells visitors chat is unavailable instead of replying free. Because chat spends the shared balance, your "minutes remaining" figure shrinks slightly as chats happen - the dollar credit shown on the Billing page is always the source of truth.
 
-- **Cost:** a chat message uses AI text usage; a call uses voice minutes (billed like any call). The greeting bubble is free.
-- **One widget per page** is recommended.
-- The widget script is served from `https://nixflex.com/button.js` and is safe to cache.
+## Privacy and limits
 
-## Related
+- Visitors are anonymous - no cookies are set by Nixflex, no tracking across websites. The visitor id lives only in that browser's localStorage for that site.
+- Conversation content is stored for 90 days for the business owner, then deleted automatically.
+- Web instructions cap: 5,000 tokens. Chat memory: last 20 messages.
+- The widget script is served from `https://nixflex.com/button.js` and updates automatically - embeds never need re-copying for improvements.
 
-- [SMS agent](/sms/sms-agent) - the same idea for two-way texting (and it *can* book)
-- [Update phone number](/api-reference/phone-numbers/update) - the `web_prompt` API field
-- [Phone numbers](/concepts/phone-numbers) - per-number configuration
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can one number power widgets on several websites?">
+    Yes. Paste the same number's snippet on any number of sites - different designs and colours per site if you like. All conversations arrive in that number's one inbox.
+  </Accordion>
+  <Accordion title="Can one number have different knowledge per website?">
+    No - one number = one set of web instructions. Different knowledge needs a different number.
+  </Accordion>
+  <Accordion title="Why did a returning customer show as a new visitor?">
+    They used a different browser, device, or a private/incognito window. Anonymous web chat identifies the browser, not the person - the industry-standard behaviour.
+  </Accordion>
+  <Accordion title="How do I change the quick questions later?">
+    Edit them in the dashboard and copy a fresh snippet, or edit the `data-chips` attribute directly on the site. Chips live in the embed, not on the server.
+  </Accordion>
+  <Accordion title="Does the web agent see my call prompt or my SMS prompt?">
+    No. Calls, SMS, and web chat are three independent channels with three independent prompts on the same number.
+  </Accordion>
+</AccordionGroup>
