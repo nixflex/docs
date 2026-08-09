@@ -16,7 +16,7 @@ The LLM generates a normal reply. If the reply contains a tag, the engine interc
 >
 > **Caller hears:** "Sure, I'll transfer you to our manager now."
 >
-> **Engine action:** Transfer to +442087601234 (cold or warm, per your dashboard setting).
+> **Engine action:** Cold transfer to +442087601234.
 
 The caller never hears the tag itself. It exists only as a signal between the LLM and the engine.
 
@@ -26,7 +26,7 @@ The caller never hears the tag itself. It exists only as a signal between the LL
 
 ## Built-in tags
 
-<Columns cols={4}>
+<Columns cols={3}>
   <Card title="End call" icon="phone-slash" href="/actions/end-call">
     `[END_CALL]` — gracefully end the conversation
   </Card>
@@ -35,10 +35,6 @@ The caller never hears the tag itself. It exists only as a signal between the LL
   </Card>
   <Card title="Send SMS" icon="message" href="/actions/send-sms">
     `[SEND_SMS: text]` — text the caller mid-call
-  </Card>
-
-  <Card title="Wait" icon="clock" href="/actions/wait">
-    `[WAIT]` — pause the silence timer while the caller steps away
   </Card>
 
 </Columns>
@@ -67,19 +63,6 @@ The agent can use more than one tag in a single reply. Common pattern after a bo
 > "Perfect, you're booked in for Tuesday at 2pm. I've just sent you a text with the details. [SEND_SMS: Your appointment with Acme Dental is confirmed for Tuesday 5th March at 2pm. Call us if anything changes.] Have a great day. [END_CALL]"
 
 The engine processes them in order: send the SMS, then end the call.
-
-## Pausing while the caller steps away
-
-Sometimes a caller needs a moment - to find a card, check a calendar, or ask someone. Normally the engine treats a long silence as a dropped line and eventually ends the call. The `[WAIT]` tag tells it the silence is expected, so it holds on instead.
-
-Tell the agent when to use it in your prompt:
-
-```
-ACTIONS
-- If the caller needs a moment to get or check something, say you are happy to wait: [WAIT]
-```
-
-When the agent emits `[WAIT]`, the engine extends the silence timer for that turn. If the caller speaks, everything returns to normal instantly. If the wait runs out, the agent gently checks whether they are still there before ending politely. You set how long it waits in the agent’s **Call Ending** settings (default 30 seconds).
 
 ## Beyond built-in actions
 

@@ -1,0 +1,57 @@
+---
+title: "Wait"
+description: "Pause while the caller steps away"
+icon: "clock"
+---
+
+The `[WAIT]` tag tells the engine that a silence is expected - the caller has stepped away to get or check something - so it should hold the line instead of treating the quiet as a dropped call.
+
+## Syntax
+
+```
+[WAIT]
+```
+
+No parameters. Place it in the agent’s reply, after whatever it says to the caller.
+
+## Example
+
+> *Caller:* "Give me a second, let me grab my card."
+>
+> *Agent:* "Of course, take your time. [WAIT]"
+
+The caller hears "Of course, take your time." The engine holds the line instead of ending the call for silence.
+
+## When to use it
+
+The tag only has any effect when your prompt tells the agent to use it - if your prompt never mentions `[WAIT]`, the engine ignores it. Add a line to your **Actions** guidance:
+
+```
+ACTIONS
+- If the caller needs a moment to get or check something, tell them to take their time: [WAIT]
+```
+
+You decide both when the agent waits and what it says - the clearer your instruction, the better it behaves. Use it only for a real step-away, not for an ordinary short pause in conversation.
+
+## How the wait works
+
+When the agent emits `[WAIT]`, the engine extends the silence timer for that one turn:
+
+1. **The caller comes back and speaks** - everything returns to normal instantly and the conversation continues.
+2. **The wait runs out** - the agent gently checks whether the caller is still there ("Are you still there?"), waits a moment, and if there is still no answer it says a polite goodbye and ends the call.
+
+The caller is never cut off mid-wait, and any sound from them cancels the wait immediately.
+
+## Configuration
+
+How long the engine waits is an agent-level field:
+
+| Field | Default | Range | Notes |
+|---|---|---|---|
+| `wait_tag_seconds` | `30` | 30–120 | How long the engine holds the line after a `[WAIT]`, in seconds. |
+
+Set it when creating an agent or update it later - see [Create agent](/api-reference/agents/create) - or use the **Wait tag pause** control in the agent’s Call Ending settings.
+
+<Tip>
+  `[WAIT]` is invisible to the caller, like every action tag. Write the words you want the agent to say next to it in your prompt; the agent speaks your words and the engine handles the pause.
+</Tip>
