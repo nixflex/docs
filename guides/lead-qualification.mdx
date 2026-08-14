@@ -1,0 +1,98 @@
+---
+title: "Outbound lead qualification"
+description: "Call a list of leads, ask qualifying questions, and capture structured answers your team can act on."
+---
+
+This guide builds an outbound agent that calls your leads, asks a few qualifying questions, and returns the answers as structured data — ready to push into your CRM or review in the dashboard.
+
+## What you'll build
+
+An outbound agent that:
+
+- Calls each lead with their details already personalized into the conversation
+- Asks your qualifying questions naturally
+- Captures the answers as structured fields after every call
+
+## Before you start
+
+- An agent created and a number attached
+- Your API key
+- A list of leads with the details you want to personalize (name, company, anything relevant)
+
+## Steps
+
+<Steps>
+  <Step title="Personalize each call with variables">
+    Pass a lead's details as variables when you start the call. The agent can use them in its prompt so every call feels tailored.
+
+    ```bash
+    curl -X POST https://api.nixflex.com/v1/calls \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "agent_id": "agent_xxx",
+        "to": "+15551234567",
+        "dynamic_variables": {
+          "lead_name": "Jordan",
+          "company": "Acme Ltd"
+        }
+      }'
+    ```
+
+    In the agent prompt, reference them with double curly braces:
+
+    ```text Agent prompt (excerpt)
+    You are calling {{lead_name}} from {{company}} on behalf of Nixflex.
+    Introduce yourself warmly and confirm you are speaking to the right person.
+    ```
+  </Step>
+
+  <Step title="Ask your qualifying questions in the prompt">
+    Tell the agent what to find out. Keep it conversational — the agent works the questions into a natural call.
+
+    ```text Agent prompt (excerpt)
+    Your goal is to find out three things:
+    - Whether they are the decision maker
+    - Their rough budget
+    - Whether they want a follow-up call
+
+    Ask naturally, one question at a time. Do not read them as a list.
+    Thank them and end the call politely once you have what you need.
+    ```
+  </Step>
+
+  <Step title="Capture the answers as structured data">
+    Define an analysis schema so every call returns the qualifying answers as clean fields — not just a transcript. The engine fills these in after the call ends.
+
+    ```json
+    {
+      "analysis_schema": {
+        "decision_maker": { "type": "boolean", "description": "Is the person the decision maker?" },
+        "budget": { "type": "string", "description": "The budget range they mentioned" },
+        "wants_followup": { "type": "boolean", "description": "Do they want a follow-up call?" }
+      }
+    }
+    ```
+
+    After each call, read the results from the call record — the structured fields sit alongside the summary and sentiment.
+  </Step>
+
+  <Step title="Scale to your whole list">
+    Repeat the call request for each lead, passing that lead's variables each time. Every call personalizes itself and returns the same structured fields, so your results line up into one clean table.
+  </Step>
+</Steps>
+
+## What's next
+
+- Read [Outbound calls](/concepts/outbound-calls) for the full call API and options.
+- See [Variables](/concepts/variables) for everything you can personalize.
+- Use [Post-call analysis](/advanced/post-call-analysis) to shape exactly which fields you capture.
+
+<CardGroup cols={2}>
+  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
+    Starting calls and passing lead details through the API.
+  </Card>
+  <Card title="Post-call analysis" icon="chart-line" href="/advanced/post-call-analysis">
+    Turning each call into structured, reviewable data.
+  </Card>
+</CardGroup>
