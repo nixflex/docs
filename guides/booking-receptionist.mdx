@@ -1,0 +1,86 @@
+---
+title: "Appointment-booking receptionist"
+description: "Build an agent that answers calls, checks a live calendar, and books real appointments while the caller is on the line."
+---
+
+This guide builds a receptionist that greets callers, checks real-time availability, and books appointments into your calendar during the call. It works the same way whether you use Cal.com or Google Calendar — you connect one calendar per phone number.
+
+## What you'll build
+
+An inbound agent that:
+
+- Answers the call and understands what the caller wants
+- Checks your live calendar for open slots
+- Books the appointment and confirms it back to the caller
+
+<Note>
+Booking is configured **per phone number**, not per agent. Each number connects its own calendar account, so one agent template can serve many businesses — each with its own calendar.
+</Note>
+
+## Before you start
+
+- An agent created in your dashboard
+- A phone number imported and attached to that agent
+- A Cal.com account **or** a Google account with the calendar you want to book into
+
+<Note>
+Connect **one** booking calendar per number — either Cal.com or Google Calendar, not both on the same number.
+</Note>
+
+## Steps
+
+<Steps>
+  <Step title="Connect your calendar to the number">
+    In your dashboard, open the phone number and go to its integrations. Choose your calendar and connect the account:
+
+    - **Cal.com** — paste your Cal.com API key and select the event type callers should book.
+    - **Google Calendar** — sign in with Google and pick the calendar to book into.
+
+    The connection is stored on that number, so the credentials belong to that number alone.
+  </Step>
+
+  <Step title="Tell the agent it can book">
+    In your agent prompt, let the agent know booking is available and how to use it. Keep it natural — the agent checks availability and books through the connected calendar automatically when a caller asks for an appointment.
+
+    ```text Agent prompt (excerpt)
+    You are the receptionist for Brightsmile Dental.
+    You can check the calendar and book appointments for callers.
+
+    When someone wants an appointment:
+    - Ask what day and rough time suits them.
+    - Offer the nearest open slots you find.
+    - Confirm the appointment once it is booked, and read the time back clearly.
+
+    Be warm, brief, and never invent a time that is not free.
+    ```
+  </Step>
+
+  <Step title="Let the engine handle the exact details">
+    You do not script the availability check or the booking call — the agent does it live when the conversation calls for it. Availability and the confirmed time come from your real calendar, so the caller always hears accurate times.
+  </Step>
+
+  <Step title="Test it with a real call">
+    Call your number and ask for an appointment. The agent should:
+
+    - Offer times that are genuinely open on your calendar
+    - Book the slot you choose
+    - Confirm the booking out loud
+
+    Then check your Cal.com or Google Calendar — the new event should be there.
+  </Step>
+</Steps>
+
+## What's next
+
+- Add [Send SMS](/actions/send-sms) so the agent texts a confirmation after booking.
+- Turn on [Post-call analysis](/advanced/post-call-analysis) to capture why each caller rang.
+- Set up [Transfer](/actions/transfer) so complex requests reach a human.
+
+<CardGroup cols={2}>
+  <Card title="Cal.com booking" icon="calendar" href="/actions/calcom">
+    Full setup and behaviour for Cal.com bookings.
+  </Card>
+  <Card title="Google Calendar booking" icon="calendar" href="/actions/google-calendar">
+    Full setup and behaviour for Google Calendar bookings.
+  </Card>
+</CardGroup>
