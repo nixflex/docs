@@ -1,0 +1,84 @@
+---
+title: "Inbound support agent"
+description: "Answer common questions, text details to callers mid-call, and hand off to a human when needed."
+---
+
+This guide builds an inbound support agent that handles routine questions on its own, texts information to callers during the call, and transfers to a human when a request needs one.
+
+## What you'll build
+
+An inbound agent that:
+
+- Answers your most common support questions
+- Sends details (links, addresses, references) by text mid-call
+- Transfers to a human when the caller needs more help
+
+## Before you start
+
+- An agent created and a phone number attached to it
+- A destination phone number for human transfers
+- The key facts your agent should know (hours, policies, common answers)
+
+## Steps
+
+<Steps>
+  <Step title="Give the agent your support knowledge">
+    Put the answers to your common questions directly in the agent prompt so it can resolve them without a human.
+
+    ```text Agent prompt (excerpt)
+    You are the support line for Brightsmile Dental.
+    You can answer questions about opening hours, location, services, and pricing.
+
+    Opening hours: Monday to Friday, 9am to 5:30pm.
+    Location: 12 High Street, Manchester.
+    New patient checkups start from £45.
+
+    Be warm and brief. If you do not know something, offer to pass the caller to a team member.
+    ```
+  </Step>
+
+  <Step title="Text details to the caller mid-call">
+    When a caller needs something written down — a link, an address, a reference — the agent can send it by text while staying on the call. Tell it when to do that in the prompt.
+
+    ```text Agent prompt (excerpt)
+    If the caller asks for our address or a booking link, offer to text it to them,
+    then send it while you keep talking.
+    ```
+
+    The text sends during the call without interrupting the conversation. See [Send SMS](/actions/send-sms) for the full behaviour.
+  </Step>
+
+  <Step title="Transfer to a human when needed">
+    When a request is beyond the agent, it can hand the call to a person. Tell the agent who to transfer to and when.
+
+    ```text Agent prompt (excerpt)
+    If the caller wants to speak to a person, or has a complaint,
+    transfer them to the practice manager.
+    ```
+
+    Nixflex supports different handoff styles — a straight transfer, or a warm one where the agent briefs the person before connecting. See [Transfer](/actions/transfer) to choose and configure the mode that fits.
+  </Step>
+
+  <Step title="Test the whole flow">
+    Call your number and try all three paths:
+
+    - Ask a common question — the agent should answer it directly.
+    - Ask for the address or a link — you should receive a text mid-call.
+    - Ask to speak to a person — the call should transfer.
+  </Step>
+</Steps>
+
+## What's next
+
+- Turn on [Post-call analysis](/advanced/post-call-analysis) to see what callers ask most.
+- Add [Keypad input](/advanced/keypad-input) if you want callers to press options.
+- Review [Controlling the conversation](/concepts/conversation-control) to fine-tune how the agent behaves.
+
+<CardGroup cols={2}>
+  <Card title="Transfer" icon="phone-arrow-right" href="/actions/transfer">
+    Handoff modes and how to configure them.
+  </Card>
+  <Card title="Send SMS" icon="comment-sms" href="/actions/send-sms">
+    Texting details to callers during a call.
+  </Card>
+</CardGroup>
