@@ -1,0 +1,68 @@
+---
+title: "SMS booking agent"
+description: "Take bookings and answer questions entirely over text message."
+---
+
+This guide builds an agent that handles bookings and questions over SMS. Callers text your number, and the agent replies, checks your calendar, and books appointments — all in a text conversation, no call required.
+
+## What you'll build
+
+An SMS agent that:
+
+- Replies to incoming texts on your number
+- Answers questions and books appointments over text
+- Uses the same calendar connection as your voice agent
+
+<Note>
+The SMS agent shares the booking tools connected to the number. If your number can book over a call, it can book over text — no separate setup.
+</Note>
+
+## Before you start
+
+- A phone number with SMS enabled, attached to an agent
+- A calendar connected to that number (see the [Appointment-booking receptionist](/guides/booking-receptionist) guide)
+
+## Steps
+
+<Steps>
+  <Step title="Write the SMS agent's instructions">
+    The SMS agent uses its own text prompt, so you can shape how it writes — shorter and more direct than speech. Tell it what it can do.
+
+    ```text SMS prompt (excerpt)
+    You handle text messages for Brightsmile Dental.
+    You can answer questions and book appointments.
+
+    Keep replies short and clear — this is a text conversation.
+    When someone wants an appointment, offer open times and confirm once booked.
+    ```
+  </Step>
+
+  <Step title="Let it book over text">
+    Because booking tools are connected to the number, the SMS agent can check availability and book appointments the same way the voice agent does — the caller just does it by text instead of by voice.
+  </Step>
+
+  <Step title="Test the conversation">
+    Text your number and ask for an appointment. The agent should:
+
+    - Reply in text
+    - Offer times that are open on your calendar
+    - Confirm the booking once you choose a slot
+
+    Check your calendar — the appointment should be there, just as it would be from a call.
+  </Step>
+</Steps>
+
+## What's next
+
+- Read the [SMS agent](/sms/sms-agent) page for the full behaviour and settings.
+- See [SMS campaigns](/sms/sms-campaigns) to send texts to many people at once.
+- Add [Post-call analysis](/advanced/post-call-analysis) to capture what people ask.
+
+<CardGroup cols={2}>
+  <Card title="SMS agent" icon="comment-sms" href="/sms/sms-agent">
+    Everything the text agent can do.
+  </Card>
+  <Card title="Appointment-booking receptionist" icon="calendar-check" href="/guides/booking-receptionist">
+    Connect the calendar this guide relies on.
+  </Card>
+</CardGroup>
