@@ -30,6 +30,22 @@ curl https://api.nixflex.com/v1/agents \
   -H "Authorization: Bearer nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6:nxfs_x1y2z3..."
 ```
 
+### Using the SDK
+
+The official Node.js SDK takes the same credential string and sets the header for you:
+
+```bash
+npm install nixflex
+```
+```javascript
+import Nixflex from 'nixflex';
+
+const client = new Nixflex({ apiKey: process.env.NIXFLEX_API_KEY });  // "nxf_xxx:nxfs_xxx"
+
+const agents = await client.agents.list();
+```
+Keep the credential in an environment variable - never in client-side code. See the [quickstart](/quickstart#using-the-sdk) for a full example.
+
 ## Creating keys
 
 In the dashboard:

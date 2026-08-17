@@ -88,31 +88,38 @@ All Nixflex data lives in **EU/UK Supabase** (Ireland region):
   <Card title="Delete an SMS campaign" href="/api-reference/sms/campaigns-delete">
     Removes the campaign and its recipient list.
   </Card>
+  <Card title="Delete a call" href="/api-reference/calls/delete">
+    Erases one call record, transcript, and recording file.
+  </Card>
+  <Card title="Delete all call data" href="/api-reference/calls/delete-all">
+    Erases every call, recording, and SMS message on your key.
+  </Card>
 </CardGroup>
 
-<Warning>
-  **There is no endpoint to delete a single call record yet.** Call records, transcripts and recordings are removed by the 90-day cleanup. If you need a specific call erased sooner - for example a GDPR Article 17 request - email [support@nixflex.com](mailto:support@nixflex.com) with the call ID. A delete-call endpoint is on the roadmap.
-</Warning>
+<Note>
+  Call deletion is immediate and irreversible: [`DELETE /v1/calls/:id`](/api-reference/calls/delete) removes the record, the transcript, and the recording file in one request, and [`DELETE /v1/calls`](/api-reference/calls/delete-all) clears everything on your key. There is no recovery window and backups do not restore deleted recordings, so fetch anything you need to keep first. The 90-day cleanup remains the automatic backstop for everything you do not delete yourself.
+</Note>
 
 ## GDPR data subject requests
 
 If one of your end-users asks for their data to be deleted under Article 17:
 
 1. Find their calls and SMS messages by phone number through the API
-2. Email [support@nixflex.com](mailto:support@nixflex.com) with the call IDs for erasure, until the delete-call endpoint ships
+2. Erase each one with [`DELETE /v1/calls/:id`](/api-reference/calls/delete) - the record, transcript, and recording go together. With the SDK: `await client.calls.delete(callId)`
 3. Delete any copies you downloaded and stored in your own system
 4. The 90-day cleanup acts as a backstop - anything missed is deleted automatically
+
+You can complete an Article 17 request yourself, in your own code, without contacting us.
 
 <Note>
   Because Nixflex deletes the carrier's copy of each recording after downloading it, there is normally nothing left to erase on your Twilio or Telnyx account. Check there anyway if you have your own recording configured directly on the carrier, outside Nixflex.
 </Note>
 
-For account-level deletion, email [support@nixflex.com](mailto:support@nixflex.com) - your account and all associated data are deleted within 30 days.
+For account-level deletion, use **Settings → Delete account** in the dashboard. Your calls, recordings, and messages are purged first, then your login is removed. Billing records are retained as required by tax law.
 
 ## Roadmap
 
 <Card title="Coming soon" icon="hourglass">
-  - Delete a single call record through the API
   - Configurable retention windows (30 / 60 / 90 days per agent)
   - Per-agent PII redaction in transcripts
 </Card>

@@ -1,0 +1,55 @@
+---
+title: "Delete all call data"
+description: "DELETE /v1/calls"
+api: "DELETE https://api.nixflex.com/v1/calls"
+---
+
+Permanently erases **every** call on your API key - all call records, transcripts, analysis, recording files, and SMS messages. Intended for bulk erasure requests, offboarding a client, or clearing test data before going live.
+
+## Request
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/calls \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Or with the [SDK](https://www.npmjs.com/package/nixflex):
+
+```javascript
+await client.calls.deleteAll();
+```
+
+The same action is available in the dashboard under **Settings → Delete call data**.
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "deleted": true,
+  "calls_deleted": 412,
+  "recordings_deleted": 389,
+  "sms_deleted": 27
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `calls_deleted` | number | Call records removed. |
+| `recordings_deleted` | number | Recording files removed from storage. Lower than `calls_deleted` when some calls had no recording. |
+| `sms_deleted` | number | SMS messages removed. |
+
+Calls are deleted in batches, so a large history takes a few seconds. The response is returned once everything is gone.
+
+## Not reversible
+
+<Warning>
+  This erases your entire call history in one request. There is no undo, no confirmation step, and no recovery window - export anything you need first with [List calls](/api-reference/calls/list). Database backups do not restore deleted recordings.
+</Warning>
+
+## What this does NOT do
+
+- Your agents, phone numbers, and API keys are untouched - the platform keeps working exactly as before, with an empty history.
+- Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.
+- To close the account itself, use account deletion in the dashboard, which purges this data and then removes your login.

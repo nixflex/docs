@@ -1,0 +1,53 @@
+---
+title: "Delete call"
+description: "DELETE /v1/calls/:callId"
+api: "DELETE https://api.nixflex.com/v1/calls/{call_id}"
+---
+
+Permanently erases a single call: the call record, its transcript and analysis, and the recording file itself. Use this to satisfy an individual erasure request ("delete my data") without waiting for the 90-day retention window.
+
+## Request
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/calls/CA1b5c0bfad4b56635b773938f16db2db7 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Or with the [SDK](https://www.npmjs.com/package/nixflex):
+
+```javascript
+await client.calls.delete('CA1b5c0bfad4b56635b773938f16db2db7');
+```
+
+## Response
+
+`200 OK`:
+
+```json
+{
+  "call_id": "CA1b5c0bfad4b56635b773938f16db2db7",
+  "deleted": true,
+  "recording_deleted": true
+}
+```
+
+`recording_deleted` is `false` when the call had no recording (recording disabled, or the call ended before audio was saved) - the call record is still deleted.
+
+## Errors
+
+| Status | Code | Meaning |
+|---|---|---|
+| 404 | `not_found` | No call with that ID on your account. Also returned for a call you have already deleted. |
+
+Only calls made with your own API key can be deleted; another account's call ID returns the same `404`.
+
+## Not reversible
+
+<Warning>
+  There is no undo and no recovery window. The transcript and the recording are removed immediately - if you need a copy, fetch it with [Get call](/api-reference/calls/get) before deleting. Database backups do not restore deleted recordings.
+</Warning>
+
+## What this does NOT do
+
+- Billing is unaffected. The call's usage remains on your invoice - a delivered call is still a billed call, and billing records are retained for tax purposes.
+- Webhook delivery logs for the call are not removed.

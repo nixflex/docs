@@ -4,7 +4,7 @@ description: "GET /v1/usage"
 api: "GET https://api.nixflex.com/v1/usage"
 ---
 
-Returns usage statistics for your account: total minutes, calls, SMS, and current credit balance.
+Returns your account's usage totals and current limits: calls, minutes, spend, your rate and concurrency limits, and this month's peak concurrency.
 
 ## Request
 
@@ -13,13 +13,13 @@ curl https://api.nixflex.com/v1/usage \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-## Query parameters
+Or with the [SDK](https://www.npmjs.com/package/nixflex):
 
-| Parameter | Type | Default | Notes |
-|---|---|---|---|
-| `period` | enum | `month_to_date` | `today`, `month_to_date`, `last_30_days`, `all_time` |
-| `since` | ISO date | — | Custom start date (overrides `period`) |
-| `until` | ISO date | now | Custom end date |
+```javascript
+const usage = await client.usage.get();
+```
+
+This endpoint takes no parameters. For usage over a specific date range, list calls with [List calls](/api-reference/calls/list) and aggregate by `started_at`.
 
 ## Response
 
@@ -27,40 +27,35 @@ curl https://api.nixflex.com/v1/usage \
 
 ```json
 {
-  "period": "month_to_date",
-  "since": "2026-05-01T00:00:00Z",
-  "until": "2026-05-17T03:45:12Z",
-  "calls": {
-    "total": 1247,
-    "inbound": 932,
-    "outbound": 315,
-    "minutes": 4218.5,
-    "cost_usd": 337.48
-  },
-  "sms": {
-    "sent": 89,
-    "delivered": 87,
-    "failed": 2,
-    "cost_usd": 0.00
-  },
-  "balance": {
-    "credit_usd": 162.52,
-    "auto_topup_enabled": true,
-    "auto_topup_threshold_usd": 20,
-    "auto_topup_amount_usd": 200
-  }
+  "plan": "pay_as_you_go",
+  "total_calls": 891,
+  "total_minutes": 551.54,
+  "total_cost": 45.9664,
+  "rate_limit_per_minute": 300,
+  "max_concurrent": 40,
+  "peak_concurrent_this_month": 6,
+  "rejected_at_cap_this_month": 0
 }
 ```
 
-## Field notes
-
-- `minutes` is fractional — `4218.5` = 4218 minutes 30 seconds
-- `cost_usd` is Nixflex's charge (does not include carrier costs, which are billed directly to you by Twilio or Telnyx)
-- `balance.credit_usd` updates in near-real-time after each call
+| Field | Type | Notes |
+|---|---|---|
+| `plan` | string | Your billing plan, e.g. `pay_as_you_go`. |
+| `total_calls` | number | Calls on this key, all time. |
+| `total_minutes` | number | Fractional minutes - `551.54` is 551 minutes 32 seconds. |
+| `total_cost` | number | Nixflex charges in USD, all time. Does not include carrier costs, which Twilio or Telnyx bill you directly. |
+| `rate_limit_per_minute` | number | API requests allowed per minute on this key. See [Rate limits](/reference/rate-limits). |
+| `max_concurrent` | number | Simultaneous calls allowed on your account. |
+| `peak_concurrent_this_month` | number | The highest number of simultaneous calls reached this month. Use it to see how close you run to the cap. |
+| `rejected_at_cap_this_month` | number | Calls refused this month because the concurrency cap was already reached. Anything above zero means you are losing calls - contact us to raise the cap. |
 
 ## Use cases
 
-- Monitor usage in a dashboard or admin panel
-- Trigger alerts before running out of credit
-- Reconcile Nixflex charges against your records
-- Track cost-per-call by date range
+- Show total spend and volume in your own admin panel
+- Watch `peak_concurrent_this_month` against `max_concurrent` to plan capacity before a campaign
+- Alert on `rejected_at_cap_this_month` moving above zero - the clearest signal you need a higher cap
+- Reconcile Nixflex charges against your own records
+
+<Note>
+  Your credit balance and invoices are in the dashboard under **Billing**. This endpoint reports usage and limits, not billing state.
+</Note>

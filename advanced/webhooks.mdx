@@ -193,6 +193,25 @@ Your `key_secret` is the part of your API key **after the colon**. API keys are 
   Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
 </Warning>
 
+### Verifying with the SDK
+
+If you use the [official Node.js SDK](https://www.npmjs.com/package/nixflex), verification is one call. It parses the header, checks the timestamp window, and compares the signature in constant time:
+
+```javascript
+import { verifyWebhookSignature } from 'nixflex';
+
+// rawBody must be the unparsed request body (string or Buffer).
+const ok = verifyWebhookSignature(
+  rawBody,
+  req.headers['x-nixflex-signature'],
+  process.env.NIXFLEX_API_KEY.split(':')[1]   // the nxfs_ half
+);
+
+if (!ok) return res.status(400).send('invalid signature');
+```
+
+It returns `false` for a tampered body, a wrong secret, a missing or malformed header, and a signature older than the tolerance window (5 minutes by default, configurable with `{ toleranceSeconds }`). It never throws, so it is safe to call directly in a route handler.
+
 ### Verifying in Node.js
 
 ```javascript
@@ -224,6 +243,10 @@ function verifyNixflexSignature(rawBody, signatureHeader, secret) {
   );
 }
 ```
+
+<Warning>
+  `crypto.timingSafeEqual` throws if the two buffers differ in length, so a malformed header could crash an unguarded handler. Check the signature is a 64-character hex string (or compare lengths) before calling it - the SDK helper above does this for you.
+</Warning>
 
 <Note>
   Always use the **raw request body bytes** when computing the HMAC. If your framework parses JSON before you see it (Express body-parser does this by default), you'll get a signature mismatch. Use `express.raw()` middleware on the webhook route.

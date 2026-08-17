@@ -39,6 +39,10 @@ You'll need:
   Treat your full credential like a password. Never commit it to source control or expose it in client-side code. If it leaks, rotate immediately from the dashboard.
 </Warning>
 
+<Tip>
+  Building in JavaScript or TypeScript? `npm install nixflex` gives you typed methods for every endpoint below, with retries and error handling built in. See [Using the SDK](#using-the-sdk).
+</Tip>
+
 ## Step 2 - Create an agent
 
 An **agent** is the AI personality that answers calls. Each agent has a prompt, voice, language, and behaviour settings.
@@ -179,6 +183,66 @@ curl https://api.nixflex.com/v1/calls \
 ```
 
 The response includes the transcript, recording URL, post-call summary, caller sentiment, and any custom data the agent extracted. See [List calls](/api-reference/calls/list) for every field.
+
+## Using the SDK
+
+The official Node.js SDK wraps every endpoint in this guide, so you get typed methods, automatic retries on rate limits, and typed errors instead of raw HTTP.
+
+```bash
+npm install nixflex
+```
+
+The whole flow above, in JavaScript:
+
+```javascript
+import Nixflex from 'nixflex';
+
+const client = new Nixflex({ apiKey: process.env.NIXFLEX_API_KEY });   // "nxf_xxx:nxfs_xxx"
+
+// Step 2 - create an agent
+const agent = await client.agents.create({
+  name: 'Test Receptionist',
+  system_prompt: 'You are a friendly receptionist for Acme Dental...',
+  welcome_message: 'Hello, Acme Dental, how can I help?',
+});
+
+// Step 3 - connect a number you already own
+await client.phoneNumbers.import({
+  phone_number: '+447446466847',
+  agent_id: agent.agent_id,
+  twilio_sid: process.env.TWILIO_SID,
+  twilio_token: process.env.TWILIO_TOKEN,
+});
+
+// Step 5 - place an outbound call
+await client.calls.create({
+  agent_id: agent.agent_id,
+  to_number: '+447386172392',
+  prompt: 'Confirm the appointment for tomorrow at 2pm.',
+});
+
+// Step 6 - read the call back
+const [latest] = await client.calls.list({ limit: 1 });
+console.log(latest.transcript);
+```
+
+Errors arrive as typed classes you can branch on:
+
+```javascript
+import { NixflexRateLimitError, NixflexPaymentRequiredError } from 'nixflex';
+
+try {
+  await client.calls.create({ /* ... */ });
+} catch (err) {
+  if (err instanceof NixflexRateLimitError) {
+    console.log(`Retry in ${err.retryAfterSeconds}s`);
+  } else if (err instanceof NixflexPaymentRequiredError) {
+    console.log('Top up your balance');
+  }
+}
+```
+
+Source and full method list: [github.com/nixflex/nixflex-node](https://github.com/nixflex/nixflex-node) - published on [npm](https://www.npmjs.com/package/nixflex). Requires Node 18 or newer, and has no runtime dependencies.
 
 ## What's next
 

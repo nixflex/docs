@@ -1,0 +1,85 @@
+---
+title: "Phone menus (IVR)"
+description: "Let an outbound agent get through an automated phone menu to reach a person"
+---
+
+When your agent calls a business, an automated menu often answers first: "press 1 for sales, press 2 for reception." Three tags let the agent wait through that menu, press the right keys, and switch back to a normal conversation the moment a person picks up.
+
+These tags are for **outbound calls only** - an inbound caller never puts your agent through a menu.
+
+## Syntax
+
+```
+[IVR]
+[PRESS: 2]
+[IVR_END]
+```
+
+| Tag | What it does |
+| --- | --- |
+| `[IVR]` | Tells the engine a machine answered. Silence timers pause, so menus and hold music never end the call. |
+| `[PRESS: 2]` | Presses keypad keys. Multiple keys work too: `[PRESS: 4827#]`. |
+| `[IVR_END]` | A person is now on the line. Normal call rules resume instantly. |
+
+`[PRESS]` also switches the engine into menu mode on its own, so a press is never ignored if the agent forgot `[IVR]` first.
+
+## Example
+
+> *Menu:* "Thank you for calling. Press 1 for sales, press 2 for reception."
+>
+> *Agent:* "\[IVR] \[PRESS: 2]"
+>
+> *Receptionist:* "Good morning, reception speaking."
+>
+> *Agent:* "\[IVR_END] Morning - I'm calling to confirm your opening hours this Saturday."
+
+The menu hears the keypad tone. Nobody hears the tags - they are invisible, like every action tag.
+
+## When to use it
+
+The tags do nothing unless your prompt tells the agent when to use them. You know who you are calling and what their menu sounds like, so put that in your outbound prompt:
+
+```
+If an automated phone menu answers, output [IVR] and stay silent.
+Listen to the options. To reach reception, output [PRESS: 2].
+If it asks for an extension, output [PRESS: 4827#].
+When a real person answers and greets you, output [IVR_END] and deliver your message.
+```
+
+Adjust it to the menu you are calling. The clearer your instruction, the more reliably the agent gets through.
+
+<Tip>
+  Tell the agent that a menu is **not** voicemail. Without that line, voicemail detection may end the call at the first robot voice. One sentence is enough: "An automated phone menu is not voicemail - use [IVR], not the voicemail tag."
+</Tip>
+
+## What happens after a person answers
+
+Nothing special - the call becomes an ordinary conversation and every feature you already use still works. Once `[IVR_END]` fires, the agent can deliver its message, book an appointment, text a link, or transfer the call to your team, exactly as your prompt says.
+
+## How the menu wait works
+
+While the agent is in menu mode:
+
+1. **Silence timers pause.** Hold music and long menu pauses look like a silent line, so without this the call would be ended as a dead connection.
+2. **The agent stays quiet** unless it presses a key or your prompt tells it to speak (some menus ask you to say a word).
+3. **A person answers** - the agent emits `[IVR_END]` and everything returns to normal immediately.
+4. **The wait runs out** - normal call rules resume automatically, so a call can never sit in menu mode forever.
+
+Maximum call duration still applies at all times as the final limit.
+
+## Configuration
+
+How long the agent may stay in menu mode is an agent-level field:
+
+| Field | Default | Range | Notes |
+| ----- | ------- | ----- | ----- |
+| `ivr_timeout_seconds` | `240` | 60-1800 | How long silence timers stay paused after `[IVR]`, in seconds. |
+
+Four minutes suits most switchboards. Raise it for lines that keep you in a queue, lower it for menus that answer straight away. Set it when creating an agent or update it later - see [Create agent](/api-reference/agents/create) - or use the **Phone menu wait** control in the agent's Call Ending settings.
+
+## Tips for reliable key presses
+
+- **Pace multi-digit entries.** Some menus miss digits sent back to back. Insert pauses with `w` (half a second) or `W` (one second): `[PRESS: 1w2w3W4#]`.
+- **Send an entry in one tag.** For an extension or account number, put every digit in a single `[PRESS]` rather than several separate ones.
+- **Finish with `#` when asked.** Many menus wait for it before acting.
+- **Prefer a direct number.** If the person you want has a direct line, dialling it skips the menu entirely - always the most reliable option.
