@@ -108,7 +108,7 @@ The body is a **flat JSON object** — every field is at the top level (no neste
 | `ended_reason` | string | Why the call ended - see the [full list of values](/actions/end-call#other-ways-calls-end). |
 | `started_at` / `ended_at` | string | ISO 8601 timestamps (UTC). |
 | `duration_seconds` | number | Full connection time in seconds (ring/connect to hang-up). Used for billing. |
-| `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. |
+| `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. The transcript records what was actually heard: if the caller interrupted an agent sentence after hearing at least 75% of it, the line appears clean; below that it does not appear at all - though you may still hear it in the recording. Silent control turns never appear. |
 | `summary`, `sentiment`, `successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
 | `extracted` | object / null | Your custom extraction fields. `null` if none configured. |
 | `bookings` | array | Appointments created, rescheduled, or cancelled during the call. Empty array if none. See [Appointment bookings](#appointment-bookings). |
