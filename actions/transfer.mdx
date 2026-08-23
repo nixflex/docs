@@ -11,7 +11,7 @@ The `[TRANSFER:]` tag forwards the active call to a different phone number. Nixf
 | | Cold transfer | Warm transfer |
 |---|---|---|
 | What the receiver hears first | Their phone rings, they pick up, the caller is there. No warning. | A short whisper from your agent — "A caller is asking about a refund for order 1234." Then the caller joins. |
-| How fast | ~10 seconds | ~15–20 seconds |
+| How fast | ~10 seconds | ~10–15 seconds (ring + whisper) |
 | Whisper voice | N/A | The same voice as your agent |
 | If no answer | Caller reconnects to the AI, which can try another number or take a message | Same |
 | Best for | Simple handoffs, urgent calls | Complex situations, when context matters |
@@ -60,11 +60,10 @@ This auto-fallback is built into the AI behavior — no extra configuration requ
 ## Warm transfer flow
 
 1. The agent says: "Let me get the manager on the line for you, one moment." then emits `[TRANSFER:+44...]`.
-2. The engine puts the caller into a conference room (they hear a brief hold).
-3. The engine calls the destination separately, 15-second timeout.
-4. **When the destination picks up,** they hear a short whisper in your agent's voice — either the static `transfer_whisper` you configured, or an AI-generated 1–2 sentence summary from the conversation.
-5. After the whisper, the destination joins the conference and meets the caller.
-6. **If the destination doesn't answer:** the caller reconnects to the AI. Same fallback behaviour as cold transfer.
+2. The engine dials the destination on the same call - the caller hears normal ringing, 10-second timeout.
+3. **When the destination picks up,** they hear a short whisper in your agent's voice — either the static `transfer_whisper` you configured, or an AI-generated 1–2 sentence summary from the conversation. The caller keeps hearing ringing while the whisper plays.
+4. After the whisper, the destination is connected directly to the caller.
+5. **If the destination doesn't answer:** the caller reconnects to the AI. Same fallback behaviour as cold transfer.
 
 ## Customizing the warm whisper
 
@@ -108,6 +107,10 @@ Older docs sometimes describe "transfer failed → caller dropped." That is **no
 - Take a message.
 
 You don't have to script this. The agent handles it conversationally.
+
+## Billing and recording during transfers
+
+Billing stops the moment a transfer connects. The ringing before the answer and the entire transferred conversation are free — you pay only for the AI's part of the call. If a transfer doesn't connect, the call simply continues with the AI and is billed normally throughout. The recording always runs to the very end of the call, so a transferred call's recording is longer than its billed duration — the difference is the free portion.
 
 ## Cold or warm — which to pick
 
