@@ -205,6 +205,15 @@
             "type": "integer",
             "description": "Time the call was connected, in milliseconds. Billing is based on this."
           },
+          "ended_reason": {
+            "type": "string",
+            "example": "completed",
+            "description": "Why the call ended: completed, transferred, voicemail_detected, silence_timeout, ivr_timeout, max_duration_reached, caller_hangup (inbound), callee_hangup (outbound), busy / failed / no-answer / canceled (carrier words), concurrency_limit, or a rare infrastructure ending."
+          },
+          "charged_minutes": {
+            "type": "number",
+            "description": "Minutes actually charged. Transfers stop the meter at handoff, so this can be less than the recording length."
+          },
           "transcript": {
             "type": "string",
             "nullable": true
