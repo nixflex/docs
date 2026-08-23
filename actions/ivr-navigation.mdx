@@ -73,7 +73,7 @@ How long the agent may stay in menu mode is an agent-level field:
 
 | Field | Default | Range | Notes |
 | ----- | ------- | ----- | ----- |
-| `ivr_timeout_seconds` | `240` | 60-1800 | How long silence timers stay paused after `[IVR]`, in seconds. |
+| `ivr_timeout_seconds` | `240` | 60-1800 | The maximum menu wait: how long the agent stays inside a phone menu to reach a person. Reaching one ([IVR_END]) cancels it early; expiry means no human was reached - the agent says a brief goodbye and the call ends with `ended_reason: ivr_timeout`. Silently capped at `max_call_duration_seconds`. |
 
 Four minutes suits most switchboards. Raise it for lines that keep you in a queue, lower it for menus that answer straight away. Set it when creating an agent or update it later - see [Create agent](/api-reference/agents/create) - or use the **Phone menu wait** control in the agent's Call Ending settings.
 

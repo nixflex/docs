@@ -50,7 +50,12 @@ All three layers run in parallel. The caller's phone disconnects, the recording 
 | `ended_reason` | What happened |
 |---|---|
 | `completed` | The agent emitted `[END_CALL]`. Goodbye spoken, call ended. |
-| `caller_hangup` | The caller pressed end on their phone. |
+| `caller_hangup` | The caller pressed end on their phone (inbound calls). |
+| `callee_hangup` | The person called hung up (outbound calls). |
+| `ivr_timeout` | A phone menu never reached a person within the agent's menu wait ([IVR navigation](/actions/ivr-navigation)). |
+| `busy` / `failed` / `no-answer` / `canceled` | The carrier's own word for an outbound call that never properly connected. |
+| `concurrency_limit` | The account's simultaneous-call limit was reached. |
+| `stuck_ws_disconnect` / `server_restart` | Rare infrastructure endings - the call was closed safely by the engine. |
 | `silence_timeout` | The caller stayed silent past `silence_hangup_seconds` (default **10s**, range 5–45s). |
 | `max_duration_reached` | The call exceeded `max_call_duration_seconds` (default **300s**, range 60s–1800s). |
 | `transferred` | The caller was transferred to a human via [`[TRANSFER:]`](/actions/transfer). |
