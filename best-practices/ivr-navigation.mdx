@@ -1,0 +1,83 @@
+---
+title: "IVR navigation"
+description: "Getting an agent through real-world phone menus reliably"
+---
+
+Phone menus vary wildly - fast menus, slow menus, hold queues, account-number gates. The engine gives your agent the tools ([the three menu tags](/actions/ivr-navigation)); this page is about using them well. Every pattern here comes from live testing against real menu systems.
+
+The one rule above all: **the prompt is the map.** An agent that knows the road ahead navigates it; an agent guessing at a menu presses the wrong keys or waits on dead ends.
+
+## 1. Script the journey
+
+Tell the agent the whole road before it dials: which menu answers first, which key at each level, what comes after. A working prompt from our own test line:
+
+```text
+You are calling a company to ask about their Saturday opening hours.
+You will first reach an automated phone menu - it is NOT voicemail.
+Use [IVR] and stay silent while the menu talks.
+Press 3 for support, then at the second menu press 4 for reception.
+When a real person answers and greets you, start your reply with
+[IVR_END] and then speak - greet them and ask about Saturday hours.
+```
+
+Every step is named: the menu, each key, and the human moment. Nothing is left for the agent to guess.
+
+## 2. Tell it how to recognise a person
+
+The handover moment matters most, so put it in the prompt explicitly: a real person **greets you or asks you something** - "hello", "reception speaking", "how can I help". A machine **states and confirms** - "please hold", "you have reached support", "I have your account number". Read-backs are still the machine.
+
+```text
+When the robot is finished and a real person answers and greets you,
+start your reply with [IVR_END] and then speak.
+```
+
+Tie `[IVR_END]` to the greeting, not to a press - after a press you are still inside the menu.
+
+## 3. Slow your digits when menus miss them
+
+Some menus buffer audio and miss fast key tones. Put pauses between digits: `w` is half a second, `W` a full second.
+
+```text
+If the account number is not accepted, enter it again more slowly:
+[PRESS: 4w8w2w7w5w9#]
+```
+
+Start plain, add `w` pauses on a retry, `W` only if digits are still missed.
+
+## 4. Send multi-digit entries in one tag
+
+Account numbers, extensions, and by-name entries go in a **single** press tag, in order, with the terminator if the menu wants one:
+
+```text
+When asked for your account number, enter it with one press:
+[PRESS: 482759#]
+```
+
+Separate presses can arrive too slowly and be read as separate answers.
+
+## 5. Hold queues: script the patience
+
+Queues speak every 30 seconds - "your call is important to us" - and an unprepared agent treats that as a person or a dead line. Name it:
+
+```text
+Press 1 to hold for the next available agent. You will be in a HOLD
+QUEUE for several minutes: hold messages like "thank you for waiting"
+are NOT a person - stay completely silent through all of them.
+```
+
+A prepared agent sits a multi-minute queue silently and greets only the human. Raise `ivr_timeout_seconds` for queue-heavy lines so the wait does not expire mid-queue.
+
+## 6. Dead ends: say so and leave
+
+If the menu might not have what you need, script the exit - otherwise the agent improvises (often reasonably, by finding a human who can route it - but that may not be what you want):
+
+```text
+Only press a key if an option clearly leads to billing. If no option
+serves billing and the menu repeats, say briefly that the right option
+was not available and end with [END_CALL] in the same reply.
+Never press keys at random.
+```
+
+## 7. Size the menu wait
+
+`ivr_timeout_seconds` (default 240) is the **maximum** the agent stays inside menus - reaching a person always cancels it early. Size it to the line: 120s for a menu that answers straight away, 600s+ for lines with long queues. If it expires with no person reached, the agent says a brief goodbye and the call ends with `ended_reason: ivr_timeout` - a clean signal in your call data that the menu, not the conversation, was the problem.

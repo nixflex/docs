@@ -18,7 +18,7 @@ These tags are for **outbound calls only** - an inbound caller never puts your a
 | Tag | What it does |
 | --- | --- |
 | `[IVR]` | Tells the engine a machine answered. Silence timers pause, so menus and hold music never end the call. |
-| `[PRESS: 2]` | Presses keypad keys. Multiple keys work too: `[PRESS: 4827#]`. |
+| `[PRESS: 2]` | Presses keypad keys. Multiple keys work too: `[PRESS: 4827#]`. For menus that miss fast digits, put pauses between keys: `[PRESS: 1w2w3#]` - `w` is half a second, `W` a full second. |
 | `[IVR_END]` | A person is now on the line. Normal call rules resume instantly. |
 
 `[PRESS]` also switches the engine into menu mode on its own, so a press is never ignored if the agent forgot `[IVR]` first.
@@ -34,6 +34,12 @@ These tags are for **outbound calls only** - an inbound caller never puts your a
 > *Agent:* "\[IVR_END] Morning - I'm calling to confirm your opening hours this Saturday."
 
 The menu hears the keypad tone. Nobody hears the tags - they are invisible, like every action tag.
+
+## The two ways menu mode ends
+
+A person answers - the agent fires `[IVR_END]` and the conversation simply continues. Or nobody ever answers - after `ivr_timeout_seconds` the agent says a brief goodbye and the call ends with `ended_reason: ivr_timeout`. Reaching a person always cancels the timer early: it is a maximum, not a schedule.
+
+A phone menu is not voicemail: menus ask you to press keys; voicemail asks you to speak after a tone. If the number could hit either, tell the agent about both - see [Voicemail detection](/advanced/voicemail-detection).
 
 ## When to use it
 
