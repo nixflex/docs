@@ -130,6 +130,15 @@
           "dtmf_enabled": {
             "type": "boolean"
           },
+          "voicemail_leave_enabled": {
+            "type": "boolean",
+            "description": "When true, the agent speaks voicemail_message on answering machines and hangs up. Applies to dashboard-imported numbers; API-imported numbers use their own per-number setting. Enabling without a message is rejected with voicemail_message_required."
+          },
+          "voicemail_message": {
+            "type": "string",
+            "nullable": true,
+            "description": "Spoken word for word on a detected voicemail when voicemail_leave_enabled is true."
+          },
           "speaking_rate": {
             "type": "number"
           },
@@ -340,6 +349,15 @@
           "sms_reply_enabled": {
             "type": "boolean"
           },
+          "voicemail_leave_enabled": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "This number's own voicemail setting - the ONLY one that applies to API-imported numbers. null = not set = silent hangup on voicemail."
+          },
+          "voicemail_message": {
+            "type": "string",
+            "nullable": true
+          },
           "sms_prompt": {
             "type": "string",
             "nullable": true
@@ -412,6 +430,16 @@
           },
           "sms_reply_enabled": {
             "type": "boolean"
+          },
+          "voicemail_leave_enabled": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Enabling without voicemail_message (here or already saved) is rejected with voicemail_message_required. null clears the setting."
+          },
+          "voicemail_message": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
           },
           "sms_prompt": {
             "type": "string",
