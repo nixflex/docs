@@ -4,7 +4,7 @@ description: "Detect answering machines and choose what your agent does"
 icon: "voicemail"
 ---
 
-On an outbound call, Nixflex detects when an answering machine picks up instead of a person. By default the agent leaves a short message and ends the call. You control what it says — or whether it says anything — from your prompt.
+On an outbound call, Nixflex detects when an answering machine picks up instead of a person. Whether the agent leaves a message — and exactly what it says — is a setting, not a prompt trick. With no message configured, the agent hangs up silently. Detected calls are marked `voicemail_detected` and billed per second like any other call.
 
 Every detected call is marked `voicemail_detected` and your webhook fires as normal.
 
@@ -14,8 +14,8 @@ Every detected call is marked `voicemail_detected` and your webhook fires as nor
   <Step title="The AI reads the first thing it hears">
     A voicemail greeting mentions leaving a message, a beep or tone, "you have reached", "not available", or the equivalent in any language. The AI recognises it from the transcript, not from the audio, so it works in every supported language.
   </Step>
-  <Step title="It leaves a short message">
-    The agent says who is calling and why, in one or two sentences, taken from your prompt. It waits for the greeting to finish first, so the message lands after the beep.
+  <Step title="It speaks your configured message - or nothing">
+    If a voicemail message is configured for the number the call came from, the agent speaks EXACTLY that message, word for word - it never improvises and never invents callback details. If none is configured, it hangs up without speaking.
   </Step>
   <Step title="The call ends">
     No conversation, no waiting for an answer. The call is recorded as `voicemail_detected`.
@@ -24,45 +24,35 @@ Every detected call is marked `voicemail_detected` and your webhook fires as nor
 
 Detection is always on, free, and needs no setup.
 
-## Control it from your prompt
+## Leaving a message — the setting
 
-The message is built from your prompt. There is no separate voicemail field — anything the agent should say on a machine goes in the prompt like everything else.
+Whether the agent leaves a message comes from a setting, and WHERE that setting lives depends on how the number joined your account. There are two worlds, and they never mix:
 
-**Leave a message with a callback number:**
+**Numbers imported from the dashboard** follow the **agent's** setting. Turn on **Leave a Voicemail Message** under the agent's Call Actions and type the message — or set it over the API:
 
-```text
-You are calling from Bella Hair Studio to remind the customer about their
-appointment on Friday at 2pm.
-
-If you reach a voicemail, ask them to call back on 020 8555 0199.
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/YOUR_AGENT_ID \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voicemail_leave_enabled": true, "voicemail_message": "Hello, this is Bella Hair Studio about your Friday appointment. Please call us back. Thank you."}'
 ```
 
-**Hang up without leaving anything:**
+**Numbers imported over the API** use **only their own** per-number setting — the agent's message never applies to them. One agent often serves many customers' numbers, and one customer's message must never play on another's line. A number with nothing set hangs up silently on voicemail. Give a number its own message:
 
-```text
-If you reach a voicemail, do not leave any message. Reply with only
-[VOICEMAIL] and nothing else.
+```bash
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/%2B447700900123 \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voicemail_leave_enabled": true, "voicemail_message": "Hi, this is Meadow Lane Dental about your upcoming visit. Please ring us back. Thank you."}'
 ```
 
-The `[VOICEMAIL]` tag is what marks the call as voicemail. Keep it in, or the
-call is recorded as a silence timeout instead and your campaign counts are wrong.
+The agent speaks the configured text **word for word** — it never rewrites it, never adds to it, and never invents a callback number.
 
-**Say nothing about the reason for the call:**
-
-```text
-If you reach a voicemail, only say who is calling and ask them to call us
-back. Do not mention the account or the balance.
-```
-
-<Warning>
-  The agent builds the voicemail message from your prompt, so anything in your
-  prompt can end up spoken onto a machine that other people in the household can
-  play back. If your call involves health, financial or other private details,
-  say in your prompt what the agent may and may not mention on a voicemail.
-</Warning>
-
-If your prompt has no clear purpose, there is nothing to say and the agent ends the call silently.
-
+<Note>
+  Enabling without a message is rejected with `voicemail_message_required` — an
+  agent told to leave a message needs words to say. Turning the toggle off (or
+  clearing the message) returns the number to silent hangup.
+</Note>
 ## If your carrier's greeting is unusual
 
 Detection works out of the box on normal answering machines in any language — you do not need to configure anything.
@@ -98,13 +88,15 @@ If both are active, AMD wins — it is faster, and the call is over before the b
 | | Built-in | Carrier AMD |
 |---|---|---|
 | Default | Always on | Off (toggle) |
-| Leaves your message | Yes | **No** |
+| Leaves your message | Yes — when configured | **No** |
 | Speed | ~10 sec | ~4 sec |
 | Cost | Free | ~$0.0075 / answered call |
 | Languages | Any | Best in US / CA |
 | Transcript saved | Yes | No |
 | Carriers | All | Twilio and Telnyx |
 | Ended reason | `voicemail_detected` | `voicemail_detected` |
+
+Detection itself is free either way — the call is billed per second like any other call.
 
 Leave AMD off unless you have a reason to want a fast hang-up. The built-in detection is free, works on every carrier and language, and is the only way to leave a message.
 

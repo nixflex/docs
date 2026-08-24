@@ -96,11 +96,11 @@ See [Batch create](/api-reference/calls/batch-create) for the full schema.
 
 When voicemail is detected:
 
-- The engine hangs up immediately (does **not** leave a message by default)
+- If a voicemail message is configured for the number, the agent speaks exactly that message, then hangs up. With nothing configured, it hangs up silently.
 - The call is logged with `voicemail_detected: true`
-- You're not charged for what wasn't a real conversation
+- The call is billed per second like any other call
 
-The message comes from your prompt - see [Voicemail detection](/advanced/voicemail-detection) for how to control what it says, or to have the agent hang up without leaving anything.
+The message is a setting - on the agent for dashboard-imported numbers, per-number over the API for API-imported numbers. See [Voicemail detection](/advanced/voicemail-detection) for both.
 
 ## Useful for
 
