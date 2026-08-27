@@ -33,7 +33,11 @@ Separate from the mid-call tag, Nixflex can automatically send a text after a ca
 
 ### Agent-level template
 
-Set a `post_call_sms_template` on the agent (with `post_call_sms_enabled: true`) via the [Update agent](/api-reference/agents/update) endpoint. It then fires automatically after every answered call on that agent - both inbound and outbound.
+Set a `post_call_sms_template` on the agent (with `post_call_sms_enabled: true`) via the [Update agent](/api-reference/agents/update) endpoint. It then fires automatically after every answered call on that agent - both inbound and outbound - on numbers added through the dashboard.
+
+<Note>
+  The agent-level template applies only to numbers added through the dashboard. Numbers imported via the API never receive it - one agent often serves many separate businesses, and an agent-level text must never reach another business's customers. For API-imported numbers, send post-call SMS yourself from the webhook (see below).
+</Note>
 
 ```bash
 curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
