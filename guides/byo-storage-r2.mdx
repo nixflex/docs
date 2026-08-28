@@ -1,0 +1,109 @@
+---
+title: "Your own bucket in 10 minutes"
+description: "Connect a Cloudflare R2 bucket and watch a real call recording land in it"
+icon: "rocket"
+---
+
+Some customers' rules say call audio must stay in their country - or simply never sit on someone else's platform. This guide connects your own bucket to Nixflex, makes a real call, and shows the recording landing in **your** storage, with Nixflex keeping no copy.
+
+We use Cloudflare R2 here because it has a free tier and takes minutes to set up. Any S3-compatible provider works the same way - see the [full provider list](/advanced/your-own-storage#supported-providers).
+
+## What you need
+
+- A Nixflex agent with a phone number attached ([Quickstart](/quickstart) if you don't have one)
+- A free [Cloudflare](https://dash.cloudflare.com) account
+
+## Step 1 - Create the bucket
+
+<Steps>
+  <Step title="Open R2">
+    In the Cloudflare dashboard, go to **R2 Object Storage** and click **Create bucket**.
+  </Step>
+  <Step title="Name it">
+    Any name works - for this guide, `my-recordings`. Location **Automatic** is fine; pick a jurisdiction (EU) if your rules require one.
+  </Step>
+</Steps>
+
+## Step 2 - Create the access keys
+
+<Steps>
+  <Step title="Manage API tokens">
+    On the R2 overview page, open **Manage API Tokens** and click **Create API Token**.
+  </Step>
+  <Step title="Scope it">
+    Permission: **Object Read & Write**. Scope it to just your new bucket.
+  </Step>
+  <Step title="Copy three things">
+    The success screen shows your **Access Key ID**, **Secret Access Key**, and the S3 endpoint - `https://<account_id>.r2.cloudflarestorage.com`. They are shown once, so copy all three now.
+  </Step>
+</Steps>
+
+## Step 3 - Connect it to Nixflex
+
+In the dashboard, open **Settings → Recording storage**, expand it, and fill in:
+
+| Field | Value |
+|---|---|
+| Bucket name | `my-recordings` |
+| Endpoint URL | `https://<account_id>.r2.cloudflarestorage.com` |
+| Region | `auto` |
+| Access key ID | from step 2 |
+| Secret access key | from step 2 |
+
+Click **Test & save**. Nixflex writes and deletes a tiny probe object in your bucket before saving - if the button comes back **Connected**, your configuration is proven working, not just stored.
+
+Prefer the API? The same thing in one call:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/account/storage \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket": "my-recordings",
+    "endpoint": "https://<account_id>.r2.cloudflarestorage.com",
+    "region": "auto",
+    "access_key": "YOUR_ACCESS_KEY_ID",
+    "secret_key": "YOUR_SECRET_ACCESS_KEY"
+  }'
+```
+
+## Step 4 - Make a call and watch it land
+
+Call your agent's number, talk for a few seconds, and hang up. Within a minute:
+
+- **Your bucket** gains `recordings/<call_id>.mp3` - open the R2 bucket's Objects tab and it is there, downloadable, playable.
+- **The call record** carries `recording_url: "byo:my-recordings/recordings/<call_id>.mp3"` - a pointer to your bucket, because Nixflex holds no copy.
+- **The dashboard** shows "Stored in your bucket" with that path instead of an audio player.
+
+Every upload is verified: Nixflex reads the object back and checks its size before treating the recording as stored.
+
+## Step 5 - Prove the safety net (optional but worth it)
+
+What if your bucket breaks later - rotated keys, deleted bucket? A recording is never lost:
+
+<Steps>
+  <Step title="Break it on purpose">
+    In your provider's console, revoke the API token you created.
+  </Step>
+  <Step title="Make another call">
+    Call the agent again and hang up.
+  </Step>
+  <Step title="See the fallback">
+    The recording lands in Nixflex EU storage instead, and the call's **Events** tab shows a `STORAGE_FAILED` note with the reason - so you know exactly which calls were affected while your bucket was down.
+  </Step>
+  <Step title="Fix it">
+    Create a fresh token and update the credentials in **Settings → Recording storage**. The next call goes back to your bucket.
+  </Step>
+</Steps>
+
+## Where this leaves your data
+
+- Recordings live in **your bucket, your region, your custody** - Nixflex's retention and deletion never touch them.
+- Deleting calls in Nixflex removes the call records; the audio files in your bucket follow **your** retention rules.
+- The transcript and analysis still live in Nixflex for now - keeping those in your infrastructure as well is on the roadmap.
+
+## Related
+
+- [Your own storage](/advanced/your-own-storage) - full reference, all providers, API details
+- [Call recording](/advanced/call-recording) - switching recording on and off
+- [Webhooks](/advanced/webhooks) - reading `recording_url` in `call.completed`
