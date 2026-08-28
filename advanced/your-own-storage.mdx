@@ -36,21 +36,38 @@ Any storage that speaks the S3 API works. That includes:
 
 <CardGroup cols={2}>
   <Card title="Amazon S3" icon="aws">
-    Leave the endpoint empty and set your bucket's region (for example `eu-west-2`). Use an IAM key pair with `PutObject` on the bucket.
+    Leave the endpoint **empty** and set your bucket's region (for example `eu-west-2` or `me-south-1`). Create an IAM user with `PutObject` on the bucket and use its access key pair.
   </Card>
   <Card title="Cloudflare R2" icon="cloudflare">
-    Endpoint: `https://<account_id>.r2.cloudflarestorage.com`, region `auto`. Create an R2 API token with Object Read & Write scoped to the bucket.
+    Endpoint: `https://<account_id>.r2.cloudflarestorage.com`, region `auto`. In the R2 dashboard, create an API token with **Object Read & Write** scoped to your bucket - it gives you the access key pair and shows your endpoint.
   </Card>
-  <Card title="Wasabi" icon="hard-drive">
-    Endpoint: `https://s3.<region>.wasabisys.com` with the matching region. Use an access key pair from the Wasabi console.
+  <Card title="Google Cloud Storage" icon="google">
+    Endpoint: `https://storage.googleapis.com`, region e.g. `europe-west2`. In **Settings â†’ Interoperability**, create an HMAC key for a service account with write access - the HMAC key ID and secret are your key pair.
+  </Card>
+  <Card title="Backblaze B2" icon="hard-drive">
+    Endpoint: `https://s3.<region>.backblazeb2.com` (shown on your bucket page, e.g. `s3.eu-central-003.backblazeb2.com`). Create an application key scoped to the bucket - the keyID and applicationKey are your pair.
+  </Card>
+  <Card title="Wasabi" icon="database">
+    Endpoint: `https://s3.<region>.wasabisys.com` with the matching region (e.g. `eu-west-1`). Create an access key pair in the Wasabi console.
   </Card>
   <Card title="MinIO / self-hosted" icon="server">
-    Your own `https://` endpoint. Any S3-compatible self-hosted store works the same way - useful for fully on-premise requirements.
+    Your own `https://` endpoint. Any S3-compatible self-hosted store works the same way - useful for fully on-premise or air-gapped requirements.
   </Card>
 </CardGroup>
 
+### Quick reference
+
+| Provider | Endpoint | Region | Credentials |
+|---|---|---|---|
+| Amazon S3 | *(leave empty)* | Bucket's AWS region | IAM access key + secret |
+| Cloudflare R2 | `https://<account_id>.r2.cloudflarestorage.com` | `auto` | R2 API token key pair |
+| Google Cloud Storage | `https://storage.googleapis.com` | Bucket's GCS region | HMAC key ID + secret |
+| Backblaze B2 | `https://s3.<region>.backblazeb2.com` | In the endpoint | Application keyID + key |
+| Wasabi | `https://s3.<region>.wasabisys.com` | Endpoint's region | Access key + secret |
+| MinIO / self-hosted | Your server's `https://` URL | Your choice | Your configured key pair |
+
 <Note>
-  Google Cloud Storage also works through its S3 interoperability mode with HMAC keys. Azure Blob Storage does not speak the S3 API natively and needs an S3-compatible gateway in front of it.
+  Azure Blob Storage does not speak the S3 API natively - put an S3-compatible gateway (such as MinIO Gateway) in front of it, then connect the gateway here.
 </Note>
 
 ## Setting it up via the API
