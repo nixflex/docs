@@ -3078,6 +3078,154 @@
         }
       }
     },
+    "/account/llm": {
+      "put": {
+        "tags": ["Account"],
+        "summary": "Connect your own LLM",
+        "operationId": "setAccountLlm",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Connect an OpenAI-compatible model endpoint. Every conversation turn on your account is then answered by your model, and calls it serves bill at a $0.015/min discount. Verified before saving with a real completion AND a tool-calling round trip - models without OpenAI-style tool calling are refused. The key is stored encrypted and is write-only. If your model fails on a call, the standard stack takes over, the call gets a PROVIDER_FALLBACK event, and that call bills at the standard rate.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["endpoint", "model", "api_key"],
+                "properties": {
+                  "endpoint": { "type": "string", "description": "OpenAI-compatible https:// base URL, e.g. https://api.openai.com/v1" },
+                  "model": { "type": "string", "description": "Model name as your provider knows it" },
+                  "api_key": { "type": "string", "description": "Your provider API key. Write-only - never returned" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified and saved",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "ok": { "type": "boolean" },
+              "byo_llm_enabled": { "type": "boolean" },
+              "endpoint": { "type": "string" },
+              "model": { "type": "string" },
+              "verified": { "type": "boolean" }
+            } } } }
+          },
+          "400": { "description": "Invalid request, or the model failed the connection test (including missing tool-calling support).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["Account"],
+        "summary": "Get your LLM configuration",
+        "operationId": "getAccountLlm",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Returns the current configuration. The provider API key is never included.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "byo_llm_enabled": { "type": "boolean" },
+              "endpoint": { "type": "string", "nullable": true },
+              "model": { "type": "string", "nullable": true }
+            } } } }
+          },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Account"],
+        "summary": "Disconnect your own LLM",
+        "operationId": "deleteAccountLlm",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Disables and clears the configuration. Calls return to the standard stack and rate from the next call.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "ok": { "type": "boolean" },
+              "byo_llm_enabled": { "type": "boolean" }
+            } } } }
+          },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/account/tts": {
+      "put": {
+        "tags": ["Account"],
+        "summary": "Connect your own TTS",
+        "operationId": "setAccountTts",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Connect your own voice provider (elevenlabs or cartesia). The agent then speaks with your voice on every phone call, and calls it serves bill at a $0.02/min discount. Verified before saving with one real synthesis against your account and the exact voice ID. Web calls keep the standard voice. The key is stored encrypted and is write-only. If your voice fails on a call, the standard voice takes over, the call gets a PROVIDER_FALLBACK event, and that call bills at the standard TTS rate.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["provider", "voice_id", "api_key"],
+                "properties": {
+                  "provider": { "type": "string", "enum": ["elevenlabs", "cartesia"], "description": "Your voice provider" },
+                  "voice_id": { "type": "string", "description": "Voice ID exactly as shown in your provider console" },
+                  "api_key": { "type": "string", "description": "Your provider API key. Write-only - never returned" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified and saved",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "ok": { "type": "boolean" },
+              "byo_tts_enabled": { "type": "boolean" },
+              "provider": { "type": "string" },
+              "voice_id": { "type": "string" },
+              "verified": { "type": "boolean" }
+            } } } }
+          },
+          "400": { "description": "Invalid request, unsupported provider, or the voice failed the connection test.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "get": {
+        "tags": ["Account"],
+        "summary": "Get your TTS configuration",
+        "operationId": "getAccountTts",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Returns the current configuration. The provider API key is never included.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "byo_tts_enabled": { "type": "boolean" },
+              "provider": { "type": "string", "nullable": true },
+              "voice_id": { "type": "string", "nullable": true }
+            } } } }
+          },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Account"],
+        "summary": "Disconnect your own TTS",
+        "operationId": "deleteAccountTts",
+        "security": [{ "bearerAuth": [] }],
+        "description": "Disables and clears the configuration. Calls return to the standard voice and rate from the next call.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "ok": { "type": "boolean" },
+              "byo_tts_enabled": { "type": "boolean" }
+            } } } }
+          },
+          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
     "/account/storage": {
       "put": {
         "tags": [
