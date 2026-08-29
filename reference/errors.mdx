@@ -139,18 +139,17 @@ If something goes wrong, it still returns `200` with `ok: false` and a short rea
 
 ## Debugging with request IDs
 
-Every API response includes an x-request-id header, like eq_a1b2c3d4e5f67890. This ID identifies that exact request in our systems.
+Every API response includes an `x-request-id` header, like `req_a1b2c3d4e5f67890`. This ID identifies that exact request in our systems.
 
 When something fails:
 
-1. Grab the x-request-id from the response headers.
+1. Grab the `x-request-id` from the response headers.
 2. Open **Dashboard &rarr; Logs** and paste it into the search box. The exact request appears with its full (redacted) request and response bodies, status, and timing.
-3. Use **Copy as cURL** on the expanded row to replay the request from your terminal - swap in your real API key and any redacted *** values first.
+3. Use **Copy as cURL** on the expanded row to replay the request from your terminal - swap in your real API key and any redacted `***` values first.
 
 The Logs page also lets you filter by method, status class (4xx, 5xx), and date range, and shows a summary of your most common error from the last 24 hours.
 
 If you contact support about a failed request, include the request ID - it takes us straight to the exact request.
-
 ## Handling errors well
 
 <Steps>
