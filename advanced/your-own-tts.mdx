@@ -1,0 +1,88 @@
+---
+title: "Your own TTS"
+description: "Bring your own voice provider - any voice from your library, 2p/min off"
+icon: "waveform-lines"
+---
+
+With **your own TTS**, the agent speaks with a voice from **your own** voice-provider account - any voice in your library, cloned voices included - and the per-minute price drops by **$0.02**, because Nixflex no longer pays for the speech.
+
+Supported providers: **ElevenLabs** and **Cartesia**. Each is a hand-built streaming integration - voice is the most latency-sensitive part of a call, so this list is curated rather than open.
+
+<Note>
+  The connection is **tested before it is saved**: Nixflex runs one real synthesis against your account with the exact voice ID you enter. A wrong voice ID or a dead key is refused at save with the provider's reason - never discovered on a live call.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Find your voice ID">
+    In your provider's console, pick a voice and copy its ID (ElevenLabs: the Voices page; Cartesia: the voice's UUID).
+  </Step>
+  <Step title="Connect it">
+    In **Settings → Your own TTS**, or via the API below: provider, voice ID, and your provider API key.
+  </Step>
+  <Step title="Your voice speaks every phone call">
+    Applies account-wide. Your provider bills you for the characters; the Nixflex rate drops by $0.02/min on calls your voice actually served.
+  </Step>
+</Steps>
+
+<Note>
+  **Phone calls only.** Web calls use high-quality 48kHz audio and keep your agent's standard voice - the telephone integrations produce 8kHz phone audio, and Nixflex never downgrades web audio.
+</Note>
+
+## If your voice fails
+
+- The **standard voice takes over instantly** for the rest of the call - callers never hear silence.
+- The call's **Events** tab records a `PROVIDER_FALLBACK` event with the reason.
+- **That call bills at the standard TTS rate** - the discount applies only to calls your voice actually carried.
+
+## Setting it up via the API
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/account/tts \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "elevenlabs",
+    "voice_id": "21m00Tcm4TlvDq8ikWAM",
+    "api_key": "sk_..."
+  }'
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `provider` | Yes | `elevenlabs` or `cartesia` |
+| `voice_id` | Yes | Exactly as shown in your provider's console |
+| `api_key` | Yes | **Write-only** - stored encrypted, never returned |
+
+Read the configuration (the key is never included):
+
+```bash
+curl https://api.nixflex.com/v1/account/tts \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Disconnect (calls return to the standard voice and rate from the next call):
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/account/tts \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Stacking the discounts
+
+Bring everything and the rate compounds:
+
+| You bring | Rate |
+|---|---|
+| Nothing (standard) | $0.08/min |
+| Your LLM | $0.065/min |
+| Your TTS | $0.06/min |
+| LLM + TTS | **$0.045/min** |
+
+Premium features (web calls, live monitoring) add $0.01/min only on calls that actually use them - the same actual-use law as the discounts.
+
+## Related
+
+- [Your own LLM](/advanced/your-own-llm) - bring your own model too
+- [Your own storage](/advanced/your-own-storage) - recordings in your own bucket

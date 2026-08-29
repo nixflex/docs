@@ -1,0 +1,103 @@
+---
+title: "Your own LLM"
+description: "Bring your own OpenAI-compatible model - your key, your bill, 1.5p/min off"
+icon: "brain-circuit"
+---
+
+By default, calls run on Nixflex's built-in AI stack. With **your own LLM**, every conversation turn is answered by a model **you** choose, on your own provider account - and the per-minute price drops by **$0.015**, because Nixflex no longer pays for the thinking.
+
+Any **OpenAI-compatible endpoint** works: OpenAI, Anthropic (Claude), Google (Gemini), Groq, Together, OpenRouter, or your own self-hosted server - one protocol covers them all.
+
+<Note>
+  The connection is **tested before it is saved**: Nixflex runs a real completion AND a tool-calling round trip against your endpoint. A model that cannot do OpenAI-style tool calling is refused with a clear message - bookings and custom functions depend on it - so a saved configuration is a working configuration.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Connect your model">
+    In **Settings → Your own LLM**, or via the API below: base URL, model name, and your provider API key.
+  </Step>
+  <Step title="Your model answers every call">
+    Applies account-wide - every number and every agent, whether added in the dashboard or through the API. Your full agent prompt goes to your model; your provider bills you for the tokens.
+  </Step>
+  <Step title="The rate drops automatically">
+    Calls your model actually served bill at **$0.065/min** instead of $0.08. Nothing to configure - the engine records which model served each call and prices it honestly.
+  </Step>
+</Steps>
+
+<Note>
+  **The opening line stays instant.** The greeting is prepared by the platform before the call connects, so callers hear an immediate hello - your model takes over from the first real conversation turn. Tool turns (bookings, custom functions) also run on the platform's stack, so the machinery that moves real appointments never depends on an unknown model.
+</Note>
+
+## If your model fails
+
+A call is never lost to a provider problem. If your endpoint errors, times out, or returns nothing:
+
+- The **standard Nixflex stack takes over instantly** - the caller never hears dead air.
+- Your endpoint is not retried for the rest of that call (no per-turn timeout tax). The next call tries it fresh.
+- The call's **Events** tab records a `PROVIDER_FALLBACK` event with the reason.
+- **That call bills at the standard rate** - the discount applies only to calls your model actually carried, however the call ends. If your model served part of the call and the platform rescued the rest, the platform did the work: standard rate.
+
+## Requirements
+
+| | |
+|---|---|
+| Protocol | OpenAI-compatible `/chat/completions` with streaming |
+| Tool calling | **Required** - verified at save |
+| Endpoint | `https://` base URL |
+| Speed | First token within 2.5s per turn, or the platform takes over for that call |
+
+<Warning>
+  Model choice is a real latency decision. A large, slow model makes every reply late and the call feels broken - that is the trade you choose. Fast, small models suit voice best.
+</Warning>
+
+## Setting it up via the API
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/account/llm \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint": "https://api.openai.com/v1",
+    "model": "gpt-4o-mini",
+    "api_key": "sk-..."
+  }'
+```
+
+| Field | Required | Notes |
+|---|---|---|
+| `endpoint` | Yes | OpenAI-compatible base URL |
+| `model` | Yes | The model name as your provider knows it |
+| `api_key` | Yes | **Write-only** - stored encrypted, never returned |
+
+Read the configuration (the key is never included):
+
+```bash
+curl https://api.nixflex.com/v1/account/llm \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Disconnect (calls return to the standard stack and rate from the next call):
+
+```bash
+curl -X DELETE https://api.nixflex.com/v1/account/llm \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Common endpoints
+
+| Provider | Base URL |
+|---|---|
+| OpenAI | `https://api.openai.com/v1` |
+| Anthropic (Claude) | `https://api.anthropic.com/v1` |
+| Google (Gemini) | `https://generativelanguage.googleapis.com/v1beta/openai` |
+| Groq | `https://api.groq.com/openai/v1` |
+| OpenRouter (any model) | `https://openrouter.ai/api/v1` |
+| Together AI | `https://api.together.xyz/v1` |
+
+## Related
+
+- [Your own TTS](/advanced/your-own-tts) - bring your own voice too
+- [Your own storage](/advanced/your-own-storage) - recordings in your own bucket
+- [Pricing](https://nixflex.com/pricing) - the full discount table
