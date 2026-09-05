@@ -1,0 +1,79 @@
+---
+title: "Set caller context"
+description: "PUT /v1/phone-numbers/:phoneNumber/callers/:callerNumber"
+api: "PUT https://api.nixflex.com/v1/phone-numbers/{phone_number}/callers/{caller_number}"
+---
+
+Sets what your agent knows about one caller on one of your numbers. Creates the record if it does not exist.
+
+See [Caller context](/concepts/caller-context) for how the agent uses these details on a call.
+
+## Request
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/phone-numbers/+447450307843/callers/+447453573770 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sam Carter",
+    "email": "sam.carter@example.com",
+    "location": "London SW1A 1AA",
+    "reference_id": "4827"
+  }'
+```
+
+URL-encode the `+` if your HTTP client does not do it automatically: `%2B447450307843`.
+
+## Body parameters
+
+Send at least one field. A field you leave out keeps its current value; send `null` to remove it.
+
+| Field | Type | Max length | Notes |
+|---|---|---|---|
+| `name` | string or null | 120 | Full name - first and last. The agent uses it naturally and confirms it before booking. |
+| `email` | string or null | 120 | Must be a valid address. Confirmed with the caller before it is used for an action. |
+| `phone` | string or null | 40 | A contact number other than the one they call from. |
+| `location` | string or null | 120 | Free text - city, area, postal code, whatever suits your market. |
+| `reference_id` | string or null | 64 | An account, order or booking reference the caller uses. |
+| `preference` | string or null | 200 | A short preference, for example `prefers morning appointments`. |
+
+`last_call` and `open_item` are written by the engine after each call and cannot be set here - sending them returns `engine_only_field`. An unrecognised field name is rejected rather than ignored, so a typo never disappears silently.
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "caller": {
+    "phone_number": "+447450307843",
+    "caller_number": "+447453573770",
+    "context": {
+      "name": "Sam Carter",
+      "email": "sam.carter@example.com",
+      "location": "London SW1A 1AA",
+      "reference_id": "4827"
+    }
+  }
+}
+```
+
+`context` is the whole record - your fields together with anything the engine has learned.
+
+## Behaviour
+
+- **Last write wins per field.** If the caller confirms a different email on a call, the engine stores the new one and the next call uses it. Send the field again to set it back.
+- **An empty value never erases.** Only an explicit `null` removes a field.
+- **One record per number, per caller.** The same person on another of your numbers is a separate record - import them to each number you want them recognised on.
+- Takes effect on the caller's next call or text. Calls already in progress are unaffected.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `phone_number_not_found` | The number is not on this account |
+| `engine_only_field` | `last_call` or `open_item` was sent |
+| `unknown_field` | A field name that is not in the table above |
+| `invalid_email` | `email` is not a valid address |
+| `field_too_long` | A value is over its maximum length |
+| `missing_field` | No fields were sent |

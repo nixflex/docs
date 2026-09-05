@@ -1,0 +1,62 @@
+---
+title: "Import caller context"
+description: "POST /v1/phone-numbers/:phoneNumber/callers/import"
+api: "POST https://api.nixflex.com/v1/phone-numbers/{phone_number}/callers/import"
+---
+
+Loads many caller records onto one of your numbers in a single request - your existing customer list, so the agent knows them from the first call.
+
+## Request
+
+```bash
+curl -X POST https://api.nixflex.com/v1/phone-numbers/+447450307843/callers/import \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "callers": [
+      { "caller_number": "+447453573770", "name": "Sam Carter", "email": "sam.carter@example.com", "reference_id": "4827" },
+      { "caller_number": "+447700900002", "name": "Priya Shah", "email": "priya.shah@example.com", "preference": "prefers afternoon appointments" }
+    ]
+  }'
+```
+
+## Body parameters
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `callers` | array | Yes | 1 to 1,000 rows. Each row takes `caller_number` plus any of the fields on [Set caller context](/api-reference/caller-context/set). |
+| `callers[].caller_number` | string | Yes | The caller's number in E.164 form. A leading `+` is added if you leave it out. |
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "phone_number": "+447450307843",
+  "imported": 2
+}
+```
+
+## Behaviour
+
+- **Every row is checked before any row is written.** One bad row rejects the whole request, so you never end up half-imported.
+- **A repeated caller in the same file** simply ends on its last row.
+- **Existing records are merged, not replaced** - a field you leave out keeps its current value, exactly as on [Set caller context](/api-reference/caller-context/set).
+- **Per number.** To recognise the same customers on a second number, import them again for that number.
+- More than 1,000 rows: split into several requests. The standard [rate limits](/reference/rate-limits) apply.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `phone_number_not_found` | The number is not on this account |
+| `invalid_body` | `callers` missing, not an array, or empty |
+| `too_many_rows` | More than 1,000 rows in one request |
+| `missing_field` | A row has no `caller_number`, or no fields to set |
+| `engine_only_field` | A row contains `last_call` or `open_item` |
+| `unknown_field` | A row contains an unrecognised field name |
+| `invalid_email` | A row has an invalid `email` |
+| `field_too_long` | A row has a value over its maximum length |
+
+Row errors name the row: `Row 7: email is not a valid address.`

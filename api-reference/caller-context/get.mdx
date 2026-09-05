@@ -1,0 +1,44 @@
+---
+title: "Get caller context"
+description: "GET /v1/phone-numbers/:phoneNumber/callers/:callerNumber"
+api: "GET https://api.nixflex.com/v1/phone-numbers/{phone_number}/callers/{caller_number}"
+---
+
+Returns what your agent knows about one caller on one of your numbers - what you set and what the engine has learned, in one record.
+
+## Request
+
+```bash
+curl https://api.nixflex.com/v1/phone-numbers/+447450307843/callers/+447453573770 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+## Response
+
+`200 OK`
+
+```json
+{
+  "caller": {
+    "phone_number": "+447450307843",
+    "caller_number": "+447453573770",
+    "context": {
+      "name": "Sam Carter",
+      "email": "sam.carter@example.com",
+      "location": "London SW1A 1AA",
+      "reference_id": "4827",
+      "last_call": "wanted to book an appointment",
+      "open_item": "waiting for a callback about a refund"
+    }
+  }
+}
+```
+
+Only fields that have a value are returned. `last_call` and `open_item` are written by the engine after a call - `last_call` is what the caller **wanted**, never what happened.
+
+## Errors
+
+| Code | Cause |
+|---|---|
+| `phone_number_not_found` | The number is not on this account |
+| `caller_not_found` | No record for that caller on that number |
