@@ -60,6 +60,7 @@ const agent = await client.agents.create({
 await client.agents.list();
 await client.agents.get(agent.agent_id);
 await client.agents.update(agent.agent_id, { voice_id: 'some-voice' });
+await client.agents.update(agent.agent_id, { incall_sms_enabled: true }); // texting during calls + booking confirmation texts
 await client.agents.delete(agent.agent_id);
 ```
 
@@ -111,6 +112,27 @@ await client.phoneNumbers.delete('+447446466847');
 
 Telnyx numbers use `telnyx_api_key` and `telnyx_connection_id` instead of the Twilio pair - the carrier is inferred from which credentials you send. `null` on an update field means *inherit the agent's setting*; see [Update phone number](/api-reference/phone-numbers/update).
 
+## Caller context
+
+What the agent knows about a caller on one of your numbers - used instead of asking again, and confirmed before any booking. One record per (your number, caller number). See [Caller context](/concepts/caller-context).
+
+```typescript
+await client.callers.set('+447446466847', '+447700900123', {
+  name: 'Sam Carter',
+  email: 'sam.carter@example.com',
+  reference_id: '4827',
+});
+const { caller } = await client.callers.get('+447446466847', '+447700900123');
+// caller.context -> { name, email, reference_id, last_call?, open_item? }
+
+await client.callers.import('+447446466847', [
+  { caller_number: '+447700900123', name: 'Sam Carter', email: 'sam.carter@example.com' },
+  { caller_number: '+447700900124', name: 'Priya Shah', preference: 'prefers afternoon appointments' },
+]);                                       // up to 1,000 rows, validated before any write
+await client.callers.delete('+447446466847', '+447700900123');   // erases yours and the engine's
+```
+
+A field you leave out of `set()` keeps its value; `null` removes it. `last_call` and `open_item` are written by the engine and cannot be set.
 ## SMS
 
 ```javascript
