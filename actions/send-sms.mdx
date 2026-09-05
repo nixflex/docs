@@ -6,6 +6,31 @@ icon: "message"
 
 The `[SEND_SMS:]` tag sends a text message to the caller from your Twilio number. Useful for booking confirmations, links, addresses, payment links, or anything easier to read than hear.
 
+## Turning it on
+In-call SMS is controlled by one setting on the agent, `incall_sms_enabled`.
+
+| Setting | What happens |
+|---|---|
+| **On** | The agent can text the caller during the call, and booking confirmations are texted automatically. Standard SMS rates apply. |
+| **Off** | No texts are sent at all - no mid-call text, no booking confirmation text. The agent confirms every detail out loud instead. |
+
+With the setting off, the agent is never taught the `[SEND_SMS:]` action, so it does not offer a text. If a prompt uses the tag anyway, the engine blocks the send and the agent tells the caller the text did not go out - turn the setting on if you want texting.
+
+New agents start with it **off**. Agents created before this setting existed were switched **on**, so their behaviour did not change.
+
+Turn it on in the dashboard (agent, then Functions, then In-Call SMS) or through the API:
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "incall_sms_enabled": true }'
+```
+
+<Note>
+  This setting covers mid-call texts and booking confirmation texts. Post-call SMS is a separate setting, `post_call_sms_enabled` - see below.
+</Note>
+
 ## Syntax
 
     [SEND_SMS: Your text message goes here]
@@ -19,6 +44,8 @@ Everything between the colon and the closing bracket is the SMS body. The agent 
 > *Agent:* "Sure, sending it now. [SEND_SMS: Acme Dental, 12 High Street, Croydon CR0 1AB. See you Tuesday at 2pm.]"
 
 ## When to use
+The setting grants permission; your prompt decides when and what to text. With `incall_sms_enabled` on, add a line such as: "If the caller asks to receive any call information by text, send it using [SEND_SMS: message]."
+
 
 Tell the agent in its `system_prompt` when to text the caller. Example snippet from a system_prompt:
 
@@ -26,6 +53,10 @@ Tell the agent in its `system_prompt` when to text the caller. Example snippet f
     - Send the address by SMS if asked where you are: [SEND_SMS: 12 High Street, Croydon CR0 1AB]
     - After booking, text confirmation: [SEND_SMS: Your appointment with Acme Dental is confirmed.]
     - Send the payment link when collecting deposits: [SEND_SMS: Pay your deposit here: https://pay.example.com/abc]
+
+<Note>
+  Booking confirmations follow the same setting. With `incall_sms_enabled` on, a confirmed booking is texted to the caller automatically. With it off, the agent confirms the day, time and details out loud and no text is sent.
+</Note>
 
 ## Post-call SMS
 
