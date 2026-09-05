@@ -93,6 +93,20 @@ A field is too long:
 }
 ```
 
+A field the engine owns:
+
+```json
+// 400
+{
+  "error": {
+    "type": "invalid_request",
+    "code": "engine_only_field",
+    "message": "open_item is written by the engine after each call and cannot be set. Send only: name, email, phone, location, reference_id, preference.",
+    "doc_url": "https://docs.nixflex.com/errors/engine_only_field",
+    "details": {}
+  }
+}
+```
 Resource not found:
 
 ```json
