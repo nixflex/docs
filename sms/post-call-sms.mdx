@@ -1,0 +1,54 @@
+---
+title: "Post-call SMS"
+description: "Text the caller automatically after the call ends"
+icon: "message-check"
+---
+
+Nixflex can send a text automatically once a call has finished - a thank-you, a summary, or a next step. There are two ways to set it up, depending on your structure.
+
+For texting during the call, see [In-call SMS](/actions/in-call-sms).
+
+## Agent-level template
+
+Set a `post_call_sms_template` on the agent (with `post_call_sms_enabled: true`) via the [Update agent](/api-reference/agents/update) endpoint. It then fires automatically after every answered call on that agent - both inbound and outbound - on numbers added through the dashboard.
+
+<Note>
+  The agent-level template applies only to numbers added through the dashboard. Numbers imported via the API never receive it - one agent often serves many separate businesses, and an agent-level text must never reach another business's customers. For API-imported numbers, send post-call SMS yourself from the webhook (see below).
+</Note>
+
+```bash
+curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "post_call_sms_enabled": true, "post_call_sms_template": "Thanks for speaking with us today, {caller_name}. We will be in touch." }'
+```
+
+Personalise the message with variables, filled in from the call:
+
+| Variable | Value | If not available |
+|---|---|---|
+| `{caller_name}` | The caller's name, if captured during the call | `there` |
+| `{business_name}` | The agent's name | `our business` |
+| `{call_summary}` | A short summary of the call | empty |
+| `{agent_name}` | The agent's name | `our team` |
+
+If `post_call_sms_enabled` is true and no template is set, a default is used: *Thanks for calling {business_name}. We appreciate your time.*
+
+<Tip>
+  Write the template so it reads naturally for both inbound and outbound calls if the agent handles both. "Thanks for calling" only fits inbound - prefer neutral wording like "Thanks for speaking with us today", or use variables to keep it flexible.
+</Tip>
+
+## Your own, from the webhook
+
+If one agent serves many separate businesses, a single agent-level template would send the same text to every business's customers. In that case, send the post-call SMS yourself: receive the [webhook](/advanced/webhooks) after each call and send a message tailored to that business from its own number, using the [Send SMS API](/api-reference/sms/send). Each business gets its own wording, branding, and number, with full control over when a message goes out.
+
+## When it sends
+
+Post-call SMS sends once, shortly after the call ends, from the business's own number on whichever carrier that number belongs to. It is skipped when the call reached voicemail, when no template is configured, or when the caller's number is not available - so messages only go out when they make sense.
+
+## Related
+
+- [In-call SMS](/actions/in-call-sms) - text the caller during the call
+- [Send SMS](/sms/send-sms) - send a message via the API, plus length, tracking, compliance and pricing
+- [SMS agent](/sms/sms-agent) - what happens when the customer texts back
+- [Webhooks](/advanced/webhooks) - the post-call event you can send your own SMS from
