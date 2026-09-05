@@ -24,7 +24,7 @@ Five booking tools are added to the agent automatically once Google Calendar is 
 | Tool | What it does |
 | --- | --- |
 | Check availability | Finds free slots from the date the caller asks for onward |
-| Book appointment | Books a slot, collecting and confirming the caller's name and email |
+| Book appointment | Books a slot, using the details already known and confirming them with the caller |
 | Find booking | Looks up the caller's existing appointment(s) by email |
 | Reschedule | Moves an existing booking to a new time |
 | Cancel | Cancels an existing booking |
@@ -37,7 +37,7 @@ The agent offers slots during standard business hours — **Monday to Friday, 9:
 >
 > *Caller:* "Nine o'clock."
 >
-> *Agent:* "Lovely. Can I take your name please?" ... "And your email?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
+> *Agent:* "Shall I book this under Sam Carter, sam.carter at example dot com?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
 ## Timezone
 When a caller says "nine o'clock", the agent books 9:00 in your business's local time, with daylight saving handled automatically. This is correct for a clinic or office that callers physically visit.
 ## SMS confirmation
@@ -45,6 +45,6 @@ The caller automatically receives an SMS whenever an appointment is **booked, re
 ## Per-number calendar
 Google Calendar is connected **per phone number** — each number connects its own Google account. Pick the number first, then connect. This lets you run different locations on one agent, each booking into its own calendar.
 ## Tips
-- The agent confirms the caller's name and email one at a time, reading each back before booking.
+- The agent confirms the caller's name and email before booking. Details already in [caller context](/concepts/caller-context) are said out loud for a yes; anything new is read back letter by letter. It never calls the tool until the caller has confirmed.
 - The connection uses Google's secure sign-in (OAuth) — only a token is stored, never your password.
 - Disconnect any time from the same **Configure** panel.

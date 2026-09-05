@@ -89,6 +89,31 @@ Respond with `200` and one of these JSON bodies, within **5 seconds**:
 - **`accept`** → the call connects normally.
 - **`reject`** → the caller hears a busy tone. The call is never answered. `reason` is optional and is logged on your call record.
 
+### Sending caller details
+
+An `accept` reply can also tell the agent who is calling. Add a `caller` object and the details go straight into the agent's instructions for that call - so a customer in your own system is recognised without importing anything to Nixflex.
+
+```json
+{
+  "action": "accept",
+  "caller": {
+    "name": "Sam Carter",
+    "email": "sam.carter@example.com",
+    "location": "London SW1A 1AA",
+    "reference_id": "4827",
+    "preference": "prefers morning appointments"
+  }
+}
+```
+
+The fields are the same ones on [Set caller context](/api-reference/caller-context/set), and the agent follows the same rules: it says a detail naturally, waits for the caller to confirm it, and never calls a booking tool before they do.
+
+- **Nothing is stored.** These details are used for this call only. Your system stays the source of truth. Anything the caller confirms during the call is learned as usual.
+- **They win for this call.** A field you send here overrides a stored value; fields you leave out fall back to the stored record.
+- **A bad field is dropped, not fatal.** An invalid email, an over-long value, or a field name that is not in the list is ignored and logged - the call still connects.
+- **No reply in time still connects.** If your server is slow or silent, the 5 second timeout applies as always and the agent uses whatever is already stored.
+
+See [Caller context](/concepts/caller-context) for the full picture.
 ### Example endpoint
 
 ```javascript
