@@ -67,19 +67,21 @@ Only `name` is recommended in practice — every other field has a sensible defa
 |---|---|---|---|---|
 | `func_end_call` | bool | No | `true` | Agent can end the call cleanly |
 | `transfer_whisper` | string | No | `null` | Warm transfer briefing text. If empty, the AI auto-generates from the conversation. | 
-| `func_send_sms` | bool | No | `false` | **Not enforced.** Accepted and returned, but the engine does not read it, so the agent can text mid-call whichever way this is set. Control it in your prompt - see the note below. |
+| `func_send_sms` | bool | No | `false` | **Not enforced.** Accepted and returned, but the engine does not read it. Use `incall_sms_enabled` to control texting during a call. |
+| `incall_sms_enabled` | bool | No | `false` | Lets the agent text the caller during a call, and sends booking confirmations by text. With it off, no text is sent and the agent confirms details out loud. Agents created before this setting existed were switched on. See [In-call SMS](/actions/in-call-sms). |
 | `func_cold_transfer` | bool | No | `false` | **Not enforced.** Same as above - accepted, returned, and not read. Transfer is controlled by your prompt and by `transfer_number`. |
 | `transfer_type` | enum | No | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls made by this agent. See [Transfer](/actions/transfer). |
 | `transfer_number` | string | No | `null` | Default destination for transfers |
 
 
 <Note>
-  **How to stop the agent texting or transferring.** These two are controlled by your
-  **prompt**, not by a flag. The engine's own rules tell the model to text only if the
-  developer prompt asks it to, and the same holds for transfers - so a prompt that
-  never mentions texting produces an agent that never texts. `func_send_sms` and
-  `func_cold_transfer` are kept because removing a field developers may already send
-  would break them silently, but they have no effect.
+  **How to stop the agent texting or transferring.** Texting is controlled by
+  `incall_sms_enabled`: with it off no text is sent, whatever the prompt says. Transfers
+  are controlled by your **prompt** - the engine tells the model to transfer only if the
+  developer prompt asks it to, so a prompt that never mentions transferring produces an
+  agent that never transfers. `func_send_sms` and `func_cold_transfer` are kept because
+  removing a field developers may already send would break them silently, but they have
+  no effect.
 </Note>
 
 <Warning>
@@ -125,6 +127,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
   "func_end_call": true,
   "transfer_whisper": null,
   "func_send_sms": false,
+  "incall_sms_enabled": false,
   "transfer_type": "cold",
   "transfer_number": null,
   "webhook_url": null,
