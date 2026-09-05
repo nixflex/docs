@@ -49,6 +49,10 @@
     {
       "name": "Integrations",
       "description": "Per-number webhooks, booking, toggles, and custom functions."
+    },
+    {
+      "name": "Caller context",
+      "description": "What your agent knows about each caller on one of your numbers."
     }
   ],
   "components": {
@@ -145,6 +149,11 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "incall_sms_enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Lets the agent text the caller during a call, and sends booking confirmations by text. Off: no text is sent, the agent confirms details out loud. Agents created before this setting existed were switched on."
           }
         },
         "additionalProperties": true
@@ -181,6 +190,11 @@
           },
           "speaking_rate": {
             "type": "number"
+          },
+          "incall_sms_enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Lets the agent text the caller during a call, and sends booking confirmations by text. Off: no text is sent, the agent confirms details out loud. Agents created before this setting existed were switched on."
           }
         },
         "required": [
@@ -805,6 +819,111 @@
           }
         },
         "additionalProperties": true
+      },
+      "CallerContextSet": {
+        "type": "object",
+        "description": "Send at least one field. Omitted fields keep their value; null removes a field.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "nullable": true,
+            "description": "Full name - first and last."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 120,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 40,
+            "nullable": true,
+            "description": "A contact number other than the one they call from."
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 120,
+            "nullable": true,
+            "description": "Free text - city, area or postal code."
+          },
+          "reference_id": {
+            "type": "string",
+            "maxLength": 64,
+            "nullable": true,
+            "description": "An account, order or booking reference the caller uses."
+          },
+          "preference": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true,
+            "example": "prefers morning appointments"
+          }
+        }
+      },
+      "CallerContext": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string"
+          },
+          "caller_number": {
+            "type": "string"
+          },
+          "context": {
+            "type": "object",
+            "description": "Only fields with a value are present.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 120,
+                "nullable": true,
+                "description": "Full name - first and last."
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 120,
+                "nullable": true
+              },
+              "phone": {
+                "type": "string",
+                "maxLength": 40,
+                "nullable": true,
+                "description": "A contact number other than the one they call from."
+              },
+              "location": {
+                "type": "string",
+                "maxLength": 120,
+                "nullable": true,
+                "description": "Free text - city, area or postal code."
+              },
+              "reference_id": {
+                "type": "string",
+                "maxLength": 64,
+                "nullable": true,
+                "description": "An account, order or booking reference the caller uses."
+              },
+              "preference": {
+                "type": "string",
+                "maxLength": 200,
+                "nullable": true,
+                "example": "prefers morning appointments"
+              },
+              "last_call": {
+                "type": "string",
+                "readOnly": true,
+                "description": "Engine-written. What the caller wanted on their last call - never what happened."
+              },
+              "open_item": {
+                "type": "string",
+                "readOnly": true,
+                "description": "Engine-written. Something still pending for the caller."
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -3080,10 +3199,16 @@
     },
     "/account/llm": {
       "put": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Connect your own LLM",
         "operationId": "setAccountLlm",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Connect an OpenAI-compatible model endpoint. Every conversation turn on your account is then answered by your model, and calls it serves bill at a $0.015/min discount. Verified before saving with a real completion AND a tool-calling round trip - models without OpenAI-style tool calling are refused. The key is stored encrypted and is write-only. If your model fails on a call, the standard stack takes over, the call gets a PROVIDER_FALLBACK event, and that call bills at the standard rate.",
         "requestBody": {
           "required": true,
@@ -3091,11 +3216,24 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["endpoint", "model", "api_key"],
+                "required": [
+                  "endpoint",
+                  "model",
+                  "api_key"
+                ],
                 "properties": {
-                  "endpoint": { "type": "string", "description": "OpenAI-compatible https:// base URL, e.g. https://api.openai.com/v1" },
-                  "model": { "type": "string", "description": "Model name as your provider knows it" },
-                  "api_key": { "type": "string", "description": "Your provider API key. Write-only - never returned" }
+                  "endpoint": {
+                    "type": "string",
+                    "description": "OpenAI-compatible https:// base URL, e.g. https://api.openai.com/v1"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Model name as your provider knows it"
+                  },
+                  "api_key": {
+                    "type": "string",
+                    "description": "Your provider API key. Write-only - never returned"
+                  }
                 }
               }
             }
@@ -3104,60 +3242,157 @@
         "responses": {
           "200": {
             "description": "Verified and saved",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "ok": { "type": "boolean" },
-              "byo_llm_enabled": { "type": "boolean" },
-              "endpoint": { "type": "string" },
-              "model": { "type": "string" },
-              "verified": { "type": "boolean" }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "byo_llm_enabled": {
+                      "type": "boolean"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "400": { "description": "Invalid request, or the model failed the connection test (including missing tool-calling support).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "400": {
+            "description": "Invalid request, or the model failed the connection test (including missing tool-calling support).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "get": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Get your LLM configuration",
         "operationId": "getAccountLlm",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Returns the current configuration. The provider API key is never included.",
         "responses": {
           "200": {
             "description": "Success",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "byo_llm_enabled": { "type": "boolean" },
-              "endpoint": { "type": "string", "nullable": true },
-              "model": { "type": "string", "nullable": true }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "byo_llm_enabled": {
+                      "type": "boolean"
+                    },
+                    "endpoint": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "model": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "delete": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Disconnect your own LLM",
         "operationId": "deleteAccountLlm",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Disables and clears the configuration. Calls return to the standard stack and rate from the next call.",
         "responses": {
           "200": {
             "description": "Success",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "ok": { "type": "boolean" },
-              "byo_llm_enabled": { "type": "boolean" }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "byo_llm_enabled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
     "/account/tts": {
       "put": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Connect your own TTS",
         "operationId": "setAccountTts",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Connect your own voice provider (elevenlabs or cartesia). The agent then speaks with your voice on every phone call, and calls it serves bill at a $0.02/min discount. Verified before saving with one real synthesis against your account and the exact voice ID. Web calls keep the standard voice. The key is stored encrypted and is write-only. If your voice fails on a call, the standard voice takes over, the call gets a PROVIDER_FALLBACK event, and that call bills at the standard TTS rate.",
         "requestBody": {
           "required": true,
@@ -3165,11 +3400,28 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["provider", "voice_id", "api_key"],
+                "required": [
+                  "provider",
+                  "voice_id",
+                  "api_key"
+                ],
                 "properties": {
-                  "provider": { "type": "string", "enum": ["elevenlabs", "cartesia"], "description": "Your voice provider" },
-                  "voice_id": { "type": "string", "description": "Voice ID exactly as shown in your provider console" },
-                  "api_key": { "type": "string", "description": "Your provider API key. Write-only - never returned" }
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "elevenlabs",
+                      "cartesia"
+                    ],
+                    "description": "Your voice provider"
+                  },
+                  "voice_id": {
+                    "type": "string",
+                    "description": "Voice ID exactly as shown in your provider console"
+                  },
+                  "api_key": {
+                    "type": "string",
+                    "description": "Your provider API key. Write-only - never returned"
+                  }
                 }
               }
             }
@@ -3178,51 +3430,142 @@
         "responses": {
           "200": {
             "description": "Verified and saved",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "ok": { "type": "boolean" },
-              "byo_tts_enabled": { "type": "boolean" },
-              "provider": { "type": "string" },
-              "voice_id": { "type": "string" },
-              "verified": { "type": "boolean" }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "byo_tts_enabled": {
+                      "type": "boolean"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "voice_id": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "400": { "description": "Invalid request, unsupported provider, or the voice failed the connection test.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "400": {
+            "description": "Invalid request, unsupported provider, or the voice failed the connection test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "get": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Get your TTS configuration",
         "operationId": "getAccountTts",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Returns the current configuration. The provider API key is never included.",
         "responses": {
           "200": {
             "description": "Success",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "byo_tts_enabled": { "type": "boolean" },
-              "provider": { "type": "string", "nullable": true },
-              "voice_id": { "type": "string", "nullable": true }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "byo_tts_enabled": {
+                      "type": "boolean"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "voice_id": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       },
       "delete": {
-        "tags": ["Account"],
+        "tags": [
+          "Account"
+        ],
         "summary": "Disconnect your own TTS",
         "operationId": "deleteAccountTts",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "description": "Disables and clears the configuration. Calls return to the standard voice and rate from the next call.",
         "responses": {
           "200": {
             "description": "Success",
-            "content": { "application/json": { "schema": { "type": "object", "properties": {
-              "ok": { "type": "boolean" },
-              "byo_tts_enabled": { "type": "boolean" }
-            } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "byo_tts_enabled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "401": { "description": "Authentication failed - bad or missing API key.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -3245,7 +3588,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["bucket", "access_key", "secret_key"],
+                "required": [
+                  "bucket",
+                  "access_key",
+                  "secret_key"
+                ],
                 "properties": {
                   "bucket": {
                     "type": "string",
@@ -3280,12 +3627,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
-                    "storage_enabled": { "type": "boolean" },
-                    "bucket": { "type": "string" },
-                    "endpoint": { "type": "string", "nullable": true },
-                    "region": { "type": "string" },
-                    "verified": { "type": "boolean" }
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "storage_enabled": {
+                      "type": "boolean"
+                    },
+                    "bucket": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "region": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -3333,11 +3693,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "storage_enabled": { "type": "boolean" },
-                    "endpoint": { "type": "string", "nullable": true },
-                    "region": { "type": "string", "nullable": true },
-                    "bucket": { "type": "string", "nullable": true },
-                    "access_key": { "type": "string", "nullable": true }
+                    "storage_enabled": {
+                      "type": "boolean"
+                    },
+                    "endpoint": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "region": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "bucket": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "access_key": {
+                      "type": "string",
+                      "nullable": true
+                    }
                   }
                 }
               }
@@ -3375,8 +3749,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" },
-                    "storage_enabled": { "type": "boolean" }
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "storage_enabled": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -6603,6 +6981,422 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing or malformed parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/phone-numbers/{phoneNumber}/callers/{callerNumber}": {
+      "parameters": [
+        {
+          "name": "phoneNumber",
+          "in": "path",
+          "required": true,
+          "description": "One of your numbers in E.164 format. URL-encode the leading + as %2B.",
+          "schema": {
+            "type": "string",
+            "example": "+447450307843"
+          }
+        },
+        {
+          "name": "callerNumber",
+          "in": "path",
+          "required": true,
+          "description": "The caller's number in E.164 format. URL-encode the leading + as %2B.",
+          "schema": {
+            "type": "string",
+            "example": "+447453573770"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Caller context"
+        ],
+        "summary": "Get caller context",
+        "operationId": "getCallerContext",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "What your agent knows about one caller on one of your numbers - what you set and what the engine learned, in one record.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "caller": {
+                      "$ref": "#/components/schemas/CallerContext"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing or malformed parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Caller context"
+        ],
+        "summary": "Set caller context",
+        "operationId": "setCallerContext",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Sets the details for one caller on one of your numbers. Creates the record if needed. A field left out keeps its value; send null to remove it. last_call and open_item are engine-only and are rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallerContextSet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "caller": {
+                      "$ref": "#/components/schemas/CallerContext"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing or malformed parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Caller context"
+        ],
+        "summary": "Delete caller context",
+        "operationId": "deleteCallerContext",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Erases the whole record for this caller on this number - both what you set and what the engine learned.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "phone_number": {
+                      "type": "string"
+                    },
+                    "caller_number": {
+                      "type": "string"
+                    },
+                    "deleted": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - missing or malformed parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/phone-numbers/{phoneNumber}/callers/import": {
+      "parameters": [
+        {
+          "name": "phoneNumber",
+          "in": "path",
+          "required": true,
+          "description": "One of your numbers in E.164 format. URL-encode the leading + as %2B.",
+          "schema": {
+            "type": "string",
+            "example": "+447450307843"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Caller context"
+        ],
+        "summary": "Import caller context",
+        "operationId": "importCallerContext",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Loads up to 1,000 caller records onto one of your numbers in one request. Every row is validated before any row is written.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "callers"
+                ],
+                "properties": {
+                  "callers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "items": {
+                      "allOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "caller_number"
+                          ],
+                          "properties": {
+                            "caller_number": {
+                              "type": "string",
+                              "example": "+447453573770"
+                            }
+                          }
+                        },
+                        {
+                          "$ref": "#/components/schemas/CallerContextSet"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "phone_number": {
+                      "type": "string"
+                    },
+                    "imported": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
