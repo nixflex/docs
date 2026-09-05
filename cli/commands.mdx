@@ -1,0 +1,90 @@
+---
+title: "CLI commands"
+description: "Every nixflex command, with an example"
+icon: "list"
+---
+
+Every command accepts `--json` (machine-readable output) and `--key` (override the API key for this command). Deletes require `--confirm`. Where a prompt is accepted, `@file` reads it from disk.
+
+## Account
+
+| Command | What it does |
+|---|---|
+| `nixflex login` | Store your API key in `~/.nixflex/config.json` after verifying it. Reads `NIXFLEX_API_KEY` if set. |
+| `nixflex logout` | Remove the stored key. |
+| `nixflex whoami` | The key id in use, plus usage and balance. |
+| `nixflex usage` | Usage and balance - the same as [GET /v1/usage](/api-reference/account/usage). |
+| `nixflex doctor` | Checks the CLI version, Node version, where the key came from, and that the API answers. |
+
+```bash
+nixflex doctor
+```
+
+## Agents
+
+| Command | Notes |
+|---|---|
+| `agents list [--limit N]` | |
+| `agents get <agent_id>` | |
+| `agents create --name NAME --prompt TEXT\|@file [--voice ID] [--language xx]` | Creates an agent. See [Create agent](/api-reference/agents/create) for what the fields mean. |
+| `agents update <agent_id> [--name] [--prompt] [--voice] [--language] [--incall-sms true\|false]` | Only the flags you pass are changed. |
+| `agents delete <agent_id> --confirm` | Without `--confirm`, shows the agent and stops. |
+
+```bash
+nixflex agents update agent_15d1a9ee16294087 --incall-sms true
+```
+
+## Calls
+
+| Command | Notes |
+|---|---|
+| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...]` | Places an outbound call now. `--var` sets prompt variables; repeat it for several. See [Create outbound call](/api-reference/calls/create-outbound). |
+| `calls list [--limit N] [--agent ID]` | Most recent first. |
+| `calls get <call_id>` | Transcript, analysis, recording URL, bookings. |
+
+```bash
+nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt @reminder.txt --var name=Sam --var slot="Tuesday 11:00"
+```
+
+## Numbers
+
+| Command | Notes |
+|---|---|
+| `numbers list [--agent ID]` | |
+| `numbers update <number> [--sms-reply true\|false] [--sms-prompt TEXT\|@file] [--dtmf true\|false\|null]` | `--dtmf null` means inherit the agent's setting. `--sms-prompt null` clears it. See [Update phone number](/api-reference/phone-numbers/update). |
+
+```bash
+nixflex numbers update +447450307843 --sms-reply true --sms-prompt @sms-prompt.txt
+```
+
+Importing a number needs carrier credentials and is done in the dashboard or through [Import phone number](/api-reference/phone-numbers/import).
+
+## Callers (caller context)
+
+What the agent knows about a caller on one of your numbers. The first number is always yours, the second the caller's. See [Caller context](/concepts/caller-context).
+
+| Command | Notes |
+|---|---|
+| `callers get <your_number> <caller_number>` | The whole record - your fields and what the engine learned. |
+| `callers set <your_number> <caller_number> [--name] [--email] [--phone] [--location] [--reference] [--preference]` | Flags you leave out keep their value. Pass `null` to remove a field: `--email null`. |
+| `callers import <your_number> <file.csv>` | Header row names the fields. Sent in chunks of 1,000; a bad row stops its chunk before any write. |
+| `callers delete <your_number> <caller_number> --confirm` | Erases your fields and the engine's. |
+
+```bash
+nixflex callers set +447450307843 +447453573770 --name "Sam Carter" --reference 4827
+nixflex callers set +447450307843 +447453573770 --reference null
+```
+
+CSV columns: `caller_number` (required), `name`, `email`, `phone`, `location`, `reference_id`, `preference`. Empty cells are ignored.
+
+## SMS
+
+| Command | Notes |
+|---|---|
+| `sms send --agent ID --from +44... --to +44... --message TEXT` | One message from one of your numbers. See [Send SMS](/sms/send-sms). |
+
+## Errors
+
+Errors print as `error <status> <code>: <message>` with a link to the error's documentation, and the process exits with code `1`. With `--json` the same information is returned as `{ "error": { "code", "status", "message", "doc_url" } }`. No key at all exits with code `2`.
+
+All error codes are listed on [Errors](/reference/errors).

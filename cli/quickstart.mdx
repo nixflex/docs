@@ -1,0 +1,69 @@
+---
+title: "CLI quickstart"
+description: "An agent, a call and a caller record in two minutes"
+icon: "bolt"
+---
+
+You need an API key from the dashboard, a phone number already imported, and Node.js 18+.
+
+<Steps>
+  <Step title="Log in">
+    ```bash
+    npx nixflex login
+    ```
+    Paste the full key (`nxf_xxx:nxfs_xxx`). The CLI verifies it against the API before saving.
+  </Step>
+  <Step title="See what you have">
+    ```bash
+    nixflex agents list
+    nixflex numbers list
+    ```
+  </Step>
+  <Step title="Create an agent">
+    Write the prompt in a file - it is easier to edit and to keep in git.
+    ```bash
+    nixflex agents create --name "Reception" --prompt @reception-prompt.txt --voice Ashley
+    ```
+    The response includes the new `agent_id`.
+  </Step>
+  <Step title="Tell the agent who is calling">
+    Load what you already know about a customer, so the agent uses it instead of asking. See [Caller context](/concepts/caller-context).
+    ```bash
+    nixflex callers set +447450307843 +447453573770 --name "Sam Carter" --email sam.carter@example.com
+    ```
+    The first number is yours, the second is the customer's.
+  </Step>
+  <Step title="Place a call">
+    ```bash
+    nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt "Call Sam to confirm his appointment on Tuesday at 11."
+    ```
+    Then follow it:
+    ```bash
+    nixflex calls get call_xxx
+    ```
+  </Step>
+</Steps>
+
+## Everything as JSON
+
+Add `--json` to any command for scripting:
+
+```bash
+nixflex calls list --limit 5 --json
+```
+
+## Load a customer list
+
+One CSV, one number, up to 1,000 rows per request (the CLI splits larger files for you):
+
+```csv
+caller_number,name,email,location,reference_id,preference
++447453573770,Sam Carter,sam.carter@example.com,London SW1A 1AA,4827,prefers morning appointments
++447700900002,Priya Shah,priya.shah@example.com,,,prefers afternoon appointments
+```
+
+```bash
+nixflex callers import +447450307843 ./customers.csv
+```
+
+Next: the full [command reference](/cli/commands).
