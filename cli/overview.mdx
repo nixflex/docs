@@ -4,7 +4,7 @@ description: "Manage agents, calls, numbers and caller context from your termina
 icon: "terminal"
 ---
 
-The `nixflex` command lets you do from a terminal what you would otherwise do in the dashboard or with the API: create an agent, place a call, load a customer list, check your balance. It ships inside the [`nixflex`](https://www.npmjs.com/package/nixflex) npm package - the same package as the Node SDK - and every command is a call into that SDK, so the CLI can never say something the API does not do.
+The `nixflex` command lets you do from a terminal what you would otherwise do in the dashboard or with the API: create an agent, place a call, load a customer list, launch a campaign, check your balance. It ships inside the [`nixflex`](https://www.npmjs.com/package/nixflex) npm package - the same package as the Node SDK - and every command is a call into that SDK, so the CLI can never say something the API does not do. A test in the package fails if any SDK method has no command.
 
 ```bash
 npx nixflex --help
@@ -32,18 +32,18 @@ The CLI needs your full API key - both halves, `nxf_xxx:nxfs_xxx`. It looks in t
 | 3 | `~/.nixflex/config.json` | Your own machine - written by `nixflex login` |
 
 ```bash
-nixflex login          # prompts for the key (not echoed) and verifies it against the API
-nixflex whoami         # which key is in use, plus your usage and balance
+nixflex login          # prompts for the key and verifies it against the API
+nixflex whoami         # which key is in use, plus usage and balance
 nixflex logout         # removes the stored key
 ```
 
 <Note>
-  `login` stores the key in `~/.nixflex/config.json` with owner-only permissions. Never paste a key into a command in a shared shell history - use `login` or the environment variable.
+  `login` stores the key in `~/.nixflex/config.json` with owner-only permissions. Never paste a key into a command in a shared shell history - use `login` or the environment variable. The [MCP server](/mcp/overview) reads the same file, so one `login` serves both.
 </Note>
 
 ## Output
 
-Every command prints a table for humans. Add `--json` for scripts - the output is then exactly what the API returned, and errors come back as JSON on stdout too:
+Every command prints a table for humans. Add `--json` for scripts - the output is then exactly what the API returned, and errors come back as JSON on stdout too. Progress messages go to stderr, so stdout can be piped safely.
 
 ```bash
 nixflex agents list --json | jq '.[].agent_id'
@@ -51,25 +51,29 @@ nixflex agents list --json | jq '.[].agent_id'
 
 ## Safety rails
 
-- **Deletes need `--confirm`.** Without it the command shows what *would* be deleted and stops.
-- **Nothing is retried or batched silently.** `callers import` sends your file in chunks of 1,000 and reports the total; a bad row stops the chunk before anything in it is written.
-- **Prompts from files.** Anywhere a prompt is accepted, `@path/to/file.txt` reads it from disk instead of the command line.
+- **Destructive commands preview first.** `agents delete`, `calls delete`, `calls delete-all`, `numbers delete`, `callers delete`, `sms campaigns delete`, `webhooks delete`, `storage|llm|tts delete` and `keys rotate` all show what would happen and stop until you add `--confirm` (or `--yes`).
+- **Nothing is retried or batched silently.** `callers import` sends a file in chunks of 1,000 and reports progress; a bad row stops its chunk before anything in it is written.
+- **Prompts from files.** Anywhere a prompt or message is accepted, `@path/to/file.txt` reads it from disk.
+- **Any field, forever.** `--set field=value` and `--body @file.json` work on every create/update - new API fields need no new CLI.
 
 ## Exit codes
 
 | Code | Meaning |
 |---|---|
 | `0` | Success |
-| `1` | The API returned an error, or the command was wrong |
+| `1` | The API returned an error, or the command was wrong (a suggestion is printed for typos) |
 | `2` | No API key found (run `nixflex login`) |
 
 ## Next
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Quickstart" icon="bolt" href="/cli/quickstart">
     An agent, a call and a caller record in two minutes.
   </Card>
   <Card title="Commands" icon="list" href="/cli/commands">
     Every command with a real example.
+  </Card>
+  <Card title="MCP" icon="diagram-project" href="/mcp/overview">
+    The same account from Claude Desktop, Cursor or VS Code.
   </Card>
 </CardGroup>

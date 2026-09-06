@@ -4,7 +4,19 @@ description: "Every nixflex command, with an example"
 icon: "list"
 ---
 
-Every command accepts `--json` (machine-readable output) and `--key` (override the API key for this command). Deletes require `--confirm`. Where a prompt is accepted, `@file` reads it from disk.
+Every command accepts `--json` (machine-readable output), `--key` (use another API key for this command) and `--base-url` (staging). Destructive commands preview and stop unless you pass `--confirm` (alias `--yes`).
+
+## Setting any field
+
+Every command that creates or updates something accepts `--set field=value` - as many times as you like - and `--body @file.json` for nested objects. Values are parsed: `true`, `false`, `null`, numbers, and `@path` reads a file. Any field the API accepts works, including ones added after this CLI was released.
+
+```bash
+nixflex agents update agent_15d1a9ee16294087 --set silence_hangup_seconds=12 --set incall_sms_enabled=true
+nixflex agents update agent_15d1a9ee16294087 --set system_prompt=@prompt.txt
+nixflex numbers import --body @number.json
+```
+
+Named flags exist for the common fields; `--set` covers the rest. An unknown field name is rejected by the API, never silently dropped.
 
 ## Account
 
@@ -13,12 +25,10 @@ Every command accepts `--json` (machine-readable output) and `--key` (override t
 | `nixflex login` | Store your API key in `~/.nixflex/config.json` after verifying it. Reads `NIXFLEX_API_KEY` if set. |
 | `nixflex logout` | Remove the stored key. |
 | `nixflex whoami` | The key id in use, plus usage and balance. |
-| `nixflex usage` | Usage and balance - the same as [GET /v1/usage](/api-reference/account/usage). |
-| `nixflex doctor` | Checks the CLI version, Node version, where the key came from, and that the API answers. |
-
-```bash
-nixflex doctor
-```
+| `nixflex usage` | Usage and balance - [GET /v1/usage](/api-reference/account/usage). |
+| `nixflex doctor` | CLI version, Node version, where the key came from, base URL, and whether the API answers. |
+| `nixflex keys rotate --confirm` | New secret. **The current one stops working immediately** - update every integration, then `nixflex login` again. Previews without `--confirm`. |
+| `nixflex completion <bash\|zsh\|pwsh>` | Prints a shell completion script. `nixflex completion bash >> ~/.bashrc` |
 
 ## Agents
 
@@ -26,24 +36,37 @@ nixflex doctor
 |---|---|
 | `agents list [--limit N]` | |
 | `agents get <agent_id>` | |
-| `agents create --name NAME --prompt TEXT\|@file [--voice ID] [--language xx]` | Creates an agent. See [Create agent](/api-reference/agents/create) for what the fields mean. |
-| `agents update <agent_id> [--name] [--prompt] [--voice] [--language] [--incall-sms true\|false]` | Only the flags you pass are changed. |
-| `agents delete <agent_id> --confirm` | Without `--confirm`, shows the agent and stops. |
-
-```bash
-nixflex agents update agent_15d1a9ee16294087 --incall-sms true
-```
+| `agents create --name NAME --prompt TEXT\|@file [--voice ID] [--language xx] [--set k=v ...]` | See [Create agent](/api-reference/agents/create). |
+| `agents update <agent_id> [--name] [--prompt] [--voice] [--language] [--incall-sms true\|false] [--set k=v ...]` | Only what you pass changes. |
+| `agents delete <agent_id> --confirm` | |
 
 ## Calls
 
 | Command | Notes |
 |---|---|
-| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...]` | Places an outbound call now. `--var` sets prompt variables; repeat it for several. See [Create outbound call](/api-reference/calls/create-outbound). |
-| `calls list [--limit N] [--agent ID]` | Most recent first. |
-| `calls get <call_id>` | Transcript, analysis, recording URL, bookings. |
+| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...] [--wait] [--timeout S]` | Places a call now. `--var` sets prompt variables. `--wait` polls until the call ends and prints the full record (transcript, analysis, bookings); default timeout 300 s. |
+| `calls list [--limit N] [--agent ID]` | Newest first. |
+| `calls get <call_id>` | |
+| `calls delete <call_id> --confirm` | Removes the record and its recording. |
+| `calls delete-all --confirm` | Every call, recording and SMS record on the account. Cannot be undone. |
 
 ```bash
-nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt @reminder.txt --var name=Sam --var slot="Tuesday 11:00"
+nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt @reminder.txt --var name=Sam --wait
+```
+
+## Campaigns (voice batch)
+
+| Command | Notes |
+|---|---|
+| `campaigns create --agent ID --from +44... --prompt TEXT\|@file --csv people.csv [--name NAME] [--set k=v ...]` | One prompt, many calls. Scheduling fields (`schedule_type`, `scheduled_date`, window) via `--set`. See [Create batch](/api-reference/calls/batch-create). |
+| `campaigns launch <campaign_id>` | Starts dialling. |
+
+CSV columns: `phone` (required, E.164), `prompt_override` (optional - replaces the campaign prompt for that person), and every other column becomes a variable the agent receives for that call.
+
+```csv
+phone,name,appointment
++447453573770,Sam,Tuesday 11:00
++447700900002,Priya,Wednesday 14:30
 ```
 
 ## Numbers
@@ -51,40 +74,60 @@ nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt 
 | Command | Notes |
 |---|---|
 | `numbers list [--agent ID]` | |
-| `numbers update <number> [--sms-reply true\|false] [--sms-prompt TEXT\|@file] [--dtmf true\|false\|null]` | `--dtmf null` means inherit the agent's setting. `--sms-prompt null` clears it. See [Update phone number](/api-reference/phone-numbers/update). |
-
-```bash
-nixflex numbers update +447450307843 --sms-reply true --sms-prompt @sms-prompt.txt
-```
-
-Importing a number needs carrier credentials and is done in the dashboard or through [Import phone number](/api-reference/phone-numbers/import).
+| `numbers import --set phone_number=+44... --set agent_id=ID --set twilio_account_sid=... --set twilio_auth_token=...` | Or `--set telnyx_api_key=... --set telnyx_connection_id=...`, or `--body @number.json`. See [Import phone number](/api-reference/phone-numbers/import). |
+| `numbers update <number> [--sms-reply true\|false] [--sms-prompt TEXT\|@file\|null] [--dtmf true\|false\|null] [--set k=v ...]` | `--dtmf null` inherits the agent setting. See [Update phone number](/api-reference/phone-numbers/update). |
+| `numbers delete <number> --confirm` | Disconnects from Nixflex; your carrier keeps the number. |
+| `numbers monitor <number> [get\|on\|off]` | Live monitoring; on bills that number at the premium rate. |
+| `numbers web-calls <number> [get\|on\|off]` | Browser calls for the number. |
 
 ## Callers (caller context)
 
-What the agent knows about a caller on one of your numbers. The first number is always yours, the second the caller's. See [Caller context](/concepts/caller-context).
+What the agent knows about a caller on one of your numbers. First number is yours, second is the caller's. See [Caller context](/concepts/caller-context).
 
 | Command | Notes |
 |---|---|
-| `callers get <your_number> <caller_number>` | The whole record - your fields and what the engine learned. |
-| `callers set <your_number> <caller_number> [--name] [--email] [--phone] [--location] [--reference] [--preference]` | Flags you leave out keep their value. Pass `null` to remove a field: `--email null`. |
-| `callers import <your_number> <file.csv>` | Header row names the fields. Sent in chunks of 1,000; a bad row stops its chunk before any write. |
+| `callers get <your_number> <caller_number>` | |
+| `callers set <your_number> <caller_number> [--name] [--email] [--phone] [--location] [--reference] [--preference]` | Omitted fields are kept; pass `null` to remove one. |
+| `callers import <your_number> <file.csv>` | Columns: `caller_number` (required), `name`, `email`, `phone`, `location`, `reference_id`, `preference`. Sent in chunks of 1,000. |
 | `callers delete <your_number> <caller_number> --confirm` | Erases your fields and the engine's. |
-
-```bash
-nixflex callers set +447450307843 +447453573770 --name "Sam Carter" --reference 4827
-nixflex callers set +447450307843 +447453573770 --reference null
-```
-
-CSV columns: `caller_number` (required), `name`, `email`, `phone`, `location`, `reference_id`, `preference`. Empty cells are ignored.
 
 ## SMS
 
 | Command | Notes |
 |---|---|
-| `sms send --agent ID --from +44... --to +44... --message TEXT` | One message from one of your numbers. See [Send SMS](/sms/send-sms). |
+| `sms send --agent ID --from +44... --to +44... --message TEXT` | One message. See [Send SMS](/sms/send-sms). |
+| `sms campaigns create --agent ID --from +44... --message TEXT\|@file --csv people.csv [--set k=v ...]` | Bulk. CSV: `phone` + any columns as `{{variables}}` in the message. See [SMS campaigns](/sms/sms-campaigns). |
+| `sms campaigns launch <id>` | |
+| `sms campaigns list [--status S] [--limit N]` | |
+| `sms campaigns get <id>` | Delivery counts. |
+| `sms campaigns delete <id> --confirm` | Pending recipients are not messaged; sent messages cannot be recalled. |
 
-## Errors
+## Webhooks (per number)
 
-Errors print as `error <status> <code>: <message>` with a link to the error's documentation, and the process exits with code `1`. With `--json` the same information is returned as `{ "error": { "code", "status", "message", "doc_url" } }`. No key at all exits with code `2`.
+| Command | Notes |
+|---|---|
+| `webhooks set <number> <url> [--slot 1\|2]` | Post-call webhook. Two slots per number. See [Webhooks](/advanced/webhooks). |
+| `webhooks get <number> [--slot 1\|2]` | |
+| `webhooks delete <number> [--slot 1\|2] --confirm` | |
 
-All error codes are listed on [Errors](/reference/errors).
+## Bring your own
+
+| Command | Notes |
+|---|---|
+| `storage set --set k=v ...` / `storage get` / `storage delete --confirm` | Your own S3-compatible bucket. See [Your own storage](/advanced/your-own-storage). |
+| `llm set --set k=v ...` / `llm get` / `llm delete --confirm` | Your own OpenAI-compatible model. See [Your own LLM](/advanced/your-own-llm). |
+| `tts set --set k=v ...` / `tts get` / `tts delete --confirm` | Your own voice provider. See [Your own TTS](/advanced/your-own-tts). |
+
+`set` verifies the connection with a real probe before saving; `get` never returns secrets.
+
+## MCP
+
+| Command | Notes |
+|---|---|
+| `mcp setup <claude\|cursor\|vscode>` | Adds the Nixflex MCP server to that app's config. Run `nixflex login` first - the server reads the same stored key. See [MCP](/mcp/overview). |
+
+## Errors and exit codes
+
+Errors print as `error <status> <code>: <message>` with a link to the error's page, and the process exits with code `1`. With `--json` the same information is returned on stdout as `{ "error": { "code", "status", "message", "doc_url" } }`. No key at all exits with `2`. A mistyped command exits `1` with a suggestion.
+
+Progress lines (imports, `--wait`) go to stderr, so stdout stays clean for pipes. All codes are listed on [Errors](/reference/errors).
