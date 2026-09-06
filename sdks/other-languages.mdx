@@ -1,0 +1,87 @@
+---
+title: "Other languages"
+description: "Use Nixflex from Python, Go, Java, C#, Ruby, PHP - any language that speaks HTTPS"
+icon: "code"
+---
+
+The Nixflex API is plain HTTPS + JSON with a bearer key. The [Node.js SDK](/sdks/node) is the only official client today; from any other language you call the API directly, or generate a client from the OpenAPI specification.
+
+## Call the API directly
+
+Every endpoint is documented with a curl example in the [API reference](/api-reference/introduction). Three things to get right:
+
+1. **Authentication** - `Authorization: Bearer KEY_ID:KEY_SECRET`, both halves joined by a colon.
+2. **Numbers in URLs** - URL-encode the leading `+` as `%2B` (`/v1/phone-numbers/%2B447446466847`).
+3. **Errors** - every error is `{ "error": { "type", "code", "message", "doc_url", "details" } }` with a meaningful HTTP status. Branch on `code`. See [Errors](/reference/errors).
+
+<CodeGroup>
+```python Python
+import requests
+
+KEY = "nxf_xxx:nxfs_xxx"
+r = requests.post(
+    "https://api.nixflex.com/v1/calls",
+    headers={"Authorization": f"Bearer {KEY}"},
+    json={"agent_id": "agent_15d1a9ee16294087", "to_number": "+447453573770",
+          "prompt": "Call Sam to confirm his appointment on Tuesday at 11."},
+    timeout=30,
+)
+call = r.json()
+if r.status_code >= 400:
+    raise RuntimeError(f"{call['error']['code']}: {call['error']['message']}")
+print(call["call_id"])
+```
+```go Go
+req, _ := http.NewRequest("POST", "https://api.nixflex.com/v1/calls",
+    strings.NewReader(`{"agent_id":"agent_15d1a9ee16294087","to_number":"+447453573770","prompt":"Call Sam to confirm his appointment on Tuesday at 11."}`))
+req.Header.Set("Authorization", "Bearer "+os.Getenv("NIXFLEX_API_KEY"))
+req.Header.Set("Content-Type", "application/json")
+res, err := http.DefaultClient.Do(req)
+```
+```bash curl
+curl -X POST https://api.nixflex.com/v1/calls \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"agent_id":"agent_15d1a9ee16294087","to_number":"+447453573770","prompt":"Call Sam to confirm his appointment on Tuesday at 11."}'
+```
+</CodeGroup>
+
+## Retries worth copying
+
+The Node SDK's policy is safe to reproduce in any language:
+
+- `429` - retry once after the `Retry-After` header.
+- Network failures - retry once.
+- `5xx` - retry only `GET` and `DELETE`. **Never blind-retry a `POST`** - a call must never be dialled twice.
+
+## Generate a client from the OpenAPI spec
+
+The full specification lives at `https://docs.nixflex.com/api-reference/openapi.json` (OpenAPI 3.1, every path and error shape). Generate a typed client for your language:
+
+```bash
+npx @openapitools/openapi-generator-cli generate \
+  -i https://docs.nixflex.com/api-reference/openapi.json \
+  -g python -o ./nixflex-python
+```
+
+Supported generators include `python`, `go`, `java`, `csharp`, `ruby`, `php`, `kotlin`, `swift` and more. Import the same file into Postman or Insomnia to explore the API interactively.
+
+## Verify webhooks in any language
+
+Webhook payloads are signed. The header is `X-Nixflex-Signature: t=<unix_ts>,v1=<hex>`; the signature is HMAC-SHA256 of `"<timestamp>.<raw_body>"` with your key secret. Reject if the timestamp is older than 300 seconds or the HMAC does not match (compare in constant time). Full detail and a Node example on [Webhooks](/advanced/webhooks).
+
+```python Python
+import hmac, hashlib, time
+
+def verify(raw_body: bytes, header: str, key_secret: str, tolerance=300) -> bool:
+    parts = dict(p.split("=", 1) for p in header.split(","))
+    ts, sig = parts.get("t"), parts.get("v1")
+    if not ts or not sig or abs(time.time() - int(ts)) > tolerance:
+        return False
+    expected = hmac.new(key_secret.encode(), f"{ts}.".encode() + raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, sig)
+```
+
+## From the terminal or an assistant
+
+No code at all: the [CLI](/cli/overview) covers every endpoint from a shell, and the [MCP server](/mcp/overview) lets Claude Desktop, Cursor or VS Code drive your account.
