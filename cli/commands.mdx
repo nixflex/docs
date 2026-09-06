@@ -59,7 +59,7 @@ nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt 
 | Command | Notes |
 |---|---|
 | `campaigns create --agent ID --from +44... --prompt TEXT\|@file --csv people.csv [--name NAME] [--set k=v ...]` | One prompt, many calls. Scheduling fields (`schedule_type`, `scheduled_date`, window) via `--set`. See [Create batch](/api-reference/calls/batch-create). |
-| `campaigns launch <campaign_id>` | Starts dialling. |
+| `campaigns launch <campaign_id>` | Starts a campaign created with `--set schedule_type=schedule`. Campaigns created without that dial immediately. |
 
 CSV columns: `phone` (required, E.164), `prompt_override` (optional - replaces the campaign prompt for that person), and every other column becomes a variable the agent receives for that call.
 
