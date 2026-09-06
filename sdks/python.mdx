@@ -1,0 +1,173 @@
+---
+title: "Python SDK"
+description: "The official Nixflex client for Python 3.9+"
+icon: "python"
+---
+
+The official SDK wraps every Nixflex endpoint - the same 46 methods as the [Node.js SDK](/sdks/node), in `snake_case` - with retries, typed errors and webhook verification built in. Sync and async clients. One dependency: `httpx`.
+
+```bash
+pip install nixflex
+```
+
+## Authenticate
+
+```python
+from nixflex import Nixflex
+
+client = Nixflex(api_key="nxf_xxx:nxfs_xxx")   # both halves, joined by a colon
+```
+
+Options: `base_url` (staging), `timeout` (seconds, default 30), `max_retries` (default 1). Use it as a context manager or call `client.close()`.
+
+## Async
+
+Every method is available on `AsyncNixflex` as an awaitable - same names, same arguments.
+
+```python
+from nixflex import AsyncNixflex
+
+async with AsyncNixflex(api_key="nxf_xxx:nxfs_xxx") as client:
+    agents = await client.agents.list()
+```
+
+## Agents
+
+```python
+agent = client.agents.create(name="Reception", system_prompt=open("prompt.txt").read(), voice_id="Ashley")
+client.agents.list(limit=20)
+client.agents.get(agent["agent_id"])
+client.agents.update(agent["agent_id"], incall_sms_enabled=True, silence_hangup_seconds=12)
+client.agents.delete(agent["agent_id"])
+```
+
+`create` and `update` take any field the API accepts as keyword arguments - see [Create agent](/api-reference/agents/create).
+
+## Calls
+
+```python
+call = client.calls.create(
+    agent_id=agent["agent_id"],
+    to_number="+447453573770",
+    prompt="Call Sam to confirm his appointment on Tuesday at 11.",
+    variables={"name": "Sam"},
+)
+client.calls.list(limit=20)
+client.calls.get(call["call_id"])          # transcript, analysis, bookings, recording_url
+client.calls.delete(call["call_id"])       # record + recording (GDPR)
+```
+
+Voice campaigns: `client.campaigns.create(agent_id=..., from_number=..., prompt=..., recipients=[{"phone": "+44...", "variables": {...}}])` dials immediately unless you pass `schedule_type="schedule"`; `client.campaigns.launch(campaign_id)` starts a scheduled one.
+
+## Phone numbers
+
+```python
+client.phone_numbers.import_(phone_number="+447446466847", agent_id=agent["agent_id"], twilio_account_sid="AC...", twilio_auth_token="...")
+client.phone_numbers.list()
+client.phone_numbers.update("+447446466847", sms_reply_enabled=True, sms_prompt="You are the text assistant for Smile Dental...")
+client.phone_numbers.set_monitor("+447446466847", True)
+client.phone_numbers.set_web_calls("+447446466847", True)
+client.phone_numbers.delete("+447446466847")
+```
+
+`import_` has a trailing underscore because `import` is a Python keyword. Telnyx numbers use `telnyx_api_key` and `telnyx_connection_id`.
+
+## Caller context
+
+What the agent knows about a caller on one of your numbers. First number is yours, second is the caller's. See [Caller context](/concepts/caller-context).
+
+```python
+client.callers.set("+447446466847", "+447700900123", name="Sam Carter", email="sam.carter@example.com", reference_id="4827")
+record = client.callers.get("+447446466847", "+447700900123")
+record["caller"]["context"]        # {"name": ..., "email": ..., "last_call": ..., "open_item": ...}
+
+client.callers.import_("+447446466847", [
+    {"caller_number": "+447700900123", "name": "Sam Carter", "email": "sam.carter@example.com"},
+    {"caller_number": "+447700900124", "name": "Priya Shah", "preference": "prefers afternoon appointments"},
+])                                  # up to 1,000 rows, validated before any write
+client.callers.delete("+447446466847", "+447700900123")
+```
+
+A field you leave out of `set()` is kept; pass `None` to remove it. `last_call` and `open_item` are written by the engine and cannot be set.
+
+## SMS
+
+```python
+client.sms.send(agent_id=agent["agent_id"], from_number="+447446466847", to="+447700900123", message="Reminder: your appointment is tomorrow at 2pm.")
+
+campaign = client.sms.campaigns.create(agent_id=..., from_number="+447446466847", message="Hi {{name}}, ...", recipients=[{"phone": "+447700900123", "variables": {"name": "Sam"}}])
+client.sms.campaigns.launch(campaign["campaign_id"])
+client.sms.campaigns.list(status="completed")
+client.sms.campaigns.get(campaign["campaign_id"])
+client.sms.campaigns.delete(campaign["campaign_id"])
+```
+
+## Webhooks
+
+```python
+client.webhooks.set("+447446466847", "https://api.yourapp.com/nixflex", slot=1)
+client.webhooks.get("+447446466847")
+client.webhooks.delete("+447446466847", slot=2)
+```
+
+Verify a delivery with the **raw** request body:
+
+```python
+from nixflex import verify_webhook_signature
+
+@app.post("/nixflex")
+async def hook(request):
+    raw = await request.body()
+    if not verify_webhook_signature(raw, request.headers.get("X-Nixflex-Signature"), KEY_SECRET):
+        return Response(status_code=401)
+    ...
+```
+
+## Account and bring your own
+
+```python
+client.usage.get()
+client.keys.rotate()                       # the old secret stops working immediately
+
+client.storage.set(**config); client.storage.get(); client.storage.delete()
+client.llm.set(**config);     client.llm.get();     client.llm.delete()
+client.tts.set(**config);     client.tts.get();     client.tts.delete()
+```
+
+`set()` is verified by the API with a real probe before saving; `get()` never returns secrets. Fields on [Your own storage](/advanced/your-own-storage), [Your own LLM](/advanced/your-own-llm), [Your own TTS](/advanced/your-own-tts).
+
+## Errors
+
+Every non-2xx response raises a typed exception. Catch by class:
+
+```python
+from nixflex import NixflexRateLimitError, NixflexNotFoundError, NixflexError
+
+try:
+    client.agents.get("agent_missing")
+except NixflexNotFoundError as e:
+    print(e.code, e.status, e.request_id)   # not_found 404 <id to quote to support>
+except NixflexRateLimitError as e:
+    time.sleep(e.retry_after_seconds)
+except NixflexError as e:
+    print(e.code, e.doc_url)
+```
+
+| Class | When |
+|---|---|
+| `NixflexAuthenticationError` | 401 - bad or missing key |
+| `NixflexPaymentRequiredError` | 402 - balance exhausted |
+| `NixflexNotFoundError` | 404 |
+| `NixflexInvalidRequestError` | 400 / 422 |
+| `NixflexRateLimitError` | 429 - `retry_after_seconds` is set |
+| `NixflexServerError` | 5xx |
+| `NixflexConnectionError` | network failure or timeout (`status == 0`) |
+
+## Retries
+
+Built in and identical to the Node SDK: a 429 is retried once after `Retry-After` (capped at 30 s); network failures retry once; 5xx retries only `GET` and `DELETE`. A `POST` is **never** retried after a 5xx - a call is never dialled twice. Set `max_retries=0` to disable.
+
+## Related
+
+- [Node.js SDK](/sdks/node) · [Other languages](/sdks/other-languages) · [CLI](/cli/overview) · [MCP server](/mcp/overview)
+- [PyPI](https://pypi.org/project/nixflex/) · [GitHub](https://github.com/nixflex/nixflex-python)
