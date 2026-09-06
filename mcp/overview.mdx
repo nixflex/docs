@@ -39,6 +39,10 @@ Claude Desktop: `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Li
 
 If you would rather not store the key, set `NIXFLEX_API_KEY` in the server's `env` block instead - the real value, not `${NIXFLEX_API_KEY}` (desktop apps do not expand variables).
 
+**Other settings.** `NIXFLEX_BASE_URL` in the same `env` block points the server at a staging API. To pin a version instead of taking the latest, use `["-y", "nixflex-mcp@0.2.1"]`. To remove the server, delete the `nixflex` block and restart the app.
+
+Tested with Claude Desktop. Cursor and VS Code use the config formats their own documentation describes; `mcp setup` writes those for you.
+
 ## Try it
 
 - "List my Nixflex agents."
@@ -75,6 +79,7 @@ Every tool is one API call. Names are `snake_case`; results come back as JSON.
 - **Spending tools say so.** `create_call`, `create_campaign`, `send_sms` and `create_sms_campaign` state in their descriptions that they spend credit.
 - **Lists are summaries.** `list_calls` returns one line per call (status, duration, summary, sentiment); `get_call` returns the full transcript for one call.
 - **Your key stays local.** The server reads `~/.nixflex/config.json` or its own `env`; nothing is sent anywhere except `api.nixflex.com`.
+- **The tool list is a contract.** A test in the package starts the real server over stdio and pins all 35 tool names, descriptions and schemas - a tool cannot vanish or change shape without failing the build.
 
 ## What it is not
 
