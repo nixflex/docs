@@ -39,6 +39,23 @@ curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447700900123 \
 
 Agent-level can also be set through the API with `record_call` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update).
 
+## Who records
+
+When recording is on, you choose who captures the audio. The default is your carrier - exactly what happened before this setting existed.
+
+| `recording_source` | Who records | What it covers | Cost |
+|---|---|---|---|
+| `"provider"` (default) | Your phone carrier | The whole call, including after a transfer to a person | Carrier recording charges on your carrier account |
+| `"nixflex"` | The Nixflex voice engine | The conversation with the AI. A transfer to a person is not included | No carrier recording charges |
+
+Set it per agent in the dashboard (**Call recording -> Recorded by**) or with `recording_source` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update). A single number can override its agent with `recording_source` on [Update phone number](/api-reference/phone-numbers/update); `null` on a number means inherit the agent. Any other value is rejected with `invalid_recording_source`.
+
+<Note>
+  Recording off always wins. With `record_call` off nothing is recorded by anyone, whatever `recording_source` says.
+</Note>
+
+Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - with both voices balanced to the same level. If the caller interrupts the agent mid-sentence, the recording contains only what the caller actually heard. Like carrier recordings, they go to your own storage bucket when one is connected.
+
 ## What happens when it is off
 
 - **No audio is captured at all.** Nixflex never asks the carrier to record, so there is no file anywhere - not on your carrier, not with us.
@@ -48,7 +65,7 @@ Agent-level can also be set through the API with `record_call` on [Create agent]
 
 ## Where the audio is stored
 
-When a call ends, Nixflex downloads the file from your carrier, stores it in **EU (Ireland)** storage, and **deletes the carrier's copy**.
+When a call ends, a **carrier** recording is downloaded from your carrier, stored in **EU (Ireland)** storage, and the **carrier's copy is deleted**. A **Nixflex** recording is written straight to that same EU storage - there is never a carrier copy to fetch or delete.
 
 Prefer the audio in your own region? Connect your own S3-compatible bucket and recordings go there instead, with Nixflex keeping no copy - see [Your own storage](/advanced/your-own-storage).
 
@@ -71,13 +88,13 @@ The URL arrives in two places:
 
 ## Audio format
 
-| | Channels |
-|---|---|
-| Inbound calls | Mono - caller and agent mixed into one track |
-| Outbound calls | Dual - caller and agent on separate tracks |
+| Recorded by | Format | Channels |
+|---|---|---|
+| Carrier - inbound | MP3 | Mono - caller and agent mixed into one track |
+| Carrier - outbound | MP3 | Dual - caller and agent on separate tracks |
+| Nixflex | WAV, 8 kHz | Mono - caller and agent mixed, balanced to the same level |
 
-Dual-channel audio is easier to analyse per speaker. This difference is long-standing behaviour and is kept as-is so existing integrations are not changed.
-
+Dual-channel audio is easier to analyse per speaker. The carrier difference between inbound and outbound is long-standing behaviour and is kept as-is so existing integrations are not changed. If your code assumes a file extension, read it from `recording_url` rather than building the name yourself.
 ## Consent
 
 <Warning>
@@ -104,6 +121,7 @@ Dual-channel audio is easier to analyse per speaker. This difference is long-sta
 ## Related
 
 - [Update phone number](/api-reference/phone-numbers/update) - the `record_call` field
+- [Update phone number](/api-reference/phone-numbers/update) - the `recording_source` field
 - [Data retention](/concepts/data-retention) - how long recordings are kept
 - [Webhooks](/advanced/webhooks) - `recording_url` in `call.completed`
 - [Keypad input](/advanced/keypad-input) - the other per-number call setting

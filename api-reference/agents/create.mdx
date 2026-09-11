@@ -57,6 +57,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | `max_call_duration_seconds` | int | No | `600` | Hard cap on call length. Range 60–1800 (1–30 min). See [End call](/actions/end-call). |
 | `silence_hangup_seconds` | int | No | `30` | Hang up if caller silent this long. Range 5–45. See [End call](/actions/end-call). |
 | `record_call` | bool | No | `true` | Save call audio to Supabase Storage. Recordings are deleted after 90 days, and a number can override this. See [Call recording](/advanced/call-recording). |
+| `recording_source` | string | No | `"provider"` | Who records when `record_call` is on. `"provider"` = your carrier records (whole call, carrier recording charges apply). `"nixflex"` = the voice engine records the conversation itself at no extra cost (a transfer to a person is not included). Anything else is rejected with `invalid_recording_source`. See [Call recording](/advanced/call-recording#who-records). |
 | `amd_enabled` | bool | No | `false` | Ask the carrier to detect an answering machine and hang up about 4 seconds in. Costs extra per answered call on your own carrier bill. With it OFF the agent detects voicemail from the first thing it hears and can leave a message, so ON means a fast hangup and NO message. See [Voicemail detection](/advanced/voicemail-detection). |
 | `dtmf_enabled` | bool or null | No | `null` | Let callers type digits on their phone keypad instead of saying them. `null` means not set, and a number can override it. See [Keypad input](/advanced/keypad-input). |
 | `webhook_url` | string | No | `null` | Where to POST post-call data |
@@ -124,6 +125,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
   "max_call_duration_seconds": 300,
   "silence_hangup_seconds": 10,
   "record_call": true,
+  "recording_source": "provider",
   "func_end_call": true,
   "transfer_whisper": null,
   "func_send_sms": false,

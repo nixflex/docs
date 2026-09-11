@@ -54,8 +54,7 @@ A scheduled job runs every day at **3 AM UTC** and deletes records older than 90
 
 ## Audio recordings
 
-**Nixflex holds the recording.** When a call ends, Nixflex downloads the audio from your carrier, stores it in EU (Ireland) storage, and then **deletes the carrier's copy**. The file is removed with the rest of the call record after 90 days.
-
+**Nixflex holds the recording.** Where the file comes from depends on who recorded it - see [Call recording](/advanced/call-recording#who-records). A **carrier** recording is downloaded from your carrier into EU (Ireland) storage and the **carrier's copy is deleted**. A **Nixflex** recording is written straight to that same EU storage, so no copy ever sits with the carrier. Either way the file is removed with the rest of the call record after 90 days.
 <Note>
   This is what both carriers recommend. Twilio charges for recording storage and documents downloading recordings to avoid those charges. Telnyx keeps recordings for up to a year and advises fetching what you need in good time. Holding the file in the EU also keeps recordings inside the EU for GDPR purposes, rather than wherever your carrier account happens to be.
 </Note>
@@ -112,8 +111,7 @@ If one of your end-users asks for their data to be deleted under Article 17:
 You can complete an Article 17 request yourself, in your own code, without contacting us.
 
 <Note>
-  Because Nixflex deletes the carrier's copy of each recording after downloading it, there is normally nothing left to erase on your Twilio or Telnyx account. Check there anyway if you have your own recording configured directly on the carrier, outside Nixflex.
-</Note>
+  There is normally nothing left to erase on your Twilio or Telnyx account: a carrier recording's copy is deleted once Nixflex has downloaded it, and a Nixflex recording never creates a carrier copy at all. Check there anyway if you have your own recording configured directly on the carrier, outside Nixflex.</Note>
 
 For account-level deletion, use **Settings → Delete account** in the dashboard. Your calls, recordings, and messages are purged first, then your login is removed. Billing records are retained as required by tax law.
 

@@ -49,6 +49,7 @@ When you `POST /v1/agents`, you can set:
 | `silence_hangup_seconds` | int | `10` | Hang up if caller silent this long. Range 5–45. |
 | `pickup_delay` | int | `10` | Seconds to wait after pickup before speaking. Range 5–30. |
 | `record_call` | bool | `true` | Record audio to Supabase bucket |
+| `recording_source` | enum | `"provider"` | `provider` (carrier records) or `nixflex` (the voice engine records). Only matters while `record_call` is on. |
 | `webhook_url` | string | null | Where to POST post-call data |
 | `transfer_type` | enum | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls. |
 | `transfer_whisper` | string | null | Warm transfer briefing. If empty, AI auto-generates. |

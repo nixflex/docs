@@ -131,6 +131,12 @@
           "record_call": {
             "type": "boolean"
           },
+          "recording_source": {
+            "type": "string",
+            "enum": ["provider", "nixflex"],
+            "default": "provider",
+            "description": "Who records when record_call is on. provider = your carrier records; nixflex = the voice engine records the conversation itself."
+          },
           "dtmf_enabled": {
             "type": "boolean"
           },
@@ -184,6 +190,12 @@
           },
           "record_call": {
             "type": "boolean"
+          },
+          "recording_source": {
+            "type": "string",
+            "enum": ["provider", "nixflex"],
+            "default": "provider",
+            "description": "Who records when record_call is on. provider = your carrier records; nixflex = the voice engine records the conversation itself."
           },
           "dtmf_enabled": {
             "type": "boolean"
@@ -391,6 +403,12 @@
           "record_call": {
             "type": "boolean",
             "nullable": true
+          },
+          "recording_source": {
+            "type": "string",
+            "enum": ["provider", "nixflex"],
+            "nullable": true,
+            "description": "Who records on this number. null = inherit the agent."
           }
         },
         "additionalProperties": true
@@ -476,6 +494,12 @@
           "record_call": {
             "type": "boolean",
             "nullable": true
+          },
+          "recording_source": {
+            "type": "string",
+            "enum": ["provider", "nixflex"],
+            "nullable": true,
+            "description": "Who records on this number. null = inherit the agent."
           }
         },
         "minProperties": 1

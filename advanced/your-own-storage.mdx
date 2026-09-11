@@ -19,10 +19,10 @@ This is built for data residency. If your customers' rules require call audio to
     In **Settings → Recording storage**, or via the API below. You provide the bucket name, an endpoint URL, and credentials that allow writing objects.
   </Step>
   <Step title="Recordings go to your bucket">
-    After each call, the audio is uploaded to `recordings/<call_id>.mp3` in your bucket (`.wav` for web calls). Nixflex stores only the object path, never the audio.
+    After each call, the audio is uploaded to `recordings/<call_id>` in your bucket - `.mp3` for a carrier recording, `.wav` when Nixflex or a web call recorded it (see [Call recording](/advanced/call-recording#who-records)). Nixflex stores only the object path, never the audio.
   </Step>
   <Step title="The call record points at your bucket">
-    `recording_url` becomes a path like `byo:your-bucket/recordings/<call_id>.mp3`. The dashboard shows where the file lives instead of a player - the audio is in your custody, so Nixflex has nothing to stream.
+    `recording_url` becomes a path like `byo:your-bucket/recordings/<call_id>.mp3`. The dashboard shows where the file lives instead of a player - the audio is in your custody, so Nixflex has nothing to stream. Read the extension from `recording_url` rather than assuming one.
   </Step>
 </Steps>
 
