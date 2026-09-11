@@ -27,6 +27,8 @@ It fills two gaps at once: speech recognition is at its worst on emails and refe
 
 `last_call` and `open_item` are written by the engine only. Sending them through the API returns `engine_only_field`.
 
+`last_call` is stored and returned by the API and your webhook, but it is NOT shown to the agent during a call. Even phrased as intent it read to the agent like something already done - the one thing caller context must never imply.
+
 ## One record per number, per caller
 
 A record belongs to **one of your phone numbers and one caller number**. The same person calling two of your numbers has two separate records.
