@@ -108,6 +108,19 @@ Because that name does not exist. When the engine does not recognise a placehold
 
 Check the spelling against the tables above, and remember names are case-sensitive and need both pairs of braces: `{{current_date}}`, not `{current_date}` or `{{Current_Date}}`.
 
+## Which braces go where
+
+Everything uses double braces except one: the message a caller gets **after** the call.
+
+| You are writing | Syntax | Example |
+|---|---|---|
+| Agent instructions (inbound and outbound) | `{{double}}` | `Remind {{first_name}} about {{appointment_time}}.` |
+| SMS campaign message | `{{double}}` | `Hi {{first_name}}, your check-up is due.` |
+| Custom function fields | `{{double}}` | `{"ref": "{{call_id}}"}` |
+| Post-call SMS template | `{single}` | `Thanks for calling {business_name}.` |
+
+The post-call template is the odd one out because it came first and changing it would break every template already saved. If a placeholder is not being replaced, check the brace count before anything else.
+
 ## When are variables filled in?
 
 | Stage | What happens |
@@ -132,7 +145,7 @@ We are deliberate about this. Every variable is a promise - once it exists, agen
 
 ## Good to know
 
-- An unknown name is left in place rather than deleted, so you can see the mistake.
+- On inbound calls an unknown name is left in place, so you can see the mistake. On outbound calls and in SMS it is replaced with nothing, so a wrong name leaves a gap in the sentence instead.
 - Values are turned into text. `true` and `false` appear as the words "true" and "false".
 - Names must be letters, numbers or underscores - `{{first_name}}` works, `{{first name}}` does not.
 - Both directions get the live-facts block. Only outbound gets your own values.

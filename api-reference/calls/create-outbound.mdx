@@ -21,7 +21,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   -d '{
     "agent_id": "agent_125207e452f8714a",
     "to_number": "+447386172392",
-    "prompt": "You are Sarah from Bright Smile Dental. Call to remind {patient_name} about their appointment on {appointment_time} and confirm they can still attend.",
+    "prompt": "You are Sarah from Bright Smile Dental. Call to remind {{patient_name}} about their appointment on {{appointment_time}} and confirm they can still attend.",
     "dynamic_vars": {
       "patient_name": "Sarah",
       "appointment_time": "Tuesday at 2pm"
@@ -59,10 +59,10 @@ If none of these produce a usable number, you get `agent_missing_phone_number`.
 Anything in `dynamic_vars` is interpolated into the prompt. Reference each value with curly braces:
 
 ```
-You are calling {patient_name} about their appointment on {appointment_time}.
+You are calling {{patient_name}} about their appointment on {{appointment_time}}.
 ```
 
-The engine replaces `{patient_name}` with `"Sarah"` before the agent speaks. If the prompt references a variable that is not in `dynamic_vars`, it is left as-is â€” the agent will see the literal `{patient_name}` text, so double-check your keys match.
+The engine replaces `{{patient_name}}` with `"Sarah"` before the agent speaks. If the prompt references a variable that is not in `dynamic_vars`, it is left as-is â€” the agent will see the literal `{{patient_name}}` text, so double-check your keys match.
 
 ## Response
 
