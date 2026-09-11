@@ -1,134 +1,243 @@
 ---
 title: "Agents"
-description: "The AI personality that answers and makes calls"
+description: "An agent is the AI that answers your phone - your words, your voice, your rules"
 icon: "user"
 ---
 
-An **agent** is the configurable AI personality behind a phone call. One agent owns:
+An **agent** is the AI that answers your phone calls and makes them. You give it a set of instructions written in plain English - who it is, what your business does, what it should never say - and it holds a real conversation with whoever calls.
 
-- A system prompt (what the AI says, how it behaves)
-- A voice ID
-- A language
-- Behaviour settings (response length, interruption sensitivity, silence handling)
-- Action configuration (transfer numbers, SMS templates)
-- An optional webhook URL for post-call data
+You do not build a flow chart and you do not write code for the conversation. You write the instructions; the platform handles the phone call.
 
-One agent can be attached to **many phone numbers**. This is the multi-tenant pattern: one "dental receptionist" agent can serve hundreds of clinics, each with their own phone number.
+## One agent, many phone numbers
 
-## Architecture
+An agent is a template, not a single phone line. The same agent can answer on one number or on a thousand.
 
 ```
-Agent (template/personality)
-  ├── Phone Number A → Clinic 1
-  ├── Phone Number B → Clinic 2
-  └── Phone Number C → Clinic 3
+Agent  "Dental receptionist"
+  |-- +44 20 7946 0001  ->  Meadow Lane Dental
+  |-- +44 161 555 0123  ->  Oakwood Dental
+  |-- +44 117 496 0044  ->  Riverside Dental
 ```
 
-The engine identifies which clinic is calling by the phone number that was dialled, not by which agent. The agent prompt stays the same; the per-customer context comes from the phone number record and any history Nixflex finds.
+The agent does not need to know which clinic is calling. The platform knows from the number that was dialled, and gives that call the right business details, the right calendar and the right caller history.
+
+This is how one customer runs 200 clinics on a single agent. Write the receptionist once, attach it to every number, and each clinic stays independent.
 
 <Warning>
-  **Agent-level settings are shared by every number on the agent.** Fields like `voice_id`, `post_call_sms_template`, and `transfer_number` set on the agent apply to *all* phone numbers using it. If one agent serves many separate businesses, do not rely on agent-level settings for per-business behaviour - they would apply the same voice, SMS, or transfer to every business at once.
+  **Settings on the agent apply to every number using it.** If one agent serves several separate businesses, do not use agent-level settings for per-business behaviour - the same voice, the same transfer number and the same text message would go to all of them at once.
 
-  For per-business behaviour, set values **per phone number** where supported (`voice_id` and `custom_prompt` via [Update phone number](/api-reference/phone-numbers/update), plus per-number [integrations](/integrations/slack)), or handle it yourself from the post-call [webhook](/advanced/webhooks). This keeps each business independent while sharing one agent.
+  Set those per phone number instead. See [what belongs where](#what-belongs-on-the-agent-and-what-belongs-on-the-number).
 </Warning>
 
-## Configurable fields
+## What you control and what is automatic
 
-When you `POST /v1/agents`, you can set:
+You write the business side. The platform handles the phone side.
 
-| Field | Type | Default | Purpose |
-|---|---|---|---|
-| `name` | string | `"Untitled Agent"` | Display name in dashboard |
-| `system_prompt` | string | empty | What the agent should do (see below) |
-| `welcome_message` | string | generic | First thing the agent says on inbound calls |
-| `voice_id` | string | `"Ashley"` | voice |
-| `language` | string | `"en"` | Default language code |
-| `response_length` | enum | `"medium"` | `short`, `medium`, or `long` |
-| `interruption_sensitivity` | enum | `"medium"` | `low`, `medium`, `high` |
-| `max_call_duration_seconds` | int | `300` | Hard cap; engine ends call at this |
-| `silence_hangup_seconds` | int | `10` | Hang up if caller silent this long. Range 5–45. |
-| `pickup_delay` | int | `10` | Seconds to wait after pickup before speaking. Range 5–30. |
-| `record_call` | bool | `true` | Record audio to Supabase bucket |
-| `recording_source` | enum | `"provider"` | `provider` (carrier records) or `nixflex` (the voice engine records). Only matters while `record_call` is on. |
-| `webhook_url` | string | null | Where to POST post-call data |
-| `transfer_type` | enum | `"cold"` | `cold` or `warm`. Applies to inbound, outbound, and batch calls. |
-| `transfer_whisper` | string | null | Warm transfer briefing. If empty, AI auto-generates. |
-| `transfer_number` | string | null | Default destination for `[TRANSFER:]` |
-| `post_call_sms_template` | string | null | If set, sends this SMS after call ends |
-| `llm_model` | string | `"default"` | LLM used during calls |
-| `temperature` | float | `0.7` | Creativity vs predictability |
-| `fallback_message` | string | sensible default | Said when STT confidence is too low |
-
-See the full [Create Agent API reference](/api-reference/agents/create) for request and response details.
-
-## Writing a good system prompt
-
-The agent is the brain. The prompt tells it who it is, what to do, and what not to do.
-
-For a deeper guide - scenarios, style, and inbound vs outbound - see [Writing a good agent prompt](/concepts/agent-prompts).
-
-A solid agent prompt has six sections:
-
-<Steps>
-  <Step title="Role">
-    Who the agent is. "You are the front-desk assistant for Acme Dental in London."
-  </Step>
-  <Step title="Business facts">
-    Concrete facts the agent must know. Opening hours, address, services, prices. Never invent these.
-  </Step>
-  <Step title="Goal">
-    What success looks like. "Book an appointment, answer a question, or transfer to the dentist if it's clinical."
-  </Step>
-  <Step title="Rules">
-    Hard constraints. "Never give medical advice. Never quote prices not in this prompt. If unsure, transfer."
-  </Step>
-  <Step title="Style">
-    How to speak. "Warm British accent. Short sentences. One question at a time. No bullet points (you're on a phone call)."
-  </Step>
-  <Step title="Actions">
-    When to use built-in tags like `[TRANSFER:]`, `[SEND_SMS:]`, `[END_CALL]`. See [Agent actions](/actions/overview).
-  </Step>
-</Steps>
+<Columns cols={2}>
+  <Card title="You write this" icon="pen">
+    Who the agent is and what your business does. Prices, hours, addresses. What to do in each situation. What it must never say. When to transfer, text or end the call.
+  </Card>
+  <Card title="Handled for you" icon="wand-magic-sparkles">
+    Interruptions, silence, the caller switching language, saying numbers and email addresses correctly, ending the call politely, and keeping the call alive if a provider goes down.
+  </Card>
+</Columns>
 
 <Tip>
-  You don't need to teach the agent how to handle interruptions, silence, language switching, or call endings. The engine injects those rules automatically. Just write the business logic.
+  You do not need to write rules about interruptions, silence or languages. Spend your instructions on business logic - what to say, what to ask, what to do.
 </Tip>
 
-## Example prompt
+## What belongs on the agent and what belongs on the number
 
-```
+| Set on the agent | Set on a single phone number |
+|---|---|
+| The instructions (system prompt) | Its own instructions, replacing the agent's |
+| Voice and language | Its own voice and speaking speed |
+| How it responds - length, delay, speaking speed | Keypad input on or off |
+| Call limits - silence, maximum length | Recording on or off, and who records |
+| Recording, keypad input, greeting by name | Its own booking calendar and webhook |
+| Transfer and text settings | Text-message and web-chat instructions |
+| Where post-call data is sent | Its own custom functions |
+
+A setting on the number always wins over the agent. Leave it unset on the number and it follows the agent - that is what "not set" means throughout the API.
+
+## Settings
+
+These are the same settings you see when you open an agent in the dashboard, with the API field name beside each one.
+
+**Voice and language**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| Voice | `voice_id` | Which voice the agent speaks with. See [Voices](/concepts/voices) |
+| Language | `language` | `multi` follows the caller between common languages. Some languages need their own code. See [Languages](/concepts/languages) |
+| AI speaks first | `ai_speaks_first` | The agent greets the caller instead of waiting |
+| Welcome message | `welcome_message` | The exact first line on an inbound call |
+| Dynamic message | `dynamic_greeting` | The agent improvises its greeting instead of reading the fixed one |
+| Timezone | `timezone` | The business timezone used for dates, times and bookings |
+
+**How it responds**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| Response Length | `response_length` | `short`, `medium` or `long` replies |
+| Response Delay | `response_eagerness` | The longest it waits after you stop speaking, `0`-`1000` ms. It usually replies sooner |
+| Keyterms | `boosted_keywords` | Words your callers say that a general speech model mishears - staff names, treatments, places. Comma separated, keep under 50 |
+| LLM Temperature | `temperature` | Consistent versus varied wording. `0.3` is the recommended setting, and `0.7` the practical maximum for a phone agent |
+| Speaking Speed | `speaking_rate` | `1` is normal, `0.5` half speed, `1.5` half again as fast. A number can override this |
+| Didn't-catch-that message | `fallback_message` | What the agent says when it could not make out the words |
+
+**Call handling**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| End on silence | `silence_hangup_seconds` | Hang up after this much silence. 5-45 seconds |
+| Max call duration | `max_call_duration_seconds` | Hard cap on call length. 60-1800 seconds |
+| Phone menu wait | `ivr_timeout_seconds` | On outbound calls, how long to wait at a phone menu for a real person |
+| Wait tag pause | `wait_tag_seconds` | How long to wait when the caller steps away and the agent used `[WAIT]` |
+| Pickup Delay | `pickup_delay` | How long the phone rings before the agent answers. 5-30 seconds |
+
+**Call actions**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| Greet by Name | `greet_by_name` | Greet a recognised returning caller by their name |
+| Keypad Input | `dtmf_enabled` | Let callers type digits instead of saying them. See [Keypad input](/advanced/keypad-input) |
+| Call Transfer | `transfer_type`, `transfer_number`, `transfer_whisper` | Cold hands the caller straight over; warm briefs the person first. See [Transfer](/actions/transfer) |
+| In-Call SMS | `incall_sms_enabled` | Let the agent text the caller during the call, including booking confirmations. See [In-call SMS](/actions/in-call-sms) |
+| Post-Call SMS | `post_call_sms_enabled`, `post_call_sms_template` | Text the caller automatically after the call ends |
+| Leave a Voicemail Message | `voicemail_leave_enabled`, `voicemail_message` | On an outbound call that reaches voicemail, speak this message instead of hanging up silently. See [Voicemail detection](/advanced/voicemail-detection) |
+| Voicemail detection (carrier) | `amd_enabled` | Ask the carrier to detect voicemail and hang up early. Costs extra per answered call and leaves no message |
+
+**Recording and privacy**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| Call Recording | `record_call` | Record the audio and keep it with the transcript |
+| Recorded by | `recording_source` | `provider` - your carrier records. `nixflex` - the voice engine records it, with no carrier recording charges. See [Call recording](/advanced/call-recording#who-records) |
+| Data retention | - | Call data is deleted automatically after 90 days. See [Data retention](/concepts/data-retention) |
+
+**Data out**
+
+| Dashboard | API field | What it does |
+|---|---|---|
+| Post-Call Data Extraction | `data_extraction_fields` | Pull clean fields out of every call - caller name, urgency, anything you define. See [Post-call analysis](/advanced/post-call-analysis) |
+| Webhook | `webhook_url` | Where the call summary, transcript and recording link are sent. See [Webhooks](/advanced/webhooks) |
+
+## Built in, nothing to set up
+
+These work on every call, on every agent, at no extra cost.
+
+| | |
+|---|---|
+| **Interruption handling** | The agent stops the moment the caller genuinely interrupts, listens, then carries on. Nothing to configure |
+| **Speech normalisation** | Spoken details are written properly - "john at gmail dot com" becomes `john@gmail.com`, "oh seven hundred" becomes `0700` |
+| **Backchannel filter** | Short noises like "yeah", "ok" and "mm-hmm" do not cut the agent off. Only a real interruption does |
+| **Model fallback** | If a model becomes unavailable mid-call, the call moves to a backup automatically |
+| **Transcription fallback** | A second speech engine stands by, before the call and during it. If the live one stops returning words, the agent apologises, asks the caller to repeat, and carries on |
+| **Voice fallback** | The backup voice runs on a separate provider, so one outage cannot silence your calls |
+| **Prompt caching** | Repeated parts of your instructions are cached between turns, so replies start sooner. The longer your instructions, the bigger the difference |
+
+## An example agent
+
+A small dental practice. This is the whole agent - instructions plus the settings that suit it.
+
+```text
 ROLE
-You are the front-desk assistant at Acme Dental, a small dental practice in Croydon, London.
+You are the front-desk assistant at Acme Dental, a dental practice in Croydon, London.
 
 BUSINESS FACTS
-- Opening hours: Mon-Fri 9am-6pm, Sat 9am-1pm, closed Sun
+- Opening hours: Mon-Fri 9am-6pm, Sat 9am-1pm, closed Sunday
 - Address: 12 High Street, Croydon CR0 1AB
-- Services: check-ups (£45), cleaning (£60), whitening (£250)
-- Emergency line: transfer to +442087601234
+- Services: check-ups (45 pounds), cleaning (60 pounds), whitening (250 pounds)
 
 GOAL
-Book check-up appointments, answer pricing questions, transfer clinical questions to the dentist.
+Book check-up appointments, answer pricing questions, and transfer clinical
+questions to the dentist.
 
 RULES
 - Never give medical or dental advice. Transfer clinical questions.
-- Quote only prices listed above. Say "let me check" if asked anything else.
-- If caller sounds urgent or in pain, transfer immediately: [TRANSFER:+442087601234]
-- Confirm the booking details back to the caller before ending.
+- Quote only the prices listed above. For anything else, take a message.
+- If the caller sounds urgent or in pain, transfer immediately.
+- Confirm the booking details back to the caller before ending the call.
 
 STYLE
-Friendly, professional, brief. Speak naturally — you're on a phone call.
+Friendly, professional, brief. You are on a phone call, so speak naturally
+and ask one question at a time.
 
 ACTIONS
 - To transfer: [TRANSFER:+442087601234]
-- To end the call after a booking: [END_CALL]
-- To text booking confirmation: [SEND_SMS: Your appointment with Acme Dental is confirmed for {date} at {time}.]
+- To end after a booking: [END_CALL]
+- To text a confirmation: [SEND_SMS: Your appointment at Acme Dental is
+  confirmed for {date} at {time}.]
 ```
 
-## Listing and updating
+Settings that suit a practice like this: **Response Length** short, **End on silence** 10 seconds, **Keypad Input** off, **Keyterms** `Dr Patel, hygienist, root canal, Invisalign`, **In-Call SMS** on so the booking confirmation is texted.
 
-- `GET /v1/agents` — list all your agents
-- `GET /v1/agents/:id` — fetch one
-- `PUT /v1/agents/:id` — update any field
-- `DELETE /v1/agents/:id` — remove (calls in progress finish first)
+For how to write the instructions themselves - scenarios, tone, inbound versus outbound - see [Writing a good agent prompt](/best-practices/prompting-guide) and [Controlling the conversation](/concepts/conversation-control).
 
-See the [API reference](/api-reference/agents/list) for full schemas.
+## Can one agent serve different businesses?
+
+Yes, and that is the normal way to use it. Attach the agent to each business's phone number. Each number carries its own business details, calendar, webhook and caller history, so the businesses stay separate while sharing one set of instructions. Keep per-business values on the number, never on the agent.
+
+## Can a single phone number behave differently from the rest?
+
+Yes. A number can have its own instructions, voice, speaking speed, recording setting, keypad setting, calendar and webhook. Anything set on the number wins over the agent; anything left unset follows the agent. See [Phone numbers](/concepts/phone-numbers).
+
+## Do I have to tell the agent how to handle interruptions?
+
+No. Interruptions, silence, language switching and ending the call are handled by the platform on every call. Your instructions should cover the business side only.
+
+## What happens if the caller goes quiet?
+
+The agent asks whether they are still there, and if there is still no answer it says goodbye and hangs up. You choose how long that takes with **End on silence**, between 5 and 45 seconds.
+
+## Can I change the voice for one phone number?
+
+Yes - set `voice_id` on the number and it overrides the agent's voice for calls to that number only.
+
+## What happens to an agent's live calls when I change a setting?
+
+Calls already in progress finish on the settings they started with. The change applies to the next call.
+
+## Settings available through the API only
+
+These are not in the dashboard. Most agents never need them.
+
+| Field | What it does |
+|---|---|
+| `stt_confidence` | How sure the speech engine must be before the agent acts on what it heard |
+| `stt_max_silence_ms` | How long a pause may be before the agent treats a sentence as finished |
+| `interruption_sensitivity` | Fine-tunes how easily the caller can interrupt. The dashboard leaves this built in, and the default suits nearly every agent |
+
+## Fields that are accepted but do nothing
+
+Kept so that existing integrations do not break. Sending them changes nothing.
+
+| Field | Use instead |
+|---|---|
+| `voice_speed` | `speaking_rate` |
+| `func_send_sms` | `incall_sms_enabled` |
+| `func_cold_transfer` | Your instructions and `transfer_number` |
+| `phone_number` | The [phone numbers API](/api-reference/phone-numbers/import) |
+
+## Managing agents
+
+| | |
+|---|---|
+| `GET /v1/agents` | [List your agents](/api-reference/agents/list) |
+| `GET /v1/agents/:id` | [Fetch one](/api-reference/agents/get) |
+| `POST /v1/agents` | [Create](/api-reference/agents/create) |
+| `PUT /v1/agents/:id` | [Update](/api-reference/agents/update) - send only the fields you are changing |
+| `DELETE /v1/agents/:id` | [Delete](/api-reference/agents/delete) - calls in progress finish first |
+
+<Note>
+  `GET` returns the main agent fields rather than every column. If a setting you saved is missing from the response, it was still saved - send it again with `PUT` to change it.
+</Note>
+
+## Related
+
+- [Phone numbers](/concepts/phone-numbers) - attaching numbers and per-number settings
+- [Controlling the conversation](/concepts/conversation-control) - writing scenario rules
+- [Writing a good agent prompt](/best-practices/prompting-guide) - the instructions in depth
+- [Agent actions](/actions/overview) - transfer, text, end call, wait
+- [Create agent](/api-reference/agents/create) - every field, with types and defaults
