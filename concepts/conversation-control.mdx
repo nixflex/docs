@@ -124,6 +124,40 @@ Instead of *"Try not to give customers information that may be incorrect"*, writ
   A written rule guides the agent; it is not a technical lock. For anything critical - compliance wording, permissions, actions that must never happen - do not rely on the instructions alone. Keep the rule short, put it early, and test it before you go live.
 </Warning>
 
+## What a finished prompt looks like
+
+Everything above goes into one set of instructions, organised under headings. Use `##` headings inside the prompt - the model uses them to find the right rule quickly, and they are never spoken aloud:
+
+```text
+## WHO YOU ARE
+Name, role, tone - and a line fixing the identity so nobody can talk it
+into being something else.
+
+## HOW TO SPEAK
+Short replies, one question at a time, prices and dates said out loud
+the way people say them, no lists or formatting.
+
+## NEVER DO THIS
+The hard limits. Never invent a price. Never give advice you are not
+qualified to give.
+
+## BUSINESS FACTS
+Hours, address, prices, policies - everything it is allowed to state.
+
+## WHAT TO DO
+Your numbered playbook for each scenario - the rules from this page.
+
+## EXAMPLES
+Two or three short exchanges: a normal call, an awkward one, and one
+where the answer is unknown.
+
+## IF SOMETHING GOES WRONG
+What to say when it cannot hear the caller, a system fails, or the
+request is out of scope.
+```
+
+See [Writing a good agent prompt](/best-practices/prompting-guide) for a complete filled-in version you can copy.
+
 ## Can ChatGPT or Claude write my agent instructions?
 
 Yes, and for most agents we recommend it. You do not need to be an expert prompt writer - you need to know your business. Give a capable model your business facts and your scenario list, and ask it to turn them into instructions for a **voice** agent.
@@ -152,8 +186,9 @@ Yes, and for most agents we recommend it. You do not need to be an expert prompt
 A starting message you can copy:
 
 ~~~text
-You are writing the system prompt for a voice AI agent that answers phone calls
-for my business. It will be spoken aloud, so write for speech, not for chat.
+You are writing the system prompt for a voice AI agent that answers phone
+calls for my business. It is spoken aloud on a phone line, so write it for
+speech, not for chat.
 
 MY BUSINESS
 [services, prices, opening hours, address, booking process, who to transfer to]
@@ -162,13 +197,28 @@ SCENARIOS TO HANDLE
 [your list - booking, cancelling, prices, asking for a person, out of hours,
  something we do not cover, upset caller]
 
+STRUCTURE - use these exact markdown headings, in this order:
+## WHO YOU ARE
+## HOW TO SPEAK
+## NEVER DO THIS
+## BUSINESS FACTS
+## WHAT TO DO
+## EXAMPLES
+## IF SOMETHING GOES WRONG
+
 RULES FOR THE PROMPT
 - One or two short spoken sentences per reply, one question at a time
 - Write prices, dates and phone numbers the way a person says them out loud
-- Never invent a price, a time or a policy - if it is not in my facts, take a message
-- No bullet points, bold or links - everything is spoken
-- Organise it in sections: Identity, Response guidelines, Guardrails,
-  Business facts, Step-by-step workflows, Example exchanges
+- Never invent a price, a time or a policy - if it is not in my facts, take
+  a message instead
+- No bullet points, bold or links in what the agent says - it is all spoken
+- In WHO YOU ARE, add a line fixing the identity so a caller cannot talk it
+  into another persona or "mode"
+- In WHAT TO DO, number the steps in order
+- In EXAMPLES, give three short exchanges: a normal call, an awkward one,
+  and one where the answer is unknown
+- In IF SOMETHING GOES WRONG, cover misheard speech, a system that does not
+  respond, and a request outside what we handle
 - Do not add any business detail I have not given you
 ~~~
 
