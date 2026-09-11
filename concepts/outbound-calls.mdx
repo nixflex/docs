@@ -42,7 +42,7 @@ The response includes a `call_id` immediately. The actual call happens asynchron
     Using the agent's assigned phone number as caller ID. Standard PSTN call.
   </Step>
   <Step title="Voicemail detection runs">
-    The AI reads the first thing it hears. If the call hits an answering machine, the agent leaves a short message built from your prompt and ends the call - no money wasted holding a conversation with voicemail.
+    The AI reads the first thing it hears. If the call reached an answering machine it ends the call rather than talking to a recording. Switch on **Leave a Voicemail Message** on the agent and it speaks your message first instead of hanging up silently. See [Voicemail detection](/advanced/voicemail-detection).
   </Step>
   <Step title="Human picks up">
     The agent waits a beat, then speaks. For outbound calls, the agent typically introduces itself before stating the reason.
@@ -52,19 +52,30 @@ The response includes a `call_id` immediately. The actual call happens asynchron
   </Step>
 </Steps>
 
-## History-aware outbound
+## The agent already knows the person it is calling
 
-This is one of Nixflex's biggest differences from Retell and Vapi.
+This is one of the bigger differences from other platforms.
 
-When you trigger an outbound call, Nixflex auto-fetches the past call history for the `to_number` and injects summaries into the agent's prompt. The agent already knows who it's calling.
+Before the call connects, Nixflex looks up what is on file for that number on **this** business number, and puts it into the agent's instructions. No CSV wiring, no placeholders.
 
-**Without history-aware outbound** (other platforms):
-> You upload a CSV with `name`, `appointment_time`, and 12 other variables. You wire each one into your prompt as `{name}` and `{appointment_time}`. If any variable is missing, the prompt breaks.
+What the agent is given:
 
-**With history-aware outbound** (Nixflex):
-> You upload phone numbers and a single prompt: *"Remind the caller about their appointment tomorrow."* The agent reads the past call summary for that number and already knows Sarah booked Tuesday at 2pm.
+| Detail | Where it comes from |
+|---|---|
+| Name, email, phone, location, reference, preference | You, through the API, an import or the dashboard - or learned when the caller stated it on an earlier call |
+| Open item | Anything still outstanding for that caller after a previous call |
 
-You don't need to wire variables. The agent has memory.
+**Without it** (other platforms):
+> You upload a CSV with `name`, `appointment_time`, and 12 other columns, then wire each one into your prompt. Miss a column and the prompt breaks.
+
+**With it** (Nixflex):
+> You upload phone numbers and one instruction: *"Remind the caller about their appointment tomorrow."* The agent already has Sarah's name, email and reference, and confirms them with her before doing anything.
+
+<Warning>
+  **Past outcomes are never injected - by design.** The agent is told what is on file about the person, never what happened on a previous call. Feeding a past booking into a call once made an agent confirm an appointment it had not made. The agent confirms details with the caller and checks the calendar itself before it states anything.
+</Warning>
+
+Details are scoped to the business number that is calling, so one customer's records can never surface on another customer's number. You can also send details live for a single call from your own system with the [pre-call gate](/advanced/precall-gate) - those win for that call and are never stored. See [Caller context](/concepts/caller-context).
 
 ## Batch campaigns
 
