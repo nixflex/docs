@@ -1,107 +1,146 @@
 ---
 title: "Variables"
-description: "Dynamic placeholders that inject real-time data into your agent prompts"
+description: "Put the date, the caller's number or your own data straight into what the agent says"
 icon: "code"
 ---
 
-Variables are placeholders like `{{current_date}}` that the engine replaces with real values **once per call**, before sending the prompt to the agent. They let your agent reference dynamic information (date, time, caller, history) without you hardcoding anything.
+A variable is a placeholder you write in your instructions, like `{{current_date}}`, that the engine swaps for a real value at the start of every call. It lets one set of instructions say something different on every call - today's date, the number that dialled, the customer's name from your campaign.
 
 <Note>
-  Variables are substituted **once at call start**, not per word. They add no latency to the call.
+  **Most agents never need them.** The engine already tells the agent the date, time, day of the week, timezone and who is calling, before the first word. Use a placeholder only when you want the exact wording under your control.
 </Note>
 
-## How it works
+## Do I need variables at all?
 
-Two things happen when an inbound call begins:
+Probably not for the basics. At the start of every call the engine adds a short block of live facts to your instructions - the date, tomorrow's date, the next seven days, the time, the timezone, the caller's number, your number and the call direction. The agent reads it automatically. Nothing to set up, nothing to write.
 
-1. **The engine builds a "call context" block** with real-time data (date, time, caller phone, timezone, etc.) and prepends it to your system prompt. The agent sees this context automatically — no setup needed.
-2. **If your prompt contains `{{variable}}` placeholders**, the engine substitutes them with values from the same data source. This is optional — useful when you want to phrase something explicitly.
+Write a placeholder when the phrasing matters:
 
 ```text
-Your prompt:    "Today is {{current_date}}. We close at 11pm."
-The agent sees:    "Today is Monday, May 25, 2026. We close at 11pm."
+Your instructions:   "Today is {{current_date}}. We close at 11pm."
+The agent sees:      "Today is Monday, May 25, 2026. We close at 11pm."
 ```
 
-Both approaches work. Use placeholders only if explicit phrasing reads better than letting the agent infer from the context block.
+Both work. The block is enough for "what day is it on Thursday?"; the placeholder is better when you want the agent to say a specific sentence.
 
-## Available variables
+## Every variable
 
-### Time & caller (always on)
+Write the name in double curly braces, exactly as shown. Names are case-sensitive - `{{Current_date}}` will not match.
 
-These are computed every call from the engine clock + your agent's timezone setting. Zero added latency.
+**Date and time**
 
-| Variable | Example value | Source |
+| Variable | Example value | Use it when |
 |---|---|---|
-| `{{current_date}}` | `Monday, May 25, 2026` | Server clock formatted to agent timezone |
-| `{{current_time}}` | `14:32` | 24-hour, agent timezone |
-| `{{current_day_of_week}}` | `Monday` | Agent timezone |
-| `{{tomorrow_date}}` | `Tuesday, May 26, 2026` | Agent timezone |
-| `{{caller_phone}}` | `+447446466847` | The caller's number, as reported by your carrier |
+| `{{current_date}}` | Monday, May 25, 2026 | You want today's date spoken in full |
+| `{{current_time}}` | 14:32 | Opening-hours logic, "we close in an hour" |
+| `{{current_day_of_week}}` | Monday | "We are closed on Sundays" style rules |
+| `{{tomorrow_date}}` | Tuesday, May 26, 2026 | Offering tomorrow without the agent working it out |
+| `{{upcoming_days}}` | Next 7 days: Monday 14 September (2026-09-14), ... | Already included automatically. Use it only if you move it somewhere specific in your instructions |
+| `{{current_timezone}}` | Europe/London | Confirming the timezone to a caller in another country |
+| `{{current_iso_date}}` | 2026-05-25 | Passing a date to your own system in `YYYY-MM-DD` |
+| `{{current_iso_time}}` | 14:32:07 | Timestamps for your own records |
+| `{{tomorrow_iso_date}}` | 2026-05-26 | Same, for tomorrow |
 
-<Tip>
-  Timezones honour DST automatically. Set your agent's timezone in the dashboard toolbar or via `PUT /v1/agents/:id { "timezone": "Europe/London" }`.
-</Tip>
+All of these follow the agent's **timezone** setting, and daylight saving is handled for you.
 
-### Smart context (active by default)
+**This call**
 
-| Variable | What it does |
-|---|---|
-| `{{caller_history}}` | A returning caller's name, and in one short line what they wanted last time (no summaries, outcomes or booking details) |
+| Variable | Example value | Use it when |
+|---|---|---|
+| `{{caller_phone}}` | +447446466847 | Texting the caller, or passing their number to your system. On outbound this is the number being called |
+| `{{business_phone}}` | +442087601234 | Your number - the one that was dialled, or that you called from |
+| `{{call_direction}}` | inbound | One set of instructions used for both directions |
+| `{{call_id}}` | CA1b5c... | Giving the caller a reference, or matching the call in your own records |
+| `{{agent_id}}` | agent_125207e452f8714a | Rarely needed - the agent's own ID |
 
-When a number that has called before dials your agent again, the engine looks up the caller's most recent call **that captured a name** - in parallel with the agent load, so it adds zero latency. If a name is on file, the engine passes a short hint to the agent, and places it in the greeting instruction itself so a scripted opening line cannot override it:
+**The caller**
+
+| Variable | What it holds | Use it when |
+|---|---|---|
+| `{{caller_history}}` | A returning caller's name and one line on what they wanted last time | You want to control exactly how a returning caller is greeted |
+
+## How does the agent know who is calling?
+
+When a number that has called before dials again, the engine looks up the most recent call that captured a name and passes a short note to the agent:
 
 ```text
 PREVIOUS CALL FROM THIS NUMBER
 Name: John. Last time they called about: wanted to book a check-up.
-Greet them by name. If the caller asks about their last call, you MAY tell them what
-they wanted - the line above is accurate. What you do NOT know is what happened next:
-never state or imply that anything was agreed, booked, changed or resolved.
 ```
 
-That's the whole block - **a name and one line of intent.** No summaries, outcomes, dates, bookings or sentiment are ever injected into a live call. This is deliberate: injecting past booking details once caused agents to confirm bookings they had never made. The reason line records only what the caller **wanted** ("wanted to book a check-up"), never what happened, so it carries no such risk.
+That is the whole thing - a name and what they wanted. Never what happened: no bookings, outcomes, dates or summaries are ever put into a live call. That is deliberate. When booking details were injected, agents confirmed bookings they had never made.
 
-The name and the reason both come from the most recent previous call where a name was captured, so they always describe the same visit, and a quick call that captured no name will not erase a known name. Both are extracted automatically on every call - there is nothing to configure. If the caller gives a new name, that becomes the name on file going forward. First-time callers (no name on file) get nothing extra - no clutter.
+The name is picked up automatically from the conversation; there is nothing to configure. A first-time caller adds nothing to the prompt. Turning off **Greet by name** stops the agent opening with the name, but the note itself is still available to the agent. See [Caller context](/concepts/caller-context).
 
-## When variables fire
+## Can I pass my own data into a call?
+
+Yes, on outbound calls.
+
+**One call** - send `dynamic_vars` with the call:
+
+```bash
+curl -X POST https://api.nixflex.com/v1/calls \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_125207e452f8714a",
+    "to_number": "+447446466847",
+    "dynamic_vars": {
+      "first_name": "Jane",
+      "appointment_time": "Tuesday at 3pm"
+    }
+  }'
+```
+
+Then write `{{first_name}}` and `{{appointment_time}}` in your instructions.
+
+**A campaign** - every column in your recipient list becomes a variable with the column's name, automatically. You do not have to write placeholders at all: the agent is handed each recipient's details as context for that call. Write naturally ("remind them about their appointment") and the agent has the values. See [Outbound calls](/concepts/outbound-calls).
+
+<Warning>
+  **Reserved names.** The variable names in the tables above belong to the engine. If your campaign file has a column called `current_date` or `caller_phone`, the engine's value wins and yours is ignored. Give your columns their own names - `appointment_date`, `customer_phone`.
+</Warning>
+
+Inbound calls do not take your own values yet - an inbound caller is a stranger until they say who they are, and the engine already supplies everything known about the call.
+
+## Why is {{something}} being said out loud on my calls?
+
+Because that name does not exist. When the engine does not recognise a placeholder it leaves the text exactly as written, so it ends up in what the agent reads - and the agent may say it. This is deliberate: a visible mistake is easier to find than a silently deleted one.
+
+Check the spelling against the tables above, and remember names are case-sensitive and need both pairs of braces: `{{current_date}}`, not `{current_date}` or `{{Current_Date}}`.
+
+## When are variables filled in?
 
 | Stage | What happens |
 |---|---|
-| Call starts | Engine loads agent + caller history in parallel |
-| Before greeting | Engine builds final prompt with values substituted and context block prepended |
-| Greeting plays | The agent responds using the merged prompt for the entire call |
-| Call ends | Prompt and context are discarded |
+| Call starts | The engine loads the agent, the live facts and any caller history, all at the same time |
+| Before the greeting | Placeholders are replaced and the live-facts block is added |
+| During the call | Values stay as they were. They are not recalculated per reply |
+| Call ends | Everything is discarded |
 
-Variables are **read-once**. Their values don't change during the call. If your business hours rotate by minute, don't put them in a variable — put them directly in the prompt.
+Values are read once, so there is no added delay on the call. If something changes minute by minute, do not put it in a variable - put it in your instructions, or fetch it during the call with a [custom function](/advanced/custom-functions).
 
-## What's NOT supported (and why)
+## What we do not have, and why
 
-We're deliberate about what to add. Each variable is a contract — once shipped, agents depend on it.
+We are deliberate about this. Every variable is a promise - once it exists, agents depend on it.
 
-| Often-requested | Why we don't have it |
+| Often asked for | Why not |
 |---|---|
-| `{{agent_name}}` | You already type the agent's name in your own prompt. A variable just adds indirection. |
-| `{{business_hours}}` | Hours rarely match a single string. Put them in your prompt directly so the agent can reason about edge cases ("closed for lunch", "open on bank holidays"). |
-| `{{caller_name}}` for inbound | Inbound callers are strangers until they identify themselves. Once they have given their name on a previous call, `{{caller_history}}` greets them by name. |
-| Arbitrary developer-supplied vars per call | Coming later — requires API and webhook changes. |
+| `{{agent_name}}` | You already write the agent's name in your own instructions. A variable just adds a step |
+| `{{business_hours}}` | Hours rarely fit one line. Put them in your instructions so the agent can handle "closed for lunch" and bank holidays |
+| `{{caller_name}}` on inbound | An inbound caller is a stranger until they say who they are. Once they have given a name on a previous call, `{{caller_history}}` has it |
+| Your own values on inbound | Coming later. Available on outbound today with `dynamic_vars` |
 
-## Direction support
+## Good to know
 
-- **Inbound calls**: full support ✓
-- **Outbound calls**: the engine injects the same real-time context block (date, time, day of week, timezone, the number being called, business number, call direction, and more) at the top of the prompt automatically. For **batch campaigns**, every column from your recipient CSV is also injected as context for that call, so you can write a natural prompt and the agent receives each recipient's details without needing placeholders. See [Outbound calls](/concepts/outbound-calls).
+- An unknown name is left in place rather than deleted, so you can see the mistake.
+- Values are turned into text. `true` and `false` appear as the words "true" and "false".
+- Names must be letters, numbers or underscores - `{{first_name}}` works, `{{first name}}` does not.
+- Both directions get the live-facts block. Only outbound gets your own values.
 
-<Tip>
-On outbound campaigns you do not need to add placeholders for your CSV columns - the engine passes every column to the agent as context automatically.
-</Tip>
+## Related
 
-## Behaviour reference
-
-- If a `{{var}}` has no matching value, the engine leaves it untouched (visible in the prompt as `{{var}}`). Easier to debug than silent removal.
-- Unknown variable names are not errors — they're just passed through.
-- Values are converted to strings. Booleans show as `"true"`/`"false"`.
-- Variables are case-sensitive. `{{Current_date}}` won't match `current_date`.
-
-## See also
-
-- [Agents](/concepts/agents) — writing the system prompt
-- [Inbound calls](/concepts/inbound-calls) — how a call flows through the engine
-- [Post-call analysis](/advanced/post-call-analysis) — how `caller_history` gets its data
+- [Agents](/concepts/agents) - where the timezone and other settings live
+- [Caller context](/concepts/caller-context) - what the engine remembers about a returning caller
+- [Outbound calls](/concepts/outbound-calls) - campaigns and recipient columns
+- [Custom functions](/advanced/custom-functions) - fetch live data during the call instead
+- [Writing a good agent prompt](/best-practices/prompting-guide) - where variables fit in your instructions
