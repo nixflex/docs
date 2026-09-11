@@ -1,80 +1,103 @@
 ---
 title: "Inbound calls"
-description: "How calls reach your agent"
+description: "What happens when someone calls your number, from the first ring to the call record"
 icon: "phone-arrow-down-left"
 ---
 
-An inbound call is a call placed **to** one of your imported numbers. The flow is automatic — once a number is imported, the agent answers.
+An inbound call is a call **to** one of your numbers. Once a number is imported and attached to an agent, every call to it is answered automatically. There is nothing to switch on per call.
 
 ## What happens on an inbound call
 
 <Steps>
-  <Step title="Caller dials your number">
-    A real person picks up the phone and dials.
+  <Step title="The phone rings">
+    The caller hears normal ringing for the agent's **Pickup delay** (5 to 30 seconds) before anything answers. A short ring feels like a real reception desk; an instant pickup can feel automated.
   </Step>
-  <Step title="Your carrier routes the call to Nixflex">
-    Because the number's voice webhook points at our engine, your carrier opens a WebSocket and starts streaming audio. This works the same on Twilio and Telnyx.
+  <Step title="Your system can say yes or no">
+    Optional. With the [pre-call gate](/advanced/precall-gate) on, Nixflex asks your server first. Reply **accept** and the call connects; reply **reject** and the caller hears a busy tone, the call is never answered, and nothing is charged. You can also hand over what you know about the caller in the same reply.
   </Step>
-  <Step title="Engine looks up the agent">
-    The phone number record tells the engine which agent owns this call.
+  <Step title="The number decides how the agent behaves">
+    The dialled number tells the engine which agent answers, and which per-number settings apply - business profile, voice, calendar, webhook, recording. One agent can answer as many different businesses this way. See [Phone numbers](/concepts/phone-numbers).
   </Step>
-  <Step title="Agent says welcome message">
-    The agent's `welcome_message` is spoken first.
+  <Step title="The agent knows who is calling">
+    What is on file for this caller on this number is loaded before the first word - their name, email, reference and so on - so the agent uses it instead of asking again. See [Caller context](/concepts/caller-context).
   </Step>
-  <Step title="Conversation runs">
-    STT transcribes the caller, the LLM reasons, TTS speaks the reply. Interruptions, silence, and language changes are handled automatically.
+  <Step title="The greeting">
+    With **AI speaks first** on, the agent opens with your welcome message, or improvises one when **Dynamic message** is on, and greets a known caller by name when **Greet by name** is on. With **AI speaks first** off, the agent does not open the call - the caller speaks first.
   </Step>
-  <Step title="Call ends">
-    Either the caller hangs up, the agent says `[END_CALL]`, the silence timeout fires, or `max_call_duration_seconds` is hit.
+  <Step title="The conversation">
+    The caller's speech is turned into text, the agent decides what to say, and a natural voice speaks it. Interruptions, silence, and the caller switching language are handled for you. Mid-call the agent can [transfer to a person](/actions/transfer), [text the caller](/actions/in-call-sms), take [keypad input](/advanced/keypad-input), book into a calendar, or call your own systems through [custom functions](/advanced/custom-functions).
   </Step>
-  <Step title="Post-call processing">
-    Recording is saved to Supabase storage. Post-call analysis runs (summary, sentiment, custom data extraction). Webhook fires if configured.
+  <Step title="The call ends">
+    The caller hangs up, or the agent ends it with `[END_CALL]`, or the silence limit is reached, or the maximum call length is hit. Fifteen seconds before the maximum, the agent is told to wrap up.
+  </Step>
+  <Step title="After the call">
+    The recording is saved - by your carrier or by the voice engine, depending on your [recording setting](/advanced/call-recording#who-records), and into your own bucket if you have [connected one](/advanced/your-own-storage). The transcript, summary, sentiment and any fields you defined are produced. Your [webhook](/advanced/webhooks) fires. Anything the caller stated about themselves is remembered for next time.
   </Step>
 </Steps>
 
-## Behaviour you get out of the box
+## Handled automatically
 
-You don't have to configure any of this — the engine handles it:
+None of this needs configuring:
 
-- **Barge-in / interruption** — caller can speak over the agent and the agent will stop
-- **Silence handling** — if the caller goes quiet, the agent gently prompts after a few seconds
-- **Language auto-detection** — backchannels and filler words match the caller's language
-- **Voicemail detection** — if the call somehow lands on a voicemail, the engine hangs up cleanly (rare on inbound, but possible)
-- **Call recording** — stored on Nixflex; the copy on your carrier is deleted once Nixflex has it
-- **Post-call analysis** — every call gets a summary and sentiment automatically
+- **Interruptions** - the caller can speak over the agent and it stops and listens
+- **Silence** - if the caller goes quiet the agent asks whether they are still there, then says goodbye and hangs up if there is no reply
+- **Language** - with the agent in `multi` mode it follows the caller between languages
+- **Spoken details** - emails, phone numbers and times are written out properly in the transcript
+- **Reliability** - if a model or speech engine has a problem mid-call, a backup takes over without dropping the call
+- **Analysis** - every call gets a summary, sentiment and a success flag
 
-## History-aware behaviour
+## The agent knows who is calling
 
-When an inbound call arrives, Nixflex looks up the caller's number in your past calls. If there are previous conversations, summaries are injected into the agent's prompt as background context.
+When a number that has called before calls again, the agent is given what is on file for that caller: name, email, phone, location, a reference, a stated preference, and anything still open from a previous call. It confirms details before acting on them and never asks for something it already has.
 
-The agent can naturally reference past interactions without you wiring up any database lookups:
+What it is **not** given is what happened last time - bookings, outcomes, summaries. That is deliberate: feeding a past booking into a live call once made an agent confirm an appointment it had not made. The agent checks the calendar itself.
 
-> *Caller:* "Hi, it's Sarah."
-> *Agent:* "Hi Sarah, welcome back. Last time you booked a check-up — were you calling to follow up on that, or is this something new?"
+Details are kept per business number, so a caller known to one business is a stranger to the next, even on the same agent.
 
-This works because the engine fetched Sarah's call history before the agent generated the first response.
+## Can one number behave differently from the rest?
+
+Yes. Each number can carry its own business profile (name, hours, prices), voice, speaking speed, recording setting, calendar and webhook. Leave a setting empty and the number follows the agent. This is how a single agent answers for hundreds of separate businesses. See [Phone numbers](/concepts/phone-numbers).
+
+## Can I make the agent wait before it answers?
+
+Yes - **Pickup delay** on the agent, from 5 to 30 seconds. The caller hears ordinary ringing for that long. Most businesses use 5 to 10 seconds.
+
+## What happens if the caller says nothing?
+
+After the silence limit you set (5 to 45 seconds), the agent asks if they are still there. If there is still no answer it says goodbye politely and ends the call. You are billed for the time the call was connected.
+
+## Can I stop certain callers getting through?
+
+Yes, with the [pre-call gate](/advanced/precall-gate). Nixflex asks your server before answering; reply reject and the caller hears a busy tone. A rejected call is never answered and is not charged. Common uses: an end-customer who is out of credit, a blocked number, out-of-hours handling.
+
+## What happens when more calls arrive than my plan allows?
+
+Each API key has a limit on calls running at the same time (10 by default). When a new call would go over it, the caller hears a busy tone - the call is never answered and nothing is charged. They can call back a moment later. Raise the limit on your account if you expect bursts.
 
 ## Reading the call back
 
-After the call:
-
 ```bash
-# List recent calls
+# Recent calls
 curl https://api.nixflex.com/v1/calls \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 
-# Fetch one call with full transcript + recording URL
+# One call - transcript, recording link, analysis
 curl https://api.nixflex.com/v1/calls/CA1234567890 \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-The call object includes:
+The call record holds the full transcript, the recording link, the summary, sentiment, whether the call succeeded, and any custom fields from [post-call analysis](/advanced/post-call-analysis). Call data is kept for 90 days and then deleted - see [Data retention](/concepts/data-retention). Recordings in your own bucket stay under your control.
 
-- `transcript` — full conversation, both sides
-- `recording_url` — permanent link to the audio file hosted on Nixflex
-- `call_summary` — AI-written summary
-- `caller_sentiment` — `happy`, `neutral`, or `frustrated`
-- `call_successful` — boolean (did the agent achieve the goal)
-- `extracted_data` — any custom fields you defined in post-call analysis
+<Note>
+  The same information arrives on your webhook as soon as the call ends, so you rarely need to poll. See [Webhooks](/advanced/webhooks).
+</Note>
 
-See [Get call](/api-reference/calls/get) for the full schema.
+See [Get call](/api-reference/calls/get) for every field.
+
+## Related
+
+- [Outbound calls](/concepts/outbound-calls) - when the agent calls someone
+- [Phone numbers](/concepts/phone-numbers) - importing numbers and per-number settings
+- [Caller context](/concepts/caller-context) - what the agent remembers about a caller
+- [Pre-call gate](/advanced/precall-gate) - accept or reject before answering
+- [Agents](/concepts/agents) - every setting mentioned on this page
