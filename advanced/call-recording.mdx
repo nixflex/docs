@@ -10,6 +10,23 @@ Nixflex records the audio of every call and keeps it alongside the transcript, s
   Switching recording off does not affect the transcript. Speech recognition runs independently, so you still get the full transcript, summary, sentiment and extracted data - just no audio file.
 </Note>
 
+## Who records
+
+When recording is on, you choose who captures the audio. The default is your carrier - exactly what happened before this setting existed.
+
+| `recording_source` | Who records | What it covers | Cost |
+|---|---|---|---|
+| `"provider"` (default) | Your phone carrier | The whole call, including after a transfer to a person | Carrier recording charges on your carrier account |
+| `"nixflex"` | The Nixflex voice engine | The conversation with the AI. A transfer to a person is not included | No carrier recording charges |
+
+Set it per agent in the dashboard (**Call recording -> Recorded by**) or with `recording_source` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update). A single number can override its agent with `recording_source` on [Update phone number](/api-reference/phone-numbers/update); `null` on a number means inherit the agent. Any other value is rejected with `invalid_recording_source`.
+
+<Note>
+  Recording off always wins. With `record_call` off nothing is recorded by anyone, whatever `recording_source` says.
+</Note>
+
+Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - with both voices balanced to the same level. If the caller interrupts the agent mid-sentence, the recording contains only what the caller actually heard. Like carrier recordings, they go to your own storage bucket when one is connected.
+
 ## Turning it off
 
 ### Per agent (dashboard)
@@ -38,23 +55,6 @@ curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447700900123 \
 </Warning>
 
 Agent-level can also be set through the API with `record_call` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update).
-
-## Who records
-
-When recording is on, you choose who captures the audio. The default is your carrier - exactly what happened before this setting existed.
-
-| `recording_source` | Who records | What it covers | Cost |
-|---|---|---|---|
-| `"provider"` (default) | Your phone carrier | The whole call, including after a transfer to a person | Carrier recording charges on your carrier account |
-| `"nixflex"` | The Nixflex voice engine | The conversation with the AI. A transfer to a person is not included | No carrier recording charges |
-
-Set it per agent in the dashboard (**Call recording -> Recorded by**) or with `recording_source` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update). A single number can override its agent with `recording_source` on [Update phone number](/api-reference/phone-numbers/update); `null` on a number means inherit the agent. Any other value is rejected with `invalid_recording_source`.
-
-<Note>
-  Recording off always wins. With `record_call` off nothing is recorded by anyone, whatever `recording_source` says.
-</Note>
-
-Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - with both voices balanced to the same level. If the caller interrupts the agent mid-sentence, the recording contains only what the caller actually heard. Like carrier recordings, they go to your own storage bucket when one is connected.
 
 ## What happens when it is off
 
