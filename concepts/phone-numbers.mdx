@@ -4,7 +4,7 @@ description: "Bring your own Twilio or Telnyx numbers and attach them to agents"
 icon: "phone"
 ---
 
-Nixflex uses a **bring-your-own-carrier (BYO)** model. You buy and own phone numbers in your own **Twilio** or **Telnyx** account. Nixflex points those numbers at the engine — but the numbers, and the carrier billing, stay with you.
+Nixflex uses a **bring-your-own-carrier (BYO)** model. You buy and own phone numbers in your own **Twilio** or **Telnyx** account. Nixflex points those numbers at the engine â€” but the numbers, and the carrier billing, stay with you.
 
 You never pick the carrier with a setting. It is inferred from the credentials you send when you import, and every feature below works the same either way.
 
@@ -18,7 +18,7 @@ You never pick the carrier with a setting. It is inferred from the credentials y
     You pay your carrier's wholesale prices directly. Nixflex doesn't mark up call or SMS costs.
   </Card>
   <Card title="Multi-tenant ready" icon="users">
-    One Nixflex agent can serve unlimited phone numbers — one per end-customer if you resell.
+    One Nixflex agent can serve unlimited phone numbers â€” one per end-customer if you resell.
   </Card>
   <Card title="Skip A2P 10DLC blocks" icon="shield-check">
     For US SMS, your A2P registration applies. We don't get in the way.
@@ -47,7 +47,7 @@ What this does, behind the scenes:
 2. Verifies the number exists in **your** Twilio account using the credentials you sent
 3. Confirms the agent belongs to your Nixflex account
 4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
-5. Inserts a `phone_numbers` row linking number → agent → API key
+5. Inserts a `phone_numbers` row linking number â†’ agent â†’ API key
 
 A Telnyx number needs an API key and the ID of a **TeXML Application** you created in your Telnyx portal. The difference matters: on Twilio the webhook lives on the number, on Telnyx it lives on the application and numbers are assigned to it. See [Import phone number](/api-reference/phone-numbers/import) for the full setup.
 
@@ -86,16 +86,16 @@ A single agent can be attached to many numbers. This is how reseller apps work:
 
 ```
 agent_ringback_dental (one prompt, one personality)
-  ├── +442011110001 → Smile Dental Croydon
-  ├── +442011110002 → Pearly Whites Manchester
-  ├── +442011110003 → Bright Bite Leeds
-  └── +442011110004 → ... 200 more
+  â”œâ”€â”€ +442011110001 â†’ Smile Dental Croydon
+  â”œâ”€â”€ +442011110002 â†’ Pearly Whites Manchester
+  â”œâ”€â”€ +442011110003 â†’ Bright Bite Leeds
+  â””â”€â”€ +442011110004 â†’ ... 200 more
 ```
 
 Each number can carry its own `custom_prompt` (a business profile - see below), so the same agent template answers as a different business per number. On top of that, per-customer context also comes from:
 
 - Which phone number was dialled (engine looks up the row)
-- Any past call history for the caller's number (auto-fetched into the agent's prompt)
+- What is on file about the caller, kept separately for each of your numbers (see [Caller context](/concepts/caller-context))
 
 This pattern is how Ringback runs 200 dental clinics on one agent template.
 
@@ -116,16 +116,54 @@ This applies to both **inbound calls** and **inbound SMS replies**, so a reselle
 
 ## Other per-number settings
 
-The per-number model goes beyond the business profile. Several settings are configured **per phone number**, not per agent - so each number on a shared agent can behave differently:
+The per-number model goes well beyond the business profile. Most of what an agent controls can be overridden on a single number, so every end-customer on a shared agent can behave differently.
 
-| Setting | What it does per number | Where |
-| --- | --- | --- |
-| Voice | Each number can use its own voice (inbound and outbound). Falls back to the agent's voice if unset. | [Voices](/concepts/voices) |
-| Webhook | Each number can POST call data to its own endpoint. | [Webhooks](/advanced/webhooks) |
-| Cal.com calendar | Each number books into its own connected calendar. | [Cal.com](/actions/calcom) |
-| Business profile (prompt) | Each number's identity layered over the agent prompt (above). | This page |
+**The rule: not set means inherit.** Leave a setting empty on the number and it follows the agent. Set it and the number wins for its own calls. That is what `null` means everywhere in the phone-numbers API - "no opinion", not "off".
 
-The engine resolves all of these from the number involved in the call - the dialled number for inbound, the `from_number` for outbound. A number with none of these set simply uses the agent's defaults. This is what lets one agent serve many end-customers, each with their own voice, calendar, and webhook.
+| Setting | Field | What it does for this number |
+|---|---|---|
+| Business profile | `custom_prompt` | Its own identity, layered over the agent's instructions (above) |
+| Voice | `voice_id` | Its own voice, inbound and outbound |
+| Speaking speed | `speaking_rate` | Its own pace |
+| Keypad input | `dtmf_enabled` | Accept typed digits, or not |
+| Call recording | `record_call` | Record this number's calls, or not |
+| Recorded by | `recording_source` | `provider` (your carrier) or `nixflex` (the voice engine). See [Call recording](/advanced/call-recording#who-records) |
+| Voicemail message | `voicemail_leave_enabled`, `voicemail_message` | What to say when an outbound call reaches an answering machine |
+| SMS auto-reply | `sms_reply_enabled` | Let the agent answer texts sent to this number |
+| Text instructions | `sms_prompt` | Separate instructions for text conversations |
+| Web chat instructions | `web_prompt` | Separate instructions for chat on your website |
+
+Set any of them when [importing](/api-reference/phone-numbers/import), or later with `PATCH /v1/phone-numbers/:number`. Send `null` to clear one and go back to inheriting.
+
+These have their own endpoints rather than a field on the number:
+
+| Setting | Where |
+|---|---|
+| Webhook - where this number's call data is sent | [Webhooks](/advanced/webhooks) |
+| Booking calendar - Cal.com or Google Calendar, per number | [Cal.com](/actions/calcom), [Google Calendar](/actions/google-calendar) |
+| Live monitor - listening in on this number's calls | [Update monitor](/api-reference/phone-numbers/monitor) |
+| Web calls - voice calls from your website | [Web calls](/concepts/web-calls) |
+| Custom functions - this number's own tools | [Custom functions](/advanced/custom-functions) |
+| Caller context - who this number's callers are | [Caller context](/concepts/caller-context) |
+
+<Warning>
+  **Voicemail works differently, and how you imported the number decides it.**
+
+  - Added in the **dashboard**: the **agent's** voicemail message is used. A message set on the number is ignored.
+  - Added through the **API**: only the **number's own** message is used. The agent's is never borrowed.
+
+  There is no fallback in either direction - the import route is the choice. One agent can serve hundreds of separate businesses, so a developer's own voicemail wording must never speak on a customer's number. An empty message means no voicemail is left, whatever the toggle says.
+</Warning>
+
+## Can one agent answer for different businesses?
+
+Yes - that is the normal way to use Nixflex. Give each business its own phone number on the same agent, then set that number's business profile, voice, calendar and webhook. Callers reach what feels like a separate company each time, while you maintain one set of instructions.
+
+## Can each phone number have its own voice and settings?
+
+Yes. Voice, speaking speed, recording, keypad input, booking calendar, webhook and text instructions can all be set per number, using the tables above. Anything you leave unset follows the agent.
+
+The engine resolves all of this from the number involved in the call - the number dialled for inbound, the `from_number` for outbound. A number with nothing set simply uses the agent's defaults.
 
 ## Listing numbers
 
@@ -151,12 +189,12 @@ curl -X DELETE https://api.nixflex.com/v1/phone-numbers/+447446466847 \
 For a Twilio number this clears the webhooks; for a Telnyx number it unassigns the number from your TeXML application. Either way calls stop routing to Nixflex and the row is removed from our database. If the carrier call fails, the number is still removed here and the response tells you to clear it manually.
 
 <Note>
-  Deleting a number from Nixflex does **not** release it from your carrier. The number stays in your Twilio or Telnyx account and continues to bill until you release it there. This is intentional — releasing is a permanent billing decision and stays with you.
+  Deleting a number from Nixflex does **not** release it from your carrier. The number stays in your Twilio or Telnyx account and continues to bill until you release it there. This is intentional â€” releasing is a permanent billing decision and stays with you.
 </Note>
 
 ## Using multiple carrier accounts
 
-Each phone number stores its own credentials. A single Nixflex account can serve numbers from **multiple Twilio accounts, multiple Telnyx accounts, or a mix of both** — for example:
+Each phone number stores its own credentials. A single Nixflex account can serve numbers from **multiple Twilio accounts, multiple Telnyx accounts, or a mix of both** â€” for example:
 
 - A UK Twilio account for `+44` numbers
 - A US Twilio account for `+1` numbers
