@@ -73,7 +73,7 @@ The response contains your `agent_id`:
 Save the `agent_id` - you'll attach a phone number to it next.
 
 <Tip>
-  The default voice is **Ashley** and the default language is **multi**, which follows the caller across English, Spanish, French, German, Italian, Portuguese, Dutch, Hindi, Russian and Japanese. For Arabic, Hebrew, Korean, Chinese or Polish, set `language` to that code instead. Change either later via the dashboard or the [Create agent](/api-reference/agents/create) reference.
+  The default voice is **Ashley** and the default language is `multi`. A `multi` agent starts in the language your instructions are written in and will offer to switch if the caller speaks another one. To lock an agent to a single language - including Arabic, Hebrew, Korean, Chinese or Polish - set `language` to that code. See [Languages](/concepts/languages).
 </Tip>
 
 ## Step 3 - Connect a phone number
@@ -91,7 +91,8 @@ You import a number you already own. Nixflex works out which carrier it is from 
   current documentation.
 </Warning>
 
-### Twilio
+<Tabs>
+  <Tab title="Twilio">
 
 Buy a voice-enabled number in your Twilio console, then import it with your Account SID and Auth Token:
 
@@ -113,7 +114,8 @@ Nixflex points that number's webhooks at the engine. Nothing else to configure.
   Full guide: [Twilio](/integrations/twilio).
 </Note>
 
-### Telnyx
+  </Tab>
+  <Tab title="Telnyx">
 
 Telnyx needs three things set up in your portal first, because its webhook lives on an **application** rather than on the number:
 
@@ -140,6 +142,9 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   Full guide, with the reasoning behind each step: [Telnyx](/integrations/telnyx).
 </Note>
 
+  </Tab>
+</Tabs>
+
 <Tip>
   Prefer clicking to curl? The dashboard does the same thing under **Phone Numbers**, with a Twilio / Telnyx toggle.
 </Tip>
@@ -163,14 +168,15 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
   -H "Content-Type: application/json" \
   -d '{
     "agent_id": "agent_125207e452f8714a",
-    "to_number": "+44YOUR_MOBILE"
+    "to_number": "+44YOUR_MOBILE",
+    "prompt": "You are calling from Acme Dental to check the person can still make their appointment tomorrow at 2pm."
   }'
 ```
 
 Your phone rings within seconds. Pick up and talk to your agent.
 
 <Note>
-  You don't pass a `from_number`. The engine uses the number you assigned to the agent in Step 3. Outbound works on both carriers.
+  `prompt` is required on every outbound call - it is the whole brief for that call, and the agent's own instructions are NOT used on outbound. You don't pass a `from_number`: the engine uses the number you assigned to the agent in Step 3. Outbound works on both carriers. See [Outbound calls](/concepts/outbound-calls).
 </Note>
 
 ## Step 6 - Read the call back
