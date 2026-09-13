@@ -140,6 +140,10 @@
           "dtmf_enabled": {
             "type": "boolean"
           },
+          "require_booking_confirmation": {
+            "type": "boolean",
+            "description": "Engine reads the appointment back and waits for a clear yes before any calendar write. Default false. Numbers can override."
+          },
           "voicemail_leave_enabled": {
             "type": "boolean",
             "description": "When true, the agent speaks voicemail_message on answering machines and hangs up. Applies to dashboard-imported numbers; API-imported numbers use their own per-number setting. Enabling without a message is rejected with voicemail_message_required."
@@ -199,6 +203,10 @@
           },
           "dtmf_enabled": {
             "type": "boolean"
+          },
+          "require_booking_confirmation": {
+            "type": "boolean",
+            "description": "Engine reads the appointment back and waits for a clear yes before any calendar write. Default false. Numbers can override."
           },
           "speaking_rate": {
             "type": "number"
@@ -400,6 +408,11 @@
             "type": "boolean",
             "nullable": true
           },
+          "require_booking_confirmation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "true / false for this number, null = inherit the agent. See /actions/booking-confirmation."
+          },
           "record_call": {
             "type": "boolean",
             "nullable": true
@@ -490,6 +503,11 @@
           "dtmf_enabled": {
             "type": "boolean",
             "nullable": true
+          },
+          "require_booking_confirmation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "true / false for this number, null = inherit the agent. See /actions/booking-confirmation."
           },
           "record_call": {
             "type": "boolean",

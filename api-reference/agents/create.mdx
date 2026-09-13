@@ -61,6 +61,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
 | `recording_source` | string | No | `"provider"` | Who records when `record_call` is on. `"provider"` = your carrier records (whole call, carrier recording charges apply). `"nixflex"` = the voice engine records the conversation itself at no extra cost (a transfer to a person is not included). Anything else is rejected with `invalid_recording_source`. See [Call recording](/advanced/call-recording#who-records). |
 | `amd_enabled` | bool | No | `false` | Ask the carrier to detect an answering machine and hang up about 4 seconds in. Costs extra per answered call on your own carrier bill. With it OFF the agent detects voicemail from the first thing it hears and can leave a message, so ON means a fast hangup and NO message. See [Voicemail detection](/advanced/voicemail-detection). |
 | `dtmf_enabled` | bool or null | No | `null` | Let callers type digits on their phone keypad instead of saying them. `null` means not set, and a number can override it. See [Keypad input](/advanced/keypad-input). |
+| `require_booking_confirmation` | bool | No | `false` | The engine reads the appointment back and waits for a clear yes before any calendar create, reschedule or cancel. Numbers can override it. See [Booking confirmation](/actions/booking-confirmation). |
 | `webhook_url` | string | No | `null` | Where to POST post-call data |
 
 ### Functions (tools the agent can call mid-conversation)
@@ -138,6 +139,7 @@ Only `name` is recommended in practice — every other field has a sensible defa
   "voice_speed": 0.85,
   "speaking_rate": null,
   "dtmf_enabled": null,
+  "require_booking_confirmation": false,
   "amd_enabled": false,
   "greet_by_name": true,
   "transfer_whisper": null,

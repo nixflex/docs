@@ -28,6 +28,7 @@ Any field from [Create agent](/api-reference/agents/create) can be updated. Pass
 |---|---|
 | `speaking_rate` | Clamped to the supported range rather than rejected, so `9` is stored as the maximum. Send `null` to clear it and go back to normal speed - `null` is not the same as `1`. See [Voices](/concepts/voices). |
 | `dtmf_enabled` | Three-state. `true` and `false` are explicit; `null` means **not set**, which lets a phone number's own setting decide. |
+| `require_booking_confirmation` | `true` makes the engine read the appointment back and wait for a clear yes before any calendar write. A number can override it. See [Booking confirmation](/actions/booking-confirmation). |
 | `system_prompt` | Maximum 16000 characters, about 4000 tokens. Over that the whole update is rejected with `prompt_too_long`. |
 | `voice_speed` | Accepted and saved, but **nothing reads it**. Use `speaking_rate`. |
 | `boosted_keywords` | Comma-separated words to boost in transcription - staff names, treatments, products, place names. **Keep it under 50.** The API does not reject a longer list, but too many terms are rejected at transcription time and the agent hears nothing for that call. |

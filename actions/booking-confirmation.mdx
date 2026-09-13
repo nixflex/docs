@@ -1,0 +1,82 @@
+---
+title: "Booking confirmation"
+description: "The engine reads the appointment back and waits for a clear yes before anything is written to the calendar"
+---
+
+Before your agent books, moves or cancels an appointment, the engine can read the details back to the caller and wait for an explicit **yes**. Until that yes arrives nothing is written - not by the agent, not by a retry, not by a second tool call in the same reply.
+
+This is an engine rule, not a prompt instruction. A prompt line such as "confirm before booking" is a suggestion the model usually follows; this setting makes it impossible to skip.
+
+## How it works
+
+1. The agent decides to book, reschedule or cancel and calls the calendar tool as normal.
+2. The engine holds the write and speaks its own read-back, in the language of the call, built from the exact details the tool was called with - for example: *"Just to confirm: shall I book an appointment for Sam Carter, using sam.carter@example.com, on Monday 4 March at 10:00? Please say yes to confirm."*
+3. The engine waits for that sentence to finish playing on the line. A read-back that was cut off or never played does not open the confirmation window.
+4. The caller's next words are matched as a whole. **Yes**, **yes please**, **correct** and their equivalents in the other supported languages count. *"Yes, but make it eleven"* does not - the agent is told to take the correction and the engine reads the new details back.
+5. The agent calls the tool again with the same details and the write goes through - once. A changed time, name or email is a new proposal and needs a new yes.
+
+The transcript shows the caller's actual words. What the engine tells the agent behind the scenes ("the caller has confirmed", "ask again") is never spoken and never saved as caller speech.
+
+## Turning it on
+
+The setting lives on the agent and can be overridden per phone number - the same three-state pattern as [keypad input](/advanced/keypad-input).
+
+| Where | Field | Values | Default |
+| --- | --- | --- | --- |
+| Agent | `require_booking_confirmation` | `true` / `false` | `false` |
+| Phone number | `require_booking_confirmation` | `true` / `false` / `null` | `null` (inherit the agent) |
+
+Existing agents and numbers are unchanged: the default is off, so a booking that used to be written immediately still is. Turn it on where you want the safety step.
+
+<CodeGroup>
+
+```bash Agent (all its numbers)
+curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "require_booking_confirmation": true }'
+```
+
+```bash One number only
+curl -X PATCH https://api.nixflex.com/v1/phone-numbers/%2B447446466847 \
+  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{ "require_booking_confirmation": true }'
+```
+
+</CodeGroup>
+
+Send `null` on a number to go back to inheriting the agent. Takes effect on the next call.
+
+## What counts as a yes
+
+The whole reply must be an affirmative - the engine never looks for a "yes" *inside* a longer sentence. This is deliberate: *"yes, what does it cost?"* and *"yes but Tuesday"* are not consent to the details that were read back.
+
+| Language | Accepted replies (examples) |
+| --- | --- |
+| English | yes, yes please, correct, confirm |
+| Arabic | Ù†Ø¹Ù…, Ø£Ø¬Ù„, ØµØ­ÙŠØ­ |
+| Spanish | sÃ­, correcto, confirmo |
+| French | oui, exact, je confirme |
+| German | ja, richtig |
+| Others | The equivalent short affirmatives in Chinese, Dutch, Hebrew, Hindi, Italian, Japanese, Korean, Polish, Portuguese and Russian |
+
+Trailing punctuation and quotes are ignored. Anything else keeps the proposal pending: the agent asks a short yes-or-no question again, or - if the caller gave a correction - calls the tool with the new details and the engine reads those back.
+
+## What it applies to
+
+Create, reschedule and cancel on both [Cal.com](/actions/calcom) and [Google Calendar](/actions/google-calendar). Read-only tools - checking availability, looking up an existing booking - are never held.
+
+Custom functions are not covered by this setting; use their own confirmation logic in your prompt if a function has side effects.
+
+## Good to know
+
+- The read-back is written by the engine, not the agent, so what the caller hears always describes the exact write that will happen.
+- Email addresses are read as given. Spell them with the caller *before* the booking step if your flow depends on it - the [caller context](/concepts/caller-context) rules already do this.
+- The confirmation adds one exchange to a booking. On a busy line that is a few seconds per booking.
+- Speech recognition can deliver a late fragment from *before* the read-back finished; such a fragment is never treated as the answer.
+
+## Related
+
+- [Cal.com Booking](/actions/calcom) and [Google Calendar Booking](/actions/google-calendar)
+- [Update agent](/api-reference/agents/update) and [Update phone number](/api-reference/phone-numbers/update)
