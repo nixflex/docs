@@ -164,5 +164,8 @@ Attach a phone number, on Twilio or Telnyx, so the agent can make and receive ca
 | `invalid_voice_id` | Voice not in supported list |
 | `invalid_language` | Language code not supported |
 | `invalid_request` | Missing required field or bad format |
+| `deprecated_field` | `twilio_account_sid` or `twilio_auth_token` was sent. Agents do not hold carrier credentials - import the number with [`POST /v1/phone-numbers`](/api-reference/phone-numbers/import) instead. |
+
+The response never includes `twilio_auth_token`.
 
 See [Errors](/reference/errors) for handling patterns.
