@@ -41,12 +41,12 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-What this does, behind the scenes:
+The current Twilio import implementation runs these steps:
 
 1. Validates the phone format and Twilio SID format
 2. Verifies the number exists in **your** Twilio account using the credentials you sent
-3. Confirms the agent belongs to your Nixflex account
-4. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
+3. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
+4. Confirms the agent belongs to your Nixflex account
 5. Inserts a `phone_numbers` row linking number â†’ agent â†’ API key
 
 A Telnyx number needs an API key and the ID of a **TeXML Application** you created in your Telnyx portal. The difference matters: on Twilio the webhook lives on the number, on Telnyx it lives on the application and numbers are assigned to it. See [Import phone number](/api-reference/phone-numbers/import) for the full setup.
@@ -63,7 +63,16 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-After this, calls to that number land on the agent automatically.
+After a successful import, calls to that number land on the agent automatically.
+
+<Warning>
+  An import error does not prove that carrier routing stayed unchanged. The current
+  Twilio path changes routing before its later ownership and database checks. Telnyx
+  checks ownership and duplicates first, but saving can still fail after reassignment.
+  Do not blindly repeat an uncertain import or restore old routing. Check the Nixflex
+  number list and carrier configuration first. The guarded import/removal reservation
+  work is not part of this draft's completed campaign-read correction.
+</Warning>
 
 <Note>
   **Telnyx numbers now do almost everything Twilio numbers do** - inbound and outbound
@@ -133,7 +142,10 @@ The per-number model goes well beyond the business profile. Most of what an agen
 | Text instructions | `sms_prompt` | Separate instructions for text conversations |
 | Web chat instructions | `web_prompt` | Separate instructions for chat on your website |
 
-Set any of them when [importing](/api-reference/phone-numbers/import), or later with `PATCH /v1/phone-numbers/:number`. Send `null` to clear one and go back to inheriting.
+Import accepts `custom_prompt` among these overrides. Set the other settings afterwards
+with `PATCH /v1/phone-numbers/:number`; do not send them to the import endpoint and assume
+they were saved. Only fields documented as nullable accept `null`; clearing behaviour is
+field-specific. See [Import phone number](/api-reference/phone-numbers/import).
 
 These have their own endpoints rather than a field on the number:
 

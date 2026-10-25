@@ -77,13 +77,29 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 | `phone_number` | string | Yes | E.164 format. Must already exist in your Telnyx account |
 | `telnyx_api_key` | string | Yes | A Telnyx API key with access to the number |
 | `telnyx_connection_id` | string | Yes | The ID of your TeXML Application |
+| `telnyx_public_key` | string | No | Webhook signing public key copied from your Telnyx portal; canonical base64 of exactly 32 bytes (44 characters ending in `=`) |
 | `agent_id` | string | Yes | Must be an agent you own |
 | `custom_prompt` | string | No | Per-number prompt override. Max 8000 characters |
 
 <Note>
   camelCase works everywhere too: `phoneNumber`, `twilioSid`, `twilioToken`,
-  `telnyxApiKey`, `telnyxConnectionId`, `agentId`, `customPrompt`.
+  `telnyxApiKey`, `telnyxConnectionId`, `telnyxPublicKey`, `agentId`, `customPrompt`.
 </Note>
+
+### Telnyx signing key lifecycle
+
+The optional `telnyx_public_key` is different from your secret `telnyx_api_key`.
+Saving the public key creates an **unverified candidate**, not proof that it belongs to
+your Telnyx account. Nixflex checks a signed voice callback, reads the same call back
+with this number's own Telnyx API key, and compares the call/account, direction and
+phone numbers. Verification then requires Nixflex operator approval of that evidence.
+Import success alone does not mean the signing key is verified.
+
+Paste the public key exactly: spaces, a private key, PEM text, an empty value or `null`
+are rejected. It can also be supplied later using `PATCH /v1/phone-numbers/:number`.
+Changing it creates another candidate; an overlapping previous key can make a further
+rotation return `telnyx_key_rotation_pending`. Neither import nor PATCH can force a key
+to be verified. Supplying a Telnyx public key with Twilio credentials is rejected.
 
 **What Telnyx numbers support today**
 
@@ -119,7 +135,6 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   "phone_number": {
     "phone_number": "+447446466847",
     "agent_id": "agent_125207e452f8714a",
-    "provider": "twilio",
     "twilio_number_sid": "PN451e0ddf654327e36baab58dfbcd30d6",
     "inbound_enabled": true,
     "outbound_enabled": true
@@ -127,7 +142,9 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 }
 ```
 
-A Telnyx import returns `"provider": "telnyx"` and `telnyx_number_id` instead of `twilio_number_sid`.
+The current Twilio import response does not include `provider`. A Telnyx import returns
+`"provider": "telnyx"` and `telnyx_number_id` instead of `twilio_number_sid`. Neither
+response returns carrier secrets or the signing key's internal verification fields.
 
 ## Errors
 
@@ -159,6 +176,8 @@ A Telnyx import returns `"provider": "telnyx"` and `telnyx_number_id` instead of
 | `number_not_in_telnyx` | 404 | Number not in your Telnyx account |
 | `telnyx_assign_failed` | 400 | Could not assign the number to that TeXML application — check the ID |
 | `telnyx_error` | 500 | Telnyx returned an unexpected error |
+| `invalid_telnyx_public_key` | 400 | Public key is not canonical base64 of exactly 32 bytes |
+| `telnyx_public_key_not_applicable` | 400 | A Telnyx public key was supplied for a Twilio import |
 
 ## Use case: reseller onboarding
 
