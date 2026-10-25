@@ -1,0 +1,47 @@
+{
+  "UsagePath": {
+    "get": {
+      "tags": ["Phone numbers"], "summary": "Read retained per-number usage", "operationId": "getPhoneNumberUsage",
+      "security": [{"bearerAuth": []}],
+      "parameters": [
+        {"name":"phoneNumber","in":"path","required":true,"schema":{"type":"string","pattern":"^\\+[1-9][0-9]{6,14}$"},"description":"Owned public E.164 number. URL-encode the plus."},
+        {"name":"period","in":"query","schema":{"type":"string","enum":["today","7","14","30","90","all"],"default":"all"},"description":"Calendar days including today, not rolling hours. All means retained history."},
+        {"name":"time_zone","in":"query","schema":{"type":"string","maxLength":64,"default":"UTC"},"description":"IANA zone such as Europe/London, or UTC. Match the dashboard browser zone."}
+      ],
+      "responses": {
+        "200":{"description":"Complete aggregate; never truncated partial totals.","content":{"application/json":{"schema":{"$ref":"#/UsageResponse"}}}},
+        "400":{"description":"invalid_phone_format, invalid_period, invalid_timezone or invalid_query. Duplicate/unknown query fields are rejected."},
+        "401":{"description":"Missing/invalid API key or inactive account at authentication."},
+        "403":{"description":"account_unavailable: account became inactive before the database read."},
+        "404":{"description":"number_not_found: absent, foreign, pending or internal identity."},
+        "429":{"description":"Existing API rate limit."},
+        "503":{"description":"usage_unavailable: timeout, unavailable schema/database or invalid result. Not zero usage; use a shorter period or retry later."}
+      }
+    }
+  },
+  "UsageResponse": {
+    "type":"object","additionalProperties":false,"required":["usage"],"properties":{"usage":{"$ref":"#/NumberUsage"}}
+  },
+  "NumberUsage": {
+    "type":"object","additionalProperties":false,
+    "required":["phone_number","period","time_zone","period_start","period_end","start_inclusive","end_inclusive","currency","duration_unit","call_count","total_ms","minutes","last_call","total_cost","unpriced_calls","sms_sent","sms_received","sms_count","web_chats","unused","history_note"],
+    "properties": {
+      "phone_number":{"type":"string"},
+      "period":{"type":"string","enum":["today","7","14","30","90","all"]},
+      "time_zone":{"type":"string"},
+      "period_start":{"type":["string","null"],"format":"date-time","description":"Inclusive boundary; null for all retained history."},
+      "period_end":{"type":"string","format":"date-time","description":"Inclusive server query cutoff."},
+      "start_inclusive":{"type":"boolean","const":true},"end_inclusive":{"type":"boolean","const":true},
+      "currency":{"type":"string","const":"USD"},"duration_unit":{"type":"string","const":"milliseconds"},
+      "call_count":{"type":"integer","minimum":0},"total_ms":{"type":"integer","minimum":0},
+      "minutes":{"type":"number","description":"total_ms / 60000, rounded to six decimals. total_ms is authoritative."},
+      "last_call":{"type":["string","null"],"format":"date-time"},
+      "total_cost":{"type":"string","pattern":"^-?[0-9]+(?:\\.[0-9]+)?$","description":"Exact decimal USD sum of retained calls.cost. No repricing. Display to two decimals to match the dashboard."},
+      "unpriced_calls":{"type":"integer","minimum":0,"description":"Retained calls where cost IS NULL, not zero."},
+      "sms_sent":{"type":"integer","minimum":0},"sms_received":{"type":"integer","minimum":0},"sms_count":{"type":"integer","minimum":0},
+      "web_chats":{"type":"integer","minimum":0,"description":"Distinct session IDs with messages in the period, bound to the current number row and owner."},
+      "unused":{"type":"boolean","description":"Zero calls AND zero SMS in this period; web chats do not affect this field."},
+      "history_note":{"type":"string","description":"Retained history, not a billing ledger; only recorded call charges, no provider SMS charges."}
+    }
+  }
+}

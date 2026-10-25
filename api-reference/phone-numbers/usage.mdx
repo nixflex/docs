@@ -1,0 +1,90 @@
+---
+title: "Phone number usage"
+description: "The same retained-history calculation as the dashboard Phone numbers cards"
+api: "GET https://api.nixflex.com/v1/phone-numbers/{phoneNumber}/usage"
+---
+
+Draft for API Area 1 Group 3. Requires its staging release. The kit changes below
+are local/unpublished until separately released. This is a read-only request.
+
+Use an active API key. Ownership comes only from that key, never a request field.
+URL-encode the plus in E.164: `/v1/phone-numbers/%2B447457401554/usage`.
+Absent, another owner's, pending and internal browser-test numbers return
+`404 number_not_found`. Both API-imported and dashboard-imported owned numbers work.
+
+## Period and time zone
+
+- `period`: `today`, `7`, `14`, `30`, `90`, or `all` (default).
+- `time_zone`: an IANA zone such as `Europe/London`, or `UTC` (default).
+- Finite periods start at local midnight, including today: 7 means today plus
+  six earlier calendar dates, not the previous 168 hours. DST is respected.
+- `period_start` is inclusive; `null` for all retained history. `period_end` is
+  the inclusive server query cutoff, not a future day-end. All returned ISO times
+  identify absolute instants; an offset may differ from the selected zone.
+- Use the dashboard browser's zone to compare. Requests at different instants
+  can differ if new activity arrives, costs settle or retention removes history.
+- Duplicate parameters, unknown parameters and invalid values return 400.
+
+## Response and meaning
+
+The envelope is `{ "usage": { ... } }`. It includes the number, period, zone,
+boundaries and these fields:
+
+| Field | Meaning |
+|---|---|
+| `call_count` | Retained call rows in this period, including unpriced/zero-duration rows |
+| `total_ms`, `minutes` | Sum of stored duration in milliseconds; minutes = total_ms / 60000, rounded to six decimals |
+| `last_call` | Latest call creation timestamp in the period, or null |
+| `total_cost`, `currency` | Exact decimal string of recorded call charges; currency USD |
+| `unpriced_calls` | Number of calls with NULL cost; a known zero cost is not unpriced |
+| `sms_sent`, `sms_received`, `sms_count` | Outbound, inbound and all retained SMS rows; counts are messages, not billable segments |
+| `web_chats` | Distinct session IDs with messages in the period, scoped to the current number row |
+| `unused` | Zero calls AND zero SMS. A number with only web chat is still “Unused” |
+| `history_note` | Retained history, not a billing ledger; provider SMS charges are not included |
+
+`duration_unit` is `milliseconds`; `start_inclusive` and `end_inclusive` are true.
+For display, round minutes to at most two decimals and cost to two decimals, as
+the dashboard does. Do not recompute cost from minutes or a current price.
+
+Retention can reduce these totals. Calls and SMS are attributed by owner plus
+business E.164 number (outbound = from; otherwise = to), exactly like the dashboard.
+Same-owner re-import can therefore include that owner's older call/SMS history;
+another owner's rows are excluded. Web chats additionally require the current
+number-row generation; old/unbound generations are excluded. This is not lifetime
+carrier usage, a payment statement, a ledger, or a guarantee that a call is settled.
+No raw calls, messages, recordings, credentials or internal account IDs are returned.
+
+## Query budget and failures
+
+The aggregate has a three-second database RPC budget and a five-second engine
+wait limit, with number/owner/time indexes. It returns full totals or
+`503 usage_unavailable`, never a partial aggregate or false zero. Try a smaller
+period or retry later; do not loop aggressively. The normal API rate limit applies.
+
+## Local kit examples
+
+```javascript
+const { usage } = await client.phoneNumbers.usage('+447457401554', {
+  period: '30', time_zone: 'Europe/London'
+});
+console.log(usage.total_cost); // exact decimal USD string
+```
+
+```python
+result = client.phone_numbers.usage('+447457401554', period='30', time_zone='Europe/London')
+# Same method on AsyncNixflex: await client.phone_numbers.usage(...)
+```
+
+```shell
+nixflex numbers usage +447457401554 --period 30 --time-zone Europe/London --json
+```
+
+The existing read-only MCP `list_phone_numbers` tool has an additive usage mode:
+
+```json
+{"phone_number":"+447457401554","usage":true,"period":"30","time_zone":"Europe/London"}
+```
+
+Do not combine usage with list filters/paging. Without `usage:true`, the existing
+list/single-settings tool behaviour remains unchanged. No new credentials or
+permissions are needed. Browser RPC grants have not been expanded.
