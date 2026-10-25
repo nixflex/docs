@@ -41,13 +41,13 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
   }'
 ```
 
-The current Twilio import implementation runs these steps:
+Both carriers use this order:
 
-1. Validates the phone format and Twilio SID format
-2. Verifies the number exists in **your** Twilio account using the credentials you sent
-3. Overwrites Twilio's webhooks on that number (voice, SMS, status callbacks) to point at Nixflex
-4. Confirms the agent belongs to your Nixflex account
-5. Inserts a `phone_numbers` row linking number â†’ agent â†’ API key
+1. Validate the complete request and one clear carrier credential set.
+2. Lock and check the active account, owned active agent and exact number.
+3. Reserve the number before any carrier write; a pending import is disabled.
+4. Find the exact number in your carrier account, then change its routing.
+5. Record the carrier acknowledgement and finish the database row before returning success.
 
 A Telnyx number needs an API key and the ID of a **TeXML Application** you created in your Telnyx portal. The difference matters: on Twilio the webhook lives on the number, on Telnyx it lives on the application and numbers are assigned to it. See [Import phone number](/api-reference/phone-numbers/import) for the full setup.
 
@@ -66,12 +66,12 @@ curl -X POST https://api.nixflex.com/v1/phone-numbers \
 After a successful import, calls to that number land on the agent automatically.
 
 <Warning>
-  An import error does not prove that carrier routing stayed unchanged. The current
-  Twilio path changes routing before its later ownership and database checks. Telnyx
-  checks ownership and duplicates first, but saving can still fail after reassignment.
-  Do not blindly repeat an uncertain import or restore old routing. Check the Nixflex
-  number list and carrier configuration first. The guarded import/removal reservation
-  work is not part of this draft's completed campaign-read correction.
+  Preflight refusals do not change carrier routing. After dispatch, an unconfirmed
+  carrier response leaves the number reserved: do not blindly restore old routing.
+  `number_save_pending` can be resolved by retrying the identical import; it does not
+  repeat the acknowledged carrier write. `number_cleanup_uncertain` needs support
+  reconciliation and never expires automatically. Ordinary removal shares this fence
+  and never claims deletion while carrier cleanup is uncertain.
 </Warning>
 
 <Note>

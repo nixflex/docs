@@ -9,9 +9,29 @@ Attaches a phone number you already own to one of your agents. Nixflex supports 
 You do not choose the carrier with a field — it is inferred from the credentials you send. Send Twilio credentials and the number is imported as a Twilio number; send a Telnyx API key and it is imported as a Telnyx number.
 
 <Note>
-  Existing integrations need no changes. If you only ever send `twilio_sid` and
-  `twilio_token`, nothing about this endpoint has changed for you.
+  The documented request and success-response fields stay the same. Send one carrier
+  credential set only. Conflicting aliases and unsupported fields are now rejected.
 </Note>
+
+## Safety and retrying
+
+Before changing carrier routing, Nixflex validates the whole request, checks the active
+account and owned active agent, and reserves the exact number. Existing imports and
+pending imports, removals or releases block competing operations. A refused preflight
+makes no carrier write. A pending new import cannot answer or originate calls.
+
+If routing succeeded but database completion failed, `number_save_pending` means retry
+the **identical request**, with the same credentials, agent and settings. The saved
+carrier acknowledgement lets that retry finish without sending another routing change.
+
+If the carrier response or acknowledgement was lost, `number_cleanup_uncertain` means
+the number stays reserved. Contact support with `error.details.operation_id` when present.
+Do not restore routing blindly, delete a reservation, or switch credentials and retry.
+There is no automatic expiry or automatic replay of an uncertain carrier write.
+
+Ordinary removal uses the same reservation. It returns `deleted: true` only after the
+carrier cleanup and exact database-row removal both complete. An uncertain cleanup
+keeps the row and blocks re-import; it is not reported as a successful deletion.
 
 ## Twilio
 
@@ -158,6 +178,14 @@ response returns carrier secrets or the signing key's internal verification fiel
 | `agent_not_found` | 404 | `agent_id` does not exist |
 | `agent_not_owned` | 403 | The agent belongs to a different API key |
 | `number_already_imported` | 409 | Already attached to an agent |
+| `mixed_provider_credentials` | 400 | More than one carrier credential set |
+| `conflicting_fields` / `unknown_field` / `invalid_request` | 400 | Conflicting aliases, unsupported fields or invalid value types |
+| `account_unavailable` | 403 | Account is inactive or closing |
+| `agent_unavailable` | 409 | Agent is inactive |
+| `number_operation_pending` / `number_release_pending` | 409 | Another number operation must finish first |
+| `number_cleanup_uncertain` | 503 initially; 409 on retry | Carrier outcome is not confirmed; support must reconcile it |
+| `number_save_pending` | 503 | Carrier change acknowledged; retry the identical request to finish the database step |
+| `number_operation_unavailable` | 503 | Database operation could not be confirmed; this request sent no new carrier change |
 
 **Twilio**
 
@@ -165,7 +193,6 @@ response returns carrier secrets or the signing key's internal verification fiel
 |---|---|---|
 | `invalid_twilio_sid` | 400 | SID does not match `AC` + 32 hex |
 | `twilio_invalid_credentials` | 401 | SID and token rejected by Twilio |
-| `twilio_auth_failed` | 401 | Twilio authentication error |
 | `number_not_in_twilio` | 404 | Number not in your Twilio account |
 
 **Telnyx**
@@ -174,8 +201,7 @@ response returns carrier secrets or the signing key's internal verification fiel
 |---|---|---|
 | `telnyx_invalid_credentials` | 401 | API key rejected by Telnyx |
 | `number_not_in_telnyx` | 404 | Number not in your Telnyx account |
-| `telnyx_assign_failed` | 400 | Could not assign the number to that TeXML application — check the ID |
-| `telnyx_error` | 500 | Telnyx returned an unexpected error |
+| `number_cleanup_uncertain` | 503 | Assignment was not confirmed; check the application ID and contact support before re-importing |
 | `invalid_telnyx_public_key` | 400 | Public key is not canonical base64 of exactly 32 bytes |
 | `telnyx_public_key_not_applicable` | 400 | A Telnyx public key was supplied for a Twilio import |
 
