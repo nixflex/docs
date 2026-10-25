@@ -6,6 +6,11 @@ description: "Enable or disable browser (web) calls for one of your numbers."
 
 Web calls are **off by default**. This endpoint flips the per-number flag. See the [Web Calls concept](/concepts/web-calls) for how calls are started and billed.
 
+The website Web agent must also be ON. This endpoint returns the saved voice switch,
+not effective availability. Web agent OFF preserves that saved choice but refuses
+website voice. [Single-number GET](/api-reference/phone-numbers/get) returns both
+`web_calls_enabled` and `web_calls_effective`; account/agent/billing checks still apply.
+
 ### Path
 
 <ParamField path="phoneNumber" type="string" required>

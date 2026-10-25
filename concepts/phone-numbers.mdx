@@ -115,9 +115,9 @@ Each `phone_numbers` row can hold a `custom_prompt` - a business profile for tha
 - **Agent prompt** = the shared template (how to behave - e.g. "a friendly receptionist"). Set by you, the developer.
 - **Per-number prompt** = the specific business identity (name, address, hours, services) for that number. Different per end-customer.
 
-When a call or SMS arrives, the engine appends the number's `custom_prompt` as a **BUSINESS PROFILE** section. If it conflicts with the general agent prompt, the number's details win. If a number has no `custom_prompt`, the agent prompt is used alone - so direct single-business agents are unaffected.
-
-This applies to both **inbound calls** and **inbound SMS replies**, so a reseller's end-customer answers consistently across voice and text.
+For inbound calls, the number's `custom_prompt` supplies the business profile.
+SMS uses the separate `sms_prompt`; website chat uses `web_prompt`. Updating the
+call business profile does not update those channel instructions.
 
 <Note>
   Set `custom_prompt` in the body when [importing a number](/api-reference/phone-numbers/import), or update it anytime with `PATCH /v1/phone-numbers/:phoneNumber` and body `{ "custom_prompt": "..." }` (send `null` or an empty string to clear it - the number then falls back to the agent prompt alone). Maximum 8000 characters. Outbound calls use the per-call `prompt` instead (see [Create outbound call](/api-reference/calls/create-outbound)).
@@ -127,7 +127,11 @@ This applies to both **inbound calls** and **inbound SMS replies**, so a reselle
 
 The per-number model goes well beyond the business profile. Most of what an agent controls can be overridden on a single number, so every end-customer on a shared agent can behave differently.
 
-**The rule: not set means inherit.** Leave a setting empty on the number and it follows the agent. Set it and the number wins for its own calls. That is what `null` means everywhere in the phone-numbers API - "no opinion", not "off".
+Inheritance is field-specific. Nullable voice/speed/keypad/recording and booking
+confirmation overrides inherit the agent. SMS/web prompts clear to empty strings;
+seven switches are saved booleans, not inheritance controls. Voicemail follows the
+origin policy below. See [safe read-back](/api-reference/phone-numbers/get) and
+[seven switches](/api-reference/phone-numbers/switches).
 
 | Setting | Field | What it does for this number |
 |---|---|---|
@@ -147,7 +151,8 @@ with `PATCH /v1/phone-numbers/:number`; do not send them to the import endpoint 
 they were saved. Only fields documented as nullable accept `null`; clearing behaviour is
 field-specific. See [Import phone number](/api-reference/phone-numbers/import).
 
-These have their own endpoints rather than a field on the number:
+These also have dedicated endpoints; monitor and website voice can additionally
+be changed through the number PATCH:
 
 | Setting | Where |
 |---|---|
@@ -173,7 +178,8 @@ Yes - that is the normal way to use Nixflex. Give each business its own phone nu
 
 ## Can each phone number have its own voice and settings?
 
-Yes. Voice, speaking speed, recording, keypad input, booking calendar, webhook and text instructions can all be set per number, using the tables above. Anything you leave unset follows the agent.
+Yes. These settings can be set per number using the tables above. Only documented
+nullable overrides inherit; separate channel prompts and switches do not.
 
 The engine resolves all of this from the number involved in the call - the number dialled for inbound, the `from_number` for outbound. A number with nothing set simply uses the agent's defaults.
 
@@ -189,7 +195,10 @@ curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_xxx" \
   -H "Authorization: Bearer KEY_ID:KEY_SECRET"
 ```
 
-Returns numbers sorted by creation date, newest first.
+Returns public numbers newest first; pending/internal browser identities are hidden.
+Use `limit` and `cursor` to page, optionally filtering by `agent_id` and `provider`.
+`count` is returned rows, not total. [Single GET](/api-reference/phone-numbers/get)
+includes saved overrides and read-only source/key status.
 
 ## Removing a number
 

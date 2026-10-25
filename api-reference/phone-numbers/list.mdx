@@ -4,64 +4,52 @@ description: "GET /v1/phone-numbers"
 api: "GET https://api.nixflex.com/v1/phone-numbers"
 ---
 
-Returns every phone number belonging to your account.
-
-## Request
-
-```bash
-# All numbers
-curl https://api.nixflex.com/v1/phone-numbers \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-
-# Filter to one agent
-curl "https://api.nixflex.com/v1/phone-numbers?agent_id=agent_125207e452f8714a" \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
+Returns public numbers owned by your API key. Pending imports and internal
+browser-test identities are hidden. Both API-added and dashboard-added numbers
+are included. The dashboard Phone numbers page is unchanged.
 
 ## Query parameters
 
 | Parameter | Type | Notes |
 |---|---|---|
-| `agent_id` | string | Optional. Only return numbers attached to this agent |
+| `agent_id` | string | Optional exact agent filter |
+| `provider` | `twilio` or `telnyx` | Optional exact carrier filter |
+| `limit` | integer 1–100 | Opt into cursor paging |
+| `cursor` | string | Opaque `next_cursor` from the previous page. With cursor alone limit defaults to 50 |
 
-## Response
+Without pagination parameters the existing `{ phone_numbers, count }` envelope
+stays unchanged. The configured database row cap still applies; there is no
+guaranteed 1,000-row contract. Use paging to traverse large accounts.
+`count` ALWAYS means rows in this response, never the account total.
 
-`200 OK`:
+```bash
+curl "https://api.nixflex.com/v1/phone-numbers?provider=telnyx&limit=1" -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```
+
+Paged responses add `next_cursor` (string or null) and `has_more` (boolean).
+Keep the account and filters unchanged; pass the cursor unchanged and URL-encoded.
+Invalid limit, provider or cursor returns `400 invalid_number_query`.
 
 ```json
 {
-  "phone_numbers": [
-    {
-      "phone_number": "+447446466847",
-      "agent_id": "agent_125207e452f8714a",
-      "provider": "twilio",
-      "twilio_number_sid": "PN451e0ddf654327e36baab58dfbcd30d6",
-      "inbound_enabled": true,
-      "outbound_enabled": true,
-      "custom_prompt": null,
-      "created_at": "2026-05-03T01:59:31.548911+00:00"
-    }
-  ],
-  "count": 1
+  "phone_numbers": [{
+    "phone_number": "+12025550100", "agent_id": "agent_example", "provider": "telnyx",
+    "twilio_number_sid": null, "inbound_enabled": true, "outbound_enabled": true,
+    "sms_reply_enabled": false, "web_agent_enabled": true, "web_calls_enabled": false,
+    "web_functions_enabled": false, "monitor_enabled": false, "custom_prompt": null,
+    "created_at": "2026-10-25T10:00:00.123456+00:00", "source": "api"
+  }],
+  "count": 1, "next_cursor": null, "has_more": false
 }
 ```
 
-## Response fields
+Numbers are newest first. Paged reads break equal timestamps by phone number
+descending and put missing timestamps last. Follow `next_cursor` until null,
+even if fewer than `limit` rows arrive. This is a live list, not a snapshot:
+new imports appear on a fresh traversal; removed rows can disappear between pages.
 
-| Field | Type | Notes |
-|---|---|---|
-| `phone_number` | string | E.164 format |
-| `agent_id` | string | The agent this number answers with |
-| `provider` | string | The carrier this number is on: `twilio` or `telnyx` |
-| `twilio_number_sid` | string | Twilio numbers only. `null` on numbers from other carriers |
-| `inbound_enabled` | boolean | Whether the number accepts incoming calls |
-| `outbound_enabled` | boolean | Whether the number can place outgoing calls |
-| `custom_prompt` | string | Per-number prompt override, or `null` if unset |
-| `created_at` | string | ISO 8601 timestamp |
-
-Sorted by `created_at` descending. Returns an empty array (not `404`) if no numbers exist.
-
-<Note>
-  This endpoint is not paginated and returns up to 1,000 numbers in a single
-  response. If you hold more than 1,000, use `agent_id` to narrow the result.
-</Note>
+Empty lists return 200 with count 0, not 404. The existing Twilio number SID stays
+for compatibility. Credentials and internal row/account IDs never appear.
+`source` is descriptive api/dashboard (null for unknown legacy origin),
+not writable and never a permission. See [Get phone number](/api-reference/phone-numbers/get)
+for full saved settings and [seven switches](/api-reference/phone-numbers/switches).

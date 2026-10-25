@@ -1,0 +1,75 @@
+---
+title: "Seven number switches"
+description: "Saved settings, website prerequisites and client parity"
+---
+
+PATCH only what changes. Use JSON booleans, not strings. Existing dedicated monitor
+and web-calls GET/PUT/DELETE endpoints still work and return their existing shapes.
+
+| Boolean field | Meaning |
+|---|---|
+| `inbound_enabled` | Incoming-call admission |
+| `outbound_enabled` | Permit new outbound call dispatch; false locks it. Not a hangup command or universal SMS lock |
+| `sms_reply_enabled` | Automatic replies to incoming SMS |
+| `web_agent_enabled` | Website master switch, required for website voice |
+| `web_calls_enabled` | Saved website voice switch |
+| `web_functions_enabled` | Default OFF. Website visitors can use all enabled custom functions on this number; only enable if safe for anyone. No website booking/availability |
+| `monitor_enabled` | Monitor eligibility, not a listener attachment or takeover command |
+
+Six controls require strict booleans. SMS auto-reply retains its old server-side
+coercion for compatibility; do not rely on it. All kits document boolean inputs.
+Setting Web agent OFF does not erase the saved website voice choice. Single GET
+returns both `web_calls_enabled` and read-only `web_calls_effective`.
+Enabling monitoring alone is free; actual listener attachment drives its premium.
+Takeover is implemented but remains subject to deployment and authorization gates.
+
+## Node and CLI (local unpublished build)
+
+```javascript
+const saved = await client.phoneNumbers.get('+12025550100');
+const first = await client.phoneNumbers.list({ provider: 'telnyx', limit: 1 });
+if (first.next_cursor) await client.phoneNumbers.list({ provider: 'telnyx', limit: 1, cursor: first.next_cursor });
+await client.phoneNumbers.update('+12025550100', {
+  inbound_enabled: true, outbound_enabled: true, sms_reply_enabled: false,
+  web_agent_enabled: true, web_calls_enabled: false, web_functions_enabled: false,
+  monitor_enabled: false
+});
+```
+
+```bash
+nixflex numbers get +12025550100 --json
+nixflex numbers list --provider telnyx --limit 1 --json
+nixflex numbers update +12025550100 --set inbound_enabled=true --set outbound_enabled=true --set sms_reply_enabled=false --set web_agent_enabled=true --set web_calls_enabled=false --set web_functions_enabled=false --set monitor_enabled=false
+```
+
+CLI `--set` already parses true/false into booleans. `--body` remains available.
+Unknown PATCH fields can be ignored; use documented names and verify the result.
+
+## Python (local unpublished build)
+
+```python
+saved = client.phone_numbers.get('+12025550100')
+page = client.phone_numbers.list(provider='telnyx', limit=1)
+if page['next_cursor']:
+    page = client.phone_numbers.list(provider='telnyx', limit=1, cursor=page['next_cursor'])
+client.phone_numbers.update('+12025550100', inbound_enabled=True, outbound_enabled=True,
+    sms_reply_enabled=False, web_agent_enabled=True, web_calls_enabled=False,
+    web_functions_enabled=False, monitor_enabled=False)
+```
+
+AsyncNixflex supports the same methods with `await`. Omitted settings stay untouched;
+nullable overrides still support `None`. Existing positional `list(agent_id)` works.
+
+## MCP (local unpublished build)
+
+The existing 35 tool names remain unchanged. `list_phone_numbers` now also accepts
+`{ "phone_number": "+12025550100" }` alone to read one number in full. Without that
+selector, optional `agent_id`, `provider`, `limit` and `cursor` page the list.
+Do not combine a single-number selector with list filters.
+
+`update_phone_number` has the seven typed boolean properties inside `fields`;
+other existing settings still pass through. Dedicated `set_number_monitor` and
+`set_number_web_calls` remain. Reads use a small GET-only adapter while the installed
+SDK is 0.8.0; mutations retain the SDK and Part 1a no-repeat protection.
+
+These changes are drafts/local builds, not newly published npm/PyPI/MCP releases.

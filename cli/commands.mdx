@@ -16,7 +16,8 @@ nixflex agents update agent_15d1a9ee16294087 --set system_prompt=@prompt.txt
 nixflex numbers import --body @number.json
 ```
 
-Named flags exist for the common fields; `--set` covers the rest. An unknown field name is rejected by the API, never silently dropped.
+Named flags exist for common fields; `--set` covers the rest. Use documented names:
+number PATCH can ignore unknown fields alongside valid fields. Check read-back.
 
 ## Account
 
@@ -73,7 +74,8 @@ phone,name,appointment
 
 | Command | Notes |
 |---|---|
-| `numbers list [--agent ID]` | |
+| `numbers list [--agent ID] [--provider twilio\|telnyx] [--limit N] [--cursor CURSOR]` | Paging opt-in; count means returned rows. Local unpublished Group2 build. |
+| `numbers get <number> --json` | All safe settings, read-only source and key status. Local unpublished Group2 build. |
 | `numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...` | Or `--set telnyx_api_key=... --set telnyx_connection_id=...`, or `--body @number.json`. See [Import phone number](/api-reference/phone-numbers/import). |
 | `numbers update <number> [--sms-reply true\|false] [--sms-prompt TEXT\|@file\|null] [--dtmf true\|false\|null] [--set k=v ...]` | `--dtmf null` inherits the agent setting. See [Update phone number](/api-reference/phone-numbers/update). |
 | `numbers delete <number> --confirm` | Disconnects from Nixflex; your carrier keeps the number. |
@@ -81,6 +83,8 @@ phone,name,appointment
 | `numbers web-calls <number> [get\|on\|off]` | Browser calls for the number. |
 
 ## Callers (caller context)
+
+For all seven typed number switches and examples, see [number switches](/api-reference/phone-numbers/switches).
 
 What the agent knows about a caller on one of your numbers. First number is yours, second is the caller's. See [Caller context](/concepts/caller-context).
 

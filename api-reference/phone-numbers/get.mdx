@@ -1,0 +1,54 @@
+---
+title: "Get phone number"
+description: "All safe saved settings for one owned public number"
+api: "GET https://api.nixflex.com/v1/phone-numbers/{phoneNumber}"
+---
+
+Use E.164 and URL-encode the leading plus: `/v1/phone-numbers/%2B12025550100`.
+Requires an active API key/account. Unknown numbers, other accounts, pending imports
+and internal browser-test numbers all return `404 number_not_found`.
+
+The response is `{ "phone_number": { ... } }`. Every field below is present;
+unset saved overrides remain null. This is not a dump of the database row.
+
+| Fields | Meaning |
+|---|---|
+| `phone_number`, `agent_id`, `provider`, `created_at` | Public number, assigned public agent identifier, carrier and creation date |
+| `source` | Read-only `api` / `dashboard`; null for unknown legacy origin. Descriptive, not a permission |
+| `inbound_enabled`, `outbound_enabled`, `sms_reply_enabled` | Incoming calls, outbound call permission, automatic SMS replies |
+| `web_agent_enabled`, `web_calls_enabled`, `web_functions_enabled`, `monitor_enabled` | Saved website and monitoring switches |
+| `web_calls_effective` | Read-only website voice switch eligibility: saved voice ON and Web agent not OFF |
+| `record_call`, `recording_source` | Saved recording override and source; null inherits agent |
+| `custom_prompt`, `sms_prompt`, `web_prompt` | Separate call business profile, SMS instructions and website instructions |
+| `voice_id`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation` | Saved voice, speed, keypad and booking-confirmation overrides |
+| `voicemail_leave_enabled`, `voicemail_message` | Saved per-number voicemail; dashboard-origin numbers use the agent policy instead |
+| `telnyx_key_status` | Safe status below; no full key or full fingerprint |
+
+Effective voice is only a switch calculation, not a guarantee that a call can start.
+Account/agent activity, billing, authorization and existing admission checks still apply.
+Legacy null Web agent values retain the existing engine's enabled interpretation.
+No value is written by this request; it never changes the saved voice switch.
+
+## Telnyx key status
+
+Same projection as the dashboard:
+
+```json
+{
+  "provider": "telnyx", "set": true, "verified": false,
+  "fingerprint": "1234567890abcdef", "previousKeyAcceptedUntil": null
+}
+```
+
+`fingerprint` is at most 16 characters; the previous-key deadline is null when
+absent/expired. `set` and `verified` describe stored key state, not provider health.
+Twilio numbers normally have false/false/null/null key metadata.
+
+To install or rotate a Telnyx signature key, send `telnyx_public_key` through the
+existing import/PATCH candidate flow. A successful save is NOT verification.
+Only the engine's valid signed-callback flow can verify a candidate; read back this
+status after the normal callback test. There is no API field to force verified.
+See [update](/api-reference/phone-numbers/update) and [import](/api-reference/phone-numbers/import).
+
+Credentials, carrier account secrets, full signature keys, full fingerprints,
+internal row/account/import IDs and operation tokens are never returned.

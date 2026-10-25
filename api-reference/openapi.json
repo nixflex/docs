@@ -352,6 +352,13 @@
       "PhoneNumber": {
         "type": "object",
         "properties": {
+          "source": { "type": ["string", "null"], "enum": ["api", "dashboard", null], "readOnly": true, "description": "Descriptive origin, never a permission or writable setting." },
+          "created_at": { "type": ["string", "null"], "format": "date-time" },
+          "twilio_number_sid": { "type": ["string", "null"] },
+          "web_agent_enabled": { "type": "boolean" },
+          "web_calls_enabled": { "type": "boolean", "description": "Saved switch; website voice also needs Web agent ON." },
+          "web_functions_enabled": { "type": "boolean" },
+          "monitor_enabled": { "type": "boolean" },
           "phone_number": {
             "type": "string",
             "example": "+447446466847"
@@ -430,6 +437,7 @@
         "type": "object",
         "description": "The carrier is inferred from which credentials you send: Twilio (twilio_sid + twilio_token) or Telnyx (telnyx_api_key + telnyx_connection_id). Importing a Twilio number REPLACES that number's existing webhooks.",
         "properties": {
+          "telnyx_public_key": { "type": "string", "writeOnly": true, "description": "Optional canonical base64 32-byte signature key candidate. Saving does not verify it." },
           "phone_number": {
             "type": "string",
             "example": "+447446466847"
@@ -462,8 +470,15 @@
       },
       "PhoneNumberUpdate": {
         "type": "object",
-        "description": "Send only the fields that change; an empty body is rejected. null clears a field so the agent setting is inherited - note speaking_rate: null means INHERIT (send 1 to force normal speed).",
+        "description": "Only passed settings change. Null clearing is field-specific: nullable overrides inherit, SMS/web prompts clear to empty text. Seven switches use booleans; source/status are read-only. Unknown fields alongside valid fields may be ignored.",
         "properties": {
+          "inbound_enabled": { "type": "boolean" },
+          "outbound_enabled": { "type": "boolean", "description": "False locks new outbound calls; not a hangup or universal SMS lock." },
+          "web_agent_enabled": { "type": "boolean" },
+          "web_calls_enabled": { "type": "boolean", "description": "Saved website voice switch; also requires Web agent ON." },
+          "web_functions_enabled": { "type": "boolean", "description": "Default OFF; all enabled custom functions available to website visitors. No booking/availability." },
+          "monitor_enabled": { "type": "boolean", "description": "Eligibility only, not listener attachment or takeover." },
+          "telnyx_public_key": { "type": "string", "writeOnly": true, "description": "Canonical base64 32-byte candidate; read telnyx_key_status via single GET. Saving does not verify it." },
           "custom_prompt": {
             "type": "string",
             "nullable": true,
@@ -2820,12 +2835,16 @@
         ],
         "summary": "List phone numbers",
         "operationId": "listPhoneNumbers",
+        "description": "Owned public numbers only; pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, phone_number DESC; live traversal, not a snapshot.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "parameters": [
+          { "$ref": "phone-number-reads.json#/ProviderFilter" },
+          { "$ref": "phone-number-reads.json#/PageLimit" },
+          { "$ref": "phone-number-reads.json#/PageCursor" },
           {
             "name": "agent_id",
             "in": "query",
@@ -2841,17 +2860,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "phone_numbers": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/PhoneNumber"
-                      }
-                    },
-                    "count": {
-                      "type": "integer"
-                    }
-                  }
+                  "$ref": "phone-number-reads.json#/NumberListResponse"
                 }
               }
             }
@@ -2910,6 +2919,20 @@
       }
     },
     "/phone-numbers/{phoneNumber}": {
+      "get": {
+        "tags": ["Phone numbers"], "summary": "Get safe saved number settings", "operationId": "getPhoneNumber",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Saved safe settings, not inherited values.", "content": { "application/json": { "schema": {
+            "type": "object", "required": ["phone_number"], "properties": { "phone_number": { "$ref": "phone-number-reads.json#/PhoneNumberDetails" } }
+          } } } },
+          "400": { "description": "Invalid E.164 phone number." },
+          "401": { "description": "Invalid key or inactive account." },
+          "404": { "description": "Missing, foreign, pending or internal browser identity; number_not_found." },
+          "429": { "description": "Rate limit exceeded." },
+          "500": { "description": "Database read failed, not an empty successful result." }
+        }
+      },
       "parameters": [
         {
           "name": "phoneNumber",

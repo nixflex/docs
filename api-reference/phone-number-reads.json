@@ -1,0 +1,58 @@
+{
+  "PhoneNumberDetails": {
+    "type": "object",
+    "description": "Explicit safe saved settings. Null means unset, not a resolved agent value. No credentials or internal IDs.",
+    "additionalProperties": false,
+    "required": ["phone_number","agent_id","provider","source","created_at","inbound_enabled","outbound_enabled","sms_reply_enabled","web_agent_enabled","web_calls_enabled","web_functions_enabled","monitor_enabled","custom_prompt","sms_prompt","web_prompt","voice_id","speaking_rate","dtmf_enabled","require_booking_confirmation","record_call","recording_source","voicemail_leave_enabled","voicemail_message","web_calls_effective","telnyx_key_status"],
+    "properties": {
+      "phone_number": {"type":"string"},
+      "agent_id": {"type":["string","null"]},
+      "provider": {"type":["string","null"],"enum":["twilio","telnyx",null]},
+      "source": {"type":["string","null"],"enum":["api","dashboard",null],"readOnly":true,"description":"Descriptive only, not writable or a permission."},
+      "created_at": {"type":["string","null"],"format":"date-time"},
+      "inbound_enabled": {"type":["boolean","null"]},
+      "outbound_enabled": {"type":["boolean","null"]},
+      "sms_reply_enabled": {"type":["boolean","null"]},
+      "web_agent_enabled": {"type":["boolean","null"]},
+      "web_calls_enabled": {"type":["boolean","null"]},
+      "web_functions_enabled": {"type":["boolean","null"]},
+      "monitor_enabled": {"type":["boolean","null"]},
+      "custom_prompt": {"type":["string","null"]},
+      "sms_prompt": {"type":["string","null"]},
+      "web_prompt": {"type":["string","null"]},
+      "voice_id": {"type":["string","null"]},
+      "speaking_rate": {"type":["number","null"]},
+      "dtmf_enabled": {"type":["boolean","null"]},
+      "require_booking_confirmation": {"type":["boolean","null"]},
+      "record_call": {"type":["boolean","null"]},
+      "recording_source": {"type":["string","null"],"enum":["provider","nixflex",null]},
+      "voicemail_leave_enabled": {"type":["boolean","null"]},
+      "voicemail_message": {"type":["string","null"]},
+      "web_calls_effective": {"type":"boolean","readOnly":true,"description":"Saved website voice true and Web agent not false (legacy null retains old semantics). Switch eligibility only; active/billing admission still applies."},
+      "telnyx_key_status": {"$ref":"#/TelnyxKeyStatus"}
+    }
+  },
+  "TelnyxKeyStatus": {
+    "type":"object","readOnly":true,"additionalProperties":false,
+    "required":["provider","set","verified","fingerprint","previousKeyAcceptedUntil"],
+    "properties":{
+      "provider":{"type":["string","null"]},
+      "set":{"type":"boolean"},
+      "verified":{"type":"boolean"},
+      "fingerprint":{"type":["string","null"],"maxLength":16},
+      "previousKeyAcceptedUntil":{"type":["string","null"],"format":"date-time","description":"Null if absent or expired."}
+    }
+  },
+  "NumberListResponse": {
+    "type":"object","required":["phone_numbers","count"],
+    "properties":{
+      "phone_numbers":{"type":"array","items":{"$ref":"openapi.json#/components/schemas/PhoneNumber"}},
+      "count":{"type":"integer","description":"Rows returned, NOT the account total."},
+      "next_cursor":{"type":["string","null"],"description":"Only present in paged mode. Keep account and filters unchanged."},
+      "has_more":{"type":"boolean","description":"Only present in paged mode."}
+    }
+  },
+  "ProviderFilter":{"name":"provider","in":"query","schema":{"type":"string","enum":["twilio","telnyx"]}},
+  "PageLimit":{"name":"limit","in":"query","description":"Opt into pagination. With cursor alone defaults to 50.","schema":{"type":"integer","minimum":1,"maximum":100}},
+  "PageCursor":{"name":"cursor","in":"query","description":"Opaque next_cursor from the last page; same account and filters.","schema":{"type":"string","maxLength":1024}}
+}

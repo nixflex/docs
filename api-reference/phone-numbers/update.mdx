@@ -33,10 +33,20 @@ URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B44744646
 
 ## Body parameters
 
+The [seven boolean switches](/api-reference/phone-numbers/switches) are supported:
+`inbound_enabled`, `outbound_enabled`, `sms_reply_enabled`, `web_agent_enabled`,
+`web_calls_enabled`, `web_functions_enabled`, `monitor_enabled`.
+`source` and key verification status are read-only, not update fields.
+Use [single-number GET](/api-reference/phone-numbers/get) for complete saved settings.
+
+`telnyx_public_key` also accepts a signature public-key candidate. Saving does not
+mark it verified. Read `telnyx_key_status` after the normal signed-callback test.
+Do not send `verified` or `telnyx_key_verified_at` to try to bypass verification.
+
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `custom_prompt` | string or null | No | The business profile layered on top of the agent prompt on **phone calls**. Maximum 8000 characters. Send `null` or an empty string to clear it - the number then falls back to the agent prompt alone. Does **not** affect SMS or web chat. |
-| `voice_id` | string or null | No | The voice this number speaks with on calls, overriding the agent's voice (e.g. `Craig`, `Eleanor`, `Ashley`). Send `null` or empty to fall back to the agent's voice. Must be an exact, valid voice ID. |
+| `voice_id` | string or null | No | The voice override. Send null/empty to inherit the agent. Use a current catalog ID; this PATCH trims the value but does not validate catalog membership. |
 | `sms_reply_enabled` | boolean | No | Turns the SMS agent (auto-reply) on or off for this number. `false` by default - a number only replies to texts when you turn this on. Accepts `true`/`false`. |
 | `sms_prompt` | string or null | No | Instructions for the [SMS agent](/sms/sms-agent) on this number. Independent of `custom_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
 | `web_prompt` | string or null | No | Instructions for the [Web agent](/web-assistant/overview) on this number. Independent of `custom_prompt` and `sms_prompt`. Maximum 20000 characters. Send `null` or an empty string to clear it. |
@@ -47,6 +57,13 @@ URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B44744646
 | `recording_source` | string or null | No | Who records on this number when recording is on. `"provider"` = your carrier records; `"nixflex"` = the voice engine records the conversation itself, with no carrier recording charges. `null` means **not set** - the number inherits the agent's choice. Ignored while `record_call` is off. Any other value is rejected with `invalid_recording_source`. See [Call recording](/advanced/call-recording#who-records). |
 
 Send at least one field. An empty body is rejected.
+
+Clearing is field-specific: `custom_prompt`, `voice_id` and `voicemail_message`
+clear to null; `sms_prompt` and `web_prompt` clear to an empty string. Nullable
+speed/keypad/recording/booking-confirmation overrides inherit the agent. The
+seven switches are not nullable inheritance controls. Voicemail requires a message
+when enabled; dashboard-origin numbers retain the agent's voicemail policy.
+Unknown fields alongside valid fields may be ignored, not always rejected.
 
 ## Response
 
