@@ -1,30 +1,18 @@
 ---
 title: "Get agent"
-description: "GET /v1/agents/:id"
+description: "GET /v1/agents/:id — Batch 1 draft"
 api: "GET https://api.nixflex.com/v1/agents/{agent_id}"
 ---
 
-Fetches a single agent with all its configuration.
+Draft. Fetch an owned agent using its `agent_id`.
+Returns the same reviewed safe settings as create/update/list, including response delay,
+STT controls, timezone, SMS settings, extraction, voicemail and retention.
+No carrier auth token or unreviewed future column is returned.
 
-## Request
+GET still returns an owned soft-disabled agent; `is_active` is false.
 
-```bash
-curl https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-## Path parameters
-
-| Parameter | Type | Required | Notes |
-|---|---|---|---|
-| `agent_id` | string | Yes | The agent's ID (format `agent_xxx`) |
-
-## Response
-
-`200 OK` — returns the full agent object (same shape as [Create agent](/api-reference/agents/create)).
-
-## Errors
-
-| Code | HTTP | Cause |
-|---|---|---|
-| `agent_not_found` | 404 | ID doesn't exist or belongs to another account |
+| HTTP/code | Meaning |
+|---|---|
+| 200 | Owned agent and its settings |
+| 404 not_found | Missing or belongs to another account (same response) |
+| 503 agent_store_unavailable | Storage could not be checked; do not interpret as missing |

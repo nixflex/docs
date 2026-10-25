@@ -103,125 +103,9 @@
           "error"
         ]
       },
-      "Agent": {
-        "type": "object",
-        "description": "An agent is the personality that answers calls. One agent can be attached to unlimited phone numbers. See https://docs.nixflex.com/api-reference/agents/get for the full field list.",
-        "properties": {
-          "agent_id": {
-            "type": "string",
-            "example": "agent_f2b06c0e0bd877e9"
-          },
-          "name": {
-            "type": "string",
-            "example": "Acme Dental Receptionist"
-          },
-          "system_prompt": {
-            "type": "string"
-          },
-          "welcome_message": {
-            "type": "string"
-          },
-          "voice_id": {
-            "type": "string"
-          },
-          "language": {
-            "type": "string",
-            "example": "en"
-          },
-          "record_call": {
-            "type": "boolean"
-          },
-          "recording_source": {
-            "type": "string",
-            "enum": ["provider", "nixflex"],
-            "default": "provider",
-            "description": "Who records when record_call is on. provider = your carrier records; nixflex = the voice engine records the conversation itself."
-          },
-          "dtmf_enabled": {
-            "type": "boolean"
-          },
-          "require_booking_confirmation": {
-            "type": "boolean",
-            "description": "Engine reads the appointment back and waits for a clear yes before any calendar write. Default false. Numbers can override."
-          },
-          "voicemail_leave_enabled": {
-            "type": "boolean",
-            "description": "When true, the agent speaks voicemail_message on answering machines and hangs up. Applies to dashboard-imported numbers; API-imported numbers use their own per-number setting. Enabling without a message is rejected with voicemail_message_required."
-          },
-          "voicemail_message": {
-            "type": "string",
-            "nullable": true,
-            "description": "Spoken word for word on a detected voicemail when voicemail_leave_enabled is true."
-          },
-          "speaking_rate": {
-            "type": "number"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "incall_sms_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Lets the agent text the caller during a call, and sends booking confirmations by text. Off: no text is sent, the agent confirms details out loud. Agents created before this setting existed were switched on."
-          }
-        },
-        "additionalProperties": true
-      },
-      "AgentCreate": {
-        "type": "object",
-        "description": "Only name and system_prompt matter to get started; everything else has a sensible default. Full field list: https://docs.nixflex.com/api-reference/agents/create",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Acme Dental Receptionist"
-          },
-          "system_prompt": {
-            "type": "string",
-            "maxLength": 16000,
-            "example": "You are the front-desk assistant at Acme Dental..."
-          },
-          "welcome_message": {
-            "type": "string",
-            "example": "Hello, Acme Dental, how can I help?"
-          },
-          "voice_id": {
-            "type": "string"
-          },
-          "language": {
-            "type": "string",
-            "example": "en"
-          },
-          "record_call": {
-            "type": "boolean"
-          },
-          "recording_source": {
-            "type": "string",
-            "enum": ["provider", "nixflex"],
-            "default": "provider",
-            "description": "Who records when record_call is on. provider = your carrier records; nixflex = the voice engine records the conversation itself."
-          },
-          "dtmf_enabled": {
-            "type": "boolean"
-          },
-          "require_booking_confirmation": {
-            "type": "boolean",
-            "description": "Engine reads the appointment back and waits for a clear yes before any calendar write. Default false. Numbers can override."
-          },
-          "speaking_rate": {
-            "type": "number"
-          },
-          "incall_sms_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Lets the agent text the caller during a call, and sends booking confirmations by text. Off: no text is sent, the agent confirms details out loud. Agents created before this setting existed were switched on."
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "additionalProperties": true
-      },
+      "Agent": { "$ref": "./schemas/agent-response.json" },
+      "AgentCreate": { "$ref": "./schemas/agent-request.json" },
+      "AgentUpdate": { "$ref": "./schemas/agent-update.json" },
       "Call": {
         "type": "object",
         "description": "A call record. Post-call fields (transcript, summary, recording) populate after the call ends. Full field list: https://docs.nixflex.com/api-reference/calls/get",
@@ -1008,6 +892,7 @@
           }
         },
         "responses": {
+          "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "201": {
             "description": "The created agent.",
             "content": {
@@ -1102,6 +987,7 @@
           }
         ],
         "responses": {
+          "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "200": {
             "description": "Success",
             "content": {
@@ -1191,6 +1077,7 @@
           }
         ],
         "responses": {
+          "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "200": {
             "description": "Success",
             "content": {
@@ -1269,12 +1156,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AgentCreate"
+                "$ref": "#/components/schemas/AgentUpdate"
               }
             }
           }
         },
         "responses": {
+          "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "200": {
             "description": "Success",
             "content": {
@@ -1349,6 +1237,7 @@
           }
         ],
         "responses": {
+          "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "200": {
             "description": "Success",
             "content": {

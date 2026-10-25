@@ -1,0 +1,83 @@
+---
+title: "Agent contract (Batch 1 draft)"
+description: "Exact agent input, output and error rules"
+---
+
+Draft only: publish with the matching engine release, not before staging verification.
+All four read/write responses use the same reviewed projection. Responses never contain
+`twilio_auth_token`; `twilio_account_sid` is a legacy readable account identifier.
+
+## Inputs
+
+No coercion of strings into booleans/numbers. Valid 0/false values are preserved.
+Omitted fields retain defaults (create) or the saved value (update).
+Pickup delay is the deliberate legacy exception: this release does not alter its
+validation, values or defaults. Do not change it as part of the staging helper.
+
+| Fields | Contract |
+|---|---|
+| name | string, max 200 |
+| system_prompt, welcome_message | strings, max 16000 each |
+| language | supported language code or multi; existing empty create default retained |
+| voice_id / voice_key | string or null; key max 36, alias max 200; resolve one catalog voice, reject conflicting pair |
+| is_active, ai_speaks_first, dynamic_greeting, record_call, amd_enabled, greet_by_name, remember_callers, require_booking_confirmation | booleans |
+| func_end_call, func_cold_transfer, func_send_sms | booleans; last two are compatibility fields, not runtime permission switches |
+| temperature | finite number 0..0.7, omitted create default 0.3 |
+| response_length | short / medium / long |
+| response_eagerness | whole milliseconds 0..1000, not pickup delay |
+| stt_confidence | finite number 0..1 |
+| stt_max_silence_ms | whole number 0..2147483647 (stored control; not the response-delay slider) |
+| interruption_sensitivity | whole number 0..100; retained compatibility setting |
+| max_call_duration_seconds / silence_hangup_seconds | whole seconds 1..2147483 or null (avoids milliseconds-timer overflow); null preserves existing runtime fallback; new-create defaults 600 / 30 |
+| wait_tag_seconds / ivr_timeout_seconds | whole seconds 30..120 or null / whole seconds 1..1800 |
+| timezone | valid IANA name, max 100; no timezone conversion or call-window change |
+| incall_sms_enabled / post_call_sms_enabled | booleans |
+| post_call_sms_template | string, max 600 |
+| voicemail_leave_enabled | boolean; true requires a non-blank merged voicemail_message |
+| voicemail_message | string max 600 or null |
+| transfer_type | cold / warm |
+| transfer_number / phone_number | E.164, null or empty; phone_number is legacy, not an import |
+| transfer_whisper | string max 16000 or null |
+| webhook_url | HTTP(S) without user-info, max 2048, null or empty; URL shape validation is not an outbound fetch |
+| boosted_keywords | max 2000 characters, at most 50 comma-separated non-empty terms, or null |
+| dtmf_enabled | true / false / null; null retains inheritance |
+| recording_source | provider / nixflex, case/space-normalized by the existing parser; null/empty normalizes to provider; invalid_recording_source retained |
+| speaking_rate | finite number (existing clamp 0.5..1.5), null or empty (clear) |
+| voice_speed | finite number 0.01..100; compatibility only, not used for speech |
+| llm_model / fallback_message | strings max 200 / 16000; compatibility only, not runtime model/fallback selection |
+| call_retention_days | PUT only: 90 / 30 / 7 / 1 / 0. POST inherits account default |
+| twilio_account_sid / twilio_auth_token | deprecated input: real values fail; null/empty may clear on PUT, never echo a token |
+| data_extraction_fields | array of up to 50 definitions below; [] clears |
+
+`func_end_call` governs duration/silence timers; it is not a blanket prohibition on model END_CALL.
+This release does not turn inert compatibility settings into features, and does not
+change channel rules, billing, recording, pickup timing or the dashboard's direct writes.
+
+Extraction entries: required `name` (unique identifier, 1-64 letters/digits/underscores,
+starting with a letter/underscore; __proto__/constructor/prototype forbidden) and
+`type` (text / selector / boolean / number). Optional `description` and
+`format_example` are strings up to 2000; `optional` is boolean.
+`choices` is up to 100 unique non-blank strings, each at most 200 characters;
+a selector requires at least one. Unknown nested properties reject the whole request.
+
+## Errors and warnings
+
+Empty/unknown-only PUT: 400 empty_agent_update.
+Mixed supported/unknown fields: supported fields save, with a JSON `warnings` array
+containing code unknown_fields, unknown names, and "These fields were not saved."
+Unknown input values are not echoed. Empty POST still creates defaults.
+
+Known invalid input fails before writing. Dedicated prompt, recording-source,
+remember-callers, retention, voice-selection and credential errors remain.
+Missing/foreign agent: 404 not_found. Database failure: 503 agent_store_unavailable.
+Catalog lookup outage: 503 catalog_unavailable. No blind write retries.
+
+## Kits
+
+See the feature-branch examples/agent-contract.md in Node+CLI, Python and MCP.
+The CLI already passes all fields via repeated --set or --body; no new CLI flags
+or mutation-retry behavior are needed. MCP publishes named settings while retaining
+unknown keys so the engine can issue its warning. No package publication in this run.
+
+DELETE soft-disables only and retains the legacy response {"message":"Agent deleted"}.
+It does not detach numbers, erase history or make GET of an owned disabled agent return 404.

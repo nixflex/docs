@@ -1,85 +1,16 @@
 ---
 title: "List agents"
-description: "GET /v1/agents"
+description: "GET /v1/agents — Batch 1 draft"
 api: "GET https://api.nixflex.com/v1/agents"
 ---
 
-Returns your active agents, newest first. Inactive agents are not included. 100 per page by default - page with `limit` and `offset`.
+Draft. Returns a bare array of your active agents, newest first.
+Each item has the same safe settings projection as create/update/get.
+Disabled agents are excluded from this list but can still be fetched by owned ID.
+Carrier auth tokens and unreviewed future columns are never returned.
 
-## Request
+Pagination is unchanged: `limit` defaults to 100 and is capped at 200;
+`offset` defaults to 0. Ordering remains `created_at` descending.
+Batch 1 does not redesign pagination or add status/search filters.
 
-```bash
-curl https://api.nixflex.com/v1/agents \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-## Query parameters
-
-| Parameter | Type | Default | Notes |
-|---|---|---|---|
-| `limit` | int | `100` | How many agents to return. Hard-capped at **200** per request - a higher value is reduced to 200 rather than rejected. |
-| `offset` | int | `0` | How many agents to skip. Combine with `limit` to page through. |
-
-## Response
-
-`200 OK` returns a JSON array:
-
-```json
-[
-  {
-    "agent_id": "agent_125207e452f8714a",
-    "name": "Acme Dental Receptionist",
-    "system_prompt": "You are the receptionist for...",
-    "welcome_message": "Good morning, Acme Dental.",
-    "voice_id": "Dennis",
-    "language": "en",
-    "voice_speed": 1,
-    "temperature": 0.7,
-    "max_call_duration_seconds": 600,
-    "silence_hangup_seconds": 20,
-    "record_call": true,
-    "recording_source": "provider",
-    "webhook_url": null,
-    "transfer_number": null,
-    "fallback_message": "Sorry, could you say that again?",
-    "post_call_sms_enabled": false,
-    "post_call_sms_template": null,
-    "data_extraction_fields": [],
-    "is_active": true,
-    "created_at": "2026-05-17T03:45:12Z",
-    "updated_at": "2026-05-17T03:45:12Z"
-  }
-]
-```
-
-## Response fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `agent_id` | string | Unique ID for the agent |
-| `name` | string | Display name |
-| `system_prompt` | string | The agent's instructions |
-| `welcome_message` | string | What the agent says first |
-| `voice_id` | string | The voice the agent speaks with |
-| `language` | string | Language code, e.g. `en` |
-| `voice_speed` | number | Speaking rate multiplier |
-| `temperature` | number | How much the agent's wording varies |
-| `max_call_duration_seconds` | int | Hard cap on call length |
-| `silence_hangup_seconds` | int | Hang up after this much silence |
-| `record_call` | boolean | Whether calls are recorded |
-| `recording_source` | string | Who records when on: `provider` (carrier) or `nixflex` (voice engine) |
-| `webhook_url` | string | Agent-level webhook, or `null` |
-| `transfer_number` | string | Default transfer destination, or `null` |
-| `fallback_message` | string | Said when the agent cannot answer |
-| `post_call_sms_enabled` | boolean | Whether an SMS is sent after the call |
-| `post_call_sms_template` | string | Template for that SMS, or `null` |
-| `data_extraction_fields` | array | Fields to pull from each call |
-| `is_active` | boolean | Always `true` in this response |
-| `created_at` | string | ISO 8601 |
-| `updated_at` | string | ISO 8601 |
-
-<Note>
-  Results are ordered newest first (`created_at` descending).
-</Note>
-
-Fetch one agent by ID with [Get agent](/api-reference/agents/get).
+Database failures return `503 agent_store_unavailable`, not an empty successful list.

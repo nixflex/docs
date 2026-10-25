@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "type"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$",
+      "description": "Unique; __proto__, constructor and prototype forbidden."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "selector",
+        "boolean",
+        "number"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "optional": {
+      "type": "boolean"
+    },
+    "format_example": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "choices": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "description": "Required non-empty for selector; whitespace-only choices rejected."
+    }
+  }
+}
