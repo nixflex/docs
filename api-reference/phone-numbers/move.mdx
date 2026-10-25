@@ -1,0 +1,92 @@
+---
+title: "Move a number to another agent"
+description: "Keep the number and its settings; change only its assigned agent"
+---
+
+D7 draft, local/unpublished. Requires SQL100 and the engine release with
+`NUMBER_AGENT_MOVE=on` after all old engine instances and their work have drained.
+It is OFF by default. No carrier routing or billing changes are made by a move.
+
+## Request
+
+Send `PATCH /v1/phone-numbers/{phoneNumber}` with **only** `agent_id`:
+
+```json
+{"agent_id":"agent_target"}
+```
+
+Use your existing account authentication. Encode the plus: `%2B447457401554`.
+The number and active target agent must belong to the same account, not merely
+the same human login. A foreign or unknown agent returns `404 agent_not_found`.
+Missing/foreign number returns `404 number_not_found`. Pending imports are busy.
+
+## What changes and what stays
+
+Only the existing number row's `agent_id` changes, atomically. Never delete and
+re-import to perform this move. The carrier, credentials, row identity, source,
+number overrides, website and SMS instructions, website appearance, custom
+functions, number-level integrations, inbox and history remain unchanged.
+
+New work resolves the new agent from the database; no deployment or cache wait is
+needed. The new agent's shared voice and settings apply where there is no number
+override. The number's own website instructions still apply, not the new agent's
+phone prompt. Agent-level integration fallback follows the new agent; number-level
+integration settings stay. Existing history is not reassigned retroactively.
+
+Running or starting calls (both carriers and browser calls), automatic SMS replies,
+website replies, unfinished campaigns (including draft/paused/scheduled) and number
+operations prevent the move. A same-agent request is a no-op, but pending import or
+number operations are still refused. A timeout never proves that work has ended.
+
+```json
+{"phone_number":{"phone_number":"+447457401554","agent_id":"agent_target","agent_name":"Ggg","changed":true}}
+```
+
+`changed:false` means it was already assigned to this agent. Read saved overrides
+with the existing single-number GET; the move response is deliberately small.
+
+## Errors
+
+| HTTP | Code | What to do |
+|---|---|---|
+| 400 | invalid_agent_move | Send a nonempty agent_id alone, at most 200 characters. Update settings separately. |
+| 400 | invalid_number | Use a complete E.164 number. |
+| 403 | account_unavailable | The account must be active. |
+| 404 | agent_not_found / number_not_found | Select an agent/number belonging to this account. |
+| 409 | agent_unavailable | Activate or choose another target agent. |
+| 409 | number_busy | Wait for the call, reply, campaign or number operation to finish. |
+| 503 | number_move_disabled | The operator has not enabled the rollout. |
+| 503 | number_move_unconfirmed | GET the number first. A lost reply may follow a committed move; never blindly retry. |
+
+Unconfirmed work stays busy, even after restart. Support must reconcile proof;
+waiting a fixed number of minutes is not permission to clear it.
+
+## Kits (local/unpublished)
+
+```js
+await client.phoneNumbers.move(number, targetAgentId);
+await client.phoneNumbers.update(number, {agent_id: targetAgentId});
+```
+
+```python
+client.phone_numbers.move(number, target_agent_id)
+client.phone_numbers.update(number, agent_id=target_agent_id)
+# AsyncNixflex: await either method.
+```
+
+```sh
+nixflex numbers move +447457401554 --agent agent_target
+nixflex numbers update +447457401554 --agent agent_target
+```
+
+MCP keeps the existing `update_phone_number` tool: pass
+`{"phone_number":"+447457401554","fields":{"agent_id":"agent_target"}}`.
+No automatic retry of a move on a timeout or server error.
+
+## Dashboard integration for Chat B
+
+Owner-session-only `PATCH /api/phone-numbers/{phoneNumber}/agent`, same body,
+response and error codes. Use the existing dashboard session transport, never an
+API key from the browser. Refresh the number listing after success; show the
+engine's error message and do not optimistically change the assignment on failure.
+No dashboard dropdown is built in this change.

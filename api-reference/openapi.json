@@ -2962,23 +2962,20 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PhoneNumberUpdate"
+                "$ref": "phone-number-move.json#/UpdateRequest"
               }
             }
           }
         },
         "responses": {
+          "409": { "$ref": "phone-number-move.json#/Busy" },
+          "503": { "$ref": "phone-number-move.json#/Unavailable" },
           "200": {
             "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "phone_number": {
-                      "$ref": "#/components/schemas/PhoneNumber"
-                    }
-                  }
+                  "$ref": "phone-number-move.json#/UpdateResponse"
                 }
               }
             }

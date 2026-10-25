@@ -6,6 +6,10 @@ api: "PATCH https://api.nixflex.com/v1/phone-numbers/{phone_number}"
 
 Update the per-number settings on a number you have already imported: the call business profile, the voice, and the SMS and web agent instructions. Every field is optional - send only what you want to change. Any field left out is untouched.
 
+D7 draft: sending **only** `agent_id` uses the separate safe
+[move-number operation](/api-reference/phone-numbers/move), with its small response
+and busy checks. Do not combine it with the settings below.
+
 Each channel is independent:
 
 - `custom_prompt` shapes **phone calls** (layered on top of the agent prompt).

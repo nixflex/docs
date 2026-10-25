@@ -1,0 +1,32 @@
+{
+  "Request": {
+    "type": "object", "additionalProperties": false, "required": ["agent_id"],
+    "properties": { "agent_id": { "type": "string", "minLength": 1, "maxLength": 200 } },
+    "description": "D7 draft: send only agent_id. Target must be active and belong to the authenticated account."
+  },
+  "UpdateRequest": {
+    "oneOf": [
+      { "$ref": "#/Request" },
+      { "allOf": [ { "$ref": "openapi.json#/components/schemas/PhoneNumberUpdate" }, { "not": { "required": ["agent_id"] } } ] }
+    ]
+  },
+  "Response": {
+    "type": "object", "additionalProperties": false, "required": ["phone_number"],
+    "properties": { "phone_number": {
+      "type": "object", "additionalProperties": false,
+      "required": ["phone_number", "agent_id", "agent_name", "changed"],
+      "properties": {
+        "phone_number": { "type": "string" }, "agent_id": { "type": "string" },
+        "agent_name": { "type": ["string", "null"] }, "changed": { "type": "boolean" }
+      }
+    } }
+  },
+  "UpdateResponse": {
+    "anyOf": [
+      { "$ref": "#/Response" },
+      { "type": "object", "properties": { "phone_number": { "$ref": "openapi.json#/components/schemas/PhoneNumber" } } }
+    ]
+  },
+  "Busy": { "description": "number_busy: a call, reply, campaign or number operation is unfinished; agent_unavailable: target inactive. Do not retry until the cause is resolved." },
+  "Unavailable": { "description": "number_move_disabled: rollout OFF. number_move_unconfirmed: read the number before retrying; the database may have committed. Never automatically repeat the PATCH." }
+}
