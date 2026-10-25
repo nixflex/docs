@@ -62,7 +62,7 @@ Voice campaigns: `client.campaigns.create(agent_id=..., from_number=..., prompt=
 ## Phone numbers
 
 ```python
-client.phone_numbers.import_(phone_number="+447446466847", agent_id=agent["agent_id"], twilio_account_sid="AC...", twilio_auth_token="...")
+client.phone_numbers.import_(phone_number="+447446466847", agent_id=agent["agent_id"], twilio_sid="AC...", twilio_token="...")
 client.phone_numbers.list()
 client.phone_numbers.update("+447446466847", sms_reply_enabled=True, sms_prompt="You are the text assistant for Smile Dental...")
 client.phone_numbers.set_monitor("+447446466847", True)
@@ -165,7 +165,7 @@ except NixflexError as e:
 
 ## Retries
 
-Built in and identical to the Node SDK: a 429 is retried once after `Retry-After` (capped at 30 s); network failures retry once; 5xx retries only `GET` and `DELETE`. A `POST` is **never** retried after a 5xx - a call is never dialled twice. Set `max_retries=0` to disable.
+The unpublished local Python candidate retries only GET/HEAD reads, with bounded backoff and `Retry-After`. Changes (including DELETE and 429 responses) are never automatically repeated. Lost or malformed mutation replies and unproved 5xx raise `NixflexOutcomeUnknownError`, with `outcome='unknown'` and `safe_to_retry=False`: check before retrying. Set `max_retries=0` to disable read retries too. This is candidate behaviour, not a claim about the published PyPI package; Part 1a only confirms that candidate and does not publish it.
 
 ## Related
 

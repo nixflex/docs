@@ -56,20 +56,20 @@ Because this is a normal API call, you can wire it into your own product - enabl
 
 ## Pricing
 
-Live Monitor is billed as a small add-on to the standard voice rate, and **only on the calls you can actually listen to** (inbound calls on monitored numbers).
+Enabling Live Monitor is free. The listening add-on applies only to a call where a live listener actually attaches, whether the phone call is inbound or outbound. Viewing the page or switching monitoring ON is not attachment evidence.
 
 | | Per minute |
 |---|---|
 | Standard voice | \$0.08 |
-| **Inbound call someone actually listened to** | **\$0.09** |
-| Outbound call (any number) | \$0.08 |
+| **Inbound or outbound call with a live listener attached** | **\$0.09** |
+| Inbound or outbound phone call with no listener attached | \$0.08 |
 
-- The extra **\$0.01/min** applies only to **inbound** calls on a number that has monitoring enabled - the calls a listener can tune into.
-- **Outbound calls are always billed at the standard \$0.08/min**, even on a monitored number, because outbound calls are not monitored.
-- If you turn monitoring **off**, the number returns to the standard \$0.08/min immediately.
+- The listening add-on is **\$0.01/min** on a call with actual listener attachment, inbound or outbound. Existing bring-your-own discounts still apply to the base rate.
+- A call with no attached listener does not get the listening add-on merely because monitoring is enabled.
+- Turning monitoring OFF later does not erase evidence that a listener already attached to that call.
 
 <Note>
-You are charged the small add-on on every inbound minute of a monitored number, whether or not anyone actually listened. This keeps billing simple and predictable - one clear rate per number - rather than trying to measure exact listen time.
+The prices above show the standard base-rate example. Actual listener attachment selects the call's listening premium; it is not a separate meter of seconds spent listening. Website voice has its own existing premium rule. This documentation change does not alter billing calculations.
 </Note>
 
 ## Common questions
@@ -79,13 +79,13 @@ You are charged the small add-on on every inbound minute of a monitored number, 
     Yes. Enabling and disabling monitoring is a standard API call, so you can automate it - for example, turn it on when a customer upgrades to a plan that includes live monitoring, and off when they downgrade.
   </Accordion>
   <Accordion title="Does enabling monitoring change how calls work?">
-    No. A monitored number answers and behaves exactly like any other number. Monitoring only marks the number as eligible to be listened to, and adds the small per-minute charge on inbound calls.
+    No. Monitoring marks the number as eligible to be listened to. Enabling the switch alone adds no listening charge.
   </Accordion>
   <Accordion title="Am I charged if nobody listens?">
-    No. Enabling monitoring on a number is free, and calls nobody opens bill at the standard \$0.08/min. You are only charged the \$0.09 rate for a call someone actually listened to - and opening a live call even briefly puts that whole call on the higher rate.
+    No. Enabling monitoring or opening the page is not enough. A live listener must actually attach before the call receives the listening premium. Even a brief successful attachment counts for that call.
   </Accordion>
   <Accordion title="Are outbound calls monitored or charged extra?">
-    No. Outbound calls are not monitored and are always billed at the standard \$0.08/min, even on a number that has monitoring enabled.
+    Outbound phone calls use the same listening rule as inbound calls: the extra \$0.01/min requires an actually attached listener. The number switch alone is free.
   </Accordion>
   <Accordion title="Can two accounts see each other's calls?">
     No. Listeners only ever see and hear calls on numbers they own, matched on their API key. Calls are fully isolated per account.

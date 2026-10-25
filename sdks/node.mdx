@@ -46,7 +46,7 @@ const { Nixflex } = require('nixflex');
 | `apiKey` | required | `KEY_ID:KEY_SECRET`. Keep it server-side. |
 | `baseUrl` | `https://api.nixflex.com` | Override for testing against a mock server. |
 | `timeout` | `30000` | Per-request timeout in milliseconds. |
-| `maxRetries` | `1` | Retries after a rate limit or network failure. |
+| `maxRetries` | `1` | Bounded GET retries only; changes never repeat automatically. |
 
 <Warning>
   Never use the SDK in browser or mobile client code - it needs your API secret. Call it from your own backend and expose only what your app needs.
@@ -249,21 +249,24 @@ try {
 | `NixflexNotFoundError` | 404 | No such resource on your account. |
 | `NixflexRateLimitError` | 429 | Too many requests. Carries `retryAfterSeconds`. |
 | `NixflexServerError` | 5xx | Something failed on our side. |
+| `NixflexOutcomeUnknownError` | 0 / response status | A change may have happened. `outcome='unknown'`, `safe_to_retry=false`; check before retrying. Also a `NixflexServerError` for compatible catches. |
 | `NixflexConnectionError` | - | Network failure or timeout before a response. |
 | `NixflexError` | - | Base class - catch this to handle any SDK error. |
 
 ## Retries
 
-The SDK retries carefully, never blindly:
+Draft Part 1a behaviour (not yet published to npm):
 
-- **429** - retried once, honouring the `Retry-After` header.
-- **Network failure or timeout** - retried, because no request reached us.
-- **5xx** - retried only for `GET` and `DELETE`.
-- **`POST` after a 5xx** - never retried. A create request that may have succeeded is not repeated, so a call is never dialled twice.
+- **GET** - bounded retries for 429, network failure/timeout and 5xx; `Retry-After` is honoured.
+- **POST/PUT/PATCH/DELETE** - never automatically repeated, including after 429. A network failure does not prove the request never reached the server.
+- **Lost/malformed change reply or unproved 5xx** - `NixflexOutcomeUnknownError`: check whether the change happened before retrying. Original error details and request ID remain available. Explicit whole-operation not-sent proof stays distinct.
+- **CLI** - uses this same policy. JSON errors include `outcome` and `safe_to_retry` for unknown results. Do not put an automatic retry loop around the command.
 
 ## TypeScript
 
 Types ship with the package - no `@types` install. Request and response shapes are typed for every endpoint, and each method carries the field-level notes from this reference as editor tooltips.
+
+Draft Part 1a adds the existing six number-switch PATCH fields, `telnyx_public_key` and `require_booking_confirmation`. The shared `PhoneNumber.provider` is optional because current Twilio-import and PATCH responses can omit it; check it before using it as a string. This is a type correction, not an engine response change.
 
 ```typescript
 import Nixflex, { type Call, type PhoneNumber } from 'nixflex';
