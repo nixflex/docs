@@ -38,7 +38,7 @@ nixflex logout         # removes the stored key
 ```
 
 <Note>
-  `login` stores the key in `~/.nixflex/config.json` with owner-only permissions. The file has two keys, `api_key` and optionally `base_url` - safe to write yourself in a provisioning script. Never paste a key into a command in a shared shell history - use `login` or the environment variable. The [MCP server](/mcp/overview) reads the same file, so one `login` serves both.
+  Legacy `login` stores plaintext in `~/.nixflex/config.json`; this is not an encrypted vault. POSIX file mode is not a guarantee of Windows ACL protection. The file contains `api_key` and optional `base_url`; staging must retain its explicit URL. Never put keys in scripts, shell history, chat or client JSON. The [MCP foundation draft](/mcp/overview) binds key and URL together; secure key setup is planned for run 3, not built into today's login.
 </Note>
 
 ## Output
@@ -74,6 +74,6 @@ nixflex agents list --json | jq '.[].agent_id'
     Every command with a real example.
   </Card>
   <Card title="MCP" icon="diagram-project" href="/mcp/overview">
-    The same account from Claude Desktop, Cursor or VS Code.
+    Claude Desktop, Claude Code, Codex and Cursor; see the unpublished foundation and release status.
   </Card>
 </CardGroup>

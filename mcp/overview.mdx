@@ -1,14 +1,23 @@
 ---
 title: "MCP server"
-description: "Manage your Nixflex account from Claude Desktop, Cursor, VS Code or any MCP client"
+description: "MCP setup draft for Claude Desktop, Claude Code, Codex and Cursor"
 icon: "diagram-project"
 ---
 
 `nixflex-mcp` exposes your Nixflex account as tools an AI assistant can use. Once connected, you can say *"call Sam and confirm his Tuesday appointment"* or *"which calls failed today and why?"* and the assistant does it through your account - the same API the dashboard and the CLI use.
 
-It runs on your machine, talks to the assistant over stdio, and calls the official [`nixflex`](https://www.npmjs.com/package/nixflex) SDK. Nothing is hosted by Nixflex; your key never leaves your computer.
+It runs on your machine and talks to the assistant over stdio. It sends your key
+over HTTPS to the selected Nixflex API; tool results are visible to your assistant.
+It is not true that your key or all data stays on your computer.
 
-## Connect in two steps
+## Run 1 installation foundation — unpublished draft
+
+The local MCP candidate is 0.3.1; CLI candidate is 0.9.1. These changes are not npm
+publications. Do not copy a candidate-version install into a live dashboard yet.
+Supported tools: Claude Desktop (Windows/Mac), Claude Code, Codex and Cursor.
+VS Code setup is retired. Node 22+ is required for this MCP candidate. Both Windows
+and macOS are release targets; automated macOS runs and a manual Mac test must pass
+before launch. A workflow file alone is not evidence of a Mac pass.
 
 Local unpublished Group 2 keeps the same 35 tool names. `list_phone_numbers` accepts
 `phone_number` alone for one complete safe read, or list filters/cursor pagination.
@@ -16,40 +25,63 @@ Seven update switches are typed. See [number tools](/api-reference/phone-numbers
 The local read-only compatibility adapter works with installed SDK 0.8.0; mutations
 still use the SDK and Part 1a no-repeat guards. This is not an npm publication.
 
-<Steps>
-  <Step title="Log in once with the CLI">
-    ```bash
-    npx nixflex login
-    ```
-    The MCP server reads the same stored key, so it needs no configuration of its own.
-  </Step>
-  <Step title="Add the server to your app">
-    ```bash
-    npx nixflex mcp setup claude     # or: cursor, vscode
-    ```
-    Then **fully quit** the app (from the system tray, not just the window) and reopen it. The server appears under connectors as **nixflex**.
-  </Step>
-</Steps>
+Run 1 safely updates existing Claude Desktop/Cursor config only; Codex and Claude
+Code have tested config builders, with their user-facing installers coming in run 3.
+The unpublished candidate refuses npm-mode setup. Maintainers can use the verified
+unpacked artifact with `nixflex mcp setup claude --mcp-local <package-directory>`
+(or `cursor`). That writes an absolute Node/entry-point launch, not a registry lookup.
+See the repository's `FOUNDATION.md` for the secret-free staging smoke procedure.
 
-Prefer to edit the config yourself? This is all `mcp setup` writes:
+After publication approval, the same builder generates this Windows environment-mode
+entry (merge under `mcpServers.nixflex-staging`; the key must be in the CLIENT process
+environment, not this file). This snippet is a draft, not a command to run now:
 
 ```json
 {
-  "mcpServers": {
-    "nixflex": { "command": "npx", "args": ["-y", "nixflex-mcp"] }
+  "command": "cmd.exe",
+  "args": ["/d", "/s", "/c", "npx -y nixflex-mcp@0.3.1"],
+  "env": {
+    "NIXFLEX_CREDENTIAL_SOURCE": "environment",
+    "NIXFLEX_BASE_URL": "https://nixflex-voice-engine-staging.up.railway.app"
   }
 }
 ```
 
-Claude Desktop: `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS). Cursor: `~/.cursor/mcp.json`. VS Code: `.vscode/mcp.json` under `"servers"`.
+Mac/Linux launcher: command `npx`, args `["-y","nixflex-mcp@0.3.1"]`. Claude Desktop
+is Windows/Mac only. The setup writer chooses the OS; it never inserts credentials
+or arbitrary text into shell strings. Production uses `https://api.nixflex.com`
+and a separate `nixflex` entry, not a staging key silently redirected to production.
 
-If you would rather not store the key, set `NIXFLEX_API_KEY` in the server's `env` block instead - the real value, not `${NIXFLEX_API_KEY}` (desktop apps do not expand variables).
+Claude Desktop: `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or
+`~/Library/Application Support/Claude/claude_desktop_config.json` (Mac).
+Cursor: `~/.cursor/mcp.json`. Cursor supports `${env:NIXFLEX_API_KEY}` interpolation;
+Codex supports an `env_vars` allowlist. Support differs by client: do not reuse one
+client's variable syntax everywhere. A separately opened GUI may not inherit a
+terminal's environment. Never paste a real key into JSON, TOML, argv or chat.
 
-**Other settings.** `NIXFLEX_BASE_URL` in the same `env` block points the server at a staging API. To pin a version instead of taking the latest, use `["-y", "nixflex-mcp@0.2.1"]`. To remove the server, delete the `nixflex` block and restart the app.
+**Legacy credentials:** the existing CLI file is plaintext, not an encrypted vault.
+The MCP reads key and `base_url` together. An old unprofiled file without `base_url`
+retains its documented production default; staging must have an explicit saved URL.
+Named legacy profiles require their own URL. An explicit URL conflicting with the
+saved URL is refused. Environment keys always require an explicit approved URL.
+Only the exact production and staging origins above are allowed; redirects are refused.
 
-Tested with Claude Desktop. Cursor and VS Code use the config formats their own documentation describes; `mcp setup` writes those for you.
+**Config safety:** only a missing file may start empty. Malformed/unreadable files,
+duplicate keys, conflicts, concurrent edits or an existing commented Nixflex block
+that needs replacement cause refusal. Other entries/comments are retained. A changed
+Nixflex entry needs confirmation after a redacted preview. Close other config editors
+while setup runs. No key is copied into the client file. Restore/remove only the
+specific entry when uninstalling; do not replace the entire file.
+
+Run 2 adds the Claude Desktop bundle. Run 3 adds secure key setup and per-tool installs,
+including Cursor's button. ChatGPT is **coming soon** until hosted OAuth after launch.
 
 ## Try it
+
+For installation verification, request **“Use Nixflex get_usage only. Do not change
+anything.”** Use a staging account and check the displayed API origin. This does
+not require a real call, SMS or payment. The examples below are account actions,
+not installation tests; review and approve them separately.
 
 - "List my Nixflex agents."
 - "Show my last 10 calls and tell me which ones ended badly and why."
@@ -83,10 +115,10 @@ Every tool is one API call. Names are `snake_case`; results come back as JSON.
 Draft Part 1a (unpublished): the local server disables SDK retries and retries only read-only tools once. Changes never automatically repeat after lost replies, network errors, 429 or 5xx. Unknown changes return `outcome: unknown` and `safe_to_retry: false`; check before retrying. This protection also works with the installed Node SDK 0.8.0, without waiting for an npm publication.
 
 - **Nothing destructive runs without `confirm: true`.** `delete_*` tools and `rotate_api_key` return a preview of what would happen and change nothing until the assistant calls again with `confirm: true` - which a well-behaved assistant only does after asking you.
-- **There is no delete-all tool.** Wiping an account stays a deliberate API or CLI action.
+- **There is no delete-all MCP tool.** Do not infer account-deletion permission from MCP access.
 - **Spending tools say so.** `create_call`, `create_campaign`, `send_sms` and `create_sms_campaign` state in their descriptions that they spend credit.
 - **Lists are summaries.** `list_calls` returns one line per call (status, duration, summary, sentiment); `get_call` returns the full transcript for one call.
-- **Your key stays local.** The server reads `~/.nixflex/config.json` or its own `env`; nothing is sent anywhere except `api.nixflex.com`.
+- **Credentials are destination-bound.** The resolved key is sent only to its selected approved API origin. Tool results are shared with the assistant; a plaintext config is not secure key storage.
 - **The tool list is a contract.** A test in the package starts the real server over stdio and pins all 35 tool names, descriptions and schemas - a tool cannot vanish or change shape without failing the build.
 
 ## What it is not
@@ -98,7 +130,9 @@ It manages your **account** - agents, numbers, calls, customers. It does not sit
 | Symptom | Fix |
 |---|---|
 | **nixflex** does not appear in the connectors list | The app reads its config on launch - fully quit it (system tray → Quit) and reopen. Check the JSON is valid. |
-| Server shows but every tool fails with "No API key" | Run `npx nixflex login`, or set the real key in the server's `env` block. |
+| Missing key or explicit API URL | Supply the full key and approved URL in the client process environment, or inspect your existing legacy file locally. Never send the file or key to support. |
+| Destination conflict | Keep the key with its own saved URL; create a separate staging entry. Never change the URL just to make an error disappear. |
+| npm candidate not published | Use the maintainer's verified local artifact; do not fall back to the old npm version. |
 | "Key rejected" | The key must be the full pair `nxf_xxx:nxfs_xxx`. |
 | Anything else | Claude Desktop writes the server's log to `%APPDATA%\Claude\logs\mcp-server-nixflex.log` (Windows) or `~/Library/Logs/Claude/mcp-server-nixflex.log` (macOS). The server logs to stderr only - stdout is the protocol. |
 
