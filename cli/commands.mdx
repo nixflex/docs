@@ -45,11 +45,11 @@ number PATCH can ignore unknown fields alongside valid fields. Check read-back.
 
 | Command | Notes |
 |---|---|
-| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...] [--wait] [--timeout S]` | Places a call now. `--var` sets prompt variables. `--wait` polls until the call ends and prints the full record (transcript, analysis, bookings); default timeout 300 s. |
+| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...] [--wait] [--timeout S]` | Places a call now. `--var name=Sam` fills `{{name}}` via `dynamic_vars` in the batch 1 candidate. `--wait` polls for the end; default timeout 300 s, not a hangup timer. See [client safety](/api-reference/calls/client-safety). |
 | `calls list [--limit N] [--agent ID]` | Newest first. |
 | `calls get <call_id>` | |
-| `calls delete <call_id> --confirm` | Removes the record and its recording. |
-| `calls delete-all --confirm` | Every call, recording and SMS record on the account. Cannot be undone. |
+| `calls delete <call_id> --confirm` | Requests guarded cleanup; pending/safety refusals are not deletion. |
+| `calls delete-all --confirm` | Requests guarded call cleanup, not SMS or account erasure. Never blindly retry an uncertain response. |
 
 ```bash
 nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt @reminder.txt --var name=Sam --wait

@@ -35,7 +35,7 @@ curl -X POST https://api.nixflex.com/v1/calls/outbound \
 |---|---|---|---|
 | `agent_id` | string | Yes | The agent that will handle this call. Must belong to your API key. |
 | `to_number` | string | Yes | Who to call, in E.164 format (`+447386172392`, not `07386172392`). |
-| `prompt` | string | Yes | The call purpose â€” what the agent should say and why it is calling. Sent fresh per call, stored nowhere. This is separate from the agent's own saved prompt and must not be empty. |
+| `prompt` | string | Yes | Per-call purpose, separate from the agent's saved prompt. It may be retained with the call's actual prompt and history; it must not be empty. |
 | `dynamic_vars` | object | No | Key-value pairs injected into the prompt (see below). |
 | `from_number` | string | No | Which of your numbers to dial from. Must be an **outbound-enabled** number on this agent. If you omit it, the engine uses the agent's first outbound-enabled number. |
 | `campaign_id` | string | No | Link this call to a batch campaign for reporting. |
@@ -62,7 +62,14 @@ Anything in `dynamic_vars` is interpolated into the prompt. Reference each value
 You are calling {{patient_name}} about their appointment on {{appointment_time}}.
 ```
 
-The engine replaces `{{patient_name}}` with `"Sarah"` before the agent speaks. If the prompt references a variable that is not in `dynamic_vars`, it is left as-is â€” the agent will see the literal `{{patient_name}}` text, so double-check your keys match.
+Use double braces, for example `{{patient_name}}`, and supply every referenced key.
+Missing-detail validation can refuse an incomplete call when enabled; do not rely
+on an unmatched placeholder staying literal. These values and the actual prompt
+can be retained with call data, subject to the applicable retention policy.
+
+The [client safety draft](/api-reference/calls/client-safety) shows Node, CLI,
+Python and MCP syntax and the one-attempt rule for changing requests. Lost replies
+do not prove no call was placed: check before retrying.
 
 ## Response
 

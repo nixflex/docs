@@ -181,14 +181,14 @@
           },
           "prompt": {
             "type": "string",
-            "description": "Instructions for this specific call, layered on the agent prompt."
+            "description": "Purpose for this specific call. May be retained with the actual prompt and history; not guaranteed ephemeral."
           },
           "dynamic_vars": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Values for {placeholders} in the prompt."
+            "description": "Values for double-brace placeholders such as {{name}}. Single-call wire field is dynamic_vars; supply every referenced value."
           },
           "from_number": {
             "type": "string",
@@ -1398,7 +1398,7 @@
             "bearerAuth": []
           }
         ],
-        "description": "Permanently erases every call, recording, and SMS message on this key. Irreversible.",
+        "description": "Guarded call cleanup request; does not delete SMS or close the account. Can refuse with 409/503 while work or cleanup confirmation is pending. Legacy recording counters are not all-copy erasure proof. Never blindly retry an uncertain response.",
         "responses": {
           "200": {
             "description": "Success",
@@ -1559,7 +1559,7 @@
             "bearerAuth": []
           }
         ],
-        "description": "Permanently erases the call record, transcript, and recording file. Irreversible.",
+        "description": "Guarded cleanup request for an owned call. Can refuse with 409/503 for in-progress/unsettled work or pending/failed cleanup. Not a promise of immediate all-copy erasure. Never blindly retry an uncertain response.",
         "responses": {
           "200": {
             "description": "Success",

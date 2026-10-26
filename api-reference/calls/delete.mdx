@@ -4,7 +4,10 @@ description: "DELETE /v1/calls/:callId"
 api: "DELETE https://api.nixflex.com/v1/calls/{call_id}"
 ---
 
-Permanently erases a single call: the call record, its transcript and analysis, and the recording file itself. Use this to satisfy an individual erasure request ("delete my data") without waiting for the 90-day retention window.
+Requests guarded cleanup of one owned call. This is **not** a promise of immediate
+erasure of every copy. The current public deletion guard can refuse nonempty
+cleanup until original storage/transfer-audio safety is confirmed. A separate
+safe-delete design is pending; this documentation does not bypass that fence.
 
 ## Request
 
@@ -21,7 +24,7 @@ await client.calls.delete('CA1b5c0bfad4b56635b773938f16db2db7');
 
 ## Response
 
-`200 OK`:
+Legacy `200 OK` shape if cleanup is permitted and completes:
 
 ```json
 {
@@ -31,20 +34,30 @@ await client.calls.delete('CA1b5c0bfad4b56635b773938f16db2db7');
 }
 ```
 
-`recording_deleted` is `false` when the call had no recording (recording disabled, or the call ended before audio was saved) - the call record is still deleted.
+`recording_deleted` reflects the legacy cleanup path's count, not proof that a
+recording existed or every copy was erased. That path also requests removal of a
+possible transfer-whisper object, even when no such object exists. Never use this
+boolean as an erasure certificate. A refused request must not be shown as deleted.
 
 ## Errors
 
 | Status | Code | Meaning |
 |---|---|---|
 | 404 | `not_found` | No call with that ID on your account. Also returned for a call you have already deleted. |
+| 409 | `call_in_progress`, `campaign_in_progress` | Work still running; wait for it to end or resolve the campaign. |
+| 409 | `deletion_unsettled` | Outcome/charge is not confirmed; do not claim deletion. |
+| 409 | `recording_cleanup_pending`, `cleanup_pending_confirmation` | Storage/transfer-audio cleanup needs confirmation; contact support. |
+| 409 | `deletion_cleanup_failed` | Cleanup did not finish; contact support before retrying. |
+| 503 | `deletion_unavailable` | Safety could not be checked; deletion is not confirmed. |
 
 Only calls made with your own API key can be deleted; another account's call ID returns the same `404`.
 
 ## Not reversible
 
 <Warning>
-  There is no undo and no recovery window. The transcript and the recording are removed immediately - if you need a copy, fetch it with [Get call](/api-reference/calls/get) before deleting. Database backups do not restore deleted recordings.
+  Completed removal cannot be undone through this API. Do not promise immediate
+  completion, automatic retry or deletion from customer-owned storage and external
+  copies. Lost replies mean outcome unknown: check before retrying.
 </Warning>
 
 ## What this does NOT do

@@ -88,7 +88,7 @@ const call = await client.calls.create({
 const recent = await client.calls.list({ limit: 20 });
 const one = await client.calls.get(call.call_id);
 
-// GDPR erasure - irreversible
+// Guarded deletion requests: safety holds can refuse cleanup
 await client.calls.delete(call.call_id);
 await client.calls.deleteAll();
 ```
@@ -96,6 +96,11 @@ await client.calls.deleteAll();
 <Note>
   Outbound calls use `to_number`. A single SMS uses `to`. The SDK's types enforce the difference, so an editor with TypeScript will catch it before you run the code.
 </Note>
+
+Area 3 batch 1 fixes `calls.iter(pageSize)` for histories above 200: pageSize must
+be a whole number 1–200; invalid values fail before HTTP. Offset pages are not a
+snapshot. See [client safety](/api-reference/calls/client-safety) for variables,
+uncertain replies and publication limits.
 
 ## Phone numbers
 

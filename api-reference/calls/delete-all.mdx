@@ -4,7 +4,10 @@ description: "DELETE /v1/calls"
 api: "DELETE https://api.nixflex.com/v1/calls"
 ---
 
-Permanently erases **every** call on your API key - all call records, transcripts, analysis, recording files, and SMS messages. Intended for bulk erasure requests, offboarding a client, or clearing test data before going live.
+Requests guarded cleanup of owned call history. The current public guard can
+hold nonempty cleanup for storage/transfer-audio confirmation. This is not an
+immediate account-erasure workflow and does **not** delete SMS messages. The
+separate reviewed safe-delete design remains pending; no safety fence is removed.
 
 ## Request
 
@@ -19,37 +22,44 @@ Or with the [SDK](https://www.npmjs.com/package/nixflex):
 await client.calls.deleteAll();
 ```
 
-The same action is available in the dashboard under **Settings → Delete call data**.
+Do not assume dashboard deletion jobs use this same public API lifecycle.
 
 ## Response
 
-`200 OK`:
+Legacy `200 OK` shape; an already-empty scope can return:
 
 ```json
 {
   "deleted": true,
-  "calls_deleted": 412,
-  "recordings_deleted": 389,
-  "sms_deleted": 27
+  "calls_deleted": 0,
+  "recordings_deleted": 0,
+  "sms_deleted": 0
 }
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `calls_deleted` | number | Call records removed. |
-| `recordings_deleted` | number | Recording files removed from storage. Lower than `calls_deleted` when some calls had no recording. |
-| `sms_deleted` | number | SMS messages removed. |
+| `recordings_deleted` | number | Legacy requested-storage-path count, including possible whisper paths; not proof of objects found or every copy erased. |
+| `sms_deleted` | number | Compatibility field; this route does not delete SMS and returns zero. |
 
-Calls are deleted in batches, so a large history takes a few seconds. The response is returned once everything is gone.
+Refusals use 409 for in-progress, unsettled or pending/failed cleanup, and 503 when
+safety cannot be checked. See [Delete call](/api-reference/calls/delete) for the
+codes. A safety refusal includes `details.deleted=false` and
+`details.safe_to_retry=false`; show the reason instead of “deleted”. No completion
+deadline or all-copy erasure guarantee is made by this response.
 
 ## Not reversible
 
 <Warning>
-  This erases your entire call history in one request. There is no undo, no confirmation step, and no recovery window - export anything you need first with [List calls](/api-reference/calls/list). Database backups do not restore deleted recordings.
+  This is destructive if allowed. SDK changes never automatically retry it;
+  a lost reply may follow partial progress. Check before retrying. There is no
+  undo through this API; no promise about customer-owned or exported copies.
 </Warning>
 
 ## What this does NOT do
 
-- Your agents, phone numbers, and API keys are untouched - the platform keeps working exactly as before, with an empty history.
+- This call-data request does not delete your agents, phone numbers or API keys.
 - Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.
-- To close the account itself, use account deletion in the dashboard, which purges this data and then removes your login.
+- Account deletion is a separate dashboard-owner workflow with pending states;
+  this endpoint does not close an account or certify its complete erasure.

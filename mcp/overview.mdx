@@ -114,6 +114,13 @@ Every tool is one API call. Names are `snake_case`; results come back as JSON.
 
 Draft Part 1a (unpublished): the local server disables SDK retries and retries only read-only tools once. Changes never automatically repeat after lost replies, network errors, 429 or 5xx. Unknown changes return `outcome: unknown` and `safe_to_retry: false`; check before retrying. This protection also works with the installed Node SDK 0.8.0, without waiting for an npm publication.
 
+Area 3 batch 1 candidate: `create_call.variables` is translated to `dynamic_vars`
+for `{{name}}` placeholders. Summary direction comes from the API's
+`call_direction`/`call_type` (legacy `direction` fallback), never guessed from an
+absent field. Null/false/zero values stay honest; no transcript is added to lists.
+See [client safety](/api-reference/calls/client-safety). Bundles/install work is
+parked; this does not claim your installed server has been upgraded.
+
 - **Nothing destructive runs without `confirm: true`.** `delete_*` tools and `rotate_api_key` return a preview of what would happen and change nothing until the assistant calls again with `confirm: true` - which a well-behaved assistant only does after asking you.
 - **There is no delete-all MCP tool.** Do not infer account-deletion permission from MCP access.
 - **Spending tools say so.** `create_call`, `create_campaign`, `send_sms` and `create_sms_campaign` state in their descriptions that they spend credit.

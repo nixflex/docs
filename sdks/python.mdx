@@ -53,15 +53,18 @@ client.agents.delete(agent["agent_id"])
 call = client.calls.create(
     agent_id=agent["agent_id"],
     to_number="+447453573770",
-    prompt="Call Sam to confirm his appointment on Tuesday at 11.",
+    prompt="Call {{name}} to confirm their appointment on Tuesday at 11.",
     variables={"name": "Sam"},
 )
 client.calls.list(limit=20)
 client.calls.get(call["call_id"])          # transcript, analysis, bookings, recording_url
-client.calls.delete(call["call_id"])       # record + recording (GDPR)
+client.calls.delete(call["call_id"])       # guarded request; may refuse cleanup
 ```
 
 Voice campaigns: `client.campaigns.create(agent_id=..., from_number=..., prompt=..., recipients=[{"phone": "+44...", "variables": {...}}])` dials immediately unless you pass `schedule_type="schedule"`; `client.campaigns.launch(campaign_id)` starts a scheduled one.
+
+Area 3 batch 1 maps single-call `variables` to `dynamic_vars` on the wire; the
+canonical keyword also works, but do not pass both. See [client safety](/api-reference/calls/client-safety).
 
 ## Phone numbers
 
@@ -165,11 +168,19 @@ except NixflexError as e:
 | `NixflexInvalidRequestError` | 400 / 422 |
 | `NixflexRateLimitError` | 429 - `retry_after_seconds` is set |
 | `NixflexServerError` | 5xx |
-| `NixflexConnectionError` | network failure or timeout (`status == 0`) |
+| `NixflexOutcomeUnknownError` | A change may have happened; check before retrying. Also a `NixflexServerError`. |
+| `NixflexConnectionError` | Read failure or timeout; no mutation retry implied |
 
 ## Retries
 
-The unpublished local Python candidate retries only GET/HEAD reads, with bounded backoff and `Retry-After`. Changes (including DELETE and 429 responses) are never automatically repeated. Lost or malformed mutation replies and unproved 5xx raise `NixflexOutcomeUnknownError`, with `outcome='unknown'` and `safe_to_retry=False`: check before retrying. Set `max_retries=0` to disable read retries too. This is candidate behaviour, not a claim about the published PyPI package; Part 1a only confirms that candidate and does not publish it.
+Area 3 batch 1 implements GET-only bounded retries for sync and async clients.
+POST/PUT/PATCH/DELETE never repeat automatically, including after 429. Lost or
+malformed change replies and unproved 5xx raise `NixflexOutcomeUnknownError`, with
+`outcome='unknown'`, `safe_to_retry=False`, status, request ID and original details
+when available. Catch this type before `NixflexServerError`; check before retrying.
+Explicit whole-operation not-sent proof stays distinct, without an automatic retry.
+Set `max_retries=0` to disable GET retries. This remains an unpublished candidate,
+not a claim about the package currently installed from PyPI.
 
 ## Related
 

@@ -1,0 +1,85 @@
+---
+title: "Call client safety"
+description: "Area 3 batch 1 draft: variables, paging and uncertain replies"
+---
+
+<Note>
+  Local candidate documentation, not a claim that these fixes are already in
+  npm, PyPI, a Desktop bundle or your installed client. No engine behaviour,
+  pricing, pickup delay or ringing changes are part of this batch.
+</Note>
+
+## Single-call variables
+
+The HTTP field is `dynamic_vars`. Use double braces in the prompt: `{{name}}`.
+
+| Client | Input | Sent to `/v1/calls/outbound` |
+|---|---|---|
+| Node | `dynamic_vars: { name: 'Sam' }` | `dynamic_vars` |
+| CLI | `--var name=Sam` | `dynamic_vars` |
+| Python sync/async | `variables={"name": "Sam"}` | `dynamic_vars` |
+| MCP `create_call` | `variables: { "name": "Sam" }` | `dynamic_vars` |
+
+```typescript
+await client.calls.create({
+  agent_id: 'agent_example', to_number: '+12025550100',
+  prompt: 'Confirm the appointment with {{name}}.', dynamic_vars: { name: 'Sam' },
+});
+```
+
+```powershell
+nixflex calls create --agent agent_example --to +12025550100 --prompt 'Confirm with {{name}}.' --var name=Sam
+```
+
+These examples place a real paid call when run with a real configured client.
+Use the supplied offline fake-test helper to test this release instead.
+
+Python also accepts the canonical `dynamic_vars` keyword; use only one alias.
+CLI `--body`/`--set` may use either alias, but cannot combine them or combine one
+with `--var`. Ambiguous inputs fail locally before any request. Empty maps and
+empty string values are preserved. Campaign recipient `variables` is a separate,
+unchanged contract; do not rename it to `dynamic_vars`.
+
+Supply every referenced value; enabled missing-detail checks may refuse incomplete
+calls. Per-call purpose/variables can become part of stored prompts and history.
+They are not guaranteed to disappear or be stored nowhere.
+
+## One attempt for a change
+
+Python sync and async now use the same no-automatic-mutation-retry rule as Node:
+
+- **GET**: bounded retry on network failure, timeout, 429 and 5xx; default one
+  retry, `max_retries=0` / `maxRetries=0` disables it. Retry-After waits cap at 30s.
+- **POST/PUT/PATCH/DELETE**: one attempt, including 429, 5xx, disconnect and timeout.
+- Lost/malformed change reply, unproved 5xx or redirect: `NixflexOutcomeUnknownError`,
+  `outcome='unknown'`, `safe_to_retry=false`. A call/change may already have happened.
+- A 429 remains a rate-limit error. Its delay is not permission to resend a change.
+- Explicit whole-operation proof (`outcome=not_sent`, `sent=false`, `charged=false`,
+  `safe_to_retry=true`) stays distinct, but the SDK still does not resend it.
+
+Python's new error is also a `NixflexServerError` for existing catch compatibility.
+Catch the specific unknown type before a general server error. Status, request ID
+and original error details remain available when a response supplied them.
+
+Do not put a blind retry loop around the SDK, CLI or MCP tool. If a `call_id` is
+known, read it; otherwise check recent history and the request ID with support.
+An empty history page does not prove nothing was sent. This is not an exactly-once
+server/idempotency guarantee. MCP retains its existing no-retry mutation wrapper
+around pinned SDK 0.8.0; the variable fix works without publishing a new SDK first.
+
+## Node history iteration and MCP summaries
+
+`for await (const call of client.calls.iter(200)) { ... }` reads beyond 200 rows.
+The iterator accepts whole-number page sizes 1–200 only. Oversized, zero, negative,
+fractional and nonnumeric values throw `RangeError` before HTTP. A full final page
+requires one last empty read; a short page stops immediately. Offset pages are not
+a snapshot and can shift if history changes during iteration.
+
+MCP summaries read `call_direction`, then compatible `call_type`/older `direction`.
+Unrecognised/missing direction is null, not guessed inbound. Zero duration, false
+success and null analysis are not invented as positive results. Summary lists
+exclude transcripts, prompts and recording URLs; use `get_call` for detail.
+
+Full history filters, recording availability and billing breakdown are later batches.
+Do not rely on the current CLI/MCP `agent_id` call-list argument: the API does not
+apply that filter yet. No additional live control or tester capability is added.
