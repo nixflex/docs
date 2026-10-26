@@ -4,7 +4,9 @@ description: "Record call audio, and switch it off per agent or per number"
 icon: "microphone"
 ---
 
-Nixflex records the audio of every call and keeps it alongside the transcript, so you can listen back to anything your agent handled. Recording is **on by default** and can be switched off for an agent, or for a single number.
+Nixflex can record call audio alongside the transcript. Recording is **on by default**,
+but the effective number/agent setting and successful storage determine whether a
+recording is available. This Batch 3 draft clarifies inheritance, not new behaviour.
 
 <Note>
   Switching recording off does not affect the transcript. Speech recognition runs independently, so you still get the full transcript, summary, sentiment and extracted data - just no audio file.
@@ -22,7 +24,10 @@ When recording is on, you choose who captures the audio. The default is your car
 Set it per agent in the dashboard (**Call recording -> Recorded by**) or with `recording_source` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update). A single number can override its agent with `recording_source` on [Update phone number](/api-reference/phone-numbers/update); `null` on a number means inherit the agent. Any other value is rejected with `invalid_recording_source`.
 
 <Note>
-  Recording off always wins. With `record_call` off nothing is recorded by anyone, whatever `recording_source` says.
+  The effective recording decision wins over the source. A number's explicit
+  `record_call` wins over the agent: agent OFF + number ON still records. Number null
+  inherits the agent. An effective OFF stops Nixflex-controlled capture, not a
+  recording separately configured at your carrier.
 </Note>
 
 Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - with both voices balanced to the same level. If the caller interrupts the agent mid-sentence, the recording contains only what the caller actually heard. Like carrier recordings, they go to your own storage bucket when one is connected.
@@ -31,7 +36,8 @@ Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - wit
 
 **Per agent (dashboard)**
 
-Open the agent, find **Call actions**, and switch off **Call recording**. Every number on that agent stops recording from the next call onwards.
+Open the agent, find **Call actions**, and switch off **Call recording**. Numbers
+inheriting the agent stop recording on new calls; explicit number ON overrides remain.
 
 **Per number (API)**
 
@@ -58,22 +64,23 @@ Agent-level can also be set through the API with `record_call` on [Create agent]
 
 ## What happens when it is off
 
-- **No audio is captured at all.** Nixflex never asks the carrier to record, so there is no file anywhere - not on your carrier, not with us.
+- **Nixflex-controlled capture is off.** Independently configured carrier recording and existing copies are not erased by this setting.
 - **`recording_url` is `null`** on the call record and in the `call.completed` webhook. If your code reads that field, handle `null`.
 - **Past recordings are untouched.** Switching off applies to future calls only.
-- **You are not charged by your carrier** for recording those calls.
+- **Nixflex does not request carrier recording** when effective capture is off; any independent carrier configuration and its charges are outside this switch.
 
 ## Where the audio is stored
 
-When a call ends, a **carrier** recording is downloaded from your carrier, stored in **EU (Ireland)** storage, and the **carrier's copy is deleted**. A **Nixflex** recording is written straight to that same EU storage - there is never a carrier copy to fetch or delete.
+Carrier collection aims to fetch and safely persist the recording before carrier
+cleanup; failures or pending processing can leave the copy at the carrier. Nixflex
+capture does not create a carrier recording through that capture path. The actual
+storage destination depends on account configuration and successful tracked storage.
 
 Prefer the audio in your own region? Connect your own S3-compatible bucket and recordings go there instead, with Nixflex keeping no copy - see [Your own storage](/advanced/your-own-storage).
 
-<Note>
-  This is what both carriers recommend. Twilio charges for recording storage and documents downloading recordings to avoid those charges. Telnyx keeps recordings for up to a year and advises fetching what you need in good time. Pulling the file to EU storage also keeps recordings inside the EU, which matters if your end-customers are covered by GDPR.
-</Note>
-
-Recordings are deleted automatically after 90 days along with the rest of the call record - see [Data retention](/concepts/data-retention).
+Retention is the applicable **90/30/7/1/0-day** policy, not always 90 days. Cleanup
+waits for required work and storage proof. Automatic Nixflex retention excludes BYO
+storage; manage that bucket's lifecycle yourself. See [Data retention](/concepts/data-retention).
 
 ## Reading a recording
 
@@ -83,7 +90,9 @@ The URL arrives in two places:
 - In the [post-call webhook](/advanced/webhooks): `call.completed` includes `recording_url`
 
 <Tip>
-  If you need recordings for longer than 90 days, download the file from `recording_url` when the `call.completed` webhook fires and store it in your own system.
+  If you need a copy beyond your retention window, arrange your own storage workflow
+  and handle recording-unavailable/pending outcomes. A completed call alone does not
+  guarantee that its audio upload has already finished.
 </Tip>
 
 ## Audio format

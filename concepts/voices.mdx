@@ -6,11 +6,18 @@ icon: "waveform"
 
 # Voices
 
-Every Nixflex agent speaks with a voice. You can set it at two levels: a **default voice on the agent**, and an optional **per-number voice** that overrides it for a specific phone number.
+Every voice call uses an eligible voice selection. The agent supplies a default;
+number overrides are field-specific. Website voice shares audio settings, not the
+phone prompt or phone actions. Website chat has no spoken voice.
+
+Batch 3 draft: agent `voice_key` selects a catalog entry; `voice_id` is its legacy
+alias and can be null for catalog-only voices. A conflicting key/alias pair is
+rejected. The outbound catalog hand-off is now built, as for inbound/browser audio;
+actual availability still depends on the selected voice, language, BYO and fallback.
 
 ## Two ways to set a voice
 
-**Agent default** — the voice used by every number on the agent unless a number overrides it. Set the `voice_id` field on the agent:
+**Agent selection** — select a catalog voice or a supported legacy alias. For example:
 
 ```json
 {
@@ -19,7 +26,8 @@ Every Nixflex agent speaks with a voice. You can set it at two levels: a **defau
 }
 ```
 
-**Per-number override** — give one phone number its own voice, regardless of the agent default. This is essential when one agent serves many numbers (for example a reseller running 200 clinics on a single agent) and each number needs to sound different. Set `voice_id` on the number:
+**Per-number legacy alias** — set `voice_id` on the number for the legacy selection
+path. It is not a per-number catalog key and does not always beat an agent catalog selection:
 
 ```bash
 curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
@@ -28,17 +36,28 @@ curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
   -d '{ "voice_id": "Craig" }'
 ```
 
-A number with its own `voice_id` uses that voice; a number without one falls back to the agent's voice. Changes take effect on the next call — no redeploy. See [Update phone number](/api-reference/phone-numbers/update) for the full endpoint.
+A number alias overrides the agent alias when the legacy path uses `voice_id`.
+With catalog mode ON, the dispatcher prioritizes the agent's non-null `voice_key`
+over that alias. The number alias is not automatically converted into a catalog
+override. BYO and provider fallback can also change the actual rendered voice.
+Changes affect new calls; verify the active route before promising a distinct voice
+for each number. See [Update phone number](/api-reference/phone-numbers/update).
 
-Per-number voice applies to **both inbound and outbound** calls. The voice is resolved from the number the call uses: the dialled number for inbound, the from_number for outbound, so a number sounds the same in both directions. Set it once; if it ever gets cleared, set it again before the next call.
+Per-number voice is resolved from the dialled number for inbound, `from_number` for
+outbound, and the website's number for public browser voice. A saved catalog selection
+must be checked together with its alias; do not assume an arbitrary alias rewrites a
+catalog key or guarantees the same fallback voice on every provider.
 
 <Note>
-  `voice_id` must be an exact, valid voice ID (for example `Olivia`, `Craig`, `Ashley`). An unrecognised value falls back to the agent's voice rather than erroring, so if a voice isn't changing, check the value is exact.
+  Use a valid eligible voice selection and inspect the API response. Agent catalog
+  validation can reject a bad selection; a generic promise that unknown IDs always
+  fall back is unsafe. Do not infer supported languages from a voice's display name.
 </Note>
 
-## Recommended voices
+## Voice examples
 
-These voices work well for phone receptionists and business calls — warm, clear, and professional.
+These are example display names/styles, not a live availability or language contract.
+Use the current voice selector and eligible catalog entry for the intended language.
 
 | Voice | Gender | Style | Language |
 | --- | --- | --- | --- |
@@ -54,7 +73,10 @@ These voices work well for phone receptionists and business calls — warm, clea
 
 ## Multilingual voices
 
-Some voices speak several languages while keeping the same identity. For example, Olivia can speak English, German, Spanish, and Arabic. Set the `language` field to choose which language the voice speaks on a call.
+Some catalog voices support several languages. A language unsupported by the selected
+voice may require another eligible voice; keeping the same identity is not guaranteed.
+Agent `language` and the actual STT/TTS route together determine usable coverage.
+See [Languages](/concepts/languages).
 
 ## Speaking speed
 
@@ -99,7 +121,8 @@ So if you set the agent to `1.5`, **every number on that agent speaks at 1.5** -
   To bring one number back to normal while the rest of the agent stays fast, send `1` - not `null`.
 </Warning>
 
-Speed applies to **both inbound and outbound** calls and takes effect on the next call, like the voice itself.
+Speed applies to inbound, outbound and website voice, not website text chat, and takes
+effect on new calls. See [settings by channel](/concepts/agent-channels).
 
 <Note>
   Small steps go a long way on a phone line. `0.9` already sounds noticeably more measured and `1.1` noticeably brisker, so adjust a step at a time rather than jumping to the limits.

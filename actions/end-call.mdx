@@ -60,7 +60,7 @@ All three layers run in parallel. The caller's phone disconnects, the recording 
 | `speech_unrecognized` | The caller was speaking, but nothing could be understood - usually a language the line is not set to. The engine says so in the agent's language (up to twice), then ends the call. |
 | `max_duration_reached` | The call exceeded `max_call_duration_seconds` (default **300s**, range 60s–1800s). |
 | `transferred` | The caller was transferred to a human via [`[TRANSFER:]`](/actions/transfer). |
-| `voicemail_detected` | An outbound call hit voicemail. The engine hangs up immediately. |
+| `voicemail_detected` | Outbound voicemail handling; a configured source-eligible message may be spoken before ending. Carrier AMD can end the call before that path runs. |
 | `balance_insufficient` | The developer ran out of credit. Caller hears an apology, call ends. |
 
 Use `ended_reason` to filter analytics and identify problem calls.
@@ -74,7 +74,11 @@ The two silence/duration thresholds are agent-level fields:
 | `silence_hangup_seconds` | `10` | 5–45 | How long the agent waits in silence before ending the call. |
 | `max_call_duration_seconds` | `300` | 60–1800 | Hard cap on call length, whether or not anyone is talking. |
 
-Set them when creating an agent or update them later. See [Create agent](/api-reference/agents/create).
+New API agents default to 10/300 seconds; explicit valid inputs win and existing
+agents are not migrated. The ranges above describe dashboard controls, not the whole
+API validation contract; see [Create agent](/api-reference/agents/create).
+`func_end_call: false` disables the configured silence/duration timers, not every
+model-requested END_CALL. It is not a general prohibition on hanging up.
 
 <Tip>
   If you want the agent to confirm the booking back to the caller before ending, write that into the prompt. The agent will speak the confirmation, then emit `[END_CALL]`.

@@ -4,15 +4,21 @@ icon: "globe"
 description: "Let visitors talk to your AI agent from the browser - no phone number dialled, no carrier involved."
 ---
 
-Web calls let a visitor speak to your AI agent **directly from a web page**, using their microphone. Same agent, same prompt, same tools and booking - but the audio travels over the internet instead of a phone line. No carrier minutes are used, and it works from any country with zero telephony setup.
+Web calls let a visitor speak to your AI agent **directly from a web page**, using
+their microphone. Audio settings are shared, but the number's website instructions
+and visitor context replace phone business instructions. Built-in phone booking,
+SMS and transfers are not website capabilities. No carrier minutes are used.
 
 <Info>
-  A web call **is** an inbound call to the number's agent. It appears in call history, is recorded, analysed, billed, and fires webhooks exactly like a phone call. The caller shows as `web`.
+  A web call uses the inbound voice lifecycle and appears in call history with caller
+  `web`. Recording is conditional; analysis, billing and post-call delivery still have
+  their normal gates. This is not the owner's authenticated **Talk to your agent** test.
 </Info>
 
 ## Enabling web calls on a number
 
-Web calls are **off by default** on every number. Turn them on per number:
+Website voice needs both Web agent and web calls enabled on the number. Web calls
+are **off by default**. The legacy toggle below changes only web calls, not Web agent:
 
 ```bash
 curl -X PUT https://api.nixflex.com/v1/integrations/web-calls/number/+441234567890 \
@@ -70,11 +76,12 @@ A refused start returns `{"ok": false, "reason": "..."}` - `unavailable` (number
 ## Behaviour and guarantees
 
 - **Inbound only.** A web call always rings *in* to the number's agent.
-- **Everything is inherited.** Voice, prompt, language, booking tools, custom functions, transfers, webhooks, post-call analysis - whatever the number's agent does on the phone, it does on the web.
+- **Selective inheritance.** Voice, speech controls and voice limits are shared; prompts, greeting and actions follow the [channel matrix](/concepts/agent-channels).
 - **Interruptions work.** Visitors can talk over the agent and it stops, like a phone call.
 - **Recording included.** If recording is on for the number/agent, web calls are recorded - and an interrupted sentence is recorded only up to the moment it was cut, exactly as the visitor heard it.
-- **Caller identity is `web`.** Every visitor arrives as the same caller, so caller history and greet-by-name are deliberately skipped on web calls.
-- **No SMS destination.** A browser visitor has no phone number, so `[SEND_SMS]` and booking confirmation texts cannot be delivered. Tell your agent in its prompt not to offer texts on web calls - or have it collect a mobile number first.
+- **Separate visitor context.** Telephone caller identity is `web`; a website visitor card/history is separate from phone memory and may supply a greeting name.
+- **Custom functions only.** The number's `web_functions_enabled` switch defaults OFF and gates its enabled custom functions for website chat and voice.
+- **No built-in phone actions.** Collecting a mobile number does not enable website SMS, calendar booking/availability, transfer, keypad or IVR actions.
 
 ## Related
 

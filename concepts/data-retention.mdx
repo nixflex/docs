@@ -1,123 +1,62 @@
 ---
 title: "Data retention"
-description: "How long Nixflex keeps your call data, transcripts and recordings"
+description: "Agent retention preferences, safe cleanup and customer-owned copies"
 icon: "shield-check"
 ---
 
-Nixflex automatically deletes call data 90 days after the call ends. Account data (your agents, phone numbers, API keys) stays until you delete it.
+Batch 3 draft. Call-data retention is configurable; it is not uniformly 90 days.
 
-## What gets deleted after 90 days
+## Account default and agent setting
 
-A scheduled job runs every day at **3 AM UTC** and deletes records older than 90 days:
+Choose **90 / 30 / 7 / 1 day / Delete after each call**. The API represents the last
+option as `0`. New agents inherit the account default, with a 90-day fallback.
+Changing the account default does not rewrite existing agents. Duplicating an agent
+does not override this new-agent inheritance with the original agent's preference.
 
-<CardGroup cols={2}>
-  <Card title="Calls" icon="phone">
-    Call records, transcripts, summaries, sentiment, extracted data, duration - and the audio recording itself.
-  </Card>
+`POST /v1/agents` rejects an explicit `call_retention_days` with
+`retention_inherited`. After creation, `PUT /v1/agents/:id` accepts the setting.
+GET/list expose it. `GET /v1/account/retention` returns the saved default,
+`applies_to: "new_agents"` and `processing_enabled`.
 
-  <Card title="SMS messages" icon="message">
-    Inbound and outbound SMS sent through your agents.
-  </Card>
+## Eligibility is not proof of deletion
 
-  <Card title="Webhook deliveries" icon="webhook">
-    Logs of every webhook payload Nixflex sent to your endpoints.
-  </Card>
+The worker checks the applicable policy and waits for required settlement,
+post-call processing, recording writers and delivery decisions before erasing
+eligible content. A cleanup or storage failure remains pending; it is not reported
+as successful erasure. Worker configuration and deployed SQL must be ready.
 
-  <Card title="Outbound campaigns" icon="phone-volume">
-    Campaigns and their recipient lists.
-  </Card>
+`0` does not delete a live call or suppress its post-call analysis. Required
+post-call data is prepared for the API/webhook workflow first. It does not promise
+indefinite delivery retries or that an unreachable recipient received the data.
+Do not rely on an expired call remaining available to an ordinary GET indefinitely.
 
-  <Card title="SMS campaigns" icon="messages">
-    SMS broadcast campaigns and recipient lists.
-  </Card>
-</CardGroup>
+Website messages capture the applicable agent policy at insertion. Zero-day messages
+become eligible after the reply, on the next safe cleanup, without ending the chat.
+Saved visitor cards and telephone caller memory are separate from call/message
+retention. Disabling `remember_callers` does not erase either automatically.
 
-## What stays until you delete it
+## Recordings and copies
 
-<CardGroup cols={2}>
-  <Card title="Your account" icon="user">
-    Login email, name, account creation date.
-  </Card>
+Automatic Nixflex retention cleanup handles tracked Nixflex storage, not the
+customer's own bucket. Apply your own retention policy to BYO storage, downloaded
+files, webhook receivers and other copies you control. Billing/finalization evidence
+is not the same thing as retained conversation content.
 
-  <Card title="Agents" icon="robot">
-    Prompts, voice configuration, all agent settings.
-  </Card>
+For carrier recordings, collection/storage/cleanup may be pending or fail. Do not
+assume that every carrier copy was already deleted or that an absent URL proves
+there was never a recording. Independent carrier recording is outside a Nixflex toggle.
 
-  <Card title="Phone numbers" icon="phone-arrow-up-right">
-    Numbers you have imported, with their carrier credentials.
-  </Card>
+## Manual actions are separate
 
-  <Card title="API keys" icon="key">
-    Keys you have created for programmatic access.
-  </Card>
-</CardGroup>
+Switching recording off affects new work, not old audio. Number `true` still wins
+over agent `false`; see [recording](/advanced/call-recording).
+`DELETE /v1/agents/:id` switches the agent off; it does not erase its history.
+Call deletion and account erasure have their own safety checks and pending outcomes.
+A timeout or an HTTP request alone is not proof that all copies are gone.
 
-## Audio recordings
+This page does not promise that all service/provider data stays in one region or
+certify regulatory compliance. Confirm your configured destinations, provider terms,
+consent and retention obligations for your deployment.
 
-**Nixflex holds the recording.** Where the file comes from depends on who recorded it - see [Call recording](/advanced/call-recording#who-records). A **carrier** recording is downloaded from your carrier into EU (Ireland) storage and the **carrier's copy is deleted**. A **Nixflex** recording is written straight to that same EU storage, so no copy ever sits with the carrier. Either way the file is removed with the rest of the call record after 90 days.
-<Note>
-  This is what both carriers recommend. Twilio charges for recording storage and documents downloading recordings to avoid those charges. Telnyx keeps recordings for up to a year and advises fetching what you need in good time. Holding the file in the EU also keeps recordings inside the EU for GDPR purposes, rather than wherever your carrier account happens to be.
-</Note>
-
-<Tip>
-  **Need recordings for longer than 90 days?** Download the file from `recording_url` when the `call.completed` [webhook](/advanced/webhooks) fires and keep it in your own storage. That also gives you your own retention policy.
-</Tip>
-
-You can switch recording off entirely, per agent or per number - see [Call recording](/advanced/call-recording). With it off, no audio is captured anywhere, and the transcript is still produced.
-
-## Where the data is stored
-
-All Nixflex data lives in **EU/UK Supabase** (Ireland region):
-
-- **GDPR compliant by default** - data does not leave the EU
-- **UK data residency** for UK businesses
-- **Encrypted at rest** (AES-256) and in transit (TLS 1.3)
-
-## Manual deletion before 90 days
-
-<CardGroup cols={2}>
-  <Card title="Delete a phone number" href="/api-reference/phone-numbers/delete">
-    Removes the number from your account.
-  </Card>
-
-  <Card title="Delete an agent" href="/api-reference/agents/delete">
-    Removes the agent and all its configuration.
-  </Card>
-
-  <Card title="Delete an SMS campaign" href="/api-reference/sms/campaigns-delete">
-    Removes the campaign and its recipient list.
-  </Card>
-  <Card title="Delete a call" href="/api-reference/calls/delete">
-    Erases one call record, transcript, and recording file.
-  </Card>
-  <Card title="Delete all call data" href="/api-reference/calls/delete-all">
-    Erases every call, recording, and SMS message on your key.
-  </Card>
-</CardGroup>
-
-<Note>
-  Call deletion is immediate and irreversible: [`DELETE /v1/calls/:id`](/api-reference/calls/delete) removes the record, the transcript, and the recording file in one request, and [`DELETE /v1/calls`](/api-reference/calls/delete-all) clears everything on your key. There is no recovery window and backups do not restore deleted recordings, so fetch anything you need to keep first. The 90-day cleanup remains the automatic backstop for everything you do not delete yourself.
-</Note>
-
-## GDPR data subject requests
-
-If one of your end-users asks for their data to be deleted under Article 17:
-
-1. Find their calls and SMS messages by phone number through the API
-2. Erase each one with [`DELETE /v1/calls/:id`](/api-reference/calls/delete) - the record, transcript, and recording go together. With the SDK: `await client.calls.delete(callId)`
-3. Delete any copies you downloaded and stored in your own system
-4. The 90-day cleanup acts as a backstop - anything missed is deleted automatically
-
-You can complete an Article 17 request yourself, in your own code, without contacting us.
-
-<Note>
-  There is normally nothing left to erase on your Twilio or Telnyx account: a carrier recording's copy is deleted once Nixflex has downloaded it, and a Nixflex recording never creates a carrier copy at all. Check there anyway if you have your own recording configured directly on the carrier, outside Nixflex.</Note>
-
-For account-level deletion, use **Settings → Delete account** in the dashboard. Your calls, recordings, and messages are purged first, then your login is removed. Billing records are retained as required by tax law.
-
-## Roadmap
-
-<Card title="Coming soon" icon="hourglass">
-  - Configurable retention windows (30 / 60 / 90 days per agent)
-  - Per-agent PII redaction in transcripts
-</Card>
+See [privacy/action inheritance](/concepts/agent-inheritance) and
+[the agent contract](/api-reference/agents/contract).

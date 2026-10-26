@@ -10,7 +10,7 @@ You do not build a flow chart and you do not write code for the conversation. Yo
 
 ## One agent, many phone numbers
 
-An agent is a template, not a single phone line. The same agent can answer on one number or on a thousand.
+An agent is a template, not a single phone line. The same agent can answer on one number or many.
 
 ```
 Agent  "Dental receptionist"
@@ -50,7 +50,7 @@ You write the business side. The platform handles the phone side.
 
 | Set on the agent | Set on a single phone number |
 |---|---|
-| The instructions (system prompt) | Its own instructions, replacing the agent's |
+| Phone instructions (system prompt) | Inbound business profile, overriding conflicting business facts |
 | Voice and language | Its own voice and speaking speed |
 | How it responds - length, delay, speaking speed | Keypad input on or off |
 | Call limits - silence, maximum length | Recording on or off, and who records |
@@ -58,7 +58,10 @@ You write the business side. The platform handles the phone side.
 | Transfer and text settings | Text-message and web-chat instructions |
 | Where post-call data is sent | Its own custom functions |
 
-A setting on the number always wins over the agent. Leave it unset on the number and it follows the agent - that is what "not set" means throughout the API.
+Precedence is field-specific: recording/speed can inherit, while SMS and voicemail
+also depend on import source. Website instructions are separate from phone prompts.
+See [settings by channel](/concepts/agent-channels) and
+[privacy/action inheritance](/concepts/agent-inheritance). These are Batch 3 drafts.
 
 ## Settings
 
@@ -68,7 +71,7 @@ These are the same settings you see when you open an agent in the dashboard, wit
 
 | Dashboard | API field | What it does |
 |---|---|---|
-| Voice | `voice_id` | Which voice the agent speaks with. See [Voices](/concepts/voices) |
+| Voice | `voice_id`, `voice_key` | Legacy alias or catalog selection; a catalog-only voice may have a null alias. See [Voices](/concepts/voices) |
 | Language | `language` | `multi` follows the caller between common languages. Some languages need their own code. See [Languages](/concepts/languages) |
 | AI speaks first | `ai_speaks_first` | The agent greets the caller instead of waiting |
 | Welcome message | `welcome_message` | The exact first line on an inbound call |
@@ -84,7 +87,7 @@ These are the same settings you see when you open an agent in the dashboard, wit
 | Keyterms | `boosted_keywords` | Words your callers say that a general speech model mishears - staff names, treatments, places. Comma separated, keep under 50 |
 | LLM Temperature | `temperature` | Consistent versus varied wording. `0.3` is the recommended setting, and `0.7` the practical maximum for a phone agent |
 | Speaking Speed | `speaking_rate` | `1` is normal, `0.5` half speed, `1.5` half again as fast. A number can override this |
-| Didn't-catch-that message | `fallback_message` | What the agent says when it could not make out the words |
+| Legacy fallback text | `fallback_message` | Compatibility-only; no current runtime effect |
 
 **Call handling**
 
@@ -114,7 +117,7 @@ These are the same settings you see when you open an agent in the dashboard, wit
 |---|---|---|
 | Call Recording | `record_call` | Record the audio and keep it with the transcript |
 | Recorded by | `recording_source` | `provider` - your carrier records. `nixflex` - the voice engine records it, with no carrier recording charges. See [Call recording](/advanced/call-recording#who-records) |
-| Data retention | - | Call data is deleted automatically after 90 days. See [Data retention](/concepts/data-retention) |
+| Data retention | `call_retention_days` | 90/30/7/1/0 days; new agents inherit the account default. Cleanup has safety gates. See [Data retention](/concepts/data-retention) |
 
 **Data out**
 
@@ -125,7 +128,8 @@ These are the same settings you see when you open an agent in the dashboard, wit
 
 ## Built in, nothing to set up
 
-These work on every call, on every agent, at no extra cost.
+These are built-in voice behaviours. Provider coverage, fallback safety and actual
+cache hits vary; website chat does not inherit the voice fallback chain.
 
 | | |
 |---|---|
@@ -199,7 +203,8 @@ Yes, and that is the normal way to use it. Attach the agent to each business's p
 
 ## Can a single phone number behave differently from the rest?
 
-Yes. A number can have its own instructions, voice, speaking speed, recording setting, keypad setting, calendar and webhook. Anything set on the number wins over the agent; anything left unset follows the agent. See [Phone numbers](/concepts/phone-numbers).
+Yes. A number can have its own business profile, voice, speaking speed, recording,
+keypad, calendar and webhook. See the field-specific [inheritance rules](/concepts/agent-inheritance).
 
 ## Do I have to tell the agent how to handle interruptions?
 
@@ -225,15 +230,19 @@ These are not in the dashboard. Most agents never need them.
 |---|---|
 | `stt_confidence` | How sure the speech engine must be before the agent acts on what it heard |
 | `stt_max_silence_ms` | How long a pause may be before the agent treats a sentence as finished |
-| `interruption_sensitivity` | Fine-tunes how easily the caller can interrupt. The dashboard leaves this built in, and the default suits nearly every agent |
+| `interruption_sensitivity` | Stored compatibility setting; it does not tune the built-in interruption decisions |
 
 ## Fields that are accepted but do nothing
 
-Kept so that existing integrations do not break. Sending them changes nothing.
+Kept so that existing integrations do not break. They may be saved/read back, but
+do not have the suggested runtime effect.
 
 | Field | Use instead |
 |---|---|
 | `voice_speed` | `speaking_rate` |
+| `llm_model` | Platform/account BYO routing, not agent-level model selection |
+| `fallback_message` | Built-in recognition/recovery behaviour |
+| `interruption_sensitivity` | Built-in interruption policy |
 | `func_send_sms` | `incall_sms_enabled` |
 | `func_cold_transfer` | Your instructions and `transfer_number` |
 | `phone_number` | The [phone numbers API](/api-reference/phone-numbers/import) |
@@ -246,10 +255,13 @@ Kept so that existing integrations do not break. Sending them changes nothing.
 | `GET /v1/agents/:id` | [Fetch one](/api-reference/agents/get) |
 | `POST /v1/agents` | [Create](/api-reference/agents/create) |
 | `PUT /v1/agents/:id` | [Update](/api-reference/agents/update) - send only the fields you are changing |
-| `DELETE /v1/agents/:id` | [Delete](/api-reference/agents/delete) - calls in progress finish first |
+| `DELETE /v1/agents/:id` | [Switch off](/api-reference/agents/delete) - soft disable, not erase/detach or a wait-for-calls operation |
 
 <Note>
-  `GET` returns the main agent fields rather than every column. If a setting you saved is missing from the response, it was still saved - send it again with `PUT` to change it.
+  Create/update/get/list return the reviewed safe projection. Missing fields are not
+  proof a write succeeded; inspect warnings and read-back. New API agents default to
+  dynamic greeting ON, maximum duration 300 seconds and silence timeout 10 seconds.
+  Explicit valid inputs win; no existing agent is migrated and PUT remains partial.
 </Note>
 
 ## Related

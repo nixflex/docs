@@ -1,0 +1,83 @@
+---
+title: "Agent privacy and action inheritance"
+description: "Memory, greetings, recording, SMS, voicemail, retention and website permissions"
+---
+
+Batch 3 draft. There is no universal rule that every number setting inherits in the
+same way. Check the field and the channel, not just the agent's saved value.
+
+## Remembering callers is different from greeting by name
+
+`remember_callers: false` stops ordinary telephone caller-context use and learning.
+It does not erase saved caller records or prohibit explicit caller-context API writes.
+`greet_by_name` is a separate inbound greeting control, not global anonymization.
+
+| Remember callers | Greet by name | Inbound behaviour |
+|---|---|---|
+| On | On | Caller context and name greeting may be used |
+| Off | On | Ordinary context/learning off; a saved name can still be used in the greeting |
+| On | Off | Memory remains available; no dedicated name-greeting hint |
+| Off | Off | Ordinary context/learning and the name-greeting hint are off |
+
+Website visitor cards and chat history are separate. Public website chat/voice use
+their saved visitor context, not telephone caller memory. A visitor's supplied name
+is not verified identity. These flags do not erase a website visitor card.
+
+## Recording: number first, then agent
+
+For `record_call`, number `true` or `false` wins. Number `null` inherits the agent.
+Therefore **agent OFF + number ON records**; agent OFF is not a universal kill switch.
+The recording source is resolved separately: a number source override wins, otherwise
+the agent's source applies. Source does not turn recording on when the effective
+recording decision is off. Website audio has no carrier recording source.
+
+Changing a setting applies to new work; it does not delete old recordings or stop
+independently configured carrier recording. See [recording](/advanced/call-recording).
+
+## Dashboard-imported versus API-imported phone numbers
+
+Import source is provenance assigned by the import path, not a writable permission
+switch. Both kinds remain owned by their account; the source distinction below is
+deliberate protection against one shared agent sending a business's messages for another.
+
+| Action | Dashboard-imported number | API-imported number |
+|---|---|---|
+| Post-call SMS, no per-call override | Agent enable/template may apply | Agent enable does not automatically enable it |
+| Explicit per-call post-call SMS override | Overrides enable decision | Can deliberately enable it; a template is still required |
+| Leave voicemail | Agent enable/message | Number's own enable/message; no fallback to agent |
+
+Post-call SMS additionally needs an owned/eligible sending number, this call's account
+and agent, and a real E.164 recipient. It is skipped after detected voicemail.
+Template selection prefers a nonblank per-call template, then the agent template;
+no usable template means no send. For an API number, explicitly enabling a per-call
+SMS can therefore still use the agent template unless you supply your own.
+In-call SMS is a separate `incall_sms_enabled` gate; it is not post-call SMS.
+
+Voicemail ON needs nonblank text. Carrier AMD can terminate a machine-answered call
+before the leave-message path runs. Do not assume enabling both guarantees a message.
+
+## New-agent retention is inherited once
+
+The account's retention default is applied when a new agent is created, including
+duplicates/templates; it is not copied blindly from the source agent. The fallback
+account default is 90 days. Existing agents keep their own setting.
+`POST /v1/agents` rejects `call_retention_days` with `retention_inherited`.
+Use PUT on the created agent to choose **90 / 30 / 7 / 1 / 0**; 0 means delete after
+each call. Changing the account default is not a bulk edit of existing agents.
+
+Call cleanup waits for required finalization/post-call work and recorded delivery
+decisions. Zero is not deletion during a live call or before its post-call data is
+prepared. Website messages capture policy at insert; zero becomes eligible after the
+reply, not a chat hangup. Cleanup is worker/configuration-dependent and may remain
+pending safely; saving the integer is not proof deletion ran. Customer-owned storage
+is excluded from automatic Nixflex retention deletion. See [retention](/concepts/data-retention).
+
+## Website custom functions belong to the number
+
+`web_functions_enabled` defaults OFF. When ON, the number's enabled custom functions
+can be used in website chat and voice after owner, active-state and argument checks.
+This is one per-number switch, not an agent-wide or per-function website approval.
+Visitors are public: enable it only when **all** those functions are safe for them.
+The engine uses bounded safe HTTP fetching and plain errors; a function may still
+perform business actions. This does not enable built-in website booking, availability,
+SMS, transfers, keypad or phone-menu navigation—even after collecting a phone number.

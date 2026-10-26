@@ -1,0 +1,70 @@
+---
+title: "Agent settings by channel"
+description: "Which saved agent settings affect phone calls, website chat and website voice"
+---
+
+Batch 3 draft. A setting being accepted and returned by the API does not mean every
+channel uses it. This table describes the current implementation, not new features.
+**Web call** here means a visitor on your website. The owner's **Talk to your agent**
+test is a separate authenticated browser-call path and uses the phone-agent setup.
+
+| Setting | Inbound phone | Outbound phone | Website chat | Website voice |
+|---|---|---|---|---|
+| `name`, `is_active` | Identity/admission | Identity/admission | Identity/admission | Identity/admission |
+| `system_prompt` | Agent instructions plus the number's business profile; profile wins on conflicting business facts | Per-call `prompt` is the call purpose instead | Number's `web_prompt` instead | Number's `web_prompt` instead |
+| `voice_id`, `voice_key` | Number legacy alias is loaded; catalog mode prioritizes agent `voice_key` | Same; catalog key now reaches the outbound renderer | Not used | Same voice-selection rules; see voices |
+| `speaking_rate` | Explicit number speed overrides agent | Same | Not used | Same |
+| `language` | Fixed or route-aware multilingual speech | Same | Visitor-language website rules, not agent language | Fixed or route-aware multilingual speech |
+| `timezone` | Dates/time context | Dates/time context | Dates/time context | Dates/time context |
+| `ai_speaks_first` | Controls opening | Outbound flow waits for the callee; not an inbound-style greeting switch | Not used | Controls opening |
+| `dynamic_greeting`, `welcome_message` | Dynamic greeting or fixed saved welcome | Separate generated outbound opener; saved welcome cleared | No phone greeting | Website dynamic greeting; phone welcome cleared |
+| `response_length`, `temperature` | Voice reply policy | Voice reply policy | Separate short-reply request; does not read these agent values | Voice reply policy |
+| `response_eagerness`, `stt_confidence`, `stt_max_silence_ms`, `boosted_keywords` | Speech-recognition controls; provider-specific effects | Same | No speech recognition | Speech-recognition controls |
+| `silence_hangup_seconds`, `max_call_duration_seconds` | Voice timers | Voice timers | Not a chat retention/timeout control | Voice timers |
+| `func_end_call` | False suppresses configured silence/duration timers, not all END_CALL actions | Same | Not used | Voice timer behaviour; not a website action grant |
+| `ivr_timeout_seconds` | Not an inbound menu navigator | Outbound phone-menu wait | Not used | Not used |
+| `wait_tag_seconds` | WAIT only when enabled by the agent prompt | WAIT only when enabled by the call-purpose prompt | Not used | WAIT disabled |
+| `pickup_delay` | Ringing before answering | Not used for the outbound opener | Not used | Not used |
+| `remember_callers`, `greet_by_name` | Separate memory and greeting rules | Phone memory can apply; no identical inbound name-greeting switch | Separate visitor card/history | Separate visitor card/history |
+| `dtmf_enabled` | Number-aware keypad | Number-aware keypad | Disabled | Disabled |
+| `record_call` | Number overrides agent | Number overrides agent | No audio recording | Number overrides agent |
+| `recording_source` | Carrier or Nixflex capture | Carrier or Nixflex capture | Not used | Browser/Nixflex capture; no carrier recorder |
+| `transfer_type`, `transfer_number`, `transfer_whisper` | Phone transfer policy; whisper for warm transfer | Same | Built-in phone transfer blocked | Built-in phone transfer blocked |
+| `incall_sms_enabled`, `require_booking_confirmation` | In-call SMS and phone calendar rules | Same | Built-in SMS/calendar actions blocked | Built-in SMS/calendar actions blocked |
+| `post_call_sms_enabled`, `post_call_sms_template` | Source/recipient-aware; see inheritance | Same, with voicemail exclusion | Not a chat auto-reply setting | No telephone recipient; post-call SMS skipped |
+| `voicemail_leave_enabled`, `voicemail_message`, `amd_enabled` | Not an inbound voicemail-leaving mode | Number-source and carrier-AMD precedence | Not used | Not used |
+| `data_extraction_fields` | Post-call analysis | Post-call analysis | Not the phone post-call extraction pipeline | Post-call analysis |
+| `webhook_url` | Post-call destination; number destinations can also apply | Same | Not this phone-call webhook | Post-call destination |
+| Before-call webhook | Separate agent/number integration, before admission | Not used by this outbound path | Not used | Admission gate with caller `web` |
+| `call_retention_days` | Call-data policy | Call-data policy | Policy stamped on messages; cleanup after reply | Call-data policy |
+| Website custom functions | Phone functions have their own number configuration | Same | Only number's `web_functions_enabled` grant | Only number's `web_functions_enabled` grant |
+
+## Compatibility-only fields
+
+These remain accepted for old integrations. Saving them is not a promise of a runtime effect.
+
+| Field | Actual meaning |
+|---|---|
+| `llm_model` | Does not select the running model. Platform routing and account BYO configuration are separate. |
+| `fallback_message` | No current runtime consumer; not a configurable recognition-failure phrase. |
+| `interruption_sensitivity` | Stored/loaded compatibility value, not an effective interruption tuning control. |
+| `voice_speed` | No current speech effect; use `speaking_rate`. |
+| `func_send_sms`, `func_cold_transfer` | Not runtime permission gates; use the effective SMS setting and phone transfer policy. |
+| `phone_number` on an agent | Not number import/assignment; use the phone-numbers API. |
+
+Interruption handling, backchannel filtering, speech normalization and voice fallback
+are built-in voice policies, not missing API toggles. Their exact effect depends on
+the active provider/route. Prompt caching does not guarantee a cache hit or savings.
+Website chat uses its own model request and does not inherit the voice fallback chain.
+
+## Defaults and scope
+
+New API agents default to `dynamic_greeting: true`, maximum duration **300 seconds**
+and silence timeout **10 seconds**. Explicit valid values win. Existing agents are
+not migrated; PUT is partial. Null timers retain their existing runtime fallback.
+`DELETE /v1/agents/:id` means **switch off**, not erase or detach numbers.
+
+This documentation does not change pickup delay, ringing, model routing or actions.
+See [the exact API contract](/api-reference/agents/contract),
+[privacy/action inheritance](/concepts/agent-inheritance) and
+[route-aware languages](/concepts/languages).
