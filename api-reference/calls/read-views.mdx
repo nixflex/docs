@@ -1,0 +1,106 @@
+---
+title: "History, recordings and billing reads"
+description: "Area 3 batch 2 draft: read-only views; deploy SQL 101 first"
+---
+
+<Warning>Unpublished candidate. Requires engine SQL 101_01 and 101_02 plus the matching engine build. No paid call is needed to test these reads.</Warning>
+
+## History without changing old clients
+
+`GET /v1/calls` still returns the old array. Opt in with
+`GET /v1/calls/history` (also `/v1/calls?view=history`). The new view returns metadata,
+not transcripts, events, extracted data or recording URLs.
+
+| Parameter | Meaning |
+|---|---|
+| `agent`, `number` | Agent ID or business number. These are not the caller's number. |
+| `direction` | `all`, `inbound`, `outbound`, `web`; same call-type filter as dashboard. |
+| `outcome` | `all`, `successful`, `unsuccessful`, `unknown`, `failed`. Failed includes refused starts and proved never-connected outbound calls; unknown is not failure. |
+| `source` | `all`, `campaign`, `web`, `test`, `other`. A test may also be outbound: source and direction are separate. |
+| `period` | Default `month` (rolling 30 days), `week` (7 days), `today` (UTC midnight), `all`. |
+| `since`, `until` | Inclusive ISO timestamps with a time zone. Copy the dashboard browser's exact boundaries to compare local-day results. |
+| `search` | Literal substring of call ID/name or phone number; maximum 120 characters. No wildcard or SQL syntax. |
+| `limit`, `offset` | Strict whole numbers: 1–200 (default 50), 0–1,000,000 (default 0). |
+| `cursor` | Continue with the returned `next_cursor` and optional `limit` only. Do not resend filters or an offset. |
+
+Example: `/v1/calls/history?number=%2B12025550100&outcome=failed&period=month`.
+Encode `+` as `%2B`; the kits do this for you.
+
+```json
+{
+  "data": [],
+  "totals": { "total": 0, "minutes": 0, "cost": 0, "cost_unknown": 0, "successful": 0 },
+  "filters": { "period": "all", "since": null, "until": "2026-10-26T12:00:00.000Z" },
+  "limit": 50, "offset": 0, "has_more": false, "next_cursor": null
+}
+```
+
+Rows sort by `created_at DESC, id DESC`. Cursor paging retains the original filters
+and cutoff and avoids shifting offsets when newer calls arrive. It is **not a frozen
+snapshot**: retention, deletion, outcome updates or backdated inserts can change rows
+and totals between requests. Totals cover the full filter, even on an empty page.
+`cost` sums known recorded costs; `cost_unknown` counts missing costs. These cards are
+history statistics, not a settled invoice. Unknown row values stay `null`, not zero/false.
+
+Failed starts use IDs beginning `failed:`. Retention-cleared rows keep only allowed
+metadata; we do not recover erased content. Rows removed from dashboard history are
+also absent here. Where retention kept a metadata stub, its exact call ID remains
+readable with `GET /v1/calls/{id}?view=detail`. Explicitly deleted or foreign IDs are 404.
+This detail view also reads failed-start IDs, masks scheduled-for-deletion content,
+and returns `recording_url: null`; use the recording endpoint instead.
+
+## Recording status and download
+
+`GET /v1/calls/{id}/recording` returns `call_id`, `status`, `url`, `expires_at`.
+Only `available` has a URL. It is minted for **300 seconds**, with expiry read from
+the storage-issued token. Do not log/share this bearer link. Ask for another after expiry.
+The endpoint requires a private managed bucket; it never pretends a permanent public URL expires.
+
+| Status | Meaning |
+|---|---|
+| `available` | Managed recording link issued successfully. |
+| `pending` | Recording processing/retry is explicitly pending. |
+| `expired` | Retention has removed Nixflex's content. |
+| `customer_bucket` | A customer-storage pointer/proof exists. No Nixflex link or expiry is asserted, and no request is made to that bucket. The owner may have changed/deleted their copy. |
+| `not_recorded` | Proven never-started call. |
+| `pending_deletion` | Content is hidden while the existing retention process finishes. |
+| `unavailable` | Recording processing explicitly failed. |
+| `unknown` | Historical absence does not prove recording was off. |
+
+Missing/foreign call: 404 `not_found`. Database/storage/signing failure or a public
+bucket: 503 `call_data_unavailable`, not “not recorded”. No permission to delete a
+recording, carrier copy, BYO object or account is added. Existing issued links can stop
+working before expiry if the underlying recording is deleted by the normal process.
+
+## Billing proof, not recalculation
+
+`GET /v1/calls/{id}/billing` returns `status`, `cost`, `recorded_cost`, `currency: USD`,
+`charged_minutes`, `ai_billed_ms`, `human_free_ms`, and `basis`.
+
+- `settled`: matching existing final settlement proof. Cost/minutes are copied, never recalculated.
+- `pending`: finalization exists but is not settled. Final cost and split remain null.
+- `unknown`: no consistent final proof. `recorded_cost` may exist; it is not relabelled a settled total.
+- `not_started`: a refused-start journal proves no call started; cost and durations are zero.
+
+`basis: fenced` is the stored takeover split. `conservative` is a protective billing
+cap: remaining time was free, but it is **not proof of the exact human handover time**.
+`settled_no_takeover` requires consistent full-duration settlement and no active takeover
+proof. A missing/conflicting split stays null. Connected `duration_ms` can exceed billed
+AI time; no new rate, credit, refund or charge is calculated by any read.
+
+## Kits
+
+```js
+const page = await client.calls.history({ number: '+12025550100', outcome: 'failed', period: 'month' });
+const detail = await client.calls.read(callId);
+const recording = await client.calls.recording(callId);
+const billing = await client.calls.billing(callId);
+```
+
+Python uses the same method names with keyword filters: `client.calls.history(number="+12025550100", period="month")`.
+CLI: `nixflex calls history --number +12025550100 --outcome failed --period month --json`;
+`nixflex calls read CALL_ID --json`, `calls recording CALL_ID --json`, `calls billing CALL_ID --json`.
+MCP keeps its existing tools: `list_calls` with `history:true` for the envelope,
+`get_call` with `view: detail`, `recording` or `billing`. Lists omit transcripts and URLs.
+Legacy `calls.list`, `calls.get`, MCP reads without a view and all mutation doors remain.
+These kit branches are candidates, not a claim that npm, PyPI or a Desktop bundle is published.

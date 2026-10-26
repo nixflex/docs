@@ -1,0 +1,52 @@
+{
+ "openapi":"3.1.0",
+ "info":{"title":"Nixflex call reads draft","version":"1.0.0"},
+ "paths":{
+  "/calls/history":{"get":{"tags":["Calls"],"operationId":"callHistory","summary":"Filtered call metadata and totals","description":"Candidate; SQL101 required. Same filters as dashboard. Stable created_at/id cursor, not a frozen snapshot. Legacy /calls stays an array. Use cursor + limit only after page one.",
+   "parameters":[
+    {"name":"limit","in":"query","schema":{"type":"integer","minimum":1,"maximum":200,"default":50}},
+    {"name":"offset","in":"query","schema":{"type":"integer","minimum":0,"maximum":1000000,"default":0}},
+    {"name":"cursor","in":"query","schema":{"type":"string","maxLength":4096}},
+    {"name":"agent","in":"query","schema":{"type":"string","maxLength":200}},
+    {"name":"number","in":"query","description":"Business number, URL encode +","schema":{"type":"string","maxLength":80}},
+    {"name":"direction","in":"query","schema":{"enum":["all","inbound","outbound","web"],"default":"all"}},
+    {"name":"outcome","in":"query","schema":{"enum":["all","successful","unsuccessful","unknown","failed"],"default":"all"}},
+    {"name":"source","in":"query","schema":{"enum":["all","campaign","web","test","other"],"default":"all"}},
+    {"name":"period","in":"query","description":"today is UTC; use explicit since/until to match browser local periods","schema":{"enum":["all","today","week","month"],"default":"month"}},
+    {"name":"since","in":"query","schema":{"type":"string","format":"date-time"}},
+    {"name":"until","in":"query","schema":{"type":"string","format":"date-time"}},
+    {"name":"search","in":"query","description":"Literal substring","schema":{"type":"string","maxLength":120}}
+   ],"responses":{"200":{"description":"Metadata only, totals even on an empty page","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HistoryPage"}}}},"400":{"description":"Invalid filter or cursor"},"401":{"description":"Authentication required"},"503":{"description":"call_data_unavailable; never an empty success"}}}},
+  "/calls/{id}/recording":{"parameters":[{"$ref":"#/components/parameters/CallId"}],"get":{"tags":["Calls"],"operationId":"callRecording","summary":"Recording state and temporary download link","description":"Candidate. Private managed storage only; available links are minted for 300 seconds. Never fetches customer buckets. Unknown is not proof recording was off.","responses":{"200":{"description":"State; URL/expiry null except available","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Recording"}}}},"404":{"description":"not_found on this account"},"503":{"description":"call_data_unavailable: storage/database/signer unconfirmed"}}}},
+  "/calls/{id}/billing":{"parameters":[{"$ref":"#/components/parameters/CallId"}],"get":{"tags":["Calls"],"operationId":"callBilling","summary":"Read existing settled AI and free-human proof","description":"Candidate. No recalculation, charge or refund. Conservative basis is a protective billing cap, not exact human handover time. Missing proof is null.","responses":{"200":{"description":"Existing proof or explicit pending/unknown","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Billing"}}}},"404":{"description":"not_found on this account"},"503":{"description":"call_data_unavailable"}}}}
+ },
+ "components":{
+  "parameters":{"CallId":{"name":"id","in":"path","required":true,"schema":{"type":"string","minLength":1,"maxLength":200}}},
+  "schemas":{
+   "CallRead":{"type":"object","required":["call_id"],"description":"Nullable metadata; retained stubs can omit fields. History omits transcript/events/extracted_data/recording_url. Detail view masks expired or scheduled-for-deletion content.","properties":{
+    "call_id":{"type":"string"},"id":{"type":"string","format":"uuid"},"agent_id":{"type":["string","null"]},
+    "call_direction":{"enum":["inbound","outbound","web",null]},"call_type":{"enum":["inbound","outbound","web",null]},
+    "call_status":{"type":["string","null"]},"from_number":{"type":["string","null"]},"to_number":{"type":["string","null"]},
+    "duration_ms":{"type":["integer","null"]},"start_timestamp":{"type":["integer","null"]},"end_timestamp":{"type":["integer","null"]},"answered_at":{"type":["integer","null"]},
+    "call_successful":{"type":["boolean","null"]},"caller_sentiment":{"type":["string","null"]},"ended_reason":{"type":["string","null"]},
+    "cost":{"type":["number","null"]},"charged_minutes":{"type":["number","null"]},"created_at":{"type":["string","null"],"format":"date-time"},
+    "call_summary":{"type":["string","null"]},"transcript":{"type":["string","null"]},"extracted_data":{"type":["object","null"]},"recording_url":{"type":"null"},
+    "payload_deleted_at":{"type":["string","null"]},"payload_deleted_reason":{"type":["string","null"]},"payload_in_own_storage":{"type":["boolean","null"]},"payload_scheduled_for_deletion":{"type":"boolean"}
+   }},
+   "HistoryPage":{"type":"object","required":["data","totals","filters","limit","offset","has_more","next_cursor"],"properties":{
+    "data":{"type":"array","items":{"$ref":"#/components/schemas/CallRead"}},"filters":{"type":"object"},
+    "limit":{"type":"integer"},"offset":{"type":"integer"},"has_more":{"type":"boolean"},"next_cursor":{"type":["string","null"]},
+    "totals":{"type":"object","properties":{"total":{"type":"integer"},"minutes":{"type":"number"},"cost":{"type":"number"},"cost_unknown":{"type":"integer"},"successful":{"type":"integer"}}}
+   }},
+   "Recording":{"type":"object","required":["call_id","status","url","expires_at"],"properties":{
+    "call_id":{"type":"string"},"status":{"enum":["available","pending","expired","customer_bucket","not_recorded","unknown","unavailable","pending_deletion"]},
+    "url":{"type":["string","null"],"format":"uri"},"expires_at":{"type":["string","null"],"format":"date-time"}
+   }},
+   "Billing":{"type":"object","required":["call_id","status","cost","currency","charged_minutes","ai_billed_ms","human_free_ms","basis"],"properties":{
+    "call_id":{"type":"string"},"status":{"enum":["settled","pending","unknown","not_started"]},"currency":{"const":"USD"},
+    "cost":{"type":["number","null"]},"recorded_cost":{"type":["number","null"]},"charged_minutes":{"type":["number","null"]},
+    "ai_billed_ms":{"type":["integer","null"]},"human_free_ms":{"type":["integer","null"]},"basis":{"enum":["fenced","conservative","settled_no_takeover","not_started",null]}
+   }}
+  }
+ }
+}

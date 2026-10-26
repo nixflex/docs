@@ -6,6 +6,9 @@ api: "GET https://api.nixflex.com/v1/calls/{call_id}"
 
 Fetches a single call: transcript, recording URL, and post-call analysis.
 
+The optional [read views](/api-reference/calls/read-views) provide explicit nullable detail,
+failed-start/retained metadata, recording status with an expiring link, and settled billing proof.
+
 ## Request
 
 ```bash
@@ -61,9 +64,9 @@ Three worth repeating:
 
 | Field | Notes |
 |---|---|
-| `duration_ms` | **Time connected**, from answer to hangup - the number you are billed on. Ring time is excluded, so it will not equal `end_timestamp - start_timestamp` on an outbound call. |
+| `duration_ms` | **Time connected**, from answer to hangup, or null when unknown. Ring time is excluded. Human takeover can make AI billed time shorter; use the billing read for existing settlement proof. |
 | `transcript` | A single **string**, with each turn on its own line - not an array of turn objects. |
-| `recording_url` | The MP3 in Nixflex storage, or `null` if [recording](/advanced/call-recording) was off for this call. The copy on your carrier is deleted after Nixflex downloads it, so this is the only copy - see [Data retention](/concepts/data-retention). |
+| `recording_url` | Legacy recording pointer, which can be null after retention or while processing, or refer to customer storage. Null does not prove recording was off, nor does this field prove there are no other copies. Use the recording read for explicit status and a short-lived managed link. |
 
 <Note>
   Timestamps `start_timestamp`, `answered_at` and `end_timestamp` are epoch
@@ -74,7 +77,8 @@ Three worth repeating:
 
 | Code | Cause |
 |---|---|
-| `call_not_found` | ID doesn't exist or belongs to another account |
+| `not_found` (404) | ID doesn't exist or belongs to another account |
+| `call_data_unavailable` (503) | Database/retained-data check failed; absence is not established |
 
 ## Related
 
