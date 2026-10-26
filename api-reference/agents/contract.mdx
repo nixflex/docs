@@ -1,5 +1,5 @@
 ---
-title: "Agent contract (Batch 1 draft)"
+title: "Agent contract (Batch 2 draft)"
 description: "Exact agent input, output and error rules"
 ---
 
@@ -28,9 +28,9 @@ validation, values or defaults. Do not change it as part of the staging helper.
 | stt_confidence | finite number 0..1 |
 | stt_max_silence_ms | whole number 0..2147483647 (stored control; not the response-delay slider) |
 | interruption_sensitivity | whole number 0..100; retained compatibility setting |
-| max_call_duration_seconds / silence_hangup_seconds | whole seconds 1..2147483 or null (avoids milliseconds-timer overflow); null preserves existing runtime fallback; new-create defaults 600 / 30 |
+| max_call_duration_seconds / silence_hangup_seconds | whole seconds 1..2147483 or null (avoids milliseconds-timer overflow); null preserves existing runtime fallback; new-create defaults 300 / 10 |
 | wait_tag_seconds / ivr_timeout_seconds | whole seconds 30..120 or null / whole seconds 1..1800 |
-| timezone | valid IANA name, max 100; no timezone conversion or call-window change |
+| timezone | valid IANA name, max 100; new create uses valid account zone or UTC when omitted; no existing row or calling-hours policy is changed |
 | incall_sms_enabled / post_call_sms_enabled | booleans |
 | post_call_sms_template | string, max 600 |
 | voicemail_leave_enabled | boolean; true requires a non-blank merged voicemail_message |
@@ -75,8 +75,8 @@ Catalog lookup outage: 503 catalog_unavailable. No blind write retries.
 ## Kits
 
 See the feature-branch examples/agent-contract.md in Node+CLI, Python and MCP.
-The CLI already passes all fields via repeated --set or --body; no new CLI flags
-or mutation-retry behavior are needed. MCP publishes named settings while retaining
+The CLI passes write fields via repeated --set or --body. Agent list adds --offset,
+--status and --search; mutation-retry behavior is unchanged. MCP publishes named settings while retaining
 unknown keys so the engine can issue its warning. No package publication in this run.
 
 DELETE soft-disables only and retains the legacy response {"message":"Agent deleted"}.

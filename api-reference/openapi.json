@@ -966,25 +966,12 @@
             "bearerAuth": []
           }
         ],
-        "description": "Active agents, newest first. Returns a bare array.",
+        "description": "Owned agents; active by default. Optional status/search. Stable created_at DESC, agent_id DESC ordering. Bare array. Strict bounds: invalid queries return 400 invalid_agent_list.",
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 100,
-              "maximum": 200
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 0
-            }
-          }
+          { "$ref": "./schemas/agent-list-parameters.json#/limit" },
+          { "$ref": "./schemas/agent-list-parameters.json#/offset" },
+          { "$ref": "./schemas/agent-list-parameters.json#/status" },
+          { "$ref": "./schemas/agent-list-parameters.json#/search" }
         ],
         "responses": {
           "503": { "description": "Agent storage or catalog unavailable; check before retrying a write.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },

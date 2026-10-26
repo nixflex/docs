@@ -1,0 +1,21 @@
+{
+  "limit": {
+    "name": "limit", "in": "query",
+    "description": "Strict decimal integer; no signs, fractions, leading zeros or repeated values. Invalid values return 400 invalid_agent_list; not clamped.",
+    "schema": {"type":"integer","minimum":1,"maximum":200,"default":100}
+  },
+  "offset": {
+    "name": "offset", "in": "query",
+    "description": "Strict decimal integer. Pages are not a snapshot during concurrent writes.",
+    "schema": {"type":"integer","minimum":0,"maximum":1000000,"default":0}
+  },
+  "status": {
+    "name": "status", "in": "query",
+    "schema": {"type":"string","enum":["active","disabled","all"],"default":"active"}
+  },
+  "search": {
+    "name": "search", "in": "query",
+    "description": "Case-insensitive literal name/agent_id substring. Trim outer whitespace; empty means no search. Control characters forbidden. No wildcard or regex syntax.",
+    "schema": {"type":"string","maxLength":200,"pattern":"^[^\\u0000-\\u001f\\u007f]*$"}
+  }
+}

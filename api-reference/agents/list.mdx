@@ -1,16 +1,40 @@
 ---
 title: "List agents"
-description: "GET /v1/agents — Batch 1 draft"
+description: "GET /v1/agents — Batch 2 draft"
 api: "GET https://api.nixflex.com/v1/agents"
 ---
 
-Draft. Returns a bare array of your active agents, newest first.
+Draft. Returns a bare array of your agents; active only unless status is supplied.
 Each item has the same safe settings projection as create/update/get.
-Disabled agents are excluded from this list but can still be fetched by owned ID.
+Disabled agents can be listed with status=disabled or status=all, or fetched by owned ID.
 Carrier auth tokens and unreviewed future columns are never returned.
 
-Pagination is unchanged: `limit` defaults to 100 and is capped at 200;
-`offset` defaults to 0. Ordering remains `created_at` descending.
-Batch 1 does not redesign pagination or add status/search filters.
+| Parameter | Contract |
+|---|---|
+| limit | Integer 1..200, default 100 |
+| offset | Integer 0..1000000, default 0 |
+| status | active (default), disabled, all |
+| search | Case-insensitive literal substring of name or agent_id; up to 200 characters, no control characters; leading/trailing whitespace trimmed; empty = no search |
+
+Numbers must be decimal digits without signs, leading zeros (except 0), fractions,
+exponents or trailing text. Repeated/array/object values are rejected.
+Invalid query values return `400 invalid_agent_list`, not silent clamping/defaults.
+This is an intentional tightening from Batch 1; use valid bounds before upgrading.
+
+Order is `created_at DESC, agent_id DESC`, including tied creation times. Pages are
+not a snapshot: concurrent creation, enabling/disabling or edits may shift offsets.
+Every filter remains scoped to the authenticated API key. Search cannot change that.
+Special characters such as %, _, *, quotes and parentheses are literal, not wildcards.
+
+Example: `GET /v1/agents?status=all&search=Support&limit=50&offset=50`.
+URL-encode search values (the kits do this automatically).
+
+Node: `client.agents.list({status:'all',search:'Support',limit:50,offset:50})`.
+`client.agents.iter(200)` walks active agents until a short/empty page. Its page size
+must be an integer 1..200 (larger sizes throw before HTTP); it does not silently stop
+after 200 total agents. At the maximum offset it throws rather than truncate silently.
+CLI: `nixflex agents list --status all --search Support --limit 50 --offset 50`.
+Python (sync or await): `client.agents.list(status='all', search='Support', limit=50, offset=50)`.
+MCP: `list_agents` takes the same four fields; no new tool or confirmation needed.
 
 Database failures return `503 agent_store_unavailable`, not an empty successful list.

@@ -13,7 +13,8 @@ The existing response is kept for compatibility, but its wording means **soft di
 { "message": "Agent deleted" }
 ```
 
-GET by ID can still return the owned disabled agent. List returns only active agents.
+GET by ID can still return the owned disabled agent. List defaults to active only;
+use `status=disabled` or `status=all` to include it.
 PUT `{"is_active":true}` can re-enable it. This is not the dashboard's permanent erasure process.
 
 The update must affect an owned row before success is returned.

@@ -1,12 +1,12 @@
 ---
 title: "Create agent"
-description: "POST /v1/agents — Batch 1 draft"
+description: "POST /v1/agents — Batch 2 draft"
 api: "POST https://api.nixflex.com/v1/agents"
 ---
 
-Draft for the Batch 1 engine release; not published in this run.
+Draft for the Batch 2 engine release; not published in this run.
 
-Creates an agent. Every field is optional. An empty object keeps the existing defaults.
+Creates an agent. Every field is optional. An empty object uses the new defaults below.
 It does not import a phone number or start a call.
 
 ```json
@@ -34,7 +34,12 @@ POST now stores the same legitimate settings as PUT, except retention:
 `call_retention_days` inherits the account default on create. Sending it to POST
 returns `400 retention_inherited`; change it with PUT afterwards if needed.
 
-## Defaults (unchanged)
+## Defaults (NEW agents only)
+
+Dynamic greeting, maximum duration and silence timeout now match the dashboard's
+new-agent form. No existing agent is migrated, and PUT still changes only sent fields.
+Dynamic greeting means the AI writes the inbound greeting from the agent prompt;
+the saved welcome text is used when you explicitly turn dynamic greeting off.
 
 | Fields | Default |
 |---|---|
@@ -44,19 +49,25 @@ returns `400 retention_inherited`; change it with PUT afterwards if needed.
 | voice_id / voice_key | Ashley, resolved to its catalog key |
 | language / temperature / response_length | multi / 0.3 / short |
 | response_eagerness / stt_confidence / stt_max_silence_ms | Database defaults: 200 / 0 / 0 |
-| is_active / ai_speaks_first / func_end_call / record_call / greet_by_name | true |
-| dynamic_greeting / func_cold_transfer / func_send_sms / amd_enabled / require_booking_confirmation | false |
+| is_active / ai_speaks_first / dynamic_greeting / func_end_call / record_call / greet_by_name | true |
+| func_cold_transfer / func_send_sms / amd_enabled / require_booking_confirmation | false |
 | incall_sms_enabled / post_call_sms_enabled / voicemail_leave_enabled | Database default false |
-| max_call_duration_seconds / silence_hangup_seconds | 600 / 30 |
+| max_call_duration_seconds / silence_hangup_seconds | 300 / 10 |
 | wait_tag_seconds / ivr_timeout_seconds | null / 240 |
 | interruption_sensitivity / pickup_delay | 50 / 10; pickup handling unchanged |
 | transfer_type / recording_source | cold / provider |
 | voice_speed / speaking_rate / dtmf_enabled | 0.85 / null / null |
-| timezone / data_extraction_fields | Database defaults: Europe/London / [] |
+| timezone | Valid account time zone, otherwise UTC; explicit valid timezone wins |
+| data_extraction_fields | Database default [] |
 
 Omitted database-managed settings stay database-managed. The release does not
-change their defaults or any existing agent. Valid zero/false settings are not replaced
-with defaults. Existing empty-string defaults for name/prompt/greeting/language/model/fallback stay.
+change their defaults or any existing agent. Explicit valid values win, including
+zero/false, empty name/prompt/welcome/model/fallback text and nullable timers.
+Explicit timer null is stored as null and keeps the existing runtime fallback; it
+does not mean "use the new create default". The dashboard can use the browser time
+zone if the account has none; a server API has no browser, so it uses UTC instead.
+Existing language-empty normalization to multi, voice validation, speaking-rate clamp,
+recording-source normalization and pickup handling remain unchanged.
 
 ## Response and errors
 
