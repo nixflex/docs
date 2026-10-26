@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 5.1
 [CmdletBinding()]
 param(
  [Parameter(Mandatory)][string]$Number,
@@ -10,6 +10,7 @@ param(
  [int]$ExpectedTotal=-1
 )
 $ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Net.Http
 $base='https://nixflex-voice-engine-staging.up.railway.app'
 if ($Number -notmatch '^\+[1-9][0-9]{6,14}$') { throw 'Number must be the business number in +countrycode format.' }
 $handler=[System.Net.Http.HttpClientHandler]::new()
@@ -28,13 +29,15 @@ function Read-Api([string]$Path) {
  try {
   $response=$http.SendAsync($request).GetAwaiter().GetResult()
   if (-not $response.IsSuccessStatusCode) { throw "Staging read returned HTTP $([int]$response.StatusCode). No call or charge was requested." }
-  return ($response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json -Depth 60)
+  return ($response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json)
  } finally { if ($response) { $response.Dispose() }; $request.Dispose() }
 }
 try {
- $parts=@('number='+[uri]::EscapeDataString($Number),'outcome='+$Outcome,'period='+$Period,'limit=25')
- foreach ($pair in @(@('since',$Since),@('until',$Until))) {
-  if ($pair[1]) { $parts+=($pair[0]+'='+[uri]::EscapeDataString($pair[1])) }
+ $query=[ordered]@{number=$Number;outcome=$Outcome;period=$Period;limit='25'}
+ if ($Since) { $query.since=$Since }
+ if ($Until) { $query.until=$Until }
+ $parts=foreach ($pair in $query.GetEnumerator()) {
+  '{0}={1}' -f [uri]::EscapeDataString([string]$pair.Key),[uri]::EscapeDataString([string]$pair.Value)
  }
  $history=Read-Api ('/v1/calls/history?'+($parts -join '&'))
  if ($null -eq $history.totals -or $null -eq $history.data) { throw 'Missing history envelope.' }

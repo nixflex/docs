@@ -1,5 +1,8 @@
 # Chat A — Calls API batch 2 — 26 October 2026
 
+Staging follow-up: see `AREA3-BATCH2-STAGING-FIXES.md`. It corrects the helper query,
+adds PowerShell 5.1 compatibility and supports signed links from the existing public bucket.
+
 READY FOR STAGING READ TEST: YES. Local checks only; nothing pushed or applied remotely.
 History filters/totals, explicit recording states and temporary links, and settled
 AI/free-human billing proof are built in engine and Node/CLI, Python and MCP candidates.
@@ -45,7 +48,7 @@ match existing proof. Conservative split means a billing cap, not exact handover
 
 Local gates: engine 2,312; Node/CLI 82 + build; Python 104; MCP 57 + packed artifact
 checks; docs 23. Local PostgreSQL replay, new reverses/reapply, CRLF and all boot checks
-pass. Public buckets/signing failure return 503; old calls without proof can correctly
+pass. Unconfirmed bucket metadata/signing failure returns 503; old calls without proof can correctly
 return unknown. No live staging or rendered/published docs result is claimed.
 
 ## Only approved locked expectation

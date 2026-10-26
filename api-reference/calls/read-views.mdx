@@ -54,7 +54,10 @@ and returns `recording_url: null`; use the recording endpoint instead.
 `GET /v1/calls/{id}/recording` returns `call_id`, `status`, `url`, `expires_at`.
 Only `available` has a URL. It is minted for **300 seconds**, with expiry read from
 the storage-issued token. Do not log/share this bearer link. Ask for another after expiry.
-The endpoint requires a private managed bucket; it never pretends a permanent public URL expires.
+The endpoint signs managed recordings in either a public or private bucket. `expires_at`
+is the signed link's expiry only. An existing public object remains accessible through
+its public URL; signing does not make it private or erase it. The endpoint never returns
+that permanent public URL as a supposedly expiring link.
 
 | Status | Meaning |
 |---|---|
@@ -67,8 +70,8 @@ The endpoint requires a private managed bucket; it never pretends a permanent pu
 | `unavailable` | Recording processing explicitly failed. |
 | `unknown` | Historical absence does not prove recording was off. |
 
-Missing/foreign call: 404 `not_found`. Database/storage/signing failure or a public
-bucket: 503 `call_data_unavailable`, not “not recorded”. No permission to delete a
+Missing/foreign call: 404 `not_found`. Database/storage/signing failure:
+503 `call_data_unavailable`, not “not recorded”. No permission to delete a
 recording, carrier copy, BYO object or account is added. Existing issued links can stop
 working before expiry if the underlying recording is deleted by the normal process.
 
