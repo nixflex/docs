@@ -1,0 +1,46 @@
+---
+title: Organisations and your team
+description: One shared account and balance, with personal logins.
+---
+
+<Warning>Round 218 candidate, not released or safe to enable yet. Live-monitor removal, safe hand-back to AI, existing recording links and activated-account rollback still need the reviewed round 2 work. Nothing on this page claims staging acceptance.</Warning>
+
+An organisation is your existing Nixflex account. Its agents, numbers, calls, campaigns and credit stay together. Team members are free. Each person signs in with their own login, belongs to one organisation and may optionally enable two-factor authentication for that login.
+
+The Owner controls everything, including billing, the API key, team roles, ownership transfer and deletion. Admins can use normal tools and invite or remove Members. They cannot manage other Admins or the Owner. Members can use normal tools but cannot open Billing, API Keys, Team or account deletion. Only the Owner sees money cards on Overview and the Activity tab in Logs. Admins have a limited Members section in Settings.
+
+## Invitations
+
+In Settings, enter the person's email and choose Member or Admin. They receive a link valid for 24 hours and create their own password or use their existing login. They must verify that email and explicitly accept. Opening an email never accepts an invitation. Invited signup does not create another account or trial credit.
+
+Resend replaces the previous link. Revoke invalidates it. “Accepted by email provider” does not mean the message reached the inbox. If delivery is unknown, check before resending. Existing members of another organisation must leave it first; accepting never moves a wallet or shared data.
+
+The default safety limits are 50 people including pending invitations and 20 invitations per UTC day. Expired/revoked links do not reserve a seat. Resending counts as an invitation. Contact support for higher limits; there is no seat charge.
+
+## Personal logins and shared credentials
+
+Only the Owner can reveal or roll the organisation API key. Dashboard actions use each person's login, not that shared secret. If the Owner shares the API key outside the dashboard, its holder has organisation API authority. Roll it when that person leaves. Removing a Member does not automatically roll it.
+
+Webhook signing is separate from API authentication. The candidate preserves the current signing value when upgrading; rolling the API key no longer changes it. Owners can reveal it in API Keys. Never paste either secret into a chat or log. The organisations MCP intentionally does not reveal signing secrets.
+
+## Leaving, ownership and deletion
+
+Admin and Member can Leave organisation in Settings. Their shared work stays in place and their login is kept. An Owner must first offer ownership to another active, verified member. Both people sign in again (including their own optional two-factor check); the recipient explicitly accepts in Settings. The former Owner becomes Admin. The organisation balance and key do not move.
+
+Only the Owner can request deletion after a fresh login. The organisation locks immediately; tracked cleanup follows the existing settlement, storage and deletion fences. Personal logins are kept. Billing records and the trial-protection fingerprint remain; Activity lasts 12 months. Customer-owned buckets are not erased by Nixflex. Pending cleanup is never shown as deleted.
+
+## Activity
+
+Logs has API logs and Owner-only Activity. Activity records the acting person or organisation API key, action, target, time and outcome. Unknown outcomes remain unknown. There is no customer edit/delete route. Pages contain at most 50 events; CSV contains at most 500 from the selected cursor. CSV cells are protected against spreadsheet formulas. Passwords, invitation tokens, API secrets and message content do not belong in Activity.
+
+## API, SDK, CLI and MCP candidate
+
+The API remains under `/v1/organisation`; use the existing full organisation API key. Read context, members and Activity; invite, resend, revoke, remove and change Member/Admin roles. API-only accounts can request a verified-email owner claim without changing their balance. Acceptance, Leave, ownership transfer and deletion require a person's dashboard login.
+
+The Node candidate exposes `client.organisation`. CLI candidate commands are `organisation get`, `members`, `activity`, `invite`, `claim`, `resend`, `revoke`, `remove` and `role`. Changes preview unless `--confirm` is supplied. Fields use `--set email=person@example.com` and `--set role=member`. A response lost after a change must be checked before retrying.
+
+The optional `nixflex-organisations-mcp` candidate uses the same bound API key/address and adds nine focused tools. The existing 35-tool server and Desktop bundle are unchanged. Every change needs `confirm:true`; personal owner actions are absent. These candidates are not published packages. The SDK's unchanged fixed-resource CLI coverage test still requires an approved additive mapping before release.
+
+The Python candidate also exposes `client.organisation` in sync and async clients: `get`, `members`, `activity`, `invite`, `resend`, `revoke`, `remove_member`, `set_role`, `claim_invite`. Async calls must be awaited. Changes never retry automatically. None of these clients turns pending live disconnection into a successful disconnection, or exposes personal acceptance, Leave, transfer or deletion through an API key.
+
+For the exact paths and replies, see [organisation API candidate](/api-reference/organisations/overview).

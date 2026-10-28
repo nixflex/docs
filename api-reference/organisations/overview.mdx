@@ -1,0 +1,27 @@
+---
+title: Organisation API candidate
+description: Round 218 draft. Not enabled or published.
+---
+
+<Warning>Not safe to enable yet. SQL 104 and reviewed round 2 activation are required. Default OFF returns 404 on these new routes. The engine explicitly refuses organisations activation until its safety blockers are resolved.</Warning>
+
+The full organisation API key is Owner-level API authority. A dashboard JWT is checked against its current membership and optional MFA on each request. Never pass an account ID or role in a request to select another organisation.
+
+- `GET /v1/organisation`: context, role and permissions. No secret or balance.
+- `GET /v1/organisation/members`: people and pending/expired invitations, delivery status and safety limits.
+- `POST /v1/organisation/invites`: `{ "email":"person@example.com", "role":"member" }`; returns 201 with `id`, `delivery`, `expires_in`.
+- `POST /v1/organisation/invites/{id}/resend`: replaces the old link; uses the daily quota again.
+- `DELETE /v1/organisation/invites/{id}`: revokes a pending link.
+- `PATCH /v1/organisation/members/{id}`: `{ "role":"admin" }` or `member`; Owner only.
+- `DELETE /v1/organisation/members/{id}`: removes access without deleting shared work or rolling the key. Cannot remove Owner. Admin may remove only Members.
+- `GET /v1/organisation/activity`: Owner only; 50 events, `next_cursor`; optional `before` cursor and `actor` UUID. `format=csv` returns at most 500 records.
+- `POST /v1/organisation/claim-invite`: existing API-only account only; `{ "email":"owner@example.com" }`. The verified person accepts the emailed invitation; no new credit/account.
+- `GET /v1/organisation/signing-secret`: explicit Owner retrieval; `signing_secret`. Never include this response in logs or automatic tool output. The dashboard has a Reveal action; the candidate SDK/CLI/MCP does not automatically reveal it.
+
+Removal/role/Leave replies include `live_disconnect_pending`. 202 means membership was changed but live disconnection is unconfirmed; it never proves AI hand-back. This is a blocked candidate path, not permission to ship incomplete revocation.
+
+Errors use the existing `{error:{code,message,...}}` envelope. `permission_denied` and `membership_revoked` are 403; invite expiry/mismatch, membership conflicts and quota limits are 409; database/auth uncertainty is 503. Do not convert uncertainty into an empty list or retry an invitation blindly. UUID path IDs and Activity filters are validated.
+
+Owner-only web calls are `/api/organisation/transfer/request` and recipient `/transfer/accept`; `/api/account/delete` requires fresh login. API-key account deletion stays disabled. Invitation preview and acceptance use POST `/api/organisation/invite-preview` and `/accept`; preview never accepts, and acceptance verifies the invited person's own login.
+
+This draft does not change call prices, settlement, campaign delivery or current public API routes. The one account ID captured when a call starts remains its billing owner after a team change or ownership transfer.
