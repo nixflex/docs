@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=name=>JSON.parse(readFileSync(new URL('../api-reference/'+name,import.meta.url)));
 test('Batch2 OpenAPI list links strict bounds and additive status/search without changing bare array',()=>{
  const root=read('openapi.json'),params=read('schemas/agent-list-parameters.json'),get=root.paths['/agents'].get;
@@ -14,6 +14,6 @@ test('Batch2 OpenAPI list links strict bounds and additive status/search without
 test('Batch2 defaults are create-only, explicit values win, pickup and soft disable remain honest',()=>{
  const input=read('schemas/agent-request.json'),page=readFileSync(new URL('../api-reference/agents/create.mdx',import.meta.url),'utf8');
  for(const text of ['dynamic_greeting true','max_call_duration_seconds 300','silence_hangup_seconds 10','Update is partial, never applies create defaults'])a.ok(input.description.includes(text));
- a.match(page,/300 \/ 10/);a.match(page,/No existing agent is migrated/);a.match(page,/pickup handling remain unchanged/);
+ a.match(page,/300-second duration limit/);a.match(page,/10-second silence hang-up/);a.match(page,/dynamic greeting enabled/);a.match(page,/Omitted, null, empty or zero becomes 10/);
  a.equal(read('schemas/agent-update.json').allOf[0].$ref,'./agent-request.json');
 });

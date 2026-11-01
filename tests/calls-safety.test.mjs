@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import a from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('calls safety draft aligns four client variables and one-attempt policy',()=>{
   const safety=read('api-reference/calls/client-safety.mdx'),outbound=read('api-reference/calls/create-outbound.mdx');

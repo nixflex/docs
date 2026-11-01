@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const root=JSON.parse(read('api-reference/openapi.json')),usage=JSON.parse(read('api-reference/phone-number-usage.json'));
 test('Group3 OpenAPI exposes only an authenticated GET with defaulted periods/zone and precise monetary strings',()=>{

@@ -1,0 +1,2691 @@
+{
+  "paths": {
+    "/agents": {
+      "post": {
+        "tags": [
+          "Agents"
+        ],
+        "summary": "Create an agent",
+        "operationId": "createAgent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Optional create settings. Unknown-only input is refused; extra unknown fields alongside supported fields produce warnings. call_retention_days is inherited on create and must be omitted.",
+                "properties": {
+                  "is_active": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "ai_speaks_first": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "dynamic_greeting": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "func_end_call": {
+                    "type": "boolean",
+                    "description": "Voice silence/duration timer gate, not a blanket prohibition on END_CALL.",
+                    "default": true
+                  },
+                  "func_cold_transfer": {
+                    "type": "boolean",
+                    "description": "Compatibility-only; not the effective transfer permission.",
+                    "default": false
+                  },
+                  "func_send_sms": {
+                    "type": "boolean",
+                    "description": "Compatibility-only; use incall_sms_enabled for in-call SMS.",
+                    "default": false
+                  },
+                  "record_call": {
+                    "type": "boolean",
+                    "description": "Agent recording default; an explicit number true/false wins.",
+                    "default": true
+                  },
+                  "post_call_sms_enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "incall_sms_enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "amd_enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "greet_by_name": {
+                    "type": "boolean",
+                    "description": "Inbound name-greeting hint, independent of remembering callers; not global anonymization.",
+                    "default": true
+                  },
+                  "remember_callers": {
+                    "type": "boolean",
+                    "description": "Phone caller context/learning; false does not erase saved records or website visitor history.",
+                    "default": true
+                  },
+                  "require_booking_confirmation": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "voicemail_leave_enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "default": "Untitled Agent"
+                  },
+                  "system_prompt": {
+                    "type": "string",
+                    "maxLength": 100000,
+                    "description": "Up to 3,000 tokens when knowledge prompt checks are enabled; otherwise up to 16,000 characters. The 100,000-character input ceiling is for counting, not the accepted prompt size."
+                  },
+                  "welcome_message": {
+                    "type": "string",
+                    "maxLength": 16000,
+                    "default": "Hello! How can I help you today?"
+                  },
+                  "voice_id": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true,
+                    "default": "Ashley"
+                  },
+                  "voice_key": {
+                    "type": "string",
+                    "maxLength": 36,
+                    "nullable": true
+                  },
+                  "language": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "default": "multi"
+                  },
+                  "webhook_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "llm_model": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Compatibility-only; does not select the runtime model."
+                  },
+                  "fallback_message": {
+                    "type": "string",
+                    "maxLength": 16000,
+                    "description": "Compatibility-only; no current runtime consumer.",
+                    "default": "I am sorry, could you say that again?"
+                  },
+                  "post_call_sms_template": {
+                    "type": "string",
+                    "maxLength": 600,
+                    "description": "No endpoint default; supply a template when enabling post-call SMS."
+                  },
+                  "transfer_number": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "transfer_whisper": {
+                    "type": "string",
+                    "maxLength": 16000,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Nonempty IANA time zone. When omitted, use the valid account time zone or UTC."
+                  },
+                  "boosted_keywords": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "voicemail_message": {
+                    "type": "string",
+                    "maxLength": 600,
+                    "nullable": true,
+                    "description": "Required and nonblank when voicemail_leave_enabled is true; no endpoint default."
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.7,
+                    "default": 0.3
+                  },
+                  "response_eagerness": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000,
+                    "default": 200
+                  },
+                  "stt_confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 0
+                  },
+                  "stt_max_silence_ms": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647,
+                    "default": 0
+                  },
+                  "interruption_sensitivity": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Stored compatibility value; does not tune current interruption decisions.",
+                    "default": 50
+                  },
+                  "max_call_duration_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483,
+                    "nullable": true,
+                    "default": 300,
+                    "description": "Null uses the runtime fallback; it does not mean unlimited."
+                  },
+                  "silence_hangup_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483,
+                    "nullable": true,
+                    "default": 10,
+                    "description": "Null uses the runtime fallback."
+                  },
+                  "wait_tag_seconds": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 120,
+                    "nullable": true,
+                    "default": null
+                  },
+                  "ivr_timeout_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1800,
+                    "default": 240
+                  },
+                  "voice_speed": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 100,
+                    "description": "Compatibility-only; use speaking_rate.",
+                    "default": 0.85
+                  },
+                  "speaking_rate": {
+                    "oneOf": [
+                      {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          ""
+                        ]
+                      }
+                    ],
+                    "description": "Existing numeric clamp to 0.5..1.5. Null or empty clears.",
+                    "default": null
+                  },
+                  "pickup_delay": {
+                    "description": "Legacy input handling and default (10) unchanged in this release.",
+                    "default": 10
+                  },
+                  "dtmf_enabled": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "default": null
+                  },
+                  "response_length": {
+                    "type": "string",
+                    "enum": [
+                      "short",
+                      "medium",
+                      "long"
+                    ],
+                    "default": "short"
+                  },
+                  "transfer_type": {
+                    "type": "string",
+                    "enum": [
+                      "cold",
+                      "warm"
+                    ],
+                    "default": "cold"
+                  },
+                  "recording_source": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "provider or nixflex (case/space normalized); null/empty clears to provider.",
+                    "default": "provider"
+                  },
+                  "data_extraction_fields": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "name",
+                        "type"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$",
+                          "description": "Unique; __proto__, constructor and prototype forbidden."
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "selector",
+                            "boolean",
+                            "number"
+                          ]
+                        },
+                        "description": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "optional": {
+                          "type": "boolean"
+                        },
+                        "format_example": {
+                          "type": "string",
+                          "maxLength": 2000
+                        },
+                        "choices": {
+                          "type": "array",
+                          "maxItems": 100,
+                          "uniqueItems": true,
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          "description": "Required non-empty for selector; whitespace-only choices rejected."
+                        }
+                      }
+                    },
+                    "default": []
+                  }
+                },
+                "additionalProperties": true
+              },
+              "example": {
+                "name": "Reception",
+                "system_prompt": "Answer business enquiries clearly."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created agent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "One safe projection for create, update, get and list. No secrets or automatic future-column exposure.",
+                  "properties": {
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "ai_speaks_first": {
+                      "type": "boolean"
+                    },
+                    "dynamic_greeting": {
+                      "type": "boolean"
+                    },
+                    "func_end_call": {
+                      "type": "boolean"
+                    },
+                    "func_cold_transfer": {
+                      "type": "boolean"
+                    },
+                    "func_send_sms": {
+                      "type": "boolean"
+                    },
+                    "record_call": {
+                      "type": "boolean"
+                    },
+                    "post_call_sms_enabled": {
+                      "type": "boolean"
+                    },
+                    "incall_sms_enabled": {
+                      "type": "boolean"
+                    },
+                    "amd_enabled": {
+                      "type": "boolean"
+                    },
+                    "greet_by_name": {
+                      "type": "boolean"
+                    },
+                    "remember_callers": {
+                      "type": "boolean"
+                    },
+                    "require_booking_confirmation": {
+                      "type": "boolean"
+                    },
+                    "voicemail_leave_enabled": {
+                      "type": "boolean"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "system_prompt": {
+                      "type": "string"
+                    },
+                    "welcome_message": {
+                      "type": "string"
+                    },
+                    "voice_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "voice_key": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "language": {
+                      "type": "string"
+                    },
+                    "webhook_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone_number": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "llm_model": {
+                      "type": "string"
+                    },
+                    "fallback_message": {
+                      "type": "string"
+                    },
+                    "post_call_sms_template": {
+                      "type": "string"
+                    },
+                    "transfer_number": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "transfer_whisper": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "boosted_keywords": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "voicemail_message": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "temperature": {
+                      "type": "number"
+                    },
+                    "response_eagerness": {
+                      "type": "integer"
+                    },
+                    "stt_confidence": {
+                      "type": "number"
+                    },
+                    "stt_max_silence_ms": {
+                      "type": "integer"
+                    },
+                    "interruption_sensitivity": {
+                      "type": "integer"
+                    },
+                    "max_call_duration_seconds": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "silence_hangup_seconds": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "wait_tag_seconds": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "ivr_timeout_seconds": {
+                      "type": "integer"
+                    },
+                    "voice_speed": {
+                      "type": "number"
+                    },
+                    "dtmf_enabled": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "response_length": {
+                      "type": "string",
+                      "enum": [
+                        "short",
+                        "medium",
+                        "long"
+                      ]
+                    },
+                    "transfer_type": {
+                      "type": "string",
+                      "enum": [
+                        "cold",
+                        "warm"
+                      ]
+                    },
+                    "recording_source": {
+                      "type": "string",
+                      "nullable": true,
+                      "enum": [
+                        "provider",
+                        "nixflex",
+                        null
+                      ]
+                    },
+                    "data_extraction_fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$",
+                            "description": "Unique; __proto__, constructor and prototype forbidden."
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "selector",
+                              "boolean",
+                              "number"
+                            ]
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 2000
+                          },
+                          "optional": {
+                            "type": "boolean"
+                          },
+                          "format_example": {
+                            "type": "string",
+                            "maxLength": 2000
+                          },
+                          "choices": {
+                            "type": "array",
+                            "maxItems": 100,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "description": "Required non-empty for selector; whitespace-only choices rejected."
+                          }
+                        }
+                      }
+                    },
+                    "pickup_delay": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "speaking_rate": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "id": {
+                      "type": "string",
+                      "nullable": false,
+                      "readOnly": true
+                    },
+                    "agent_id": {
+                      "type": "string",
+                      "nullable": false,
+                      "readOnly": true
+                    },
+                    "api_key_id": {
+                      "type": "string",
+                      "nullable": false,
+                      "readOnly": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "nullable": false,
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "nullable": false,
+                      "readOnly": true
+                    },
+                    "twilio_account_sid": {
+                      "type": "string",
+                      "nullable": true,
+                      "readOnly": true
+                    },
+                    "greeting_language": {
+                      "type": "string",
+                      "nullable": true,
+                      "readOnly": true
+                    },
+                    "precall_webhook_url": {
+                      "type": "string",
+                      "nullable": true,
+                      "readOnly": true
+                    },
+                    "tester_scenarios": {
+                      "nullable": true,
+                      "description": "Stored compatibility metadata; not a create input."
+                    },
+                    "outbound_transfer_numbers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "readOnly": true,
+                      "nullable": true
+                    },
+                    "outbound_warm_transfer_numbers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "readOnly": true,
+                      "nullable": true
+                    },
+                    "outbound_post_call_sms_templates": {
+                      "description": "Stored compatibility message template data; not a create input."
+                    },
+                    "outbound_max_duration_seconds": {
+                      "type": "integer",
+                      "nullable": true,
+                      "readOnly": true
+                    },
+                    "outbound_silence_hangup_seconds": {
+                      "type": "integer",
+                      "nullable": true,
+                      "readOnly": true
+                    },
+                    "call_retention_days": {
+                      "type": "integer",
+                      "enum": [
+                        90,
+                        30,
+                        7,
+                        1,
+                        0,
+                        null
+                      ],
+                      "nullable": true
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "enum": [
+                              "unknown_fields"
+                            ]
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Check the named field and its documented type or limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "invalid_request",
+                    "code": "invalid_agent_field",
+                    "message": "Check the named field and its documented type or limit.",
+                    "doc_url": "https://docs.nixflex.com/errors/invalid_agent_field",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "unauthorized",
+                    "message": "Invalid or missing API key",
+                    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The organisation policy refused this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "error",
+                    "code": "permission_denied",
+                    "message": "The organisation policy refused this operation.",
+                    "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Read Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "rate_limit",
+                    "code": "rate_limit_exceeded",
+                    "message": "Rate limit exceeded. Read Retry-After.",
+                    "doc_url": "https://docs.nixflex.com/errors/rate_limit_exceeded",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The outcome could not be confirmed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "server_error",
+                    "code": "server_error",
+                    "message": "The outcome could not be confirmed.",
+                    "doc_url": "https://docs.nixflex.com/errors/server_error",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent storage is unavailable; read state before another write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "server_error",
+                    "code": "agent_store_unavailable",
+                    "message": "Agent storage is unavailable; read state before another write.",
+                    "doc_url": "https://docs.nixflex.com/errors/agent_store_unavailable",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Create an agent with optional settings. An empty JSON object is valid. Omitted settings use normal creation defaults; this operation has no general idempotency guarantee."
+      },
+      "get": {
+        "tags": [
+          "Agents"
+        ],
+        "summary": "List agents",
+        "operationId": "listAgents",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Owned agents; active by default. Optional status/search. Stable created_at DESC, agent_id DESC ordering. Bare array. Strict bounds: invalid queries return 400 invalid_agent_list.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Strict decimal integer; no signs, fractions, leading zeros or repeated values. Invalid values return 400 invalid_agent_list; not clamped.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Strict decimal integer. Pages are not a snapshot during concurrent writes.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000,
+              "default": 0
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "disabled",
+                "all"
+              ],
+              "default": "active"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive literal name/agent_id substring. Trim outer whitespace; empty means no search. Control characters forbidden. No wildcard or regex syntax.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "One safe projection for create, update, get and list. No secrets or automatic future-column exposure.",
+                    "properties": {
+                      "is_active": {
+                        "type": "boolean"
+                      },
+                      "ai_speaks_first": {
+                        "type": "boolean"
+                      },
+                      "dynamic_greeting": {
+                        "type": "boolean"
+                      },
+                      "func_end_call": {
+                        "type": "boolean"
+                      },
+                      "func_cold_transfer": {
+                        "type": "boolean"
+                      },
+                      "func_send_sms": {
+                        "type": "boolean"
+                      },
+                      "record_call": {
+                        "type": "boolean"
+                      },
+                      "post_call_sms_enabled": {
+                        "type": "boolean"
+                      },
+                      "incall_sms_enabled": {
+                        "type": "boolean"
+                      },
+                      "amd_enabled": {
+                        "type": "boolean"
+                      },
+                      "greet_by_name": {
+                        "type": "boolean"
+                      },
+                      "remember_callers": {
+                        "type": "boolean"
+                      },
+                      "require_booking_confirmation": {
+                        "type": "boolean"
+                      },
+                      "voicemail_leave_enabled": {
+                        "type": "boolean"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "system_prompt": {
+                        "type": "string"
+                      },
+                      "welcome_message": {
+                        "type": "string"
+                      },
+                      "voice_id": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "voice_key": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "language": {
+                        "type": "string"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "phone_number": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "llm_model": {
+                        "type": "string"
+                      },
+                      "fallback_message": {
+                        "type": "string"
+                      },
+                      "post_call_sms_template": {
+                        "type": "string"
+                      },
+                      "transfer_number": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "transfer_whisper": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "timezone": {
+                        "type": "string"
+                      },
+                      "boosted_keywords": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "voicemail_message": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "temperature": {
+                        "type": "number"
+                      },
+                      "response_eagerness": {
+                        "type": "integer"
+                      },
+                      "stt_confidence": {
+                        "type": "number"
+                      },
+                      "stt_max_silence_ms": {
+                        "type": "integer"
+                      },
+                      "interruption_sensitivity": {
+                        "type": "integer"
+                      },
+                      "max_call_duration_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "silence_hangup_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "wait_tag_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "ivr_timeout_seconds": {
+                        "type": "integer"
+                      },
+                      "voice_speed": {
+                        "type": "number"
+                      },
+                      "dtmf_enabled": {
+                        "type": "boolean",
+                        "nullable": true
+                      },
+                      "response_length": {
+                        "type": "string",
+                        "enum": [
+                          "short",
+                          "medium",
+                          "long"
+                        ]
+                      },
+                      "transfer_type": {
+                        "type": "string",
+                        "enum": [
+                          "cold",
+                          "warm"
+                        ]
+                      },
+                      "recording_source": {
+                        "type": "string",
+                        "nullable": true,
+                        "enum": [
+                          "provider",
+                          "nixflex",
+                          null
+                        ]
+                      },
+                      "data_extraction_fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$",
+                              "description": "Unique; __proto__, constructor and prototype forbidden."
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "selector",
+                                "boolean",
+                                "number"
+                              ]
+                            },
+                            "description": {
+                              "type": "string",
+                              "maxLength": 2000
+                            },
+                            "optional": {
+                              "type": "boolean"
+                            },
+                            "format_example": {
+                              "type": "string",
+                              "maxLength": 2000
+                            },
+                            "choices": {
+                              "type": "array",
+                              "maxItems": 100,
+                              "uniqueItems": true,
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "description": "Required non-empty for selector; whitespace-only choices rejected."
+                            }
+                          }
+                        }
+                      },
+                      "pickup_delay": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "speaking_rate": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "id": {
+                        "type": "string",
+                        "nullable": false,
+                        "readOnly": true
+                      },
+                      "agent_id": {
+                        "type": "string",
+                        "nullable": false,
+                        "readOnly": true
+                      },
+                      "api_key_id": {
+                        "type": "string",
+                        "nullable": false,
+                        "readOnly": true
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "nullable": false,
+                        "readOnly": true
+                      },
+                      "updated_at": {
+                        "type": "string",
+                        "nullable": false,
+                        "readOnly": true
+                      },
+                      "twilio_account_sid": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                      },
+                      "greeting_language": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                      },
+                      "precall_webhook_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                      },
+                      "tester_scenarios": {
+                        "type": "array",
+                        "items": {},
+                        "readOnly": true
+                      },
+                      "outbound_transfer_numbers": {
+                        "type": "array",
+                        "items": {},
+                        "readOnly": true
+                      },
+                      "outbound_warm_transfer_numbers": {
+                        "type": "array",
+                        "items": {},
+                        "readOnly": true
+                      },
+                      "outbound_post_call_sms_templates": {
+                        "type": "array",
+                        "items": {},
+                        "readOnly": true
+                      },
+                      "outbound_max_duration_seconds": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                      },
+                      "outbound_silence_hangup_seconds": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                      },
+                      "call_retention_days": {
+                        "type": "integer",
+                        "enum": [
+                          90,
+                          30,
+                          7,
+                          1,
+                          0
+                        ]
+                      },
+                      "warnings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "unknown_fields"
+                              ]
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "message": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid agent list query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "invalid_request",
+                    "code": "invalid_agent_list",
+                    "message": "Invalid agent list query.",
+                    "doc_url": "https://docs.nixflex.com/errors/invalid_agent_list",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "unauthorized",
+                    "message": "Invalid or missing API key",
+                    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent storage or catalog unavailable; check before retrying a write.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/phone-numbers": {
+      "get": {
+        "tags": [
+          "Phone numbers"
+        ],
+        "summary": "List phone numbers",
+        "operationId": "listPhoneNumbers",
+        "description": "Owned public numbers only; pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, phone_number DESC; live traversal, not a snapshot.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Opts into cursor paging; 1–100. Omitted with a cursor defaults to 50.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Opaque next_cursor from the preceding page; keep the same account and filters.",
+            "schema": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          },
+          {
+            "name": "agent_id",
+            "in": "query",
+            "description": "Only numbers assigned to this agent.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "count is this page size. next_cursor and has_more are present only in paged mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "phone_numbers",
+                    "count"
+                  ],
+                  "properties": {
+                    "phone_numbers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "api",
+                              "dashboard",
+                              null
+                            ],
+                            "readOnly": true,
+                            "description": "Descriptive origin, never a permission or writable setting."
+                          },
+                          "created_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
+                          },
+                          "twilio_number_sid": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "web_agent_enabled": {
+                            "type": "boolean"
+                          },
+                          "web_calls_enabled": {
+                            "type": "boolean",
+                            "description": "Saved switch; website voice also needs Web agent ON."
+                          },
+                          "web_functions_enabled": {
+                            "type": "boolean"
+                          },
+                          "monitor_enabled": {
+                            "type": "boolean"
+                          },
+                          "phone_number": {
+                            "type": "string",
+                            "example": "+447446466847"
+                          },
+                          "agent_id": {
+                            "type": "string"
+                          },
+                          "provider": {
+                            "type": "string",
+                            "enum": [
+                              "twilio",
+                              "telnyx"
+                            ]
+                          },
+                          "inbound_enabled": {
+                            "type": "boolean"
+                          },
+                          "outbound_enabled": {
+                            "type": "boolean"
+                          },
+                          "custom_prompt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "voice_id": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "sms_reply_enabled": {
+                            "type": "boolean"
+                          },
+                          "voicemail_leave_enabled": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "description": "This number's own voicemail setting - the ONLY one that applies to API-imported numbers. null = not set = silent hangup on voicemail."
+                          },
+                          "voicemail_message": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "sms_prompt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "web_prompt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "speaking_rate": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "dtmf_enabled": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "require_booking_confirmation": {
+                            "type": "boolean",
+                            "nullable": true,
+                            "description": "true / false for this number, null = inherit the agent. See /actions/booking-confirmation."
+                          },
+                          "record_call": {
+                            "type": "boolean",
+                            "nullable": true
+                          },
+                          "recording_source": {
+                            "type": "string",
+                            "enum": [
+                              "provider",
+                              "nixflex"
+                            ],
+                            "nullable": true,
+                            "description": "Who records on this number. null = inherit the agent."
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "phone_numbers": [],
+                  "count": 0,
+                  "next_cursor": null,
+                  "has_more": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid phone-number paging or filter query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "invalid_request",
+                    "code": "invalid_number_query",
+                    "message": "Invalid phone-number paging or filter query.",
+                    "doc_url": "https://docs.nixflex.com/errors/invalid_number_query",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "unauthorized",
+                    "message": "Invalid or missing API key",
+                    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found on your account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Create an API account",
+        "operationId": "createKey",
+        "security": [],
+        "description": "Unauthenticated signup creates a new account, not an additional organisation key. Limited to three attempts per address per hour. Save the credential securely; do not repeat an uncertain signup.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "key_id": {
+                      "type": "string",
+                      "example": "nxf_a1b2c3..."
+                    },
+                    "key_secret": {
+                      "type": "string",
+                      "description": "Shown once. Store it immediately."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "example": "invalid_request_error"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "missing_field"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "agent_id is required."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "example": "https://docs.nixflex.com/errors/missing_field"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many account creations from this address.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "rate_limit",
+                    "code": "key_creation_rate_limited",
+                    "message": "Too many account creations from this address.",
+                    "doc_url": "https://docs.nixflex.com/errors/key_creation_rate_limited",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/retention": {
+      "get": {
+        "tags": [
+          "Account and keys"
+        ],
+        "operationId": "getAccountRetention",
+        "summary": "Get account retention",
+        "description": "Read the inherited retention setting for newly created agents.",
+        "responses": {
+          "200": {
+            "description": "Saved retention default.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "call_retention_days": {
+                      "type": "integer",
+                      "enum": [
+                        90,
+                        30,
+                        7,
+                        1,
+                        0
+                      ]
+                    },
+                    "applies_to": {
+                      "type": "string",
+                      "enum": [
+                        "new_agents"
+                      ]
+                    },
+                    "processing_enabled": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "unauthorized",
+                    "message": "Invalid or missing API key",
+                    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The read could not be confirmed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organisation/name": {
+      "patch": {
+        "tags": [
+          "Organisation"
+        ],
+        "operationId": "renameOrganisation",
+        "summary": "Rename the organisation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved organisation name."
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "unauthorized",
+                    "message": "Invalid or missing API key",
+                    "doc_url": "https://docs.nixflex.com/errors/unauthorized",
+                    "details": {}
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Organisation name or state was refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The read could not be confirmed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{id}/recording": {
+      "get": {
+        "tags": [
+          "Calls"
+        ],
+        "operationId": "callRecording",
+        "summary": "Recording state and temporary download link",
+        "description": "Managed public or private storage; private-access links last 600 seconds and the legacy path uses 300 seconds. Use the returned expires_at. Expiry applies to this signed link, not the underlying public URL or stored object. Never fetches customer buckets. Unknown is not proof recording was off.",
+        "responses": {
+          "200": {
+            "description": "State; URL/expiry null except available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "call_id",
+                    "status",
+                    "url",
+                    "expires_at"
+                  ],
+                  "properties": {
+                    "call_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": [
+                        "available",
+                        "pending",
+                        "expired",
+                        "customer_bucket",
+                        "not_recorded",
+                        "unknown",
+                        "unavailable",
+                        "pending_deletion"
+                      ]
+                    },
+                    "url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uri"
+                    },
+                    "expires_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found on this account"
+          },
+          "503": {
+            "description": "call_data_unavailable: storage/database/signer unconfirmed"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ]
+      }
+    }
+  }
+}

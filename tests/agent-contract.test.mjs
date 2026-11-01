@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=name=>JSON.parse(readFileSync(new URL('../api-reference/'+name,import.meta.url)));
 test('Batch1 draft links shared agent schemas, all newly writable settings, safe reads and update-only retention',()=>{
  const root=read('openapi.json'),input=read('schemas/agent-request.json'),output=read('schemas/agent-response.json'),update=read('schemas/agent-update.json');

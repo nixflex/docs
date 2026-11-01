@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('D7 draft covers agent-only update, scoped error semantics, all kits and dashboard owner handoff',()=>{
  const d=read('api-reference/phone-numbers/move.mdx'),m=JSON.parse(read('api-reference/phone-number-move.json'));

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import a from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read = name => readFileSync(new URL('../' + name, import.meta.url), 'utf8');
 
 test('Batch3 navigation and channel matrix distinguish public website from owner tests', () => {

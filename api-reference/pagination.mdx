@@ -1,0 +1,57 @@
+---
+title: "API pagination and filtering for Nixflex resource lists"
+sidebarTitle: "Pagination and filtering"
+description: "Page through Nixflex phone numbers and agents safely, use the correct cursor or offset, preserve filters, and handle empty results and invalid queries."
+---
+
+Lists do not all use the same paging contract. Follow the endpoint's response shape and preserve its filters between requests.
+
+## Phone numbers: cursor paging
+
+Call `GET /v1/phone-numbers?limit=1` to opt into paging. The limit is **1 to 100**. Supplying a cursor without a limit uses **50**. A request with neither `limit` nor `cursor` keeps the legacy response without cursor fields.
+
+```json
+{"phone_numbers": [], "count": 0, "next_cursor": null, "has_more": false}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `phone_numbers` | Items in this response. |
+| `count` | Number returned, not the account total. |
+| `next_cursor` | Opaque string for the next request, or null at the end. |
+| `has_more` | Whether another page is available. |
+
+Send the returned cursor as the next request's URL-encoded `cursor`. Keep the same account and filters, including optional `agent_id`. Do not construct, decode, or alter a cursor. Order is newest creation first, then phone number descending; missing creation dates come last.
+
+Stop when `has_more` is false and `next_cursor` is null. An empty page is valid. Stop if a cursor repeats. A cursor for a different account or filter, or an invalid limit, returns `400 invalid_number_query`.
+
+## Agents: offset paging
+
+```http
+GET /v1/agents?limit=100&offset=0&status=active
+```
+
+| Query | Accepted value | Default |
+| --- | --- | --- |
+| `limit` | Integer 1–200 | 100 |
+| `offset` | Integer 0–1,000,000 | 0 |
+| `status` | `active`, `disabled`, or `all` | `active` |
+| `search` | Trimmed literal text, at most 200 characters; no control characters | No search |
+
+The response is a **bare array**. Increase `offset` by the number returned. Stop on an empty page or one shorter than the limit. Invalid values return `400 invalid_agent_list`; signs, fractions, and leading zeros in numeric query strings are not accepted.
+
+Order is creation time descending, then agent ID descending. Offset reads are not a fixed snapshot: concurrent writes can move rows. Deduplicate by ID and use a fresh scan when completeness matters.
+
+## Other lists
+
+Voice catalog cursors can expire; restart at the first page after `cursor_expired`. Organisation Activity returns `next_cursor`, but the next request sends it as **`before`**. Its JSON page size is 50; keep date and actor filters consistent. An exact full page can require one final empty request.
+
+Calls, campaigns, inboxes, and knowledge lists have their own filters and envelopes. Do not send a generic `page` or `cursor` to every endpoint. Check the operation first.
+
+## Invalid request example
+
+```http
+GET /v1/phone-numbers?limit=0
+```
+
+This returns HTTP 400 with `error.code = invalid_number_query`. Correct the limit before another request. See the [error catalog](/api-reference/errors#invalid_number_query) and [retry guidance](/api-reference/retries).

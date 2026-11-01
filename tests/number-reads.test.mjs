@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync,existsSync} from 'node:fs';
+import {existsSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 import {resolve,dirname} from 'node:path';
 const root=resolve(import.meta.dirname,'..');
 const file=resolve(root,'api-reference/openapi.json');

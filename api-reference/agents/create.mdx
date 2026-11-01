@@ -2,7 +2,7 @@
 title: "Create an agent: settings, defaults and API examples"
 sidebarTitle: "Create an agent"
 description: "Create an AI phone agent with the Nixflex API. Check request fields, default call limits, responses and errors, with cURL, Node, Python and CLI examples."
-api: "POST https://api.nixflex.com/v1/agents"
+openapi: "/api-reference/public.openapi.json POST /agents"
 playground: "simple"
 ---
 
@@ -255,8 +255,8 @@ returns `400 invalid_agent_field` with `details.field: "max_call_duration_second
 This endpoint does **not** provide a documented idempotency-key replay guarantee.
 A repeated successful request creates another agent. After a timeout, connection loss or uncertain
 server error, use [List agents](/api-reference/agents/list) to reconcile the result before trying again.
-The Node and Python examples disable automatic retries. The CLI may retry a network failure in its
-current client; use the cURL or no-retry SDK example when a duplicate would be harmful.
+The Node and Python examples disable automatic retries. Configure every client for one write attempt,
+and verify the installed CLI’s retry policy before use. Never automatically replay a write.
 
 ## Related endpoints
 

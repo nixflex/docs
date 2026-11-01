@@ -1,146 +1,40 @@
 ---
-title: "API reference"
-description: "Complete reference for the Nixflex REST API"
-icon: "code"
+title: "Nixflex API overview: accounts, resources and requests"
+sidebarTitle: "API overview"
+description: "Start with the Nixflex API: choose the right resource, authenticate requests, understand response shapes, and follow links to errors and safe retries."
 ---
 
-The Nixflex API is REST over HTTPS. All requests use JSON. Authentication is via Bearer token (see [Authentication](/authentication)).
+Build voice, messaging, and knowledge workflows with the Nixflex API. Requests use HTTPS and the versioned base URL `https://api.nixflex.com/v1`.
 
-## Base URL
+## Start here
 
-```
-https://api.nixflex.com
-```
+1. Read [Authentication and permissions](/api-reference/authentication).
+2. [Create an agent](/api-reference/agents/create), then read it back using its returned ID.
+3. Choose the resource page for the operation you need.
+4. Handle [errors](/api-reference/errors), [paging](/api-reference/pagination), and [uncertain write results](/api-reference/retries) explicitly.
 
-All endpoints in this reference are relative to this base URL.
+## Requests and responses
 
-## Versioning
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` from your server. JSON bodies use `Content-Type: application/json`. Keep credentials out of browser code, URLs, repositories, and logs.
 
-The current version is **v1**. All paths are prefixed `/v1/`.
+A resource ID belongs to the authenticated account. Use the ID returned by the API; a display name is not an ID. Phone numbers use international E.164 format and must be URL-encoded in paths.
 
-When v2 is released, v1 will continue working unchanged for at least 12 months. Breaking changes always live behind a new version.
+Successful statuses and response shapes vary by operation. Some lists are bare arrays; others contain items and a cursor. A `202` response means accepted work, not completed work. Poll the documented job or resource read until its result is known.
 
-## Authentication
+## Supported scope
 
-Every request requires an `Authorization` header:
+The public reference covers accounts and keys, agents, voices, phone numbers, calls, campaigns, SMS, contact controls, caller context, web agents, inboxes, knowledge, organisations, and integration settings. A product feature does not automatically provide a public API operation. Only documented public operations belong in an integration.
 
-```
-Authorization: Bearer key_id:key_secret
-```
+The [public OpenAPI file](/api-reference/public.openapi.json) is a bundled foundation. It describes the operations currently included in that file; it does not claim that every future resource page is complete. Existing resource pages remain available while the reference expands.
 
-The colon between `key_id` and `key_secret` is required. See [Authentication](/authentication) for details.
+## Normal agent defaults
 
-## Request format
+A new agent has a maximum call duration of **300 seconds**, a silence hang-up delay of **10 seconds**, and **dynamic greeting enabled**. An existing agent keeps its stored settings when a field is omitted from an update. See the [agent contract](/api-reference/agents/contract) and [versioning and changelog](/api-reference/versioning).
 
-`POST`, `PUT`, and `PATCH` requests must include `Content-Type: application/json` and a JSON body.
+## Environments
 
-`GET` requests use query parameters where applicable.
+Production uses `https://api.nixflex.com/v1`. A staging key belongs to its staging service and must not be sent to production. Examples use placeholders. Set the correct base URL and key together.
 
-## Response format
+## Next steps
 
-All responses are JSON. Success responses return the resource directly:
-
-```json
-{
-  "agent_id": "agent_125207e452f8714a",
-  "name": "Test Receptionist",
-  ...
-}
-```
-
-Error responses follow a consistent envelope (see [Errors](/reference/errors)):
-
-```json
-{
-  "error": {
-    "type": "invalid_request",
-    "code": "invalid_phone_format",
-    "message": "..."
-  }
-}
-```
-
-## Result limits
-
-Nixflex does not currently support offset-based pagination. Each list endpoint returns a fixed set of results:
-
-| Endpoint | Returns | `limit` supported |
-|---|---|---|
-| `GET /v1/calls` | The 50 most recent calls | No |
-| `GET /v1/agents` | All active agents | No |
-| `GET /v1/phone-numbers` | All numbers (up to 1,000) | No |
-| `GET /v1/campaigns` | All campaigns | Yes |
-| `GET /v1/sms/campaigns` | All campaigns | Yes |
-
-```bash
-curl "https://api.nixflex.com/v1/campaigns?limit=10" \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-<Note>
-  `GET /v1/calls` returns only the 50 most recent calls and cannot reach older
-  records. To keep full call history, subscribe to the `call.completed` webhook
-  and store each call in your own backend as it arrives.
-</Note>
-
-## Resource list
-
-<CardGroup cols={2}>
-  <Card title="Agents" icon="user" href="/api-reference/agents/create">
-    Create and manage AI agents (prompt, voice, behaviour).
-  </Card>
-  <Card title="Calls" icon="phone" href="/api-reference/calls/list">
-    List, fetch, and trigger calls. Outbound + batch.
-  </Card>
-  <Card title="Phone numbers" icon="hash" href="/api-reference/phone-numbers/import">
-    Import numbers from Twilio or Telnyx and attach them to agents.
-  </Card>
-  <Card title="SMS" icon="message" href="/api-reference/sms/send">
-    Send individual messages and bulk campaigns.
-  </Card>
-  <Card title="Account" icon="user-shield" href="/api-reference/account/create-key">
-    Manage API keys and view usage.
-  </Card>
-</CardGroup>
-
-## OpenAPI specification
-
-The whole API is described in a machine-readable OpenAPI 3.1 document:
-
-```/api-reference/openapi.json
-```
-
-Full URL: [https://docs.nixflex.com/api-reference/openapi.json](https://docs.nixflex.com/api-reference/openapi.json)
-
-Use it to:
-
-- **Import every endpoint into Postman or Insomnia** - one paste and each request is ready to send, fields included.
-- **Generate a client in your language** - run any OpenAPI generator against it for Python, Go, PHP, Ruby, Java, or C#. For Node.js, use the [official SDK](/sdks/node) instead.
-- **Give an AI coding assistant the real shape of the API** - tools that read a spec write correct calls instead of guessing field names.
-
-The spec covers authentication, every request and response schema, and the shared error envelope. A few objects with long field lists stay open in the spec and link to the page that documents them in full.
-
-## Status codes
-
-| Code | Meaning |
-|---|---|
-| `200` | Success (GET, PUT, PATCH, DELETE) |
-| `201` | Created (POST) |
-| `400` | Invalid request — check parameters |
-| `401` | Not authenticated — check API key |
-| `403` | Authenticated but not permitted |
-| `404` | Resource not found |
-| `409` | Conflict (e.g. number already imported) |
-| `429` | Rate limited — see `Retry-After` header |
-| `500` | Server error — contact support |
-| `502` | Upstream provider error (Twilio, etc.) |
-
-## Idempotency
-
-Mutation endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) accept an optional `Idempotency-Key` header for safe retries:
-
-```
-Idempotency-Key: my-unique-request-id-123
-```
-
-Requests with the same key within 24 hours return the original response. Safe to retry on network failures.
+See [Node](/sdks/node), [Python](/sdks/python), [CLI](/cli/overview), and [MCP](/mcp/overview) for client setup. Check a client's operation support and retry settings before using it for a write.

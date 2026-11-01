@@ -1,0 +1,49 @@
+---
+title: "API retries and idempotency: handle uncertain writes"
+sidebarTitle: "Retry and idempotency"
+description: "Explore api retries and idempotency with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
+---
+
+**Never automatically retry a write.** A timeout, broken connection, or server error can arrive after the operation took effect. Repeating it can create another agent, call, message, campaign, invitation, or job.
+
+## Choose the next action
+
+| Result | Read-only GET | Write or action request |
+| --- | --- | --- |
+| 400 or 422 | Correct the request first | Understand the refusal before a deliberate corrected attempt. |
+| 401 or 403 | Fix authentication or permission | Fix access; do not loop. |
+| 409 conflict | Refresh relevant state | Read state and resolve the named conflict. |
+| 429 throttle | Wait at least `Retry-After`; use a bounded retry | Stop automatic retries. Review the refusal and state before a deliberate later attempt. |
+| Timeout, 5xx, disconnected response | Bounded backoff with jitter is reasonable | Treat the outcome as unknown and reconcile it. |
+| 202 accepted | Read the documented job or resource | Save its identity and poll; do not submit another job to check progress. |
+
+GET retries need a limit, overall deadline, and cancellation. Honour `RateLimit-Limit`, `RateLimit-Remaining`, and `Retry-After` when returned. Do not assume a POST is harmless because its name contains “test” or “preview”.
+
+## Check an uncertain result
+
+1. Save the operation, resource ID, request time, safe correlation IDs, and receipt. Keep secrets and customer content out of logs.
+2. Read the affected resource or job. Compare the intended change with stored state.
+3. If completion is confirmed, continue from that resource. If a refusal is confirmed and no work occurred, decide whether a corrected attempt is appropriate.
+4. If still unknown, stop and seek support with safe identifiers. An empty or delayed list is not proof that a call or message was never sent.
+
+| Operation | Reconciliation |
+| --- | --- |
+| Agent create | Use the returned ID; otherwise inspect recent agents. Names are not unique, so a name match alone is insufficient. |
+| Agent or number update | Read the same resource and compare the changed fields. |
+| Call or SMS | Read the receipt/resource and relevant history. Never redial or resend because a response was lost. |
+| Campaign action | Read campaign state and results before another action. |
+| Knowledge write | Read its job, revision, source, draft, or session. |
+| Key rotation | Test a saved credential with a read. A lost new secret requires recovery. |
+| Delete | Read the resource and asynchronous deletion state; absence alone does not prove background cleanup finished. |
+
+## Idempotency is operation-specific
+
+There is no universal `Idempotency-Key` promise. Sending that header does not make agent creation, call creation, SMS, or other writes safe to replay.
+
+Knowledge mutations and test messages use their documented idempotency identity. Preserve the same key and payload for the same logical operation; a changed payload under a used key can return `409 idempotency_conflict`. Check each operation's required key and revision fields. A replay can return saved work; it still does not authorise an automatic write retry policy.
+
+## Client settings
+
+Disable write retries in the HTTP client, SDK, proxy, job runner, and application. If a client only offers a global retry setting, use zero for the client that performs writes. Confirm CLI and MCP behaviour for the installed version before production use.
+
+Use the [error catalog](/api-reference/errors). In particular, `outcome_unknown`, `campaign_outcome_unknown`, and `carrier_outcome_unknown` require reconciliation, not repetition.

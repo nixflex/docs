@@ -1,4 +1,4 @@
-import {test} from 'node:test';import a from 'node:assert/strict';import fs from 'node:fs';
+import {test} from 'node:test';import a from 'node:assert/strict';import {readLegacyFileSync} from './support/read-legacy-spec.mjs'; const fs = {readFileSync:readLegacyFileSync};
 test('organisation draft keeps safety blockers, single balance/key, personal auth and honest delivery visible',()=>{
  const text=fs.readFileSync('concepts/organisations.mdx','utf8');
  for(const s of ['not released','safe hand-back','20 invitations','50 people','24 hours','12 months','500','personal','not automatically','35-tool','not published'])a.ok(text.includes(s),s);

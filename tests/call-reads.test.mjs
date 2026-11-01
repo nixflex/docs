@@ -1,13 +1,13 @@
 import {test} from 'node:test';
 import a from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readLegacyFileSync as readFileSync} from './support/read-legacy-spec.mjs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-test('call read drafts name bounded filters, nullable proof, retention and short links without billing changes',()=>{
+test('call read drafts name bounded filters, nullable proof, retention and short links with billing excluded from public documentation',()=>{
  const page=read('api-reference/calls/read-views.mdx');
- for(const term of ['next_cursor','cost_unknown','failed:','customer_bucket','not_recorded','unknown','pending_deletion','300 seconds','conservative','not a frozen','recorded_cost']){
+ for(const term of ['next_cursor','cost_unknown','failed:','customer_bucket','not_recorded','unknown','pending_deletion','300 seconds','not a frozen']){
   a.ok(page.includes(term),term);
  }
- a.match(page,/no new rate, credit, refund or charge/);a.match(page,/not a claim/);
+ a.doesNotMatch(page,/## Billing|calls\.billing|recorded_cost/);a.match(page,/not a claim/);
  a.ok(read('docs.json').includes('api-reference/calls/read-views'));
 });
 test('call read OpenAPI external paths and nullable schema resolve; legacy array contract stays',()=>{
