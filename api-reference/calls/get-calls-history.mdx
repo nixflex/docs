@@ -1,0 +1,222 @@
+---
+title: "Get call history: filters, totals and cursor pagination"
+sidebarTitle: "Get call history"
+description: "Read filtered Nixflex call history with matching totals and cursor paging. Distinguish unknown costs, failed starts, retained metadata, and changing records."
+openapi: "/api-reference/public.openapi.json GET /calls/history"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+`}</style>
+
+Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `limit` (query) | integer | No | `50` | Strict integer page size; signs, fractions and leading zeros are refused. Minimum 1. Maximum 200. |
+| `offset` (query) | integer | No | `0` | Offset for the first page only. Prefer the returned cursor for continuation. Minimum 0. Maximum 1000000. |
+| `cursor` (query) | string | No | Omitted | Opaque continuation cursor, up to 4096 characters. With cursor, send only limit; do not repeat filters or a nonzero offset. Maximum 4096 characters. |
+| `direction` (query) | string | No | `"all"` | Filter by direction. Allowed: `"all"`, `"inbound"`, `"outbound"`, `"web"`. |
+| `source` (query) | string | No | `"all"` | Filter by source. Allowed: `"all"`, `"campaign"`, `"web"`, `"test"`, `"other"`. |
+| `outcome` (query) | string | No | `"all"` | Filter by outcome. Allowed: `"all"`, `"successful"`, `"unsuccessful"`, `"unknown"`, `"failed"`. |
+| `period` (query) | string | No | `"month"` | UTC time range: today starts at UTC midnight; week is the preceding 7 days; month the preceding 30 days. Allowed: `"all"`, `"today"`, `"week"`, `"month"`. |
+| `agent` (query) | string | No | `"all"` | Agent ID, or all. This is agent, not agent_id. Maximum 200 characters. |
+| `number` (query) | string | No | `"all"` | Business number, or all; use + in E.164 and encode it in the query. Maximum 80 characters. |
+| `search` (query) | string | No | `""` | Trimmed literal search in caller name, call ID and phone numbers. Control characters are invalid. Maximum 120 characters. |
+| `since` (query) | string | No | Omitted | Optional ISO timestamp with a time zone. Overrides the period start; must not be after until. Maximum 40 characters. Format: date-time. |
+| `until` (query) | string | No | Omitted | Optional ISO timestamp with a time zone; defaults to request time. Maximum 40 characters. Format: date-time. |
+
+Do not send a request body.
+
+Order is created_at descending, nulls last, then row ID descending. The cursor binds the account, filters and first-page time boundary. Send only cursor and optional limit for the next page. Stop when has_more is false and next_cursor is null; stop on a repeated cursor. This is not a frozen database snapshot: later updates and deletion can change results.
+
+The default period is the preceding 30 days. Cost sums include only known values; cost_unknown counts rows excluded from that sum. Null success is not a failed call. outcome=failed selects failed starts; their IDs can begin failed:. A retained call_summary can still be present, so treat the result as private account data.
+
+<span id="history-without-changing-old-clients"></span>
+<span id="recording-status-and-download"></span>
+<span id="kits"></span>
+For recording availability and temporary download access, use [Get a call recording](/api-reference/calls/get-calls-id-recording).
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `data` | array of object | Page of matching retained call metadata. |
+| `data[].call_id` | string | Call identifier. Failed starts can use the failed: prefix. |
+| `data[].id` | string | Internal row identifier when present. Format: uuid. |
+| `data[].agent_id` | string or null | Agent identifier, if retained. |
+| `data[].from_number` | string or null | Origin number, if retained. |
+| `data[].to_number` | string or null | Destination number, if retained. |
+| `data[].call_type` | string or null | Call channel/type, such as inbound, outbound or web. |
+| `data[].call_direction` | string or null | Direction recorded for the call. |
+| `data[].call_status` | string or null | Recorded lifecycle state; unknown future states must be tolerated. |
+| `data[].duration_ms` | integer or null | Connected duration in milliseconds; not elapsed ringing time or proof of billed time. |
+| `data[].created_at` | string or null | Creation time when retained. Format: date-time. |
+| `data[].start_timestamp` | integer or null | Start time in Unix milliseconds. |
+| `data[].end_timestamp` | integer or null | End time in Unix milliseconds. |
+| `data[].answered_at` | integer or null | Answer time in Unix milliseconds, when known. |
+| `data[].ended_reason` | string or null | Recorded end/failure reason. A null value is unknown, not success. |
+| `data[].call_successful` | boolean or null | Assessment of success. Null means unknown. |
+| `data[].caller_sentiment` | string or null | Post-call sentiment, if retained. |
+| `data[].cost` | number or null | Stored cost value. Null must remain unknown. |
+| `data[].charged_minutes` | number or null | Stored charged-minute value, when known. |
+| `data[].campaign_id` | string or null | Associated campaign, if any. |
+| `data[].test_requested_by` | string or null | Retained test source marker, if any. |
+| `data[].caller_name` | string or null | Caller name, if retained. |
+| `data[].payload_deleted_at` | string or null | Time content was erased. Format: date-time. |
+| `data[].payload_deleted_reason` | string or null | Recorded erasure reason. |
+| `data[].payload_in_own_storage` | boolean or null | Whether payload was stored in account-connected storage; its current contents are not inspected. |
+| `data[].call_retention_days` | integer or null | Retention policy recorded for this call. |
+| `data[].payload_scheduled_for_deletion` | boolean | Content is hidden while deletion processing finishes. |
+| `data[].call_summary` | string or null | Retained summary; can be absent or null. |
+| `data[].recording_availability` | string or null | Stored recording processing state. |
+| `data[].recording_availability_reason` | string or null | Stored recording processing reason. |
+| `totals` | object | Saved value. |
+| `totals.total` | integer | All matching retained rows, not just this page. Minimum 0. |
+| `totals.minutes` | number | Sum of nonnegative connected durations divided by 60,000. |
+| `totals.cost` | number | Sum of known stored costs; unknown costs are counted separately. |
+| `totals.cost_unknown` | integer | Matching rows whose cost is unknown. Minimum 0. |
+| `totals.successful` | integer | Matching rows whose success flag is true. Minimum 0. |
+| `filters` | object | Saved value. |
+| `filters.direction` | string | Filter by direction. Allowed: `"all"`, `"inbound"`, `"outbound"`, `"web"`. |
+| `filters.source` | string | Filter by source. Allowed: `"all"`, `"campaign"`, `"web"`, `"test"`, `"other"`. |
+| `filters.outcome` | string | Filter by outcome. Allowed: `"all"`, `"successful"`, `"unsuccessful"`, `"unknown"`, `"failed"`. |
+| `filters.period` | string | UTC time range: today starts at UTC midnight; week is the preceding 7 days; month the preceding 30 days. Allowed: `"all"`, `"today"`, `"week"`, `"month"`. |
+| `filters.agent` | string | Agent ID, or all. This is agent, not agent_id. Maximum 200 characters. |
+| `filters.number` | string | Business number, or all; use + in E.164 and encode it in the query. Maximum 80 characters. |
+| `filters.search` | string | Trimmed literal search in caller name, call ID and phone numbers. Control characters are invalid. Maximum 120 characters. |
+| `filters.since` | string or null | Optional ISO timestamp with a time zone. Overrides the period start; must not be after until. Maximum 40 characters. Format: date-time. |
+| `filters.until` | string | Optional ISO timestamp with a time zone; defaults to request time. Maximum 40 characters. Format: date-time. |
+| `limit` | integer | Applied page limit. |
+| `offset` | integer | Applied offset; zero during cursor continuation. |
+| `has_more` | boolean | Whether another page exists. |
+| `next_cursor` | string or null | Opaque continuation, or null at the end. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/history?limit=1&period=all" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const client = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await client.calls.history({limit: 1, period: "all"});
+console.log('Request completed.');
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as client:
+    result = client.calls.history(limit=1, period="all")
+    print("Request completed.")
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls history --limit 1 --period all \
+  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "data": [],
+  "totals": {
+    "total": 0,
+    "minutes": 0,
+    "cost": 0,
+    "cost_unknown": 0,
+    "successful": 0
+  },
+  "filters": {
+    "direction": "all",
+    "source": "all",
+    "outcome": "all",
+    "period": "all",
+    "agent": "all",
+    "number": "all",
+    "search": "",
+    "since": null,
+    "until": "2026-11-01T12:00:00.000Z"
+  },
+  "limit": 1,
+  "offset": 0,
+  "has_more": false,
+  "next_cursor": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_call_history`](/api-reference/errors#invalid_call_history) | A filter, timestamp, limit or cursor combination is invalid. | Correct the query. Continuation uses cursor and limit only. |
+| 503 | [`call_data_unavailable`](/api-reference/errors#call_data_unavailable) | The history snapshot could not be read safely. | Retry a bounded read; do not substitute zero totals. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Get a call](/api-reference/calls/get)
+- [Get a call recording](/api-reference/calls/get-calls-id-recording)
+- [Pagination and filtering](/api-reference/pagination)

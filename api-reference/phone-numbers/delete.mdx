@@ -1,73 +1,145 @@
 ---
-title: "Delete phone number | Nixflex API guide and examples"
-description: "Explore delete phone number with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "DELETE https://api.nixflex.com/v1/phone-numbers/{phone_number}"
+title: "Remove a phone number from your Nixflex API account"
 sidebarTitle: "Remove a phone number"
+description: "Remove an owned phone number from Nixflex. Check the removal scope, response fields, cleanup errors and safe cURL, Node, Python and CLI request examples."
+openapi: "/api-reference/public.openapi.json DELETE /phone-numbers/{phoneNumber}"
+playground: "simple"
 ---
 
-Disconnects a number from your Nixflex account. Clears the carrier configuration so calls no longer route to the engine - on Twilio the number's webhooks, on Telnyx the assignment to your TeXML application, then removes the row from our database.
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
 
-## Request
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+`}</style>
 
-```bash
-curl -X DELETE https://api.nixflex.com/v1/phone-numbers/+447446466847 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the number from its carrier account or end that account’s charges.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Business number. Use E.164 and URL-encode the leading + as %2B. |
+
+Do not send a request body.
+
+No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | object | Saved value. |
+| `phone_number.phone_number` | string | Removed business number. |
+| `phone_number.deleted` | boolean | The number removal completed. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
 ```
 
-URL-encode the `+` if your HTTP client doesn't do it automatically: `%2B447446466847`.
+```javascript Node
+import { Nixflex } from 'nixflex';
 
-## Response
+const client = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);
+console.log('Request completed.');
+```
 
-`200 OK`:
+```python Python
+import os
+from nixflex import Nixflex
 
-```json
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as client:
+    result = client.phone_numbers.delete(os.environ["NXF_PHONE_NUMBER"])
+    print("Request completed.")
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers delete "$NXF_PHONE_NUMBER" --confirm \
+  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
 {
   "phone_number": {
-    "phone_number": "+447446466847",
+    "phone_number": "+12025550100",
     "deleted": true
   }
 }
 ```
 
-## What this does NOT do
-
-<Warning>
-  This endpoint **does not release the number from your carrier**:
-
-  - ❌ Number stays in your carrier account
-  - ❌ Carrier billing continues
-  - ❌ Number is not cancelled
-
-  To fully release the number and stop carrier billing, do that directly in your Twilio or Telnyx account. This is intentional — releasing is a permanent billing decision and stays with the account owner.
-</Warning>
-
-## Reversible
-
-Deleting just clears webhooks and the database row. Re-importing the same number with the same data restores everything. Useful for testing.
+</ResponseExample>
 
 ## Errors
 
-| Code | HTTP | Cause |
-|---|---|---|
-| `number_not_found` | 404 | Number doesn't exist OR belongs to a different account |
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
 
-## Use case: customer offboarding
+<div className="agent-error-table">
 
-```javascript
-// 1. Stop Nixflex from routing calls
-await fetch(
-  `https://api.nixflex.com/v1/phone-numbers/${customerNumber}`,
-  {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${NIXFLEX_KEY_ID}:${NIXFLEX_KEY_SECRET}`
-    }
-  }
-);
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | The number format is invalid. | Use a complete E.164 number. |
+| 403 | [`account_unavailable`](/api-reference/errors#account_unavailable) | The account is not active. | Resolve account access before attempting another number operation. |
+| 404 | [`number_not_found`](/api-reference/errors#number_not_found) | The number is not on this account. | Check the owning account and exact number. |
+| 409 | [`number_operation_pending`](/api-reference/errors#number_operation_pending) | Another import or removal is pending. | Read the current number and wait; do not change its routing. |
+| 409 | [`number_cleanup_uncertain`](/api-reference/errors#number_cleanup_uncertain) | A previous routing change is unconfirmed. | Contact support to reconcile it before importing or removing again. |
+| 503 | [`number_cleanup_uncertain`](/api-reference/errors#number_cleanup_uncertain) | The routing outcome from this attempt is unconfirmed. | Do not resend or change routing; reconcile through support. |
+| 503 | [`number_save_pending`](/api-reference/errors#number_save_pending) | Routing changed but local completion could not be confirmed. | Read current state and contact support; never replay automatically. |
+| 503 | [`number_operation_unavailable`](/api-reference/errors#number_operation_unavailable) | The operation could not be confirmed. | Reconcile the number before another write. |
+| 409 | [`number_cleanup_credentials_missing`](/api-reference/errors#number_cleanup_credentials_missing) | The existing connection lacks the credentials needed to clear routing. | Restore the existing connection through the supported account workflow before removal. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
-// 2. Release the number from Twilio (your responsibility)
-const twilio = require('twilio')(YOUR_TWILIO_SID, YOUR_TWILIO_TOKEN);
-await twilio.incomingPhoneNumbers(numberSid).remove();
-```
+</div>
 
-Two API calls, clean separation — Nixflex stops routing, you handle Twilio billing.
+## Retry and idempotency
+
+Never automatically retry DELETE. Read the number after an uncertain result and preserve safe operation_id details. A confirmed missing number may be consistent with a completed removal; it does not prove every external routing action or data deletion occurred.
+
+## Related endpoints
+
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Import a phone number](/api-reference/phone-numbers/import)
+- [Update a phone number](/api-reference/phone-numbers/update)

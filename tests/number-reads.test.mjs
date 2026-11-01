@@ -35,7 +35,7 @@ test('Group2 all OpenAPI local refs resolve including the external schema file',
 });
 test('Group2 new pages are navigable and examples explain saved versus effective state',()=>{
   const nav=JSON.stringify(JSON.parse(readFileSync(resolve(root,'docs.json'),'utf8')));
-  for(const page of ['get','switches']){a.ok(nav.includes('api-reference/phone-numbers/'+page));a.ok(existsSync(resolve(root,'api-reference/phone-numbers',page+'.mdx')));}
-  const switches=readFileSync(resolve(root,'api-reference/phone-numbers/switches.mdx'),'utf8');for(const f of fields)a.ok(switches.includes(f));
-  a.match(switches,/web_calls_effective/);a.match(switches,/unpublished/);
+  for(const page of ['get','update']){a.ok(nav.includes('api-reference/phone-numbers/'+page));a.ok(existsSync(resolve(root,'api-reference/phone-numbers',page+'.mdx')));}
+  const switches=readFileSync(resolve(root,'api-reference/phone-numbers/update.mdx'),'utf8');for(const f of fields)a.ok(switches.includes(f));
+  a.match(switches,/web_calls_effective/);a.match(switches,/not a live listener control/);
 });

@@ -1,125 +1,193 @@
 ---
-title: "Create outbound call | Nixflex API reference guide"
-description: "Explore create outbound call with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "POST https://api.nixflex.com/v1/calls/outbound"
+title: "Create an outbound call: purpose and safe API requests"
 sidebarTitle: "Create an outbound call"
+description: "Start an outbound call with an owned agent and eligible number. Check required fields, contact checks, uncertain outcomes and safe API request examples."
+openapi: "/api-reference/public.openapi.json POST /calls/outbound"
+playground: "simple"
 ---
 
-Triggers Nixflex to call a phone number. The agent dials, waits for pickup, runs voicemail detection, and starts the conversation when a human answers.
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
 
-The call is fire-and-forget: the request returns immediately with a `call_id`, then the actual ringing, conversation, and ending all happen asynchronously. If you want the result, set a `webhook_url` on the agent (or on the number) and you will receive a `call.completed` event when the call ends.
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+`}</style>
 
-<Note>
-  The number you dial from must be **outbound-enabled**. A number that only handles inbound calls will not place outbound calls. Enable outbound on the Phone Numbers page (or when you import the number). Inbound working does **not** mean outbound works â€” they are separate switches.
-</Note>
+Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome.
 
-## Request
+## Authentication
 
-```bash
-curl -X POST https://api.nixflex.com/v1/calls/outbound \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "to_number": "+447386172392",
-    "prompt": "You are Sarah from Bright Smile Dental. Call to remind {{patient_name}} about their appointment on {{appointment_time}} and confirm they can still attend.",
-    "dynamic_vars": {
-      "patient_name": "Sarah",
-      "appointment_time": "Tuesday at 2pm"
-    }
-  }'
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Owned active agent ID. Minimum 1 characters. |
+| `to_number` | string | Yes | None | Recipient in E.164 format. Minimum 1 characters. |
+| `prompt` | string | Yes | None | Required nonblank call purpose. No separate route-level character maximum is declared; request-size and downstream admission rules still apply. Minimum 1 characters. |
+| `from_number` | string | No | Omitted | Optional owned outbound-enabled number assigned to this agent. If omitted, the oldest eligible number is selected. |
+| `dynamic_vars` | object | No | Omitted | Values for `{{name}}`-style placeholders in the call purpose. Keys must match supported placeholder names. |
+| `campaign_id` | string or null | No | `null` | Optional campaign association. Omitted or empty becomes null. |
+| `recipient_timezone` | string | No | Omitted | Optional recipient IANA time zone. Used for recipient-local contact checks, not the business clock. |
+| `recipient_country` | string | No | Omitted | Optional two-letter recipient country code. |
+
+Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.
+
+Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks.
+
+## Response fields
+
+`201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `call_id` | string | Accepted call identifier. Save it for reads and reconciliation. |
+| `status` | string | The call was initiated, not completed. |
+| `to` | string | Requested recipient. |
+| `from` | string | Selected originating number. |
+| `work_id` | string or null | Optional account work receipt ID. |
+| `deletion_work_id` | string | Optional dispatch/deletion safety receipt ID. |
+| `persistence` | string | Optional unconfirmed state if accepted work could not be fully saved. |
+| `safe_to_retry` | boolean | When supplied, false: do not repeat an accepted or uncertain call. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_AGENT_ID`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running a successful example contacts the recipient; use only an approved test destination.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/outbound" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the appointment time requested by the recipient.\"}"
 ```
 
-## Body parameters
+```javascript Node
+import { Nixflex } from 'nixflex';
 
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `agent_id` | string | Yes | The agent that will handle this call. Must belong to your API key. |
-| `to_number` | string | Yes | Who to call, in E.164 format (`+447386172392`, not `07386172392`). |
-| `prompt` | string | Yes | Per-call purpose, separate from the agent's saved prompt. It may be retained with the call's actual prompt and history; it must not be empty. |
-| `dynamic_vars` | object | No | Key-value pairs injected into the prompt (see below). |
-| `from_number` | string | No | Which of your numbers to dial from. Must be an **outbound-enabled** number on this agent. If you omit it, the engine uses the agent's first outbound-enabled number. |
-| `campaign_id` | string | No | Link this call to a batch campaign for reporting. |
-
-<Warning>
-  The request body uses `to_number` (not `to`). Sending `to` will fail with `missing_field`. (`to` is used by the SMS endpoints, not by outbound calls.)
-</Warning>
-
-## How the dialing number is chosen
-
-You do not have to pass `from_number`. The engine works out which of your numbers to dial from in this order:
-
-1. **You passed `from_number`** â†’ the engine uses exactly that number, but only if it is outbound-enabled and belongs to this agent under your API key. If it is not, you get `from_number_not_found`.
-2. **You omitted `from_number`** â†’ the engine picks the agent's first outbound-enabled number.
-3. **Legacy fallback** â†’ if the agent has no rows in the phone numbers table, it falls back to the single number stored on the agent itself.
-
-If none of these produce a usable number, you get `agent_missing_phone_number`.
-
-## Dynamic variables
-
-Anything in `dynamic_vars` is interpolated into the prompt. Reference each value with curly braces:
-
-```
-You are calling {{patient_name}} about their appointment on {{appointment_time}}.
+const client = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const body = {
+  "agent_id": process.env.NXF_AGENT_ID,
+  "to_number": process.env.NXF_TO_NUMBER,
+  "prompt": "Confirm the appointment time requested by the recipient."
+};
+const result = await client.calls.create(body);
+console.log('Request completed.');
 ```
 
-Use double braces, for example `{{patient_name}}`, and supply every referenced key.
-Missing-detail validation can refuse an incomplete call when enabled; do not rely
-on an unmatched placeholder staying literal. These values and the actual prompt
-can be retained with call data, subject to the applicable retention policy.
+```python Python
+import os
+from nixflex import Nixflex
 
-The [client safety draft](/api-reference/calls/client-safety) shows Node, CLI,
-Python and MCP syntax and the one-attempt rule for changing requests. Lost replies
-do not prove no call was placed: check before retrying.
+body = {
+  "agent_id": os.environ["NXF_AGENT_ID"],
+  "to_number": os.environ["NXF_TO_NUMBER"],
+  "prompt": "Confirm the appointment time requested by the recipient."
+}
 
-## Response
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as client:
+    result = client.calls.create(**body)
+    print("Request completed.")
+```
 
-`201 Created`:
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --to "$NXF_TO_NUMBER" --prompt "Confirm the appointment time requested by the recipient." \
+  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+```
 
-```json
+</RequestExample>
+
+## Example response
+
+Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
 {
-  "call_id": "CA1234567890",
+  "call_id": "call_example",
   "status": "initiated",
-  "to": "+447386172392",
-  "from": "+447446466847"
+  "to": "+12025550101",
+  "from": "+12025550100"
 }
 ```
 
-The response returns immediately. Your carrier dials within about 5 seconds. The actual call lifecycle (ringing â†’ connected â†’ ended) happens asynchronously â€” you will receive a webhook when the call ends if you have a `webhook_url` set.
-
-## Validation order
-
-The engine checks these in order and stops at the first failure:
-
-1. `agent_id`, `to_number`, and `prompt` are all present (and `prompt` is not blank).
-2. `to_number` is valid E.164 (e.g. `+447386172392`, not `07386172392`).
-3. The agent exists and belongs to your API key.
-4. The agent has an **outbound-enabled** number assigned. Inbound-only numbers do not count. If you passed a specific `from_number`, it must be outbound-enabled on this agent.
-5. Carrier credentials exist for that number.
-
-Each failure returns a `400` with a specific `code` (see below).
+</ResponseExample>
 
 ## Errors
 
-| Code | HTTP | Cause |
-|---|---|---|
-| `missing_field` | 400 | `agent_id`, `to_number`, or `prompt` is missing or empty |
-| `invalid_phone_format` | 400 | `to_number` is not valid E.164 |
-| `from_number_not_found` | 400 | The `from_number` you passed is not an outbound-enabled number on this agent. Import it and enable outbound on the Phone Numbers page. |
-| `agent_missing_phone_number` | 400 | The agent has no number assigned. Import one via [Phone numbers](/api-reference/phone-numbers/import) and enable outbound. |
-| `agent_missing_twilio_credentials` | 400 | The chosen number has no Twilio credentials stored |
-| `outbound_failed` | 502 | Twilio rejected the dial (see `details.twilio_error`) |
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
 
-## What happens next
+<div className="agent-error-table">
 
-After you trigger the call:
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | agent_id, to_number or a nonblank prompt is missing. | Supply the required fields before attempting a call. |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | The recipient is not valid E.164. | Correct the recipient number. |
+| 400 | [`agent_missing_phone_number`](/api-reference/errors#agent_missing_phone_number) | No eligible outbound number is assigned to the agent. | Connect and enable an owned outbound number. |
+| 400 | [`from_number_not_found`](/api-reference/errors#from_number_not_found) | The requested origin is not an eligible number of this agent. | Use an owned, assigned and settled origin. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | The agent is not available to this account. | Use an owned agent ID. |
+| 409 | [`agent_inactive`](/api-reference/errors#agent_inactive) | The agent is disabled. | Choose or enable the intended agent before sending. |
+| 409 | [`number_pending`](/api-reference/errors#number_pending) | The number is being imported or removed. | Wait for the number operation to settle. |
+| 409 | [`number_disabled`](/api-reference/errors#number_disabled) | Outbound work is disabled for the number. | Check the intended outbound setting; do not reroute automatically. |
+| 409 | [`number_context_changed`](/api-reference/errors#number_context_changed) | The number assignment changed while the call waited. | Read the current assignment before a new request. |
+| 409 | [`number_provider_invalid`](/api-reference/errors#number_provider_invalid) | The number connection is not valid. | Repair the existing connection through the dashboard. |
+| 409 | [`do_not_contact`](/api-reference/errors#do_not_contact) | The recipient is suppressed. | Respect the suppression; do not fabricate consent. |
+| 409 | [`missing_voice_details`](/api-reference/errors#missing_voice_details) | A call-purpose placeholder has no value. | Supply the named dynamic_vars values. |
+| 409 | [`unsupported_voice_placeholder`](/api-reference/errors#unsupported_voice_placeholder) | A placeholder name uses unsupported spaces or punctuation. | Use `{{name}}` with a supported identifier. |
+| 403 | [`account_disabled`](/api-reference/errors#account_disabled) | The account cannot start calls. | Resolve account access. |
+| 503 | [`agent_lookup_unavailable`](/api-reference/errors#agent_lookup_unavailable) | The agent lookup failed. | Retry only after checking that no call was accepted. |
+| 503 | [`number_lookup_unavailable`](/api-reference/errors#number_lookup_unavailable) | Number ownership or availability could not be confirmed. | Check current state before another send. |
+| 502 | [`carrier_error`](/api-reference/errors#carrier_error) | The connection service refused the call. | Read the refusal and correct the cause; do not blindly redial. |
+| 504 | [`carrier_outcome_unknown`](/api-reference/errors#carrier_outcome_unknown) | The service did not confirm whether a call was placed. | Check call history and receipts; never automatically redial. |
+| 409 | [`needs_timezone`](/api-reference/errors#needs_timezone) | The recipient location does not establish a usable time zone. | Supply the recipient time zone after checking it. |
+| 409 | [`invalid_recipient_timezone`](/api-reference/errors#invalid_recipient_timezone) | The recipient time zone is invalid. | Use a valid IANA time zone. |
+| 409 | [`invalid_recipient_country`](/api-reference/errors#invalid_recipient_country) | The recipient country is invalid. | Use a valid two-letter country code. |
+| 409 | [`outside_hours`](/api-reference/errors#outside_hours) | The recipient is outside permitted contact hours. | Wait for an allowed window; do not bypass the policy. |
+| 409 | [`not_due_local`](/api-reference/errors#not_due_local) | The recipient is not due for contact in the current local window. | Follow the returned contact-hours guidance. |
+| 409 | [`country_policy_review`](/api-reference/errors#country_policy_review) | The recipient country requires policy review. | Resolve that review before contacting the recipient. |
+| 409 | [`holiday_data_unavailable`](/api-reference/errors#holiday_data_unavailable) | Holiday checks could not confirm an allowed window. | Wait for a confirmed policy result. |
+| 409 | [`public_holiday`](/api-reference/errors#public_holiday) | The recipient-local date is a restricted holiday. | Use the next permitted contact window. |
+| 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact policy could not be checked. | Wait for recovery; do not automatically retry a send. |
+| 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | Dispatch safety could not be confirmed. | Reconcile any existing receipt before deciding on a new request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
-1. Your carrier dials the `to_number` using the chosen outbound number.
-2. Voicemail detection runs - the AI reads the first thing it hears.
-3. If voicemail is detected, the agent leaves a short message from your prompt and ends the call. See [Voicemail detection](/advanced/voicemail-detection).
-4. If a human answers, the agent starts the conversation using your `prompt`.
-5. The call ends naturally, or via `[END_CALL]`, or on timeout.
-6. The recording is saved and post-call analysis runs.
-7. A `call.completed` webhook fires to your `webhook_url` if one is set.
+</div>
 
-See [Outbound calls](/concepts/outbound-calls) for the full conceptual overview.
+## Retry and idempotency
+
+Never automatically retry POST, including after 429, a timeout or 5xx. A failed response can be uncertain after dispatch. Save call_id, work_id and safe error details when returned; inspect call history and known IDs before any deliberate new call. An initiated response with persistence: unconfirmed must not be replayed.
+
+## Related endpoints
+
+- [Get a call](/api-reference/calls/get)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Retry and idempotency](/api-reference/retries)
+- [Call client safety](/api-reference/calls/client-safety)

@@ -102,12 +102,14 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="catalog_unavailable">catalog_unavailable</span> | 503 | the voices catalog is not loaded yet; try again shortly | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="cleanup_pending_confirmation">cleanup_pending_confirmation</span> | 409 | Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="confirm_topics">confirm_topics</span> | 409 | Confirm the affected topics before removing this source. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="conflicting_fields">conflicting_fields</span> | 400 | Two aliases supplied conflicting values. | Supply each value once. |
 | <span id="contact_policy_unavailable">contact_policy_unavailable</span> | 503 | Contact hours could not be checked. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="contact_preview_busy">contact_preview_busy</span> | 429 | Another preview is running. Try again in a moment. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
 | <span id="contact_preview_unavailable">contact_preview_unavailable</span> | 503 | Calling-time preview is unavailable. No contact was sent; final checks still apply. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="context_limit">context_limit</span> | 413 | All originals and notes do not fit this preparation model. Use a larger configured model or smaller knowledge base; nothing was cut off. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
 | <span id="country_policy_review">country_policy_review</span> | 409 | The recipient country policy needs review before contact. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="cursor_expired">cursor_expired</span> | 409 | the voice catalog changed; restart the listing | Restart at the first page and deduplicate already processed IDs. |
+| <span id="custom_prompt_too_long">custom_prompt_too_long</span> | 400 | The number prompt exceeds 8,000 characters. | Shorten it. |
 
 ### D
 
@@ -187,17 +189,18 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="invalid_inbox_request">invalid_inbox_request</span> | 400 | Check the conversation or widget settings and try again. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_input">invalid_input</span> | 400 | A required value, identifier, revision, or idempotency key is invalid. | Check error.message and details. Knowledge keys need 8–128 letters, digits, or . _ : -; the prompt: prefix is reserved. |
 | <span id="invalid_invite">invalid_invite</span> | 400, 409 | The invitation email, role, or claim input is invalid. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="invalid_json">invalid_json</span> | 400 | The request body is not valid JSON. | Fix the JSON syntax before sending it. |
 | <span id="invalid_language">invalid_language</span> | 400 | language must be a supported language code | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_limit">invalid_limit</span> | 409 | The requested page size is not allowed. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="invalid_method">invalid_method</span> | 400 | The custom function HTTP method is unsupported. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_name">invalid_name</span> | 400 | name must be snake_case (lowercase letters, numbers, underscore), max 64 chars | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
-| <span id="invalid_number">invalid_number</span> | 400 | Use a complete international phone number. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_number_control">invalid_number_control</span> | 400 | A number switch must be boolean; conflicting aliases are refused. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_number_query">invalid_number_query</span> | 400 | A phone-number limit, cursor, or filter is invalid. | Use limit 1–100 and reuse next_cursor with the same account and filters. |
+| <span id="invalid_number">invalid_number</span> | 400 | Use a complete international phone number. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_operation">invalid_operation</span> | 400 | Unknown knowledge operation. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_period">invalid_period</span> | 400 | Choose period today or 7d. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
-| <span id="invalid_phone">invalid_phone</span> | 400, 409 | The supplied phone number is invalid. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="invalid_phone_format">invalid_phone_format</span> | 400 | Use an E.164 phone number, including +. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+| <span id="invalid_phone">invalid_phone</span> | 400, 409 | The supplied phone number is invalid. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="invalid_prompt">invalid_prompt</span> | 400 | Use a shorter system prompt. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_query">invalid_query</span> | 400 | Only period and time_zone are supported. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_recipient_country">invalid_recipient_country</span> | 409 | Use a valid two-letter recipient country. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
@@ -254,6 +257,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="message_in_progress">message_in_progress</span> | 409 | This test reply is still pending. Read the session before retrying. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="missing_field">missing_field</span> | 400 | A required request field is missing. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="missing_voice_details">missing_voice_details</span> | 409 | Required voice placeholders are missing from the supplied values. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="mixed_provider_credentials">mixed_provider_credentials</span> | 400 | More than one connection credential set was supplied. | Use the single connection that owns this number. |
 | <span id="model_unconfigured">model_unconfigured</span> | 503 | The knowledge preparation model and its context limit need to be configured. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 
 ### N
@@ -307,6 +311,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="page_unreadable">page_unreadable</span> | 422 | We could not read this page. Check the address, or paste its text instead. | Use the stated supported input or a clean readable source, then make a deliberate corrected attempt. |
 | <span id="parse_timeout">parse_timeout</span> | 422 | Reading this file took too long. Try a smaller document or paste the text. | Use the stated supported input or a clean readable source, then make a deliberate corrected attempt. |
 | <span id="password_pdf">password_pdf</span> | 422 | This PDF is password protected. Remove the password from a copy or paste the text. | Use the stated supported input or a clean readable source, then make a deliberate corrected attempt. |
+| <span id="payload_too_large">payload_too_large</span> | 413 | The JSON body exceeds the request parser limit. | Send a smaller JSON body. |
 | <span id="permission_denied">permission_denied</span> | 403 | Only an Admin or the Owner can do this. | Use an authorised account or ask the organisation owner to review access. |
 | <span id="phone_number_not_found">phone_number_not_found</span> | 404 | The business number was not found in this account. | Check the resource ID and owning account. Do not assume an absent item authorises a replacement write. |
 | <span id="prompt_check_unavailable">prompt_check_unavailable</span> | 503 | The prompt could not be checked; nothing was saved. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
@@ -338,6 +343,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="session_closed">session_closed</span> | 409 | Start a new test session. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="session_limit">session_limit</span> | 429 | Too many test sessions today. Reuse an existing session. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
 | <span id="sms_outcome_unknown">sms_outcome_unknown</span> | 500 | The SMS send outcome is not confirmed. | Check message history and the work receipt. Do not resend automatically. |
+| <span id="sms_prompt_too_long">sms_prompt_too_long</span> | 400 | The SMS prompt exceeds 20,000 characters. | Shorten it. |
 | <span id="source_count">source_count</span> | 413 | This knowledge base can hold up to 50 sources. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
 | <span id="source_limit">source_limit</span> | 413 | This source contains too much text. Split it into smaller documents. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
 | <span id="sources_unreadable">sources_unreadable</span> | 422 | None of the selected pages could be read. Paste the text instead. | Use the stated supported input or a clean readable source, then make a deliberate corrected attempt. |
@@ -385,6 +391,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="voice_temporarily_unavailable">voice_temporarily_unavailable</span> | 400 | this voice is temporarily unavailable; choose another | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="voice_unavailable">voice_unavailable</span> | 400 | this voice is no longer available; choose another | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="voicemail_message_required">voicemail_message_required</span> | 400 | voicemail_message is required when voicemail_leave_enabled is true. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+| <span id="voicemail_message_too_long">voicemail_message_too_long</span> | 400 | The voicemail message exceeds 2,000 characters. | Shorten it. |
 
 ### W
 
