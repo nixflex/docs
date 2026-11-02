@@ -1,0 +1,159 @@
+---
+title: "Remove a contact suppression: owner entries and locks"
+sidebarTitle: "Remove a contact suppression"
+description: "Remove one owner-created Nixflex contact suppression in a chosen channel. Respect locked recipient opt-outs and reconcile missing or uncertain results."
+openapi: "/api-reference/public.openapi.json DELETE /contact-suppressions"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Remove one explicitly removable owner-created suppression. Recipient opt-outs and entries without verified owner-removal permission remain locked.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phone_number` | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `channel` | string | No | `"all"` | Channel bucket. Allowed: `"all"`, `"voice"`, `"sms"`. |
+
+The request uses a JSON body even though the method is DELETE. Choose the exact bucket to remove; removing voice leaves any all or sms entry intact. Removing a suppression can make scheduled work eligible again; it does not grant campaign consent.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `removed` | boolean | The owner entry was removed. Value: `true`. |
+| `phone_number` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `channel` | string | Removed stored bucket. Allowed: `"all"`, `"voice"`, `"sms"`. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"phone_number":"+12025550101","channel":"all"}'
+```
+
+```javascript Node (direct HTTP)
+const body = {
+  "phone_number": "+12025550101",
+  "channel": "all"
+};
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions`, {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+console.log('Request completed.');
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+body = {
+  "phone_number": "+12025550101",
+  "channel": "all"
+}
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions",
+    method="DELETE",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
+    data=json.dumps(body).encode("utf-8"),
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+print("Request completed.")
+```
+
+```bash CLI (direct HTTP)
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"phone_number":"+12025550101","channel":"all"}'
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "removed": true,
+  "phone_number": "+12025550101",
+  "channel": "all"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The identifier or request fields are invalid. | Correct the documented fields before resending. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching object belongs to this account. | Check the account and identifier. |
+| 503 | [`feature_paused`](/api-reference/errors#feature_paused) | This control is paused. | Wait for availability; do not work around the refusal. |
+| 503 | [`outcome_unknown`](/api-reference/errors#outcome_unknown) | The write result could not be confirmed. | Read current state; do not resend automatically. |
+| 409 | [`suppression_locked`](/api-reference/errors#suppression_locked) | This entry cannot be removed through the owner API. | Respect the recipient opt-out or ask support to review unverified legacy evidence. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A repeat after confirmed removal can return 404 not_found.
+
+## Related endpoints
+
+- [List contact suppressions](/api-reference/contact-controls/get-contact-suppressions)
+- [Add contact suppressions](/api-reference/contact-controls/post-contact-suppressions)

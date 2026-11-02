@@ -62,7 +62,7 @@ test('C4 pending manual tests cannot be mistaken for successful staging writes',
  const coverage=read('COVERAGE.md');
  for(const id of [1,2,96,165,166,168,169,172,174])assert.match(coverage,new RegExp('\\| '+id+' \\| pending manual test \\|'));
  assert.match(coverage,/NXF_STAGING_KEY.*absent/);
- const missing=read('MISSING-PAGES.md');assert.match(missing,/111 public operations/);
+ const missing=read('MISSING-PAGES.md');const remaining=coverage.match(/\| toBuild \| (\d+) \|/)[1];assert.ok(missing.includes(remaining+' public operations'));
  for(const d of defs)assert.ok(!missing.split('\n').some(line=>line.startsWith('| '+d.number+' | `')));
 });
 test('C4 PowerShell 5.1 guards, missing key and finally cleanup pass with transport replaced',()=>{

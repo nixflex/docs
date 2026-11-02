@@ -1,87 +1,294 @@
 ---
-title: "Create SMS campaign | Nixflex API guide and examples"
-description: "Explore create sms campaign with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "POST https://api.nixflex.com/v1/sms/campaigns"
+title: "Create an SMS campaign: recipients, consent and hours"
 sidebarTitle: "Create an SMS campaign"
+description: "Create a Nixflex SMS campaign with message variables, consent and recipient-local hours. Handle duplicate decisions, validation errors and uncertain sends."
+openapi: "/api-reference/public.openapi.json POST /sms/campaigns"
+playground: "simple"
 ---
 
-Creates an SMS campaign. Optionally launches it immediately.
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
 
-<Note>
-  Campaigns are one-time broadcasts. Replies are handled by the agent using its `system_prompt` — include any campaign context in the agent's prompt before launching.
-</Note>
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
 
-## Request
+Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.
 
-```bash
-curl -X POST https://api.nixflex.com/v1/sms/campaigns \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "from_number": "+447446466847",
-    "name": "March promotion",
-    "message_template": "Hi {{first_name}}, 20% off cleanings this month at Acme Dental. Reply YES to book.",
-    "recipients": [
-      { "phone": "+447111000001", "variables": { "first_name": "Sarah" } },
-      { "phone": "+447111000002", "variables": { "first_name": "James" } }
-    ],
-    "schedule_type": "now"
-  }'
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Active agent owned by this account. |
+| `from_number` | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `name` | string | No | Omitted | Campaign label. Empty or omitted uses the channel-specific Untitled campaign label. |
+| `recipients` | array of object | Yes | None | At least one accepted recipient; atomic storage allows at most 100,000. The HTTP body limit still applies. Maximum 100000 items. Minimum 1 items. |
+| `recipients[].phone` | string | Yes | None | Trimmed E.164 string, 8–15 digits after +; country numbering-plan validation also applies. Pattern: `^\+[1-9][0-9]{7,14}$`. |
+| `recipients[].variables` | object | No | `{}` | Per-recipient template values. |
+| `recipients[].country` | string | No | Omitted | Uppercase supported two-letter country. Omitted uses conservative number inference. Maximum 2 characters. Minimum 2 characters. |
+| `recipients[].timezone` | string | No | Omitted | Explicit recipient IANA Area/City zone; preferred over number inference. Unknown location is held, never replaced by the campaign clock. Maximum 80 characters. |
+| `schedule_type` | string | No | `"now"` | now requests launch immediately after creation. schedule saves scheduled work that the scheduler can launch. Allowed: `"now"`, `"schedule"`. |
+| `scheduled_date` | string or null | No | `null` | Required for schedule; YYYY-MM-DD calendar date. Recipient-local eligibility still applies. Format: date. |
+| `window_start_minutes` | integer or null | No | `null` | Start minute after midnight; supply both ends. Zero means midnight. Minimum 0. Maximum 1439. |
+| `window_end_minutes` | integer or null | No | `null` | End minute after midnight; supply both ends. A lower end denotes an overnight window. Minimum 0. Maximum 1439. |
+| `window_days` | array or null | No | `null` | Optional selected weekdays; duplicate values are collapsed and empty means unset. Allowed items: `"mon"`, `"tue"`, `"wed"`, `"thu"`, `"fri"`, `"sat"`, `"sun"`. |
+| `timezone` | string or null | No | `null` | Optional valid IANA campaign time zone. It does not replace a recipient’s location. |
+| `source` | string | No | `"api"` | Origin label only; API clients should keep api. Allowed: `"api"`, `"dashboard"`. |
+| `skip_invalid` | boolean | No | `false` | When true, omit invalid phone rows only. At least one valid row remains required; other validation failures still refuse. |
+| `duplicate_policy` | string | No | `"warn"` | warn retains duplicate rows and reports them; allow explicitly keeps them; reject refuses duplicates. warn is advisory and does not prevent automatic launch. No silent deduplication. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `consent_confirmed` | boolean | No | `false` | Record confirmation for this campaign. Missing consent holds contact until recorded. |
+| `allow_wider_hours` | boolean | No | `false` | Request wider hours with a recorded explanation. Recipient policy and other checks still apply. |
+| `hours_confirmation` | string | No | Omitted | Required when wider hours is true: trimmed explanation at least 20 characters; raw maximum 1,000. Maximum 1000 characters. Minimum 20 characters. |
+| `message_template` | string | Yes | None | Nonblank text template. Each placeholder such as `{{name}}` must have a value in every recipient’s variables. |
+| `reply_context_prompt` | string or null | No | `null` | Instructions for replies associated with this campaign. |
+| `reply_window_hours` | integer | No | `168` | Hours for campaign reply association; positive integer. Omitted or zero uses 168. Minimum 1. |
+
+### Scheduling, consent and duplicate rows
+
+The scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.
+
+Choose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.
+
+The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation always creates a new campaign. reuse_campaign_id does not implement SMS reuse; do not send it.
+
+JSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.
+
+## Response fields
+
+`201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+### Scheduled creation
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Saved campaign ID. |
+| `total` | integer | Original input row count. |
+| `total_recipients` | integer | Accepted saved rows. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `status` | string | Saved campaign state. |
+
+### Immediate launch
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Campaign ID. |
+| `status` | string | running while held; otherwise done or failed. |
+| `sent` | integer | Accepted sends; not delivery proof. |
+| `failed` | integer | Known failures, distinct from accepted sends. |
+| `total_segments` | integer | Segment count for this run. |
+| `held` | integer | Held recipients when present. |
+| `reason` | string | Hold reason when present. |
+| `safe_to_retry` | boolean | False when held or outcome requires reconciliation. |
+| `stopped` | boolean | Present when number changes stop a legacy run. |
+| `stop_reason` | string | Why sending stopped. |
+| `not_sent` | integer | Remaining unattempted recipients when known. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `total` | integer | Original input row count. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running this example can contact recipients immediately or when scheduled; use only approved test destinations.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"message_template\":\"Hello {{name}}, your requested appointment reminder.\",\"recipients\":[{\"phone\":\"$NXF_TO_NUMBER\",\"variables\":{\"name\":\"Example customer\"},\"country\":\"GB\",\"timezone\":\"Europe/London\"}],\"schedule_type\":\"schedule\",\"scheduled_date\":\"2030-11-04\",\"duplicate_policy\":\"reject\",\"consent_confirmed\":true}"
 ```
 
-## Body parameters
+```javascript Node
+import { Nixflex } from 'nixflex';
 
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `agent_id` | string | Yes | Agent associated with the campaign |
-| `from_number` | string | Yes | Any number you have imported, on **either carrier** - Twilio or Telnyx. The campaign uses that number's own credentials to send, so it must be a number on your account. |
-| `name` | string | Yes | Display name in dashboard |
-| `message_template` | string | Yes | Message text. Supports `{{variable}}` placeholders |
-| `recipients` | array | Yes | Up to 10,000. Each item: `{ phone, variables }` |
-| `schedule_type` | enum | Yes | `now` or `schedule` |
-| `scheduled_at` | ISO date | If `schedule` | When to launch |
+const client = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const body = {
+  "agent_id": process.env.NXF_AGENT_ID,
+  "from_number": process.env.NXF_PHONE_NUMBER,
+  "message_template": "Hello {{name}}, your requested appointment reminder.",
+  "recipients": [
+    {
+      "phone": process.env.NXF_TO_NUMBER,
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": true
+};
+const result = await client.sms.campaigns.create(body);
+console.log('Request completed.');
+```
 
-### Recipient object
+```python Python
+import os
+from nixflex import Nixflex
 
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `phone` | string | Yes | E.164 format, e.g. `+447111000001` |
-| `variables` | object | No | Key-value pairs to fill `{{placeholders}}` in the template |
+body = {
+  "agent_id": os.environ["NXF_AGENT_ID"],
+  "from_number": os.environ["NXF_PHONE_NUMBER"],
+  "message_template": "Hello {{name}}, your requested appointment reminder.",
+  "recipients": [
+    {
+      "phone": os.environ["NXF_TO_NUMBER"],
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": True
+}
 
-## Placeholders
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as client:
+    result = client.sms.campaigns.create(**body)
+    print("Request completed.")
+```
 
-Use `{{variable_name}}` in `message_template`. Each recipient's `variables` object fills them.
-
-Template: `Hi {{first_name}}, see you on {{day}}.`
-
-Recipient: `{ "phone": "+44...", "variables": { "first_name": "Sarah", "day": "Tuesday" } }`
-
-Sent SMS: `Hi Sarah, see you on Tuesday.`
-
-Missing variables render as empty strings (no crash).
-
-## Response
-
-`201 Created`:
-
-```json
+```bash CLI
+cat > campaign.json <<JSON
 {
-  "campaign_id": "smsc_a1b2c3d4",
-  "agent_id": "agent_125207e452f8714a",
-  "name": "March promotion",
-  "status": "running",
-  "total_count": 2,
-  "delivered_count": 0,
-  "failed_count": 0,
-  "pending_count": 2,
-  "source": "api",
-  "created_at": "2026-05-17T03:45:12Z"
+  "agent_id": "$NXF_AGENT_ID",
+  "from_number": "$NXF_PHONE_NUMBER",
+  "message_template": "Hello {{name}}, your requested appointment reminder.",
+  "recipients": [
+    {
+      "phone": "$NXF_TO_NUMBER",
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": true
+}
+JSON
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex sms campaigns create --body @campaign.json \
+  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "total": 1,
+  "total_recipients": 1,
+  "valid_count": 1,
+  "invalid_count": 0,
+  "invalid": [],
+  "status": "scheduled",
+  "duplicates": [],
+  "duplicate_policy": "reject",
+  "duplicate_choice_required": false
 }
 ```
 
-When `schedule_type` is `now`, returns `status: running` and sends immediately. With `schedule`, returns `status: scheduled` — launch later with [Launch SMS campaign](/api-reference/sms/campaigns-launch).
+</ResponseExample>
 
 ## Errors
 
-See [Errors](/reference/errors). Common: `agent_not_owned`, `from_number_not_owned`, `too_many_recipients`, `invalid_schedule`.
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`campaign_creation_failed`](/api-reference/errors#campaign_creation_failed) | Required settings, ownership, template values, duplicate policy or recipient metadata failed validation. | Read error.details when present; correct the request before creating again. |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | Phone validation failed or no valid recipients remain. | Fix invalid rows; skip_invalid only skips invalid phone rows. |
+| 400 | [`campaign_launch_failed`](/api-reference/errors#campaign_launch_failed) | Creation succeeded but immediate launch was refused. | Read details.campaign_id and reconcile the saved campaign. |
+| 500 | [`campaign_outcome_unknown`](/api-reference/errors#campaign_outcome_unknown) | A campaign save or launch result is uncertain. | Use details.campaign_id to reconcile; safe_to_retry is false. |
+| 503 | [`campaigns_paused`](/api-reference/errors#campaigns_paused) | Campaign admission is temporarily paused. | Wait before a deliberate retry; check any saved campaign first. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | The current recipient was refused before sending because its safety record was unavailable. | Reconcile earlier accepted sends; do not replay the whole campaign. |
+| 409 | [`account_inactive`](/api-reference/errors#account_inactive) | Account sending is disabled. | Read details for this attempt and reconcile earlier accepted messages. |
+| 409 | [`number_changed`](/api-reference/errors#number_changed) | The sending number changed. | Read details for this attempt and reconcile earlier accepted messages. |
+| 409 | [`do_not_contact`](/api-reference/errors#do_not_contact) | The current recipient is suppressed. | Read details for this attempt and reconcile earlier accepted messages. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery.
+
+## Related endpoints
+
+- [List SMS campaigns](/api-reference/sms/campaigns-list)
+- [Launch an SMS campaign](/api-reference/sms/campaigns-launch)
+- [Record SMS consent](/api-reference/sms-campaigns/post-sms-campaigns-id-consent)
+- [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview)

@@ -1,122 +1,287 @@
 ---
-title: "Create batch campaign | Nixflex API reference guide"
-description: "Explore create batch campaign with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "POST https://api.nixflex.com/v1/calls/batch"
+title: "Create a voice campaign: recipients, consent and hours"
 sidebarTitle: "Create a voice campaign"
+description: "Create a Nixflex voice campaign with validated recipients, explicit duplicate handling, consent and local contact hours. Check launch and retry outcomes."
+openapi: "/api-reference/public.openapi.json POST /calls/batch"
+playground: "simple"
 ---
-Creates a batch campaign: queues many outbound calls under one campaign ID. Useful for appointment reminders, lead qualification, surveys.
-## Request
-```bash
-curl -X POST https://api.nixflex.com/v1/calls/batch \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "from_number": "+447446466847",
-    "name": "Tuesday appointment reminders",
-    "prompt": "You are Sarah from Bright Smile Dental. Call to remind the patient about their check-up tomorrow and confirm they can attend.",
-    "timezone": "Europe/London",
-    "recipients": [
-      { "phone": "+447111000001" },
-      { "phone": "+447111000002", "variables": { "patient_name": "John" } },
-      { "phone": "+447111000003" }
-    ],
-    "schedule_type": "schedule",
-    "scheduled_date": "2026-06-15",
-    "window_start_minutes": 540,
-    "window_end_minutes": 1080,
-    "window_days": ["mon","tue","wed","thu","fri"]
-  }'
-```
-## Body parameters
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `agent_id` | string | Yes | Agent used for all calls in this batch |
-| `prompt` | string | Yes | The call purpose for every call in the campaign - what the agent should say and why it is calling. Per-recipient `prompt_override` replaces it for that recipient. |
-| `name` | string | No | Display name for the campaign |
-| `from_number` | string | Yes | The number to dial from. Must be a number you have imported and attached to this agent. Works on Twilio and Telnyx. |
-| `recipients` | array | Yes | Recipient objects (see below) |
-| `skip_invalid` | bool | No | Default `false`: reject the whole request if any phone is invalid. `true`: dial valid numbers only; invalid ones are listed in the response. |
-| `schedule_type` | enum | No | `now` (launch immediately, default) or `schedule` |
-| `scheduled_date` | date | If schedule | `YYYY-MM-DD` - the day the campaign becomes due |
-| `window_start_minutes` | int | No | Calling window start, minutes since midnight (540 = 9:00am) |
-| `window_end_minutes` | int | No | Calling window end, minutes since midnight (1080 = 6:00pm) |
-| `window_days` | array | No | Allowed weekdays, e.g. `["mon","tue","wed","thu","fri"]` |
-| `timezone` | string | No | IANA timezone the calling window runs in, e.g. `Europe/London`, `Asia/Dubai`, `America/New_York`. Invalid values are rejected with `invalid_timezone`. |
-### Recipient object
-```json
-{
-  "phone": "+447111000001",
-  "variables": { "patient_name": "Sarah" },
-  "prompt_override": "Optional - replaces the campaign prompt for this recipient only"
-}
-```
-All `variables` are automatically injected as context for the agent - you do not need `{{placeholders}}` in your prompt.
-## Calling window and timezone
-Scheduled campaigns do not fire at midnight - they fire **inside the calling window, in local time**:
-- The scheduler checks every 60 seconds. A campaign that is due but outside its window stays `scheduled` and is re-checked each minute - it fires within a minute of the window opening.
-- The window runs in this priority of timezones: **campaign `timezone`** (if you sent one) -> **the agent's timezone** -> `Europe/London`.
-- Resellers: your end-user picks their timezone in your app, you send it per campaign - their choice wins over the agent default.
-- Overnight windows are supported (`window_start_minutes` greater than `window_end_minutes`, e.g. 18:00-02:00).
-- No window set = the campaign fires when the date is due (legacy behaviour).
-<Note>
-  One campaign = one timezone. Calling recipients across multiple countries? Split them by region into separate campaigns, each with its own `timezone`.
-</Note>
-## Response
-`201 Created` (schedule_type `now` launches immediately):
-```json
-{
-  "campaign_id": "batchcall_7f8fe206a5522cb7",
-  "status": "running",
-  "valid_count": 3,
-  "invalid_count": 0,
-  "invalid": []
-}
-```
-With `schedule_type: schedule` the response returns `status: scheduled` and the campaign fires inside its window on the scheduled date.
-## Behaviour
-- Calls are queued and processed respecting your per-key concurrent call limit
-- Each recipient becomes one outbound call with its own `call_id`
-- Failed calls are logged but do not stop the campaign
-- Voicemail detection runs per call. The agent leaves a short message built from your `prompt`, then ends the call with `ended_reason: voicemail_detected`. See [Voicemail detection](/advanced/voicemail-detection) to control or disable the message.
-## Errors
-| Code | Cause |
-|---|---|
-| `missing_field` | `prompt` missing - every campaign needs a call purpose |
-| `invalid_phone_format` | One or more recipient phones are invalid. `error.details.invalid` lists each one with the reason. Resend with `skip_invalid: true` to dial the valid ones only. |
-| `campaign_creation_failed` | `from_number` missing, not registered to your account, attached to a different agent, or a Telnyx number. Also `invalid_timezone` (bad IANA value). The message states the exact reason. |
-| `campaign_launch_failed` | The campaign passed validation but could not be launched - usually no carrier credentials for the `from_number`. The campaign is marked `failed`. |
-### Error response shape
 
-Every error follows the same shape. On a rejected batch, `error.details.invalid` names each bad number and why, so you can show it to your own users:
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
 
-```json
-{
-  "error": {
-    "type": "invalid_request",
-    "code": "invalid_phone_format",
-    "message": "1 recipient(s) have invalid phone numbers. Fix them or pass skip_invalid=true to dial only valid ones.",
-    "doc_url": "https://docs.nixflex.com/errors/invalid_phone_format",
-    "details": {
-      "total": 2,
-      "valid_count": 1,
-      "invalid_count": 1,
-      "invalid": [
-        {
-          "phone": "+44745357377",
-          "reason": "not a real number for that country code - check the digits (wrong length, or an area/mobile prefix that does not exist)",
-          "row_index": 0
-        }
-      ],
-      "hint": "Fix the numbers or resend with skip_invalid=true to dial only the valid ones."
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Active agent owned by this account. |
+| `from_number` | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `name` | string | No | Omitted | Campaign label. Empty or omitted uses the channel-specific Untitled campaign label. |
+| `recipients` | array of object | Yes | None | At least one accepted recipient; atomic storage allows at most 100,000. The HTTP body limit still applies. Maximum 100000 items. Minimum 1 items. |
+| `recipients[].phone` | string | Yes | None | Trimmed E.164 string, 8–15 digits after +; country numbering-plan validation also applies. Pattern: `^\+[1-9][0-9]{7,14}$`. |
+| `recipients[].variables` | object | No | `{}` | Per-recipient template values. |
+| `recipients[].country` | string | No | Omitted | Uppercase supported two-letter country. Omitted uses conservative number inference. Maximum 2 characters. Minimum 2 characters. |
+| `recipients[].timezone` | string | No | Omitted | Explicit recipient IANA Area/City zone; preferred over number inference. Unknown location is held, never replaced by the campaign clock. Maximum 80 characters. |
+| `recipients[].prompt_override` | string or null | No | `null` | Optional instructions for this recipient instead of the campaign prompt. Empty inherits the campaign prompt. |
+| `schedule_type` | string | No | `"now"` | now requests launch immediately after creation. schedule saves scheduled work that the scheduler can launch. Allowed: `"now"`, `"schedule"`. |
+| `scheduled_date` | string or null | No | `null` | Required for schedule; YYYY-MM-DD calendar date. Recipient-local eligibility still applies. Format: date. |
+| `window_start_minutes` | integer or null | No | `null` | Start minute after midnight; supply both ends. Zero means midnight. Minimum 0. Maximum 1439. |
+| `window_end_minutes` | integer or null | No | `null` | End minute after midnight; supply both ends. A lower end denotes an overnight window. Minimum 0. Maximum 1439. |
+| `window_days` | array or null | No | `null` | Optional selected weekdays; duplicate values are collapsed and empty means unset. Allowed items: `"mon"`, `"tue"`, `"wed"`, `"thu"`, `"fri"`, `"sat"`, `"sun"`. |
+| `timezone` | string or null | No | `null` | Optional valid IANA campaign time zone. It does not replace a recipient’s location. |
+| `source` | string | No | `"api"` | Origin label only; API clients should keep api. Allowed: `"api"`, `"dashboard"`. |
+| `skip_invalid` | boolean | No | `false` | When true, omit invalid phone rows only. At least one valid row remains required; other validation failures still refuse. |
+| `duplicate_policy` | string | No | `"warn"` | warn retains duplicate rows and reports them; allow explicitly keeps them; reject refuses duplicates. warn is advisory and does not prevent automatic launch. No silent deduplication. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `consent_confirmed` | boolean | No | `false` | Record confirmation for this campaign. Missing consent holds contact until recorded. |
+| `allow_wider_hours` | boolean | No | `false` | Request wider hours with a recorded explanation. Recipient policy and other checks still apply. |
+| `hours_confirmation` | string | No | Omitted | Required when wider hours is true: trimmed explanation at least 20 characters; raw maximum 1,000. Maximum 1000 characters. Minimum 20 characters. |
+| `prompt` | string | Yes | None | Nonblank default instructions used by every row without a prompt override. |
+| `reuse_campaign_id` | string or null | No | `null` | Replace an owned never-launched draft or scheduled voice campaign atomically. Launched campaigns are refused; this is not an idempotency key. |
+
+### Scheduling, consent and duplicate rows
+
+The scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.
+
+Choose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.
+
+The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. No public voice campaign delete route is available. Reuse replaces the recipient list and settings only while the owned campaign has never launched.
+
+JSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.
+
+## Response fields
+
+`201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+### Scheduled creation
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Saved campaign ID. |
+| `total` | integer | Original input row count. |
+| `total_recipients` | integer | Accepted saved rows. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `status` | string | Saved campaign state. |
+
+### Immediate launch
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Saved campaign ID. |
+| `status` | string | Usually running; queue admission is not completed calls. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `total` | integer | Original input rows. |
+| `dialed` | integer | Legacy count of enqueued jobs, not actual calls. |
+| `queued` | integer | Enqueued jobs. |
+| `failed` | integer | Confirmed enqueue failures. |
+| `message` | string | Queue admission explanation. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running this example can contact recipients immediately or when scheduled; use only approved test destinations.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"prompt\":\"Confirm the appointment requested by the recipient.\",\"recipients\":[{\"phone\":\"$NXF_TO_NUMBER\",\"variables\":{\"name\":\"Example customer\"},\"country\":\"GB\",\"timezone\":\"Europe/London\"}],\"schedule_type\":\"schedule\",\"scheduled_date\":\"2030-11-04\",\"duplicate_policy\":\"reject\",\"consent_confirmed\":true}"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const client = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const body = {
+  "agent_id": process.env.NXF_AGENT_ID,
+  "from_number": process.env.NXF_PHONE_NUMBER,
+  "prompt": "Confirm the appointment requested by the recipient.",
+  "recipients": [
+    {
+      "phone": process.env.NXF_TO_NUMBER,
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
     }
-  }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": true
+};
+const result = await client.campaigns.create(body);
+console.log('Request completed.');
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+body = {
+  "agent_id": os.environ["NXF_AGENT_ID"],
+  "from_number": os.environ["NXF_PHONE_NUMBER"],
+  "prompt": "Confirm the appointment requested by the recipient.",
+  "recipients": [
+    {
+      "phone": os.environ["NXF_TO_NUMBER"],
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": True
+}
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as client:
+    result = client.campaigns.create(**body)
+    print("Request completed.")
+```
+
+```bash CLI
+cat > campaign.json <<JSON
+{
+  "agent_id": "$NXF_AGENT_ID",
+  "from_number": "$NXF_PHONE_NUMBER",
+  "prompt": "Confirm the appointment requested by the recipient.",
+  "recipients": [
+    {
+      "phone": "$NXF_TO_NUMBER",
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": true
+}
+JSON
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex campaigns create --body @campaign.json \
+  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "total": 1,
+  "total_recipients": 1,
+  "valid_count": 1,
+  "invalid_count": 0,
+  "invalid": [],
+  "status": "scheduled",
+  "duplicates": [],
+  "duplicate_policy": "reject",
+  "duplicate_choice_required": false
 }
 ```
 
-<Note>
-  Numbers are checked against real numbering rules, not just E.164 shape. `+44745357377` looks like a UK mobile but is one digit short, so it can never connect - it is rejected here rather than accepted and lost.
-</Note>
+</ResponseExample>
 
-## Launching a scheduled campaign
-A `schedule_type: schedule` campaign fires automatically inside its window. You can also launch it manually with [Launch batch](/api-reference/calls/batch-launch).
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | A nonblank prompt is missing. | Send the default campaign prompt. |
+| 400 | [`campaign_creation_failed`](/api-reference/errors#campaign_creation_failed) | Required settings, ownership, template values, duplicate policy or recipient metadata failed validation. | Read error.details when present; correct the request before creating again. |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | Phone validation failed or no valid recipients remain. | Fix invalid rows; skip_invalid only skips invalid phone rows. |
+| 400 | [`campaign_launch_failed`](/api-reference/errors#campaign_launch_failed) | Creation succeeded but immediate launch was refused. | Read details.campaign_id and reconcile the saved campaign. |
+| 500 | [`campaign_outcome_unknown`](/api-reference/errors#campaign_outcome_unknown) | A campaign save or launch result is uncertain. | Use details.campaign_id to reconcile; safe_to_retry is false. |
+| 503 | [`campaigns_paused`](/api-reference/errors#campaigns_paused) | Campaign admission is temporarily paused. | Wait before a deliberate retry; check any saved campaign first. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 409 | [`number_disabled`](/api-reference/errors#number_disabled) | Outbound voice is disabled for the campaign number. | Use an intentionally enabled number; do not repeat the request unchanged. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery.
+
+## Related endpoints
+
+- [List voice campaigns](/api-reference/voice-campaigns/get-campaigns)
+- [Launch a voice campaign](/api-reference/calls/batch-launch)
+- [Record voice consent](/api-reference/voice-campaigns/post-calls-batch-id-consent)
+- [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview)

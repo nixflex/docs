@@ -86,8 +86,12 @@ function Invoke-C4Request([string]$Method, [string]$Path, [string]$Body = '', [V
     catch {
         if ($null -eq $_.Exception.Response) { throw 'Network outcome unknown; no automatic retry' }
         $response = $_.Exception.Response; $status = [int]$response.StatusCode
-        $reader = New-Object IO.StreamReader($response.GetResponseStream())
-        try { $content = $reader.ReadToEnd() } finally { $reader.Dispose() }
+        # Windows PowerShell 5.1 has usually already read the error body into ErrorDetails; the stream is then empty.
+        if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $content = [string]$_.ErrorDetails.Message }
+        else {
+            $reader = New-Object IO.StreamReader($response.GetResponseStream())
+            try { $content = $reader.ReadToEnd() } finally { $reader.Dispose() }
+        }
     }
     $json = $null
     if ($content) { try { $json = ConvertFrom-Json -InputObject $content } catch { throw 'Non-JSON response withheld' } }

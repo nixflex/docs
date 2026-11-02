@@ -1,0 +1,344 @@
+---
+title: "Update web agent settings: appearance and revision checks"
+sidebarTitle: "Update web agent settings"
+description: "Update Nixflex website agent settings using the current revision. Configure appearance and contact fields, respect limits and reload after concurrent changes."
+openapi: "/api-reference/public.openapi.json PATCH /agent-web/{number}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Update website agent settings for one owned number using its current revision. A stale revision is refused so another editor’s change is preserved.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `number` (path) | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `revision` | string | Yes | None | Opaque decimal revision. Keep as a string to avoid precision loss. Pattern: `^[0-9]{1,18}$`. |
+| `settings` | object | Yes | None | At least one setting. Omitted top-level settings stay unchanged. Unknown settings are refused. |
+| `settings.web_prompt` | string | No | Omitted | Website instructions. Limit is 16,000 UTF-16 code units; the error describes an approximate token budget. Maximum 16000 characters. |
+| `settings.web_design` | integer | No | Omitted | Legacy design choice. Minimum 1. Maximum 10. |
+| `settings.web_color` | string | No | Omitted | RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `settings.web_name` | string | No | Omitted | Website display name; empty clears to the display default. Maximum 80 characters. |
+| `settings.web_chips` | string | No | Omitted | Comma-separated questions: at most four, each trimmed question at most 80 characters; total at most 323. Maximum 323 characters. |
+| `settings.web_calls_enabled` | boolean | No | Omitted | Per-number website voice setting. |
+| `settings.web_appearance` | object | No | Omitted | Complete appearance value, not a nested merge. Database JSON representation must be at most 32,000 bytes. |
+| `settings.web_appearance.version` | integer | Yes | None | Appearance schema version. Value: `1`. |
+| `settings.web_appearance.launcher` | string | Yes | None | Launcher identifier. Pattern: `^[a-z][a-z0-9-]{0,31}$`. |
+| `settings.web_appearance.window` | string | Yes | None | Window layout. Allowed: `"compact"`, `"side"`, `"centre"`, `"full"`. |
+| `settings.web_appearance.visit` | string | Yes | None | Initial visit action. Allowed: `"nothing"`, `"greeting"`, `"open"`. |
+| `settings.web_appearance.theme` | string | Yes | None | Colour theme. Allowed: `"dark"`, `"light"`. |
+| `settings.web_appearance.colourMode` | string | Yes | None | Colour mode. Allowed: `"solid"`, `"gradient"`. |
+| `settings.web_appearance.colour` | string | Yes | None | Primary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `settings.web_appearance.colour2` | string | Yes | None | Secondary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `settings.web_appearance.text` | object | Yes | None | Allowed wording keys; omitted keys are not automatically preserved when replacing appearance. |
+| `settings.web_appearance.text.greeting` | string | No | Omitted | Optional greeting wording. Maximum 500 characters. |
+| `settings.web_appearance.text.button` | string | No | Omitted | Optional button wording. Maximum 500 characters. |
+| `settings.web_appearance.text.title` | string | No | Omitted | Optional title wording. Maximum 500 characters. |
+| `settings.web_appearance.text.subtitle` | string | No | Omitted | Optional subtitle wording. Maximum 500 characters. |
+| `settings.web_appearance.text.call` | string | No | Omitted | Optional call wording. Maximum 500 characters. |
+| `settings.web_appearance.text.chat` | string | No | Omitted | Optional chat wording. Maximum 500 characters. |
+| `settings.web_appearance.text.welcome` | string | No | Omitted | Optional welcome wording. Maximum 500 characters. |
+| `settings.web_appearance.text.placeholder` | string | No | Omitted | Optional placeholder wording. Maximum 500 characters. |
+| `settings.web_appearance.text.status` | string | No | Omitted | Optional status wording. Maximum 500 characters. |
+| `settings.web_appearance.text.send` | string | No | Omitted | Optional send wording. Maximum 500 characters. |
+| `settings.web_appearance.text.close` | string | No | Omitted | Optional close wording. Maximum 500 characters. |
+| `settings.web_appearance.text.footer` | string | No | Omitted | Always normalised to Powered by Nixflex on write and read. Maximum 500 characters. |
+| `settings.web_appearance.text.typing` | string | No | Omitted | Optional typing wording. Maximum 500 characters. |
+| `settings.web_appearance.text.error` | string | No | Omitted | Optional error wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contact` | string | No | Omitted | Optional contact wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactNote` | string | No | Omitted | Optional contactNote wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactName` | string | No | Omitted | Optional contactName wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactPhone` | string | No | Omitted | Optional contactPhone wording. Maximum 500 characters. |
+| `settings.web_appearance.text.avatar` | string | No | Omitted | Optional avatar wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceConnecting` | string | No | Omitted | Optional voiceConnecting wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voicePrivacy` | string | No | Omitted | Optional voicePrivacy wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceMute` | string | No | Omitted | Optional voiceMute wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceUnmute` | string | No | Omitted | Optional voiceUnmute wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceEnd` | string | No | Omitted | Optional voiceEnd wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceAllow` | string | No | Omitted | Optional voiceAllow wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceCancel` | string | No | Omitted | Optional voiceCancel wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceEnded` | string | No | Omitted | Optional voiceEnded wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceYouEnded` | string | No | Omitted | Optional voiceYouEnded wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceUnavailable` | string | No | Omitted | Optional voiceUnavailable wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceUnavailableNote` | string | No | Omitted | Optional voiceUnavailableNote wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceDisabled` | string | No | Omitted | Optional voiceDisabled wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceInsecure` | string | No | Omitted | Optional voiceInsecure wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceInsecureNote` | string | No | Omitted | Optional voiceInsecureNote wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voicePermission` | string | No | Omitted | Optional voicePermission wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voicePermissionNote` | string | No | Omitted | Optional voicePermissionNote wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceChecking` | string | No | Omitted | Optional voiceChecking wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceNeeded` | string | No | Omitted | Optional voiceNeeded wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceBlocked` | string | No | Omitted | Optional voiceBlocked wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceMissing` | string | No | Omitted | Optional voiceMissing wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceInUse` | string | No | Omitted | Optional voiceInUse wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceMicError` | string | No | Omitted | Optional voiceMicError wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceBusy` | string | No | Omitted | Optional voiceBusy wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceBusyNote` | string | No | Omitted | Optional voiceBusyNote wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceRinging` | string | No | Omitted | Optional voiceRinging wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceLive` | string | No | Omitted | Optional voiceLive wording. Maximum 500 characters. |
+| `settings.web_appearance.text.voiceError` | string | No | Omitted | Optional voiceError wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactSave` | string | No | Omitted | Optional contactSave wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactSavedEdit` | string | No | Omitted | Optional contactSavedEdit wording. Maximum 500 characters. |
+| `settings.web_appearance.text.contactRequired` | string | No | Omitted | Optional contactRequired wording. Maximum 500 characters. |
+| `settings.web_appearance.text.beforeCallStart` | string | No | Omitted | Optional beforeCallStart wording. Maximum 500 characters. |
+| `settings.web_appearance.text.beforeCallCancel` | string | No | Omitted | Optional beforeCallCancel wording. Maximum 500 characters. |
+| `settings.web_appearance.contactFields` | array of object | No | Omitted | Up to nine fields; IDs must be unique. Maximum 9 items. |
+| `settings.web_appearance.contactFields[].id` | string | Yes | None | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `settings.web_appearance.contactFields[].label` | string | Yes | None | Nonblank label, no control characters; trimmed and raw length at most 60. Maximum 60 characters. Minimum 1 characters. |
+| `settings.web_appearance.contactFields[].enabled` | boolean | Yes | None | Field enabled. |
+| `settings.web_appearance.contactFields[].required` | boolean | Yes | None | Field required. |
+| `settings.web_appearance.contactFields[].askInChat` | boolean | No | Omitted | Optional request-in-chat flag. If absent, a disabled field cannot be required. |
+| `settings.web_appearance.beforeCall` | object | No | Omitted | Saved value. |
+| `settings.web_appearance.beforeCall.enabled` | boolean | Yes | None | Use a contact form before a web call. |
+| `settings.web_appearance.beforeCall.message` | string | Yes | None | Before-call message. Maximum 500 characters. |
+| `settings.web_appearance.beforeCall.fields` | array of object | Yes | None | Up to nine unique IDs. Each custom ID must exist in contactFields. Maximum 9 items. |
+| `settings.web_appearance.beforeCall.fields[].id` | string | Yes | None | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `settings.web_appearance.beforeCall.fields[].required` | boolean | Yes | None | Required before starting. |
+
+Read defaults describe the displayed value, not necessarily a persisted setting. web_agent_enabled is read-only on this endpoint. The inbox feature must be enabled; responses use Cache-Control: no-store. Read this number’s settings first and preserve revision as a string. Numeric decimal revisions are also accepted, but strings avoid precision loss. An accepted change increments the revision. The entire web_appearance object is replaced when supplied: preserve the fields you intend to keep. Its footer is always Powered by Nixflex. Contact field IDs must be unique; custom before-call fields must exist in contactFields. No nested merge is performed.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `agent_id` | string or null | Assigned agent. |
+| `web_prompt` | string or null | Saved website instructions. |
+| `web_appearance` | object or null | Complete appearance value, not a nested merge. Database JSON representation must be at most 32,000 bytes. |
+| `web_appearance.version` | integer | Appearance schema version. Value: `1`. |
+| `web_appearance.launcher` | string | Launcher identifier. Pattern: `^[a-z][a-z0-9-]{0,31}$`. |
+| `web_appearance.window` | string | Window layout. Allowed: `"compact"`, `"side"`, `"centre"`, `"full"`. |
+| `web_appearance.visit` | string | Initial visit action. Allowed: `"nothing"`, `"greeting"`, `"open"`. |
+| `web_appearance.theme` | string | Colour theme. Allowed: `"dark"`, `"light"`. |
+| `web_appearance.colourMode` | string | Colour mode. Allowed: `"solid"`, `"gradient"`. |
+| `web_appearance.colour` | string | Primary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `web_appearance.colour2` | string | Secondary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `web_appearance.text` | object | Allowed wording keys; omitted keys are not automatically preserved when replacing appearance. |
+| `web_appearance.text.greeting` | string | Optional greeting wording. Maximum 500 characters. |
+| `web_appearance.text.button` | string | Optional button wording. Maximum 500 characters. |
+| `web_appearance.text.title` | string | Optional title wording. Maximum 500 characters. |
+| `web_appearance.text.subtitle` | string | Optional subtitle wording. Maximum 500 characters. |
+| `web_appearance.text.call` | string | Optional call wording. Maximum 500 characters. |
+| `web_appearance.text.chat` | string | Optional chat wording. Maximum 500 characters. |
+| `web_appearance.text.welcome` | string | Optional welcome wording. Maximum 500 characters. |
+| `web_appearance.text.placeholder` | string | Optional placeholder wording. Maximum 500 characters. |
+| `web_appearance.text.status` | string | Optional status wording. Maximum 500 characters. |
+| `web_appearance.text.send` | string | Optional send wording. Maximum 500 characters. |
+| `web_appearance.text.close` | string | Optional close wording. Maximum 500 characters. |
+| `web_appearance.text.footer` | string | Always normalised to Powered by Nixflex on write and read. Maximum 500 characters. |
+| `web_appearance.text.typing` | string | Optional typing wording. Maximum 500 characters. |
+| `web_appearance.text.error` | string | Optional error wording. Maximum 500 characters. |
+| `web_appearance.text.contact` | string | Optional contact wording. Maximum 500 characters. |
+| `web_appearance.text.contactNote` | string | Optional contactNote wording. Maximum 500 characters. |
+| `web_appearance.text.contactName` | string | Optional contactName wording. Maximum 500 characters. |
+| `web_appearance.text.contactPhone` | string | Optional contactPhone wording. Maximum 500 characters. |
+| `web_appearance.text.avatar` | string | Optional avatar wording. Maximum 500 characters. |
+| `web_appearance.text.voiceConnecting` | string | Optional voiceConnecting wording. Maximum 500 characters. |
+| `web_appearance.text.voicePrivacy` | string | Optional voicePrivacy wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMute` | string | Optional voiceMute wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnmute` | string | Optional voiceUnmute wording. Maximum 500 characters. |
+| `web_appearance.text.voiceEnd` | string | Optional voiceEnd wording. Maximum 500 characters. |
+| `web_appearance.text.voiceAllow` | string | Optional voiceAllow wording. Maximum 500 characters. |
+| `web_appearance.text.voiceCancel` | string | Optional voiceCancel wording. Maximum 500 characters. |
+| `web_appearance.text.voiceEnded` | string | Optional voiceEnded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceYouEnded` | string | Optional voiceYouEnded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnavailable` | string | Optional voiceUnavailable wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnavailableNote` | string | Optional voiceUnavailableNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceDisabled` | string | Optional voiceDisabled wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInsecure` | string | Optional voiceInsecure wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInsecureNote` | string | Optional voiceInsecureNote wording. Maximum 500 characters. |
+| `web_appearance.text.voicePermission` | string | Optional voicePermission wording. Maximum 500 characters. |
+| `web_appearance.text.voicePermissionNote` | string | Optional voicePermissionNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceChecking` | string | Optional voiceChecking wording. Maximum 500 characters. |
+| `web_appearance.text.voiceNeeded` | string | Optional voiceNeeded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBlocked` | string | Optional voiceBlocked wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMissing` | string | Optional voiceMissing wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInUse` | string | Optional voiceInUse wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMicError` | string | Optional voiceMicError wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBusy` | string | Optional voiceBusy wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBusyNote` | string | Optional voiceBusyNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceRinging` | string | Optional voiceRinging wording. Maximum 500 characters. |
+| `web_appearance.text.voiceLive` | string | Optional voiceLive wording. Maximum 500 characters. |
+| `web_appearance.text.voiceError` | string | Optional voiceError wording. Maximum 500 characters. |
+| `web_appearance.text.contactSave` | string | Optional contactSave wording. Maximum 500 characters. |
+| `web_appearance.text.contactSavedEdit` | string | Optional contactSavedEdit wording. Maximum 500 characters. |
+| `web_appearance.text.contactRequired` | string | Optional contactRequired wording. Maximum 500 characters. |
+| `web_appearance.text.beforeCallStart` | string | Optional beforeCallStart wording. Maximum 500 characters. |
+| `web_appearance.text.beforeCallCancel` | string | Optional beforeCallCancel wording. Maximum 500 characters. |
+| `web_appearance.contactFields` | array of object | Up to nine fields; IDs must be unique. Maximum 9 items. |
+| `web_appearance.contactFields[].id` | string | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `web_appearance.contactFields[].label` | string | Nonblank label, no control characters; trimmed and raw length at most 60. Maximum 60 characters. Minimum 1 characters. |
+| `web_appearance.contactFields[].enabled` | boolean | Field enabled. |
+| `web_appearance.contactFields[].required` | boolean | Field required. |
+| `web_appearance.contactFields[].askInChat` | boolean | Optional request-in-chat flag. If absent, a disabled field cannot be required. |
+| `web_appearance.beforeCall` | object | Saved value. |
+| `web_appearance.beforeCall.enabled` | boolean | Use a contact form before a web call. |
+| `web_appearance.beforeCall.message` | string | Before-call message. Maximum 500 characters. |
+| `web_appearance.beforeCall.fields` | array of object | Up to nine unique IDs. Each custom ID must exist in contactFields. Maximum 9 items. |
+| `web_appearance.beforeCall.fields[].id` | string | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `web_appearance.beforeCall.fields[].required` | boolean | Required before starting. |
+| `appearance_version` | integer | Current appearance schema version. Value: `1`. |
+| `web_design` | integer | Saved design, displayed as 1 when unset. |
+| `web_color` | string | Saved colour, displayed as #25D366 when unset. |
+| `web_name` | string | Saved name, displayed as empty when unset. |
+| `web_chips` | string | Saved comma-separated questions, empty when unset. |
+| `web_calls_enabled` | boolean | Saved voice setting, false when unset. |
+| `web_agent_enabled` | boolean or null | Current chat enabled setting; read-only here. |
+| `revision` | string | Opaque decimal settings revision. Send current value in PATCH; 0 before an installation exists. |
+| `install_id` | string or null | Public widget installation ID, not an API credential. |
+| `first_seen_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `last_seen_at` | string or null | Saved timestamp, or null. Format: date-time. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER`, `NXF_WEB_REVISION` to the intended account-owned identifiers or approved recipient before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"revision\":\"$NXF_WEB_REVISION\",\"settings\":{\"web_name\":\"Example support\"}}"
+```
+
+```javascript Node (direct HTTP)
+const body = {
+  "revision": process.env.NXF_WEB_REVISION,
+  "settings": {
+    "web_name": "Example support"
+  }
+};
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/${encodeURIComponent(process.env.NXF_PHONE_NUMBER)}`, {
+  method: 'PATCH',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+console.log('Request completed.');
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+body = {
+  "revision": os.environ["NXF_WEB_REVISION"],
+  "settings": {
+    "web_name": "Example support"
+  }
+}
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/{quote(os.environ['NXF_PHONE_NUMBER'], safe='')}",
+    method="PATCH",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
+    data=json.dumps(body).encode("utf-8"),
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+print("Request completed.")
+```
+
+```bash CLI (direct HTTP)
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"revision\":\"$NXF_WEB_REVISION\",\"settings\":{\"web_name\":\"Example support\"}}"
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": "+12025550101",
+  "agent_id": "agent_example",
+  "web_prompt": null,
+  "web_appearance": null,
+  "appearance_version": 1,
+  "web_design": 1,
+  "web_color": "#25D366",
+  "web_name": "Example support",
+  "web_chips": "",
+  "web_calls_enabled": false,
+  "web_agent_enabled": true,
+  "revision": "1",
+  "install_id": "widget_example",
+  "first_seen_at": null,
+  "last_seen_at": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 400 | [`web_prompt_too_long`](/api-reference/errors#web_prompt_too_long) | Website instructions exceed 16,000 UTF-16 code units. | Shorten the instructions. |
+| 409 | [`widget_settings_changed`](/api-reference/errors#widget_settings_changed) | The submitted revision is stale. | Read current settings and deliberately reapply the intended changes. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Do not retry a stale revision unchanged. Reload after 409, compare the changed settings, then submit only the intended edit with the new revision.
+
+## Related endpoints
+
+- [Read web agent settings](/api-reference/web-agent/get-agent-web-number)
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [List inbox conversations](/api-reference/agent-inbox/get-agent-inbox-channel-number)

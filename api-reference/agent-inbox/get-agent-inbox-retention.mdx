@@ -1,0 +1,156 @@
+---
+title: "Read inbox retention: web policy and SMS cleanup status"
+sidebarTitle: "Read inbox retention"
+description: "Read Nixflex inbox retention defaults and optional number-specific web policy. Distinguish saved policy from cleanup processing and understand zero days."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/retention"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned agent’s web-message retention policy.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `number` (query) | string | No | Omitted | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+Do not send a request body.
+
+Only number is accepted as a query field. URL-encode + in a query value. Without number, web_days is null rather than the account default. Zero days means cleanup on the next cleanup run after reply, not an immediate response-time deletion guarantee. Archiving does not extend retention. Requests return Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `call_retention_days` | integer | Account retention default, 90 when unset. |
+| `web_days` | integer or null | Effective agent or account web days when number is supplied; null without number. |
+| `web_expiry_confirmed` | boolean | Web cleanup database prerequisites are confirmed. |
+| `applies_to` | string | Policy scope. Value: `"new_messages_agent_policy"`. |
+| `legacy_web_policy` | string | Legacy-message fallback. Value: `"account_policy_at_creation_or_90_days"`. |
+| `zero_days_means` | string | Zero-day cleanup timing. Value: `"next_cleanup_after_reply"`. |
+| `archive_changes_retention` | boolean | Archiving does not change retention. Value: `false`. |
+| `sms_days` | integer | SMS retention days. Value: `90`. |
+| `sms_processing_enabled` | boolean | SMS cleanup processing is enabled. |
+| `web_processing_enabled` | boolean | Cleanup enabled and web prerequisites confirmed. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node (direct HTTP)
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention`, {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+console.log('Request completed.');
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention",
+    method="GET",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"]},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+print("Request completed.")
+```
+
+```bash CLI (direct HTTP)
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "call_retention_days": 90,
+  "web_days": null,
+  "web_expiry_confirmed": true,
+  "applies_to": "new_messages_agent_policy",
+  "legacy_web_policy": "account_policy_at_creation_or_90_days",
+  "zero_days_means": "next_cleanup_after_reply",
+  "archive_changes_retention": false,
+  "sms_days": 90,
+  "sms_processing_enabled": true,
+  "web_processing_enabled": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [Read an inbox thread](/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread)
+- [Update an inbox thread](/api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread)

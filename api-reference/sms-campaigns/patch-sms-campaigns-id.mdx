@@ -1,0 +1,214 @@
+---
+title: "Update an SMS campaign: reply context and reply window"
+sidebarTitle: "Update SMS reply settings"
+description: "Update an owned Nixflex SMS campaign’s reply instructions, reply window and active flag. Read the direct response shape and reconcile uncertain saves."
+openapi: "/api-reference/public.openapi.json PATCH /sms/campaigns/{id}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or message template, and it is not a cancellation control.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Exact saved campaign_id owned by this account. This operation does not declare a route-level length or character validator. |
+
+Send at least one supported field. Omitted fields stay unchanged; unknown fields are ignored. Database constraints still apply.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `is_active` | boolean | No | Omitted | Enable or disable reply behaviour; does not stop dispatch. |
+| `reply_context_prompt` | string or null | No | Omitted | Replace reply instructions; null clears. |
+| `reply_window_hours` | integer | No | Omitted | Saved reply association window in hours. Use a positive integer; no route-level range validator is declared. Minimum 1. |
+
+The response is the campaign object directly, with no campaign wrapper. It contains saved counters, rather than the recomputed totals returned by list/detail. This route currently has no strict type/length validation before the database; empty updates, missing campaigns and database failures may return 500 server_error. Read detail after an uncertain save.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Public campaign ID. |
+| `agent_id` | string | Owning agent ID. |
+| `name` | string or null | Saved campaign label. |
+| `from_number` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `schedule_type` | string | Saved now or schedule mode. |
+| `scheduled_date` | string or null | Saved scheduled date. |
+| `window_start_minutes` | integer or null | Configured start minute. |
+| `window_end_minutes` | integer or null | Configured end minute. |
+| `window_days` | array or null | Saved value. |
+| `timezone` | string or null | Saved campaign time zone. |
+| `source` | string | Saved origin label. |
+| `status` | string | Current state; for example scheduled, launching, running, done, failed or cancelled. Treat new states conservatively. |
+| `total_count` | integer | Count. Minimum 0. |
+| `started_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `completed_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `created_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `updated_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `allow_wider_hours` | boolean | True only with confirmation evidence for the current policy revision. |
+| `id` | string | Internal row ID used in list cursors. Format: uuid. |
+| `api_key_id` | string | Owning account ID, not its secret. |
+| `message_template` | string | Saved text template. |
+| `reply_context_prompt` | string or null | Saved reply instructions. |
+| `reply_window_hours` | integer | Reply association window in hours. |
+| `is_active` | boolean | Reply behaviour enabled flag; not a dispatch cancellation control. |
+| `claimed_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `sent_count` | integer | Rows accepted for sending, including delivered or replied rows. Can overlap with later failures. |
+| `delivered_count` | integer | Delivered or replied rows. |
+| `failed_count` | integer | Failed or undelivered rows. |
+| `reply_count` | integer | Recipients marked replied. |
+| `total_segments` | integer | Estimated sum of recipient segments. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_CAMPAIGN_ID` to the intended account-owned identifiers or approved recipient before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/$(node -p 'encodeURIComponent(process.env.NXF_CAMPAIGN_ID)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"reply_context_prompt":"Answer questions about this requested appointment reminder.","reply_window_hours":24}'
+```
+
+```javascript Node (direct HTTP)
+const body = {
+  "reply_context_prompt": "Answer questions about this requested appointment reminder.",
+  "reply_window_hours": 24
+};
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/${encodeURIComponent(process.env.NXF_CAMPAIGN_ID)}`, {
+  method: 'PATCH',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+console.log('Request completed.');
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+body = {
+  "reply_context_prompt": "Answer questions about this requested appointment reminder.",
+  "reply_window_hours": 24
+}
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/{quote(os.environ['NXF_CAMPAIGN_ID'], safe='')}",
+    method="PATCH",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
+    data=json.dumps(body).encode("utf-8"),
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+print("Request completed.")
+```
+
+```bash CLI (direct HTTP)
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/$(node -p 'encodeURIComponent(process.env.NXF_CAMPAIGN_ID)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"reply_context_prompt":"Answer questions about this requested appointment reminder.","reply_window_hours":24}'
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "agent_id": "agent_example",
+  "name": "Example SMS campaign",
+  "from_number": "+12025550101",
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "window_start_minutes": null,
+  "window_end_minutes": null,
+  "window_days": null,
+  "timezone": null,
+  "source": "api",
+  "status": "scheduled",
+  "total_count": 1,
+  "started_at": null,
+  "completed_at": null,
+  "created_at": "2026-11-01T12:00:00Z",
+  "updated_at": "2026-11-01T12:00:00Z",
+  "allow_wider_hours": false,
+  "id": "00000000-0000-4000-8000-000000000001",
+  "api_key_id": "nxf_example",
+  "message_template": "Your requested reminder.",
+  "reply_context_prompt": "Answer questions about this requested appointment reminder.",
+  "reply_window_hours": 24,
+  "is_active": true,
+  "claimed_at": null,
+  "sent_count": 0,
+  "delivered_count": 0,
+  "failed_count": 0,
+  "reply_count": 0,
+  "total_segments": 0
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write.
+
+## Related endpoints
+
+- [Get an SMS campaign](/api-reference/sms/campaigns-get)
+- [Cancel SMS campaign](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel)
