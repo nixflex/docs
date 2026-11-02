@@ -1,89 +1,66 @@
 ---
-title: "Appointment-booking receptionist"
-description: "Build an agent that answers calls, checks a live calendar, and books real appointments while the caller is on the line."
-icon: "calendar-check"
+title: "Booking receptionist: connect and test appointments"
+description: "Set up a Nixflex booking receptionist, connect a calendar to your number, confirm appointment details and test the real calendar result before going live."
 ---
 
-This guide builds a receptionist that greets callers, checks real-time availability, and books appointments into your calendar during the call. It works the same way whether you use Cal.com or Google Calendar â€” you connect one calendar per phone number.
-
-## What you'll build
-
-An inbound agent that:
-
-- Answers the call and understands what the caller wants
-- Checks your live calendar for open slots
-- Books the appointment and confirms it back to the caller
-
-<Note>
-Booking is configured **per phone number**, not per agent. Each number connects its own calendar account, so one agent template can serve many businesses â€” each with its own calendar.
-</Note>
+Help callers book appointments during a phone conversation. The calendar connection supplies live availability and booking results. Your instructions explain when to use it, which details to collect and what to do if booking cannot be confirmed.
 
 ## Before you start
 
-- An agent created in your dashboard
-- A phone number imported and attached to that agent
-- A Cal.com account **or** a Google account with the calendar you want to book into
-
-<Note>
-Connect **one** booking calendar per number â€” either Cal.com or Google Calendar, not both on the same number.
-</Note>
+- Use an Owner or Admin login and an agent with a connected number.
+- Have access to the intended Cal.com or Google Calendar account.
 
 ## Steps
 
-<Steps>
-  <Step title="Connect your calendar to the number">
-    In your dashboard, open the phone number and go to its integrations. Choose your calendar and connect the account:
+### 1. Select the number
 
-    - **Cal.com** â€” paste your Cal.com API key and select the event type callers should book.
-    - **Google Calendar** â€” sign in with Google and pick the calendar to book into.
+Open **Integrations** and choose the agent and business number. Calendar setup belongs to that number. Check the selection carefully if you manage several locations or use one agent for multiple numbers.
 
-    The connection is stored on that number, so the credentials belong to that number alone.
-  </Step>
+### 2. Connect the calendar
 
-  <Step title="Tell the agent it can book">
-    In your agent prompt, let the agent know booking is available and how to use it. Keep it natural â€” the agent checks availability and books through the connected calendar automatically when a caller asks for an appointment.
+Open **Cal.com** or **Google Calendar** and complete its connection. For Cal.com, supply the requested account and event details. For Google Calendar, use **Connect Google Calendar** and approve the intended account.
 
-    ```text Goes under ## WHAT TO DO
-    You are the receptionist for Brightsmile Dental.
-    You can check the calendar and book appointments for callers.
+<Note>Screenshot placeholder: **booking-receptionist-calendar** — Integrations, selected number and connected calendar card. Use staging test data.</Note>
 
-    When someone wants an appointment:
-    - Ask what day and rough time suits them.
-    - Offer the nearest open slots you find.
-    - Confirm the appointment once it is booked, and read the time back clearly.
+### 3. Describe the booking task
 
-    Be warm, brief, and never invent a time that is not free.
-    ```
-  </Step>
+Tell the agent which appointment the caller can book, what information to confirm and what to say if there is no suitable time. Put detailed services and conditions in knowledge. Use your real calendar time zone, without assuming the caller shares it.
 
-  <Step title="Let the engine handle the exact details">
-    You do not script the availability check or the booking call â€” the agent does it live when the conversation calls for it. Availability and the confirmed time come from your real calendar, so the caller always hears accurate times.
-  </Step>
+### 4. Choose confirmation settings
 
-  <Step title="Test it with a real call">
-    Call your number and ask for an appointment. The agent should:
+Review booking confirmation and **In-Call SMS** in the agent settings. A spoken confirmation check and a text confirmation are different controls. Text confirmation requires texting to be enabled and a suitable recipient; it is not guaranteed by connecting a calendar.
 
-    - Offer times that are genuinely open on your calendar
-    - Book the slot you choose
-    - Confirm the booking out loud
+### 5. Test a complete booking
 
-    Then check your Cal.com or Google Calendar â€” the new event should be there.
-  </Step>
-</Steps>
+Call from an owned test phone, ask for a slot, confirm the details and check that the event actually appears in the calendar. Also try a correction and an unavailable time. Remove the test appointment through your normal calendar process.
 
-These snippets slot into the seven-section prompt shape - see [Writing a good agent prompt](/best-practices/prompting-guide) for the full structure.
+<Note>Screenshot placeholder: **booking-receptionist-result** — Call History, test call with booking result. Use staging test data.</Note>
 
-## What's next
+## What happens next
 
-- Add [Send SMS](/actions/send-sms) so the agent texts a confirmation after booking.
-- Turn on [Post-call analysis](/advanced/post-call-analysis) to capture why each caller rang.
-- Set up [Transfer](/actions/transfer) so complex requests reach a human.
+Review early bookings against the calendar. A spoken promise or generated summary is not the final booking record. If a booking cannot be confirmed, the agent should offer a clear follow-up instead of inventing a reservation.
 
-<CardGroup cols={2}>
-  <Card title="Cal.com booking" icon="calendar" href="/actions/calcom">
-    Full setup and behaviour for Cal.com bookings.
-  </Card>
-  <Card title="Google Calendar booking" icon="calendar" href="/actions/google-calendar">
-    Full setup and behaviour for Google Calendar bookings.
-  </Card>
-</CardGroup>
+## Common questions
+
+### Is a prompt enough to enable booking?
+
+No. The number needs a working calendar connection.
+
+### Does this work in website chat?
+
+Built-in website calendar actions are unavailable. Phone and SMS booking have separate channel rules.
+
+### Can each branch use its own calendar?
+
+Yes, calendars are connected per number. Shared agent knowledge is still shared across those numbers.
+
+### Will every booking send a text?
+
+No. In-Call SMS and message eligibility must allow it; check delivery separately.
+
+## Related guides
+
+- [Connect Cal.com](/guides/business/calcom)
+- [Connect Google Calendar](/guides/business/google-calendar)
+
+Prefer code? See [Calendar booking API guide](/actions/calcom).

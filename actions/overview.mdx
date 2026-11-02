@@ -1,86 +1,29 @@
 ---
-title: "Actions overview"
-description: "Built-in actions the agent triggers via prompt tags"
-icon: "tag"
+title: "Call actions: connect agent instructions to real outcomes"
+description: "Understand Nixflex calendar, text, transfer, wait and call-ending actions, including the permissions and actual results needed before an agent confirms success."
 ---
 
-Nixflex agents perform actions during calls — transfers, SMS, ending the call — by emitting special **tags** in the LLM's response. The engine watches for these tags, strips them from what the caller hears, and runs the action.
+Actions let a conversation request useful work. A prompt describes when to act; saved permissions, connections and current state decide whether the action can run.
 
-You don't have to wire up function calling or webhooks for built-in actions. Just tell the agent to use the tag when appropriate.
+| Action | Guide | Result to check |
+| --- | --- | --- |
+| Calendar booking | [Cal.com](/actions/calcom) · [Google Calendar](/actions/google-calendar) | Calendar mutation succeeded |
+| Booking read-back | [Confirmation](/actions/booking-confirmation) | Current details approved before mutation |
+| Text during a call | [In-call SMS](/actions/in-call-sms) | Accepted send, then delivery if available |
+| Human handoff | [Transfer](/actions/transfer) | Actual handoff state |
+| End a conversation | [End call](/actions/end-call) | Confirmed terminal call state |
+| Give a caller time | [Wait](/actions/wait) | Bounded expected silence |
+| Navigate a switchboard | [Phone menus](/actions/ivr-navigation) | Menu exit or timeout |
+| Call your service | [Custom functions](/advanced/custom-functions) | Your authenticated action result |
 
-## How tags work
+## Tags request work
 
-The LLM generates a normal reply. If the reply contains a tag, the engine intercepts it:
+Tags such as `[SEND_SMS: message]`, `[END_CALL]` and `[WAIT]` are interpreted by the relevant call path rather than spoken as ordinary text. They are not proof that the requested work completed. Multiple actions in one response are not an atomic transaction; one can succeed while another fails.
 
-> **The LLM says:** "Sure, I'll transfer you to our manager now. [TRANSFER:+442087601234]"
->
-> **Caller hears:** "Sure, I'll transfer you to our manager now."
->
-> **Engine action:** Transfer to +442087601234 (cold or warm, per your dashboard setting).
+Keep instructions narrow. Describe the trigger, required information and what to say when an action cannot be confirmed. A booking success should not be described as a delivered confirmation text, and an accepted transfer should not be described as an answered human call.
 
-The caller never hears the tag itself. It exists only as a signal between the LLM and the engine.
+## Channels have different capabilities
 
-<Note>
-  **You control what the agent says.** The tag only triggers the action. The sentence around it is whatever you tell the agent to say in your prompt. Want a specific line before it transfers? Write that line in your prompt, then the tag. The agent speaks your words; the engine runs the action.
-</Note>
+Telephone actions do not automatically become website actions. Public website visitors cannot use the built-in telephone booking, SMS, transfer, keypad or menu functions. Enabled custom functions need separate review for public visitor access.
 
-## Built-in tags
-
-<Columns cols={4}>
-  <Card title="End call" icon="phone-slash" href="/actions/end-call">
-    `[END_CALL]` — gracefully end the conversation
-  </Card>
-  <Card title="Transfer" icon="shuffle" href="/actions/transfer">
-    `[TRANSFER:+number]` — hand off to a human
-  </Card>
-  <Card title="Send SMS" icon="message" href="/actions/send-sms">
-    `[SEND_SMS: text]` — text the caller mid-call
-  </Card>
-
-  <Card title="Wait" icon="clock" href="/actions/wait">
-    `[WAIT]` — pause the silence timer while the caller steps away
-  </Card>
-
-</Columns>
-
-<Note>
-  **You do not have to use `[END_CALL]`.** The agent already ends the call on its own when the conversation naturally finishes. Use `[END_CALL]` only when you want tighter control - for example, end right after a booking is confirmed, or keep the call going until something specific happens. Put the rule in your prompt and the agent follows it.
-</Note>
-
-## Telling the agent when to use them
-
-Add an **Actions** section to your system prompt with one-line guidance for each tag you want the agent to use:
-
-```
-ACTIONS
-- End the call after a successful booking or when the caller says goodbye: [END_CALL]
-- Transfer to the manager if the caller asks for a refund: [TRANSFER:+442087601234]
-- Text confirmation after booking: [SEND_SMS: Your appointment is confirmed. Reply YES to confirm.]
-```
-
-The agent will use the tags when the conversation calls for them — without you having to script every branch.
-
-## Multiple tags in one response
-
-The agent can use more than one tag in a single reply. Common pattern after a booking:
-
-> "Perfect, you're booked in for Tuesday at 2pm. I've just sent you a text with the details. [SEND_SMS: Your appointment with Acme Dental is confirmed for Tuesday 5th March at 2pm. Call us if anything changes.] Have a great day. [END_CALL]"
-
-The engine processes them in order: send the SMS, then end the call.
-
-## Pausing while the caller steps away
-
-Sometimes a caller needs a moment - to find a card, check a calendar, or ask someone. Normally the engine treats a long silence as a dropped line and eventually ends the call. The `[WAIT]` tag tells it the silence is expected, so it holds on instead.
-
-Tell the agent when to use it in your prompt:
-
-```
-ACTIONS
-- If the caller needs a moment to get or check something, say you are happy to wait: [WAIT]
-```
-
-When the agent emits `[WAIT]`, the engine extends the silence timer for that turn. If the caller speaks, everything returns to normal instantly. If the wait runs out, the agent gently checks whether they are still there before ending politely. You set how long it waits in the agent’s **Call Ending** settings (default 30 seconds).
-
-## Beyond built-in actions
-
-For anything more complex (looking up customer records, booking appointments, processing payments), the agent can call your own APIs during the conversation. See [Cal.com](/actions/calcom) for live booking, or the integrations section for connecting your own tools.
+Using the dashboard? See [manage call actions](/guides/business/call-actions). For API workflows, use the linked task guide and the exact [agent contract](/api-reference/agents/contract).

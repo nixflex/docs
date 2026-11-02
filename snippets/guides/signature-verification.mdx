@@ -1,0 +1,43 @@
+The receiver must preserve raw bytes before its JSON middleware changes them. `secret` is your signing credential, not the full `KEY_ID:KEY_SECRET` authentication string. This helper checks authenticity and age; durable replay protection is still required.
+
+<CodeGroup>
+
+```javascript Node
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+export function verifyNixflex(rawBody, header, secret, now = Date.now()) {
+  if (!Buffer.isBuffer(rawBody) || typeof secret !== 'string' || !secret) return false;
+  if (typeof header !== 'string' || header.length > 256) return false;
+  const match = /^t=([0-9]{1,12}),v1=([a-fA-F0-9]{64})$/.exec(header);
+  if (!match) return false;
+  const timestamp = Number(match[1]);
+  if (!Number.isSafeInteger(timestamp) || Math.abs(now / 1000 - timestamp) > 300) return false;
+  const expected = createHmac('sha256', secret)
+    .update(match[1] + '.').update(rawBody).digest();
+  const supplied = Buffer.from(match[2], 'hex');
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+```
+
+```python Python
+import hashlib, hmac, re, time
+
+def verify_nixflex(raw_body, header, secret, now=None):
+    if not isinstance(raw_body, bytes) or not isinstance(secret, str) or not secret:
+        return False
+    if not isinstance(header, str) or len(header) > 256:
+        return False
+    match = re.fullmatch(r"t=([0-9]{1,12}),v1=([a-fA-F0-9]{64})", header)
+    if not match:
+        return False
+    timestamp = int(match[1])
+    if abs((time.time() if now is None else now) - timestamp) > 300:
+        return False
+    message = match[1].encode("ascii") + b"." + raw_body
+    expected = hmac.new(secret.encode("utf-8"), message, hashlib.sha256).digest()
+    return hmac.compare_digest(bytes.fromhex(match[2]), expected)
+```
+
+</CodeGroup>
+
+For a signed GET custom function, verify an empty body. That signature does not bind query parameters, the URL or method. Use a POST with a signed body for actions whose arguments must be authenticated, or apply your own explicit request authentication as well.

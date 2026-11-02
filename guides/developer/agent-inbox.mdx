@@ -1,0 +1,87 @@
+---
+title: "Agent inbox: read conversation state with the Nixflex API"
+description: "Read Nixflex SMS and website inboxes, page through messages, use read versions and archive threads while keeping visitor identity and retention limits clear."
+---
+
+Build an authenticated conversation view for a number’s SMS or website channel. Preserve server paging and version values so an old screen cannot mark newer messages read by mistake.
+
+Using the dashboard? See [the business guide](/guides/business/agent-inbox).
+
+## Prerequisites
+
+Use an owning account credential on the server. Check `GET /v1/agent-inbox/features` first. The inbox must be enabled; dashboard views can filter out API-managed numbers.
+
+## 1. Read available numbers
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/agent-inbox/numbers?offset=0" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
+  maxRetries: 0,
+});
+const result = await c.inbox.numbers({"offset": 0});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
+    max_retries=0,
+) as c:
+    result = c.inbox.numbers(offset=0)
+```
+
+```powershell CLI (PowerShell)
+nixflex inbox numbers --offset 0 --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. List a channel’s threads
+
+GET `/v1/agent-inbox/{channel}/{number}`, with channel `sms` or `web`. Filters include archived, unread, search and period. List limits are 1–100, default 30; offsets are 0–10,000. Do not infer a complete inbox from one page.
+
+## 3. Page the conversation
+
+GET `/v1/agent-inbox/{channel}/{number}/thread/{thread}`. The message limit is 1–200, default 100. Pass `before` and `before_id` together from the server; a timestamp alone can skip messages sharing that time.
+
+## 4. Change only the intended state
+
+PATCH the thread with `archived` and/or the observed `read_version`. Keep version values as decimal strings, not floating-point numbers. Archiving is not deletion and does not disable automatic replies. Members read shared work; mutations require the permitted writer role.
+
+## 5. Show identity and retention honestly
+
+Website contact details are visitor-supplied and unverified. Recognition can end when browser storage changes. Read `/v1/agent-inbox/retention` and its processing flags; saved policy alone is not proof cleanup ran. There is no manual-message composer route in this inbox contract.
+
+## Example response
+
+The numbers response contains `numbers`, `agents` and `has_more`. Thread replies include messages and read/paging state; retain the exact returned versions. The [thread schema](/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread) defines the full response.
+
+## Errors and limits
+
+| Status/code | Recovery |
+| --- | --- |
+| 400 `invalid_inbox_request` | Check channel, E.164 number, filters and paired cursor. |
+| 404 `inbox_not_found` | Check number/thread ownership. |
+| 409 `widget_settings_changed` | Reread website settings before saving with a fresh revision. |
+| 503 `agent_inbox_disabled` | Feature is not enabled; do not render an empty-success inbox. |
+| 503 `inbox_unavailable` | Retry bounded reads and preserve local state. |
+
+## Next steps
+
+- [List threads](/api-reference/agent-inbox/get-agent-inbox-channel-number)
+- [Read thread](/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread)
+- [Change thread](/api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread)

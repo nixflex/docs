@@ -1,9 +1,9 @@
 ---
-title: "Agent settings by channel"
-description: "Which saved agent settings affect phone calls, website chat and website voice"
+title: "Agent channels: separate calls, SMS and website settings"
+description: "Understand which Nixflex instructions, knowledge and actions apply to telephone calls, SMS and website conversations, including public visitor permissions."
 ---
 
-Batch 3 draft. A setting being accepted and returned by the API does not mean every
+A setting being accepted and returned by the API does not mean every
 channel uses it. This table describes the current implementation, not new features.
 **Web call** here means a visitor on your website. The owner's **Talk to your agent**
 test is a separate authenticated browser-call path and uses the phone-agent setup.
@@ -12,7 +12,7 @@ test is a separate authenticated browser-call path and uses the phone-agent setu
 |---|---|---|---|---|
 | `name`, `is_active` | Identity/admission | Identity/admission | Identity/admission | Identity/admission |
 | `system_prompt` | Agent instructions plus the number's business profile; profile wins on conflicting business facts | Per-call `prompt` is the call purpose instead | Number's `web_prompt` instead | Number's `web_prompt` instead |
-| `voice_id`, `voice_key` | Number legacy alias is loaded; catalog mode prioritizes agent `voice_key` | Same; catalog key now reaches the outbound renderer | Not used | Same voice-selection rules; see voices |
+| `voice_id`, `voice_key` | Number legacy alias is loaded; catalog mode prioritizes agent `voice_key` | Same catalog-key selection rule | Not used | Same voice-selection rules; see voices |
 | `speaking_rate` | Explicit number speed overrides agent | Same | Not used | Same |
 | `language` | Fixed or route-aware multilingual speech | Same | Visitor-language website rules, not agent language | Fixed or route-aware multilingual speech |
 | `timezone` | Dates/time context | Dates/time context | Dates/time context | Dates/time context |
@@ -64,7 +64,16 @@ and silence timeout **10 seconds**. Explicit valid values win. Existing agents a
 not migrated; PUT is partial. Null timers retain their existing runtime fallback.
 `DELETE /v1/agents/:id` means **switch off**, not erase or detach numbers.
 
-This documentation does not change pickup delay, ringing, model routing or actions.
 See [the exact API contract](/api-reference/agents/contract),
 [privacy/action inheritance](/concepts/agent-inheritance) and
 [route-aware languages](/concepts/languages).
+
+## Knowledge across channels
+
+Knowledge belongs to the agent. Inbound starts enabled; outbound calls and campaigns share a switch. Website voice, website chat and SMS each have their own switch. [Learn how knowledge works](/concepts/knowledge).
+
+## Related guides
+
+- [Set up an agent](/business)
+- [Privacy settings](/guides/business/privacy)
+- [Manage number settings with code](/guides/developer/phone-numbers)

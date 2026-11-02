@@ -1,63 +1,78 @@
 ---
-title: "Slack"
-description: "Post a short call summary to a Slack channel after every call"
-icon: "slack"
+title: "Slack notifications: connect Nixflex call outcomes safely"
+description: "Configure Nixflex Slack notifications for the intended number, protect the destination and distinguish a saved connection from successful notification delivery."
 ---
 
-When Slack is connected to a number, Nixflex posts a short summary to your Slack channel after every call on that number — so your team sees what happened without listening back. It posts once, right after the call ends, and is configured **per phone number**, so each number can post to its own channel.
+Connect the intended number to a business destination and verify the result end to end.
 
-## What you need
+Using the dashboard? See [the business guide](/guides/business/integrations).
 
-A **Slack Incoming Webhook URL** for the channel you want summaries posted to. It starts with `https://hooks.slack.com/`.
+## Prerequisites
 
-To create one: in Slack, go to **Apps → Incoming Webhooks → Add to Slack**, choose the channel, and copy the generated URL. Only a `https://hooks.slack.com/...` URL is accepted.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
 
-## Connect via API
+## 1. Read the saved connection
 
-Set Slack on one of your numbers:
+<CodeGroup>
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/integrations/slack/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "webhook_url": "https://hooks.slack.com/services/XXX/YYY/ZZZ" }'
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/slack/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-`webhook_url` is required and must be a `https://hooks.slack.com/...` URL. The number must be one connected to your account.
-
-**Read the current config.** The URL is never returned — you only see whether it is set:
-
-```bash
-curl https://api.nixflex.com/v1/integrations/slack/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("slack", "+12025550123");
+// Keep private responses out of logs and AI conversations.
 ```
 
-```json
-{ "phone_number": "+447700900123", "is_active": true, "webhook_url_set": true }
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('slack', '+12025550123')
 ```
 
-**Disconnect:**
-
-```bash
-curl -X DELETE https://api.nixflex.com/v1/integrations/slack/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```powershell CLI (PowerShell)
+nixflex integrations get slack '+12025550123' --json --base-url "https://api.nixflex.com"
 ```
 
-## Connect via dashboard
+</CodeGroup>
 
-Prefer the dashboard? Go to **Integrations → Slack**, pick the agent and number, paste the **Incoming Webhook URL**, and click **Save**. The card shows **Connected** once saved.
+## 2. Save the intended destination
 
-## What gets posted
+Use the Slack integration PUT route with the documented configuration and an authorised destination. Keep the destination credential private. Use the current connection UI or workspace administration flow to obtain it.
 
-After each call on the number ends, Nixflex posts a message with:
+## 3. Define what success means
 
-- The **call summary**
-- The **caller's number**
-- The **sentiment and outcome**
+Treat a posted notification as a copy of available call information, not proof the call or every follow-up action succeeded. External message retention is separate from Nixflex call retention.
 
-It posts **once per call, after it ends**. The full transcript is never sent — only the summary and call details. Numbers without Slack set up simply do not post.
+## 4. Test a complete workflow
 
-## Tips
+Use one approved test call and inspect both its Nixflex result and the receiving system. Check missing fields, delayed processing and duplicate delivery. Do not promise a notification arrives within a fixed number of seconds.
 
-- Use a dedicated channel such as `#calls` so summaries are easy to find.
-- Each number is independent — different locations on one agent can each post to their own channel via per-number setup.
+## 5. Disconnect and reconcile
+
+Use the documented integration DELETE route to stop future use. Previously delivered external records remain subject to that system’s controls. If a save or deletion response is lost, read the current settings before repeating it.
+
+## Example response
+
+GET returns the safe saved integration configuration. The settings response confirms configuration state; external delivery and business-action results must be checked separately.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid credentials/destination | Correct configuration before retrying. |
+| Saved but no notification | Inspect call state and external delivery separately. |
+| Duplicate event | Deduplicate before repeating a side effect. |
+| Unknown save/delete result | Read current configuration. |
+| Data deleted in Nixflex | Manage previously sent external copies separately. |
+
+## Next steps
+
+- [Read settings](/api-reference/integration-settings/get-integrations-slack-number-phoneNumber)
+- [Signed event receiver](/advanced/webhooks)
+- [Call history](/guides/developer/call-history)

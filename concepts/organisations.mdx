@@ -1,46 +1,35 @@
 ---
-title: Organisations and your team
-description: One shared account and balance, with personal logins.
+title: "Organisations: understand Owner, Admin and Member access"
+description: "Understand Nixflex accounts, team roles, invitations, billing access and ownership, while keeping personal logins separate from the shared API credential."
 ---
 
-<Warning>Round 220 candidate, not released. Flags remain OFF until deployed acceptance passes. The earlier proposed safe hand-back to AI is not supported: AI never returns after takeover. Existing-link drain and LiveKit Cloud revocation must be proved on staging. Nothing on this page claims that proof has passed.</Warning>
+An organisation lets people share agents, phone numbers, work and balance while using their own logins. The role applies to that organisation; a personal login is not its shared API credential.
 
-An organisation is your existing Nixflex account. Its agents, numbers, calls, campaigns and credit stay together. Team members are free. Each person signs in with their own login, belongs to one organisation and may optionally enable two-factor authentication for that login.
+| Capability | Owner | Admin | Member |
+| --- | --- | --- | --- |
+| Read shared work | Yes | Yes | Yes |
+| Change agents, numbers and campaigns | Yes | Yes | No |
+| View Nixflex amounts, Billing and Activity | Yes | Yes | No |
+| Manage Members | Yes | Yes | No |
+| Manage Admins | Yes | No | No |
+| Reveal or rotate the shared key | Yes | No | No |
+| Offer ownership or close the organisation | Yes | No | No |
+| Eligible live Listen and takeover | Yes | Yes | Yes |
 
-The Owner controls everything, including billing, the API key, team roles, ownership transfer and deletion. Admins can use normal tools and invite or remove Members. They cannot manage other Admins or the Owner. Members can use normal tools but cannot open Billing, API Keys, Team or account deletion. Only the Owner sees money cards on Overview and Activity. Team is a separate page: Owner sees Members and Activity; Admin sees Members only. Logs stays the API log page. Settings keeps personal controls, Leave, the Owner's Delete account and an ownership offer only for its intended recipient.
+Server checks enforce permissions. Member is not a write role, but eligible live call controls are a deliberate exception. Removing access can leave disconnection pending; a committed human takeover may retain only the controls needed to finish that one call.
 
-## Invitations
+## Invitations and ownership
 
-In Team, choose Invite, enter the person's email and choose Member or Admin. Prechecks cover format, existing members, existing invitations and limits only; there is no mailbox-existence probing. They receive a link valid for 24 hours and create their own password or use their existing login. They must verify that email and explicitly accept. Opening an email never accepts an invitation. Invited signup does not create another account or trial credit.
+Invites expire after 24 hours. Default limits are 50 seats including unexpired pending invites and 20 new or resent invites per UTC day. Resending replaces the old link. Admins can invite and manage Members only.
 
-Resend replaces the previous link. Revoke invalidates it. “Invite sent” means accepted by the email provider, not inbox delivery. An explicit rejection says the email could not be delivered; a timeout remains unknown. Check with the recipient before resending an unknown send. Existing members of another organisation must leave it first; accepting never moves a wallet or shared data. Last active shows the latest recorded organisation action, not whether someone is online.
+Ownership is offered from Team and accepted by the recipient through their own login. Recent verification can be required. The former Owner becomes an Admin after successful transfer. An offer is not a completed transfer.
 
-The default safety limits are 50 people including pending invitations and 20 invitations per UTC day. Expired/revoked links do not reserve a seat. Resending counts as an invitation. Contact support for higher limits; there is no seat charge.
+## Keys, leaving and closure
 
-## Personal logins and shared credentials
+A shared API key has account authority. Giving it to a Member does not create a restricted Member credential. Key rotation and personal membership changes are separate operations. Organisation signing credentials can also be separate from API access.
 
-Only the Owner can reveal or roll the organisation API key. Dashboard actions use each person's login, not that shared secret. If the Owner shares the API key outside the dashboard, its holder has organisation API authority. Roll it when that person leaves. Removing a Member does not automatically roll it.
+Leaving removes a membership, not the person's login. Account closure uses the personal Owner dashboard flow. The old `/v1/account/delete` exposure returns `410 dashboard_owner_required`; there is no replacement API-key closure workaround. Closure locks new work while cleanup is tracked; accepted closure is not proof every external operation or retained object has already disappeared.
 
-Webhook signing is separate from API authentication. The candidate preserves the current signing value when upgrading; rolling the API key no longer changes it. Owners can reveal it in API Keys. Never paste either secret into a chat or log. The organisations MCP intentionally does not reveal signing secrets.
-
-## Leaving, ownership and deletion
-
-Admin and Member can Leave organisation in Settings. Their shared work stays in place and their login is kept. An Owner must first offer ownership to another active, verified member. Both people sign in again (including their own optional two-factor check); the recipient explicitly accepts in Settings. The former Owner becomes Admin. The organisation balance and key do not move.
-
-Only the Owner can request deletion after a fresh login. The organisation locks immediately; tracked cleanup follows the existing settlement, storage and deletion fences. Personal logins are kept. Billing records and the trial-protection fingerprint remain; Activity lasts 12 months. Customer-owned buckets are not erased by Nixflex. Pending cleanup is never shown as deleted.
-
-## Activity
-
-Team has Owner-only Activity. Activity records the acting person or organisation API key, action, target, time and outcome. Unknown outcomes remain unknown. There is no customer edit/delete route. Load 50 more appends a page; the page scrolls internally. Download CSV contains the latest 500 matching events with the Person filter. The API also supports a before cursor. CSV cells are protected against spreadsheet formulas. Passwords, invitation tokens, API secrets and message content do not belong in Activity.
-
-## API, SDK, CLI and MCP candidate
-
-The API remains under `/v1/organisation`; use the existing full organisation API key. Read context, members and Activity; invite, resend, revoke, remove and change Member/Admin roles. API-only accounts can request a verified-email owner claim without changing their balance. Acceptance, Leave, ownership transfer and deletion require a person's dashboard login.
-
-The Node candidate exposes `client.organisation`. CLI candidate commands are `organisation get`, `members`, `activity`, `invite`, `claim`, `resend`, `revoke`, `remove` and `role`. Changes preview unless `--confirm` is supplied. Fields use `--set email=person@example.com` and `--set role=member`. A response lost after a change must be checked before retrying.
-
-The optional `nixflex-organisations-mcp` candidate uses the same bound API key/address and adds nine focused tools. The existing 35-tool server and Desktop bundle are unchanged. Every change needs `confirm:true`; personal owner actions are absent. These candidates are not published packages. The additive SDK CLI mapping was approved and checked in round 219.
-
-The Python candidate also exposes `client.organisation` in sync and async clients: `get`, `members`, `activity`, `invite`, `resend`, `revoke`, `remove_member`, `set_role`, `claim_invite`. Async calls must be awaited. Changes never retry automatically. None of these clients turns pending live disconnection into a successful disconnection, or exposes personal acceptance, Leave, transfer or deletion through an API key.
-
-For the exact paths and replies, see [organisation API candidate](/api-reference/organisations/overview).
+- [Invite and manage your team](/guides/business/team)
+- [Team access with the API](/guides/developer/organisations)
+- [Billing and balance](/guides/business/billing)

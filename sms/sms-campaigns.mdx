@@ -1,207 +1,87 @@
 ---
-title: "SMS campaigns"
-description: "Send one-time bulk SMS to many recipients"
-icon: "users"
+title: "SMS campaigns: build and track messages with the API"
+description: "Create Nixflex SMS campaigns with reviewed variables, consent and recipient-local hours, then track delivery, handle replies and reconcile uncertain sends."
 ---
 
-SMS campaigns send the same message (or templated variations) to many recipients in one API call. Useful for promotions, appointment batches, announcements, and reminders.
+Build a message campaign with explicit recipients and a complete template. Creating it can request immediate sending; scheduling is not a draft-only preview.
 
-<Note>
-  **Campaigns are one-time broadcasts.** They send the message and stop. When a recipient replies, the reply is handled by the [SMS agent](/sms/sms-agent) on that number - not by the campaign itself.
-</Note>
-## How replies work
-A campaign only sends. When a recipient texts back, the reply is answered by the [SMS agent](/sms/sms-agent) on that number, using that number's own SMS instructions (its sms_prompt) - the same agent that answers every inbound text. The campaign message is not carried into the reply automatically.
-If you want the agent to handle replies about a promotion, put the promotion details in the number's sms_prompt before you launch. Otherwise the agent does not know the campaign went out.
-For example, add to the number's sms_prompt:
-> We are running a March promotion: 20 percent off cleanings, valid weekdays 9am-5pm next week. If a customer replies YES, confirm the offer and ask which day suits them.
-Then when someone replies YES - or asks about the offer - the SMS agent already knows what to say, and can even book them in if the number has a booking calendar connected. See the [SMS agent](/sms/sms-agent) page for the full reply behaviour.
-<Note>
-  Campaigns run from Twilio and Telnyx numbers alike. The **From** number decides which
-  of your carrier accounts sends the messages and which one bills you for them.
-</Note>
+Using the dashboard? See [the business guide](/guides/business/sms-campaigns).
 
-## Create a campaign (API)
+## Prerequisites
 
-```bash
-curl -X POST https://api.nixflex.com/v1/sms/campaigns \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "from_number": "+447446466847",
-    "name": "March promotion",
-    "message_template": "Hi {{first_name}}, Acme Dental offering 20% off cleanings this month. Reply YES to book.",
-    "recipients": [
-      { "phone": "+447111000001", "variables": { "first_name": "Sarah" } },
-      { "phone": "+447111000002", "variables": { "first_name": "James" } }
-    ],
-    "schedule_type": "now"
-  }'
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
+
+## 1. Inspect campaign state
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/sms/campaigns?status=running&limit=2" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-Response:
+```javascript Node
+import { Nixflex } from 'nixflex';
 
-```json
-{
-  "campaign_id": "smsc_a1b2c3d4",
-  "status": "running",
-  "total_count": 2,
-  "delivered_count": 0,
-  "failed_count": 0,
-  "pending_count": 2,
-  "source": "api"
-}
-```
-## Personalization with placeholders
-
-Use `{{variable_name}}` in your `message_template`. Each recipient's `variables` object fills the placeholders.
-
-**Template:**
-**Recipient:**
-
-```json
-{
-  "phone": "+447111000001",
-  "variables": {
-    "first_name": "Sarah",
-    "day": "Tuesday",
-    "time": "2pm"
-  }
-}
+const c = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
+  maxRetries: 0,
+});
+const result = await c.sms.campaigns.list({"status": "running", "limit": 2});
 ```
 
-**Sent SMS:** `Hi Sarah, your appointment is on Tuesday at 2pm.`
+```python Python
+import os
+from nixflex import Nixflex
 
-If a placeholder has no matching variable, it renders as an empty string (no crash). Same pattern as Twilio, SendGrid, and Mailchimp.
-
-## From the dashboard
-
-In the dashboard, **Outbound → SMS Campaigns → New Campaign**, you can add recipients two ways:
-
-- **Paste numbers:** drop in a list separated by commas, tabs, spaces, or newlines. The form auto-detects phones (E.164 format) and any extra columns become variables.
-- **Upload CSV:** drag-and-drop or browse. The form auto-detects the phone column from headers (`phone`, `number`, `mobile`, `tel`, `telephone`) and treats all other columns as variables.
-
-Either way you get a preview table before sending.
-
-## Scheduling
-
-Send later instead of now:
-
-```json
-{
-  "schedule_type": "schedule",
-  "scheduled_at": "2026-05-20T09:00:00Z"
-}
+with Nixflex(
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
+    max_retries=0,
+) as c:
+    result = c.sms.campaigns.list(status='running', limit=2)
 ```
 
-Campaign sits at `status: scheduled` until the time arrives. You can cancel it before then with `DELETE /v1/sms/campaigns/:id`.
-
-## Tracking delivery
-
-Get campaign status:
-
-```bash
-curl https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```powershell CLI (PowerShell)
+nixflex sms campaigns list --status running --limit 2 --json --base-url "https://api.nixflex.com"
 ```
 
-Response:
+</CodeGroup>
 
-```json
-{
-  "campaign_id": "smsc_a1b2c3d4",
-  "name": "March promotion",
-  "status": "done",
-  "total_count": 100,
-  "delivered_count": 95,
-  "failed_count": 3,
-  "pending_count": 2,
-  "source": "dashboard",
-  "recipients": [
-    {
-      "phone": "+447111000001",
-      "variables": { "first_name": "Sarah" },
-      "status": "delivered",
-      "twilio_sid": "SM1234567890"
-    }
-  ]
-}
-```
-**How counts are calculated**
+## 2. Prepare the template and replies
 
-Counts come from per-recipient status, not from a cached field. Same logic in the dashboard and the API — they always match.
+Use `message_template` with values in each recipient’s nested `variables`. Every required placeholder needs a value. Set `reply_context_prompt` for campaign-specific reply context; the number still needs SMS auto-reply enabled and appropriate instructions. The default association window is 168 hours.
 
-| Count | Calculation |
-|---|---|
-| `delivered_count` | Recipients with status `delivered` |
-| `failed_count` | Recipients with status `failed`, `undelivered`, or `sent` |
-| `pending_count` | Recipients with status `pending` or `queued` |
-| `total_count` | All recipients |
+## 3. Review and create
 
-<Note>
-  **Why does `sent` count as failed?** Twilio's `sent` status only means Twilio handed the message off to the carrier — not that it reached the handset. Carrier confirmation comes as `delivered`. We treat anything that did not reach `delivered` as failed, so what you see in the dashboard matches what really happened.
-</Note>
+POST `/v1/sms/campaigns` with agent, sender, template and recipients. Choose duplicate handling, confirm permission and preview contact hours. `now` requests launch immediately. `schedule` uses `scheduled_date` and may send when due. Do not send `reuse_campaign_id`; SMS creation always creates new work.
 
-## Campaign status
+## 4. Handle delivery separately
 
-| Status | Meaning |
-|---|---|
-| `draft` | Created but not launched |
-| `scheduled` | Will launch at `scheduled_at` |
-| `running` | Currently sending |
-| `done` | All recipients processed |
-| `failed` | All recipients failed at submission |
+Store `campaign_id` and read campaign state. Sent, delivered and failed counts are distinct. A recipient response can arrive later; message acceptance is not delivery. Unknown transport outcomes must remain unknown rather than being silently resent.
 
-## Per-recipient status
+## 5. Control unsent work
 
-| Status | Meaning | Shown in UI as |
-|---|---|---|
-| `pending` | Just queued by Nixflex | Pending |
-| `queued` | Sent to Twilio API | Pending |
-| `sent` | Twilio handed to carrier (no delivery confirmation) | **Failed** |
-| `delivered` | Carrier confirmed delivery to handset | Delivered |
-| `undelivered` | Carrier rejected | Failed |
-| `failed` | Twilio itself failed | Failed |
+Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. DELETE has separate eligibility checks and does not recall messages. PATCH can edit only the fields and states allowed by the API.
 
-## List campaigns
+## Example response
 
-```bash
-curl https://api.nixflex.com/v1/sms/campaigns \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
+The creation result includes `campaign_id`, accepted and rejected row counts, duplicates and state. Campaign reads expose separate `sent_count`, `delivered_count`, `failed_count` and `reply_count`; do not compute one by subtracting unrelated totals.
 
-Returns all campaigns for your account, newest first. Each one includes computed counts.
+## Errors and limits
 
-## Cancel a campaign
+| Condition | Handling |
+| --- | --- |
+| Missing template value | Correct the recipient data before creation. |
+| Duplicate policy warn | It does not stop launch; choose reject if needed. |
+| Contact or consent hold | Resolve the reason on existing work. |
+| Unknown send result | Reconcile; do not create a replacement campaign automatically. |
+| Size | At most 100,000 accepted rows; body limits can apply earlier. |
 
-```bash
-curl -X DELETE https://api.nixflex.com/v1/sms/campaigns/smsc_a1b2c3d4 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
+## Next steps
 
-Cancels a `scheduled` or `running` campaign. Already-sent messages are not recalled. A `done` campaign cannot be cancelled.
-
-## Source tracking
-
-Every campaign records where it came from in the `source` field: `"dashboard"` or `"api"`. The dashboard shows this as a badge so you can tell at a glance which campaigns came from automation versus manual sends.
-
-## Rate limiting
-
-Twilio rate-limits SMS at ~1 message per second per number by default. The engine paces sends to respect this. A 1,000-recipient campaign takes roughly 20 minutes to send fully.
-
-Need faster? Request a higher MPS limit from Twilio support, or add more sending numbers.
-
-## Compliance
-
-<Warning>
-  Bulk SMS has stricter rules than one-off messages.
-
-  - **UK**: All recipients must have opted in. Honour STOP keywords. Keep records of consent.
-  - **US**: Requires A2P 10DLC registration. Unregistered traffic is blocked by carriers.
-
-  Sending without consent risks carrier blocking, fines, and your sending number being flagged as spam.
-</Warning>
-
-## Costs
-
-Same per-message Twilio billing as one-off SMS. No platform markup. Budget accordingly for large campaigns.
+- [Create SMS campaign](/api-reference/sms/campaigns-create)
+- [Cancel dispatch](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel)
+- [SMS reply setup](/sms/sms-agent)

@@ -1,0 +1,87 @@
+---
+title: "Voice campaigns: build and track calls with the Nixflex API"
+description: "Build Nixflex voice campaigns with reviewed recipients, duplicate handling, consent and local contact hours, then reconcile launch and cancellation results."
+---
+
+Create a voice campaign that can run immediately or when scheduled. Creation is executable work: the public API has no draft-only mode.
+
+Using the dashboard? See [the business guide](/guides/business/voice-campaigns).
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Choose an active owned agent, an eligible sender and recipients you are permitted to contact. The example below only lists existing campaigns.
+
+## 1. Read existing campaigns
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/campaigns?status=running&limit=2" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
+  maxRetries: 0,
+});
+const result = await c.campaigns.list({"status": "running", "limit": 2});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
+    max_retries=0,
+) as c:
+    result = c.campaigns.list(status='running', limit=2)
+```
+
+```powershell CLI (PowerShell)
+nixflex campaigns list --status running --limit 2 --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Prepare and preview recipients
+
+Build rows with `phone`, nested `variables`, and known `country`/`timezone` values. Supply a nonblank campaign `prompt`; use `prompt_override` only for deliberate row-specific instructions. Preview local hours and validate every required value. Choose `duplicate_policy:reject` if duplicate contacts must be prevented; `warn` retains them.
+
+## 3. Create executable work
+
+POST `/v1/calls/batch` with `agent_id`, `from_number`, `prompt` and recipients. `schedule_type:now` requests launch immediately; `schedule` uses `scheduled_date` in YYYY-MM-DD form and may run automatically when due. `duplicate_choice_required` is advisory, not a sending lock. Consent and current dispatch checks still apply.
+
+## 4. Track and control the existing campaign
+
+Save `campaign_id` even if launch is uncertain. Read campaign state and holds. Use the documented consent, cancel and resume endpoints for that same campaign. Cancel prevents further dispatch; it does not hang up active calls. Resume does not mean repeat completed recipients.
+
+## 5. Reconcile before replacement
+
+`reuse_campaign_id` replaces an owned never-launched draft or scheduled voice campaign; it is not an idempotency key. Do not recreate after `campaign_outcome_unknown`. There is no public voice campaign deletion endpoint.
+
+## Example response
+
+Creation returns `campaign_id`, recipient validation and current status. Immediate launch can also return `queued`, `failed` and legacy `dialed`; `dialed` counts enqueued jobs, not connected calls. [Create response fields](/api-reference/calls/batch-create) define the exact shape.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Duplicate warning | Review it before calling create; warn does not stop dispatch. |
+| Missing consent/location/contact hold | Resolve that reason on the existing campaign. |
+| Unknown creation or launch outcome | Reconcile using the saved campaign ID. |
+| Maximum recipients | Up to 100,000 accepted rows; request-size limits can apply first. |
+| Wider hours | Record a valid explanation; current policy still applies. |
+
+## Next steps
+
+- [Create campaign](/api-reference/calls/batch-create)
+- [Cancel campaign](/api-reference/voice-campaigns/post-calls-batch-id-cancel)
+- [Contact controls](/guides/developer/contact-controls)

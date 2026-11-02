@@ -1,54 +1,89 @@
 ---
-title: "Post-call SMS"
-description: "Text the caller automatically after the call ends"
-icon: "message-check"
+title: "Post-call SMS: configure templates and sending boundaries"
+description: "Configure Nixflex post-call texts with a usable template, understand dashboard and API number rules, and avoid duplicate follow-ups after an uncertain result."
 ---
 
-Nixflex can send a text automatically once a call has finished - a thank-you, a summary, or a next step. There are two ways to set it up, depending on your structure.
+Send a permitted follow-up after a telephone conversation. Post-call SMS is separate from in-call texts, SMS auto-reply and an explicit send request.
 
-For texting during the call, see [In-call SMS](/actions/in-call-sms).
+Using the dashboard? See [the business guide](/guides/business/call-actions).
 
-## Agent-level template
+## Prerequisites
 
-Set a `post_call_sms_template` on the agent (with `post_call_sms_enabled: true`) via the [Update agent](/api-reference/agents/update) endpoint. It then fires automatically after every answered call on that agent - both inbound and outbound - on numbers added through the dashboard.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Choose the intended agent and review the sending number’s import origin.
 
-<Note>
-  The agent-level template applies only to numbers added through the dashboard. Numbers imported via the API never receive it - one agent often serves many separate businesses, and an agent-level text must never reach another business's customers. For API-imported numbers, send post-call SMS yourself from the webhook (see below).
-</Note>
+## 1. Read the agent
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "post_call_sms_enabled": true, "post_call_sms_template": "Thanks for speaking with us today, {caller_name}. We will be in touch." }'
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/agents/agent_example" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-Personalise the message with variables, filled in from the call:
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(JSON.stringify(result));
+console.log(result);
+```
 
-| Variable | Value | If not available |
-|---|---|---|
-| `{caller_name}` | The caller's name, if captured during the call | `there` |
-| `{business_name}` | The agent's name | `our business` |
-| `{call_summary}` | A short summary of the call | empty |
-| `{agent_name}` | The agent's name | `our team` |
+```python Python
+import os, json
+from urllib.request import Request, urlopen
 
-If `post_call_sms_enabled` is true and no template is set, a default is used: *Thanks for calling {business_name}. We appreciate your time.*
+request = Request(
+    'https://api.nixflex.com/v1/agents/agent_example',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    print(json.load(response))
+```
 
-<Tip>
-  Write the template so it reads naturally for both inbound and outbound calls if the agent handles both. "Thanks for calling" only fits inbound - prefer neutral wording like "Thanks for speaking with us today", or use variables to keep it flexible.
-</Tip>
+```powershell CLI (PowerShell)
+nixflex agents get agent_example --json --base-url https://api.nixflex.com
+```
 
-## Your own, from the webhook
+</CodeGroup>
 
-If one agent serves many separate businesses, a single agent-level template would send the same text to every business's customers. In that case, send the post-call SMS yourself: receive the [webhook](/advanced/webhooks) after each call and send a message tailored to that business from its own number, using the [Send SMS API](/api-reference/sms/send). Each business gets its own wording, branding, and number, with full control over when a message goes out.
+## 2. Save a usable template
 
-## When it sends
+Update the agent with `post_call_sms_enabled:true` and a nonblank `post_call_sms_template`. Use documented single-brace values such as `{caller_name}` and `{business_name}`. Write neutral wording that works for inbound and outbound conversations.
 
-Post-call SMS sends once, shortly after the call ends, from the business's own number on whichever carrier that number belongs to. It is skipped when the call reached voicemail, when no template is configured, or when the caller's number is not available - so messages only go out when they make sense.
+## 3. Apply origin and override rules
 
-## Related
+Dashboard-origin numbers can use the agent enable/template. API-origin numbers do not inherit the enable switch automatically. An explicit documented per-call enable override can enable either origin. Template selection prefers a nonblank per-call template, then the agent template.
 
-- [In-call SMS](/actions/in-call-sms) - text the caller during the call
-- [Send SMS](/sms/send-sms) - send a message via the API, plus length, tracking, compliance and pricing
-- [SMS agent](/sms/sms-agent) - what happens when the customer texts back
-- [Webhooks](/advanced/webhooks) - the post-call event you can send your own SMS from
+## 4. Respect sending checks
+
+No usable template means no send; there is no fallback message to rely on. The route also needs an eligible owned sender and real recipient, and skips detected voicemail. Current contact and account checks still apply.
+
+## 5. Avoid a second follow-up
+
+If your signed-event handler sends a custom text too, make sure it does not duplicate the automatic path. Deduplicate event handling and reconcile uncertain sends. An ended call is not proof its post-call message was delivered.
+
+## Example response
+
+Saved agent fields describe configuration. Call completion and SMS acceptance are separate outcomes; inspect the available event or message records rather than manufacturing a delivery receipt from the settings.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| No nonblank template | No automatic send. |
+| API-origin number | Set a deliberate per-call override or use your own send workflow. |
+| Detected voicemail | Automatic post-call SMS is skipped. |
+| Unknown message result | Reconcile; do not blindly send again. |
+| In-call SMS off | It is a separate switch, not a universal outbound-text ban. |
+
+## Next steps
+
+- [Inheritance details](/concepts/agent-inheritance)
+- [Send one SMS](/sms/send-sms)
+- [Signed events](/advanced/webhooks)

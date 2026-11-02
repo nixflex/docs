@@ -1,89 +1,26 @@
 ---
-title: "Web Calls"
-icon: "globe"
-description: "Let visitors talk to your AI agent from the browser - no phone number dialled, no carrier involved."
+title: "Website calls: understand browser voice and visitor access"
+description: "Understand Nixflex website voice, the Web agent switches, public visitor context and restricted actions before enabling browser calls on your website."
 ---
 
-Web calls let a visitor speak to your AI agent **directly from a web page**, using
-their microphone. Audio settings are shared, but the number's website instructions
-and visitor context replace phone business instructions. Built-in phone booking,
-SMS and transfers are not website capabilities. No carrier minutes are used.
+Website voice lets a visitor talk to the agent through the installed widget and their browser microphone. It uses the number's website configuration and is separate from an ordinary telephone call.
 
-<Info>
-  A web call uses the inbound voice lifecycle and appears in call history with caller
-  `web`. Recording is conditional; analysis, billing and post-call delivery still have
-  their normal gates. This is not the owner's authenticated **Talk to your agent** test.
-</Info>
+## Saved switches and effective voice
 
-## Enabling web calls on a number
+Website voice requires both `web_agent_enabled` and `web_calls_enabled`. Turning the Web agent off leaves the saved voice preference unchanged but prevents effective voice access. Account, agent, balance and current admission checks also apply.
 
-Website voice needs both Web agent and web calls enabled on the number. Web calls
-are **off by default**. The legacy toggle below changes only web calls, not Web agent:
+Website instructions are separate from phone and SMS instructions. Knowledge belongs to the agent; website voice and website chat have independent knowledge switches. Visitor contact fields are self-reported, not verified identity. Recognition can end when browser storage changes.
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/integrations/web-calls/number/+441234567890 \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"enabled": true}'
-```
+## Public visitors and actions
 
-`GET` the same path to read the flag, `DELETE` to force it off. Turning the flag off is the kill switch - every start request for that number is refused from that moment.
+The number's `web_functions_enabled` switch defaults off. Enabling it permits that number's enabled custom functions after current checks. Every enabled function must therefore be suitable for a public visitor. This does not enable built-in calendar booking, SMS, transfers, keypad or telephone-menu navigation.
 
-## Pricing
+## Installation and testing
 
-Browser calls bill at **\$0.09 per minute** - the same rate as [Live Monitor](/concepts/live-monitor). You are charged the higher rate only for calls that actually use a premium feature: a call placed from the browser, or a phone call someone listened to live. Enabling either switch on a number is free, and ordinary phone calls on that number stay at \$0.08/min. A call never bills more than \$0.09, no matter how many premium features it used.
+Use the dashboard's generated Install snippet and current environment configuration. Do not copy an old SDK script or expose an account key in the browser. An install-not-ready message means the snippet cannot yet be supplied for that environment.
 
-Web calls use no carrier, so there are no Twilio/Telnyx charges at all on these calls.
+A successful preview does not test the final website's microphone permissions, browser storage, embedding restrictions or contact collection. Test the installed site with fictional contact details and approved test actions.
 
-## Starting a call from your own page
-
-The start endpoint is public - the **number is the identity**. No API key ever reaches the browser; the engine verifies the flag, the owner's balance, the agent, and concurrency on every single request.
-
-```bash
-POST https://api.nixflex.com/web-call/start
-Content-Type: application/json
-
-{"number": "+441234567890"}
-```
-
-Success returns the visitor's audio credentials:
-
-```json
-{
-  "ok": true,
-  "call_id": "WEB...",
-  "livekit": { "url": "wss://...", "token": "...", "room": "webcall-WEB..." }
-}
-```
-
-Join with [livekit-client](https://www.npmjs.com/package/livekit-client), publish the microphone, and the agent answers:
-
-```js
-const room = new LivekitClient.Room();
-await room.connect(res.livekit.url, res.livekit.token);
-room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-  if (track.kind === 'audio') document.body.appendChild(track.attach());
-});
-await room.localParticipant.setMicrophoneEnabled(true);
-```
-
-<Tip>
-  Ask for microphone permission **before** calling the start endpoint. If you start the call first, the agent greets while your visitor is still looking at the permission popup.
-</Tip>
-
-A refused start returns `{"ok": false, "reason": "..."}` - `unavailable` (number unknown, feature off, or owner unfunded), `busy` (concurrency cap), or `bad_number`.
-
-## Behaviour and guarantees
-
-- **Inbound only.** A web call always rings *in* to the number's agent.
-- **Selective inheritance.** Voice, speech controls and voice limits are shared; prompts, greeting and actions follow the [channel matrix](/concepts/agent-channels).
-- **Interruptions work.** Visitors can talk over the agent and it stops, like a phone call.
-- **Recording included.** If recording is on for the number/agent, web calls are recorded - and an interrupted sentence is recorded only up to the moment it was cut, exactly as the visitor heard it.
-- **Separate visitor context.** Telephone caller identity is `web`; a website visitor card/history is separate from phone memory and may supply a greeting name.
-- **Custom functions only.** The number's `web_functions_enabled` switch defaults OFF and gates its enabled custom functions for website chat and voice.
-- **No built-in phone actions.** Collecting a mobile number does not enable website SMS, calendar booking/availability, transfer, keypad or IVR actions.
-
-## Related
-
-- [Web Agent widget](/web-assistant/overview) - the embeddable Call + Chat launcher
-- [Live Monitor](/concepts/live-monitor) - listen to calls live at the same \$0.09 rate
+- [Install the website widget](/guides/voice-widget)
+- [Manage website settings with code](/web-assistant/overview)
+- [Agent inbox](/guides/business/agent-inbox)

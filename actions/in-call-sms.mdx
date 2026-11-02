@@ -1,67 +1,94 @@
 ---
-title: "In-call SMS"
-description: "Text the caller while the call is happening"
-icon: "message"
+title: "In-call SMS: control texts sent during Nixflex phone calls"
+description: "Configure the Nixflex in-call text switch, request permitted messages and handle booking confirmations without confusing this setting with other SMS workflows."
 ---
 
-The `[SEND_SMS:]` tag sends a text message to the caller from your own number, during the call. Useful for addresses, links, payment links, or anything easier to read than hear.
+Allow or prevent texts requested during a telephone call, including supported booking-confirmation texts.
 
-For a text after the call ends, see [Post-call SMS](/sms/post-call-sms). For sending a message with no call involved, see [Send SMS](/sms/send-sms).
+Using the dashboard? See [the business guide](/guides/business/call-actions).
 
-## Turning it on
+## Prerequisites
 
-In-call SMS is controlled by one setting on the agent, `incall_sms_enabled`.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
 
-| Setting | What happens |
-|---|---|
-| **On** | The agent can text the caller during the call, and booking confirmations are texted automatically. |
-| **Off** | No texts are sent at all - no mid-call text, no booking confirmation text. The agent confirms every detail out loud instead. |
+## 1. Read the current settings
 
-With the setting off, the agent is never taught the `[SEND_SMS:]` action, so it does not offer a text. If a prompt uses the tag anyway, the engine blocks the send and the agent tells the caller the text did not go out - turn the setting on if you want texting.
+Read the agent and any relevant number override before changing shared behaviour. A prompt alone cannot grant an action capability.
 
-New agents start with it **off**. Agents created before this setting existed were switched **on**, so their behaviour did not change.
+## 2. Save the intended setting
 
-Turn it on in the dashboard (agent, then Functions, then In-Call SMS) or through the API:
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "incall_sms_enabled": true }'
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request PUT \
+  --url "https://api.nixflex.com/v1/agents/agent_example" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"incall_sms_enabled":true}'
 ```
 
-<Note>
-  This setting covers mid-call texts and booking confirmation texts only. Post-call SMS has its own setting, `post_call_sms_enabled`.
-</Note>
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'PUT',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({"incall_sms_enabled":true}),
+});
+const result = await response.json();
+if (!response.ok) throw new Error(JSON.stringify(result));
+console.log(result);
+```
 
-## Syntax
+```python Python
+import os, json
+from urllib.request import Request, urlopen
 
-    [SEND_SMS: Your text message goes here]
+request = Request(
+    'https://api.nixflex.com/v1/agents/agent_example',
+    method='PUT',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY'], 'Content-Type': 'application/json'},
+    data='{"incall_sms_enabled":true}'.encode('utf-8'),
+)
+with urlopen(request, timeout=30) as response:
+    print(json.load(response))
+```
 
-Everything between the colon and the closing bracket is the SMS body. The agent continues the conversation naturally - the SMS is sent in the background.
+```powershell CLI (PowerShell)
+nixflex agents update agent_example --set incall_sms_enabled=true --json --base-url https://api.nixflex.com
+```
 
-## Example
+</CodeGroup>
 
-> *Caller:* "Can you send me the address?"
->
-> *Agent:* "Sure, sending it now. [SEND_SMS: Acme Dental, 12 High Street, Croydon CR0 1AB. See you Tuesday at 2pm.]"
+This agent switch governs in-call texts. It is independent of `post_call_sms_enabled`, the number’s SMS auto-reply switch and explicit API sends.
 
-## When to use
+## 3. Write a narrow instruction
 
-The setting grants permission; your prompt decides when and what to text. Tell the agent in its `system_prompt`, for example:
+Use a specific instruction such as “After a successful booking, offer a text with its confirmed time.” A `[SEND_SMS: message]` tag requests an action; it is not a delivery receipt. A disabled gate prevents this path even if a prompt asks for it.
 
-    ACTIONS
-    - If the caller asks to receive any call information by text, send it using [SEND_SMS: message]
-    - Send the address by SMS if asked where you are: [SEND_SMS: 12 High Street, Croydon CR0 1AB]
-    - Send the payment link when collecting deposits: [SEND_SMS: Pay your deposit here: https://pay.example.com/abc]
+## 4. Test the actual outcome
 
-## Booking confirmations
+Use an approved test recipient and verify the recorded send outcome. Check both an enabled and disabled configuration. Calendar success, SMS acceptance and handset delivery are separate outcomes.
 
-Booking confirmations follow the same setting. With `incall_sms_enabled` on, a confirmed booking is texted to the caller automatically - you do not need a tag in your prompt for it. With it off, the agent confirms the day, time and details out loud and no text is sent.
+## 5. Review the result
 
-## Related
+Read back configuration after a confirmed update. Inspect the call and action result separately; a saved switch is not proof a real business action succeeded. If a write response is lost, reread the object before repeating it.
 
-- [Post-call SMS](/sms/post-call-sms) - a text after the call ends
-- [Send SMS](/sms/send-sms) - send a message via the API, plus length, tracking, compliance and pricing
-- [SMS agent](/sms/sms-agent) - what happens when the customer texts back
-- [SMS campaigns](/sms/sms-campaigns) - the same message to many numbers
+## Example response
+
+The agent update returns the safe saved agent projection. Check the intended fields in a fresh [agent read](/api-reference/agents/get); call outcomes are separate records.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| In-call SMS off | This path does not send; other SMS paths have their own controls. |
+| Missing eligible sender/recipient | Do not promise a text was sent. |
+| Contact restriction | Respect the refusal. |
+| Booking text fails | Keep the booking result distinct from the text result. |
+
+## Next steps
+
+- [Update agent](/api-reference/agents/update)
+- [Action overview](/actions/overview)
+- [Setting inheritance](/concepts/agent-inheritance)

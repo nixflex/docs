@@ -1,90 +1,78 @@
 ---
-title: "GoHighLevel"
-description: "Log every call into your GoHighLevel CRM as a contact with a note"
-icon: "users"
+title: "GoHighLevel: connect Nixflex call results to your workspace"
+description: "Configure Nixflex GoHighLevel for the correct business number, protect credentials and verify external records before treating an automation as complete."
 ---
 
-When GoHighLevel is connected to a number, Nixflex logs every call on that number into your CRM: it finds or creates the caller as a **contact** and adds a **note** with the call summary. It is configured **per phone number**, so each number can log into its own GoHighLevel location — ideal for agencies running many clients on one agent.
+Connect the intended number to a business destination and verify the result end to end.
 
-## What you need
+Using the dashboard? See [the business guide](/guides/business/integrations).
 
-Two values from GoHighLevel:
+## Prerequisites
 
-- **Private Integration Token (PIT)** — starts with `pit-`
-- **Location ID** — your sub-account ID (found in the sub-account URL)
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
 
-<Warning>
-  Create the Private Integration **inside the specific sub-account** you want calls logged to (Settings → Integrations → Private Integrations — enable it under Labs if you don't see it). Enable both the **`contacts.readonly`** and **`contacts.write`** scopes. The token is **location-level** and must belong to the same sub-account as your `location_id` — an agency-level token will not work for contacts. Copy the token immediately; GoHighLevel will not show it again. See GoHighLevel's [Private Integrations guide](https://help.gohighlevel.com/support/solutions/articles/155000003054-private-integrations-everything-you-need-to-know) for the full walkthrough.
-</Warning>
+## 1. Read the saved connection
 
-## Connect via API
+<CodeGroup>
 
-Set GoHighLevel on one of your numbers with a single call:
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/integrations/gohighlevel/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "pit": "pit-xxxxxxxx",
-    "location_id": "YOUR_LOCATION_ID",
-    "tags": ["lead", "ai-call"]
-  }'
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/gohighlevel/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-`pit` and `location_id` are required. `tags` is optional — an array or a comma-separated string. The number must be one connected to your account.
-
-**Read the current config.** The token is never returned — you only see whether it is set:
-
-```bash
-curl https://api.nixflex.com/v1/integrations/gohighlevel/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("gohighlevel", "+12025550123");
+// Keep private responses out of logs and AI conversations.
 ```
 
-```json
-{ "phone_number": "+447700900123", "is_active": true, "pit_set": true, "location_id": "YOUR_LOCATION_ID", "tags": ["lead", "ai-call"] }
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('gohighlevel', '+12025550123')
 ```
 
-**Disconnect:**
-
-```bash
-curl -X DELETE https://api.nixflex.com/v1/integrations/gohighlevel/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```powershell CLI (PowerShell)
+nixflex integrations get gohighlevel '+12025550123' --json --base-url "https://api.nixflex.com"
 ```
 
-## Connect via dashboard
+</CodeGroup>
 
-Prefer the dashboard? Go to **Integrations → GoHighLevel**, pick the agent and number, paste the **Private Integration Token** and **Location ID**, optionally add tags, and click **Save**.
+## 2. Save the intended destination
 
-## What gets logged
+Use the documented GoHighLevel integration PUT route with the authorised workspace configuration. Confirm the destination business and number before enabling updates; never place the connection secret in a prompt.
 
-After each call on the number ends, Nixflex:
+## 3. Define what success means
 
-- **Finds or creates** the caller as a contact, matched by phone or email
-- Adds a **note** with the call summary, sentiment, and outcome
-- Applies any **tags** you set
+Review the actual external record and workflow result. A saved integration is not proof that a later contact update or automation ran. Keep duplicate and partial-failure handling in the receiving workflow.
 
-Only the summary and call details are sent — never the full transcript. If a call has no caller phone or email to identify the contact, nothing is logged.
+## 4. Test a complete workflow
 
-## Troubleshooting
+Use one approved test call and inspect both its Nixflex result and the receiving system. Check missing fields, delayed processing and duplicate delivery. Do not promise a notification arrives within a fixed number of seconds.
 
-**Contact not appearing after a call (403).** A `403` points to the token, not the Nixflex connection. Check, in order:
+## 5. Disconnect and reconcile
 
-1. **Scope** — the PIT must have **`contacts.write`** (and `contacts.readonly`). Recreate or edit the token with these enabled if unsure.
-2. **Location** — the PIT must have been created **inside the same sub-account** as your `location_id`. An agency-level token, or one from a different location, will be rejected.
-3. **Test the token directly** with GoHighLevel, outside Nixflex:
+Use the documented integration DELETE route to stop future use. Previously delivered external records remain subject to that system’s controls. If a save or deletion response is lost, read the current settings before repeating it.
 
-```bash
-curl -X POST https://services.leadconnectorhq.com/contacts/ \
-  -H "Authorization: Bearer YOUR_PIT" \
-  -H "Version: 2021-07-28" \
-  -H "Content-Type: application/json" \
-  -d '{"firstName":"Test","phone":"+447700900123","locationId":"YOUR_LOCATION_ID"}'
-```
+## Example response
 
-If this returns `403`, the token itself lacks permission — regenerate it in the correct sub-account with the Contacts scopes, then update it via the `PUT` above. GoHighLevel recommends rotating tokens every 90 days; after rotating, the old and new tokens both work for 7 days, so update the stored token within that window.
+GET returns the safe saved integration configuration. The settings response confirms configuration state; external delivery and business-action results must be checked separately.
 
-## Tips
+## Errors and limits
 
-- Use a tag like `ai-call` to filter AI-handled calls in your CRM.
-- Each number is independent — different clients or locations each use their own token and Location ID via per-number setup.
+| Condition | Handling |
+| --- | --- |
+| Invalid credentials/destination | Correct configuration before retrying. |
+| Saved but no notification | Inspect call state and external delivery separately. |
+| Duplicate event | Deduplicate before repeating a side effect. |
+| Unknown save/delete result | Read current configuration. |
+| Data deleted in Nixflex | Manage previously sent external copies separately. |
+
+## Next steps
+
+- [Read settings](/api-reference/integration-settings/get-integrations-gohighlevel-number-phoneNumber)
+- [Signed event receiver](/advanced/webhooks)
+- [Call history](/guides/developer/call-history)

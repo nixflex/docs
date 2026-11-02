@@ -1,160 +1,31 @@
 ---
-title: "What is Nixflex?"
-description: "A platform to build, deploy and monitor AI voice and SMS agents - telephony, prompts, tools, bookings and analytics built in"
-icon: "circle-question"
+title: "What is Nixflex? AI agents for calls, texts and websites"
+description: "Learn how Nixflex agents, phone numbers, knowledge, campaigns and teams work together, then choose a dashboard or developer guide for your first business task."
 ---
 
-**Nixflex is a platform for building AI voice agents that make and receive real phone calls.** You write what the agent should do in plain English, connect a phone number from your own carrier, and it is live - answering calls, booking into calendars, transferring to people, sending texts, and writing up every call afterwards.
+Nixflex provides configurable business agents for telephone calls, SMS and website conversations. An agent can answer questions and use permitted actions, such as checking a connected calendar or sending an allowed text.
 
-Build it in the dashboard with no code, or entirely over an API. Same engine either way.
+## The main parts
 
-## Build
+| Part | Purpose |
+| --- | --- |
+| Agent | Shared call behaviour, voice, language, time zone and knowledge |
+| Phone number | Call and message address, channel switches and number-specific connections |
+| Knowledge | Reviewed topics from text, files or website sources |
+| Campaign | A reviewed set of people to contact for a specific purpose |
+| Organisation | Shared business work with Owner, Admin and Member access |
+| Inbox and history | Current conversation and call records, subject to retention |
 
-An agent is one prompt plus a set of settings - no flow charts to drag. One agent can answer hundreds of phone numbers, each with its own business details.
+Knowledge belongs to the agent and is shared by its attached numbers. Use separate agents when different businesses need different answers. Each channel has its own instructions and permissions; website visitors cannot automatically use every telephone action.
 
-<CardGroup cols={2}>
-  <Card title="One prompt, one agent" icon="pen" href="/concepts/agents">
-    Describe the business, the rules and what to do in each situation. No node graphs to maintain.
-  </Card>
-  <Card title="Scenarios, not flow charts" icon="list-check" href="/concepts/conversation-control">
-    Write "if the caller asks X, do Y" in plain English. The same control, none of the setup.
-  </Card>
-  <Card title="One agent, many businesses" icon="layer-group" href="/concepts/phone-numbers">
-    Each number carries its own profile, voice, calendar and webhook. Built for agencies and SaaS from day one.
-  </Card>
-  <Card title="Call centre features" icon="right-left" href="/actions/overview">
-    Cold and warm transfer, keypad input, phone-menu navigation on outbound, and wait handling.
-  </Card>
-  <Card title="Bookings during the call" icon="calendar-check" href="/actions/calcom">
-    Cal.com or Google Calendar, checked and booked while the caller is on the line - per phone number.
-  </Card>
-  <Card title="Custom functions" icon="plug" href="/advanced/custom-functions">
-    The agent calls your own API mid-conversation to look something up or write it back.
-  </Card>
-  <Card title="Voice and SMS on one number" icon="comments" href="/sms/sms-agent">
-    The same number answers the phone and replies to texts, with separate instructions for each.
-  </Card>
-  <Card title="The agent knows the caller" icon="id-card" href="/concepts/caller-context">
-    Name, email and reference from earlier calls are in front of the agent before it speaks.
-  </Card>
-</CardGroup>
+## Dashboard or code
 
-## Deploy
+The dashboard provides setup, team, billing, monitoring and conversation screens. The public API provides the documented account, agent, number, campaign, knowledge and integration workflows. Some personal actions, such as ownership acceptance, need the person's signed-in dashboard flow.
 
-Your numbers stay in your own carrier account. Nixflex never resells them and never marks them up.
+Calls and messages pass current account, contact and capacity checks. Accepted work is not the same as a connected call, delivered text or successful booking. Read actual outcomes and test your intended workflow before using it with customers.
 
-<CardGroup cols={2}>
-  <Card title="Bring your own carrier" icon="tower-cell" href="/integrations/twilio">
-    Twilio or Telnyx, in your account. Each of your customers can bring their own - you keep the billing relationship.
-  </Card>
-  <Card title="Outbound and campaigns" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
-    One call over the API, or a whole list with concurrency control and a sending window.
-  </Card>
-  <Card title="Calls from a browser" icon="globe" href="/concepts/web-calls">
-    Put a voice agent on your website - the same agent, no phone number needed.
-  </Card>
-  <Card title="SMS campaigns" icon="paper-plane" href="/sms/sms-campaigns">
-    Send to a list and let the agent handle the replies that come back.
-  </Card>
-</CardGroup>
+## Where to begin
 
-## Monitor
-
-<CardGroup cols={2}>
-  <Card title="Listen to a live call" icon="headphones" href="/concepts/live-monitor">
-    Follow a call in progress from a phone or tablet. Possible because the engine is ours, not a reseller's.
-  </Card>
-  <Card title="Post-call analysis" icon="chart-simple" href="/advanced/post-call-analysis">
-    A written summary, how the caller sounded, whether the call succeeded, and any fields you define.
-  </Card>
-  <Card title="Webhooks" icon="bolt" href="/advanced/webhooks">
-    Call events sent to your system the moment a call ends. No polling.
-  </Card>
-  <Card title="Built-in reliability" icon="shield-check" href="/concepts/agents">
-    Backup model, speech engine and voice engine take over mid-call if a provider fails.
-  </Card>
-</CardGroup>
-
-## Your data
-
-<CardGroup cols={2}>
-  <Card title="Transcripts and recordings" icon="file-lines" href="/advanced/call-recording">
-    Every call, with the audio recorded by your carrier or by the engine - your choice, per number.
-  </Card>
-  <Card title="Your own storage" icon="box-archive" href="/advanced/your-own-storage">
-    Send recordings straight to your own S3-compatible bucket. Nixflex keeps only the path.
-  </Card>
-  <Card title="Deleted after 90 days" icon="trash" href="/concepts/data-retention">
-    Call data is removed automatically, and you can erase one caller or one call on request.
-  </Card>
-  <Card title="Push it anywhere" icon="arrows-turn-right" href="/integrations/overview">
-    GoHighLevel, Slack, Zapier, Make, or your own endpoint - configured per phone number.
-  </Card>
-</CardGroup>
-
-## Developer friendly
-
-Build entirely in the dashboard, or go fully programmatic. Nothing is dashboard-only.
-
-<CardGroup cols={2}>
-  <Card title="REST API" icon="server" href="/api-reference/introduction">
-    Every capability over HTTPS and JSON, with an OpenAPI spec.
-  </Card>
-  <Card title="SDKs" icon="code" href="/sdks/node">
-    Typed Node.js and Python clients with retries built in.
-  </Card>
-  <Card title="CLI" icon="terminal" href="/cli/overview">
-    The whole API from a terminal. `npx nixflex`
-  </Card>
-  <Card title="MCP server" icon="plug" href="/mcp/overview">
-    Run your account from Claude Desktop, Cursor or VS Code.
-  </Card>
-</CardGroup>
-
-## What is an AI phone agent?
-
-An AI phone agent is software that answers a phone number and holds a spoken conversation, instead of playing a menu. It understands what the caller says, replies in a natural voice, and takes action - booking, transferring, texting. Callers speak normally; there is no "press 1 for opening hours".
-
-## How does a call actually work?
-
-Your number points at the Nixflex engine. When someone calls, their speech becomes text, the agent decides what to say and do, and a natural voice speaks the reply - the whole loop in about a second, with the first audio in roughly half of one. Interruptions, silence, language switching and call endings are handled by the engine, so your instructions only cover your business.
-
-## Do I need to know how to code?
-
-No. In the dashboard you write the agent's instructions, connect your number and you are live in about five minutes. Developers get identical features over the API, SDKs, CLI and MCP. The only difference between the two paths is how you set things up.
-
-## What does it cost?
-
-Pay as you go from **$0.08 per minute** of voice, billed by the second. Calls you listen to live and calls from a browser are **$0.09**. Texts are billed by your own carrier at their rate. No subscription, and switching features on costs nothing. New accounts start with free credit. See [Pricing](/reference/pricing).
-
-## Who is it for?
-
-<CardGroup cols={2}>
-  <Card title="Developers and SaaS" icon="code">
-    Put phone agents inside your product. Every customer brings their own carrier account and numbers.
-  </Card>
-  <Card title="Agencies" icon="users">
-    One agent template across many client numbers, each with its own calendar, CRM and settings.
-  </Card>
-  <Card title="Businesses" icon="building">
-    Clinics, salons, restaurants, garages and service businesses - a phone agent without building anything.
-  </Card>
-  <Card title="Your own products" icon="rocket">
-    Full control and the lowest cost, because you own the numbers and the account.
-  </Card>
-</CardGroup>
-
-## What does it not do?
-
-Nixflex does not sell phone numbers - you bring your own carrier, which is also why you keep control of them. There is no visual flow builder, by design: scenarios are written as sentences. A knowledge base is not available yet, so facts go in the prompt or come from a custom function during the call. And an agent only knows what you tell it - give it your prices and hours, and it will take a message rather than guess at anything else.
-
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="play" href="/quickstart">
-    Developer path - first call in five minutes.
-  </Card>
-  <Card title="For businesses" icon="building" href="/business">
-    No-code path - connect a number in the dashboard.
-  </Card>
-</CardGroup>
+- [Set up a business agent](/business)
+- [Make a server-side API request](/quickstart)
+- [Read the glossary](/guides/glossary)

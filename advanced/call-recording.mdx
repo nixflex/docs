@@ -1,136 +1,82 @@
 ---
-title: "Call recording"
-description: "Record call audio, and switch it off per agent or per number"
-icon: "microphone"
+title: "Call recording: configure capture and private playback"
+description: "Configure Nixflex call recording, resolve agent and number overrides and request fresh playback access while preserving recording, retention and storage states."
 ---
 
-Nixflex can record call audio alongside the transcript. Recording is **on by default**,
-but the effective number/agent setting and successful storage determine whether a
-recording is available. This Batch 3 draft clarifies inheritance, not new behaviour.
+Enable recording only where it is intended, then display the actual capture and playback result.
 
-<Note>
-  Switching recording off does not affect the transcript. Speech recognition runs independently, so you still get the full transcript, summary, sentiment and extracted data - just no audio file.
-</Note>
+Using the dashboard? See [the business guide](/guides/business/privacy).
 
-## Who records
+## Prerequisites
 
-When recording is on, you choose who captures the audio. The default is your carrier - exactly what happened before this setting existed.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Review the applicable customer notice and business policy for the call before recording.
 
-| `recording_source` | Who records | What it covers | Cost |
-|---|---|---|---|
-| `"provider"` (default) | Your phone carrier | The whole call, including after a transfer to a person | Carrier recording charges on your carrier account |
-| `"nixflex"` | The Nixflex voice engine | The conversation with the AI. A transfer to a person is not included | No carrier recording charges |
+## 1. Read recording access
 
-Set it per agent in the dashboard (**Call recording -> Recorded by**) or with `recording_source` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update). A single number can override its agent with `recording_source` on [Update phone number](/api-reference/phone-numbers/update); `null` on a number means inherit the agent. Any other value is rejected with `invalid_recording_source`.
+<CodeGroup>
 
-<Note>
-  The effective recording decision wins over the source. A number's explicit
-  `record_call` wins over the agent: agent OFF + number ON still records. Number null
-  inherits the agent. An effective OFF stops Nixflex-controlled capture, not a
-  recording separately configured at your carrier.
-</Note>
-
-Nixflex recordings are mono 8 kHz WAV - the same quality as the phone line - with both voices balanced to the same level. If the caller interrupts the agent mid-sentence, the recording contains only what the caller actually heard. Like carrier recordings, they go to your own storage bucket when one is connected.
-
-## Turning it off
-
-**Per agent (dashboard)**
-
-Open the agent, find **Call actions**, and switch off **Call recording**. Numbers
-inheriting the agent stop recording on new calls; explicit number ON overrides remain.
-
-**Per number (API)**
-
-A single number can override its agent - useful when one client's privacy policy forbids recording but the rest of your numbers are fine.
-
-```bash
-curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"record_call": false}'
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/calls/$NXF_CALL_ID/recording" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-| Value | Meaning |
-|---|---|
-| `true` | This number records, whatever the agent says |
-| `false` | This number does not record, whatever the agent says |
-| `null` | **Not set** - the number inherits the agent's setting |
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.recording(process.env.NXF_CALL_ID);
+// Handle result privately; do not log secrets or call content.
+```
 
-<Warning>
-  `null` is not the same as `false`. `null` means "no opinion, follow the agent", so a `null` number under an agent with recording **on** will still record. To switch one number off while the agent keeps recording, send `false`, not `null`.
-</Warning>
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.recording(os.environ["NXF_CALL_ID"])
+# AsyncNixflex supports the same calls with await (and async with).
+```
 
-Agent-level can also be set through the API with `record_call` on [Create agent](/api-reference/agents/create) and [Update agent](/api-reference/agents/update).
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls recording "$NXF_CALL_ID" --base-url https://api.nixflex.com --json
+```
 
-## What happens when it is off
+</CodeGroup>
 
-- **Nixflex-controlled capture is off.** Independently configured carrier recording and existing copies are not erased by this setting.
-- **`recording_url` is `null`** on the call record and in the `call.completed` webhook. If your code reads that field, handle `null`.
-- **Past recordings are untouched.** Switching off applies to future calls only.
-- **Nixflex does not request carrier recording** when effective capture is off; any independent carrier configuration and its charges are outside this switch.
+## 2. Resolve the setting
 
-## Where the audio is stored
+For `record_call`, explicit number true/false overrides the agent; null inherits. Agent off plus number on still enables this recording decision. `recording_source` is resolved separately and cannot turn capture on when the effective recording decision is off.
 
-Carrier collection aims to fetch and safely persist the recording before carrier
-cleanup; failures or pending processing can leave the copy at the carrier. Nixflex
-capture does not create a carrier recording through that capture path. The actual
-storage destination depends on account configuration and successful tracked storage.
+## 3. Choose the capture path
 
-Prefer the audio in your own region? Connect your own S3-compatible bucket and recordings go there instead, with Nixflex keeping no copy - see [Your own storage](/advanced/your-own-storage).
+The selected recording source affects what audio can be captured, including transfer legs. Website voice has no telephone-network recording source. Do not promise every source captures the entire human handoff.
 
-Retention is the applicable **90/30/7/1/0-day** policy, not always 90 days. Cleanup
-waits for required work and storage proof. Automatic Nixflex retention excludes BYO
-storage; manage that bucket's lifecycle yourself. See [Data retention](/concepts/data-retention).
+## 4. Request playback when needed
 
-## Reading a recording
+GET `/v1/calls/{id}/recording` under current account authorisation. Use `status`, `url`, `expires_at`. Private-access mode signs available links for 600 seconds; a legacy path can use 300 seconds. Honour the returned expiry instead of hard-coding a lifetime.
 
-The URL arrives in two places:
+## 5. Apply retention and storage rules
 
-- On the call record: `GET /v1/calls/:id` returns `recording_url`
-- In the [post-call webhook](/advanced/webhooks): `call.completed` includes `recording_url`
+Turning recording off applies to new work; it does not delete existing audio or independently configured external recording. Call retention and deletion have tracked cleanup. Customer-bucket files need the customer’s own lifecycle. Storage failure can lead to fallback, not guaranteed regional exclusivity.
 
-<Tip>
-  If you need a copy beyond your retention window, arrange your own storage workflow
-  and handle recording-unavailable/pending outcomes. A completed call alone does not
-  guarantee that its audio upload has already finished.
-</Tip>
+## Example response
 
-## Audio format
+Example: `{"call_id":"call_example","status":"not_recorded","url":null,"expires_at":null}`. Pending, expired, customer_bucket, unavailable and pending_deletion also need distinct UI states.
 
-| Recorded by | Format | Channels |
-|---|---|---|
-| Carrier - inbound | MP3 | Mono - caller and agent mixed into one track |
-| Carrier - outbound | MP3 | Dual - caller and agent on separate tracks |
-| Nixflex | WAV, 8 kHz | Mono - caller and agent mixed, balanced to the same level |
+## Errors and limits
 
-Dual-channel audio is easier to analyse per speaker. The carrier difference between inbound and outbound is long-standing behaviour and is kept as-is so existing integrations are not changed. If your code assumes a file extension, read it from `recording_url` rather than building the name yourself.
-## Consent
+| Condition | Handling |
+| --- | --- |
+| Capture enabled | Wait for actual recording availability. |
+| Expired link | Request fresh authorised access. |
+| No playable URL | Display the returned status, not a broken player. |
+| Customer bucket | Use the customer’s authorised storage path. |
+| Pending deletion | Do not restore access from a cached URL. |
 
-<Warning>
-  Recording calls is regulated, and the rules differ by country and by state. In many places you must tell the caller the call is recorded, and in some you need their explicit consent. Nixflex does not announce recording for you - if you need an announcement, put it in your agent prompt or your greeting.
-</Warning>
+## Next steps
 
-## Testing it
-
-<Steps>
-  <Step title="Switch it off">
-    Turn off **Call recording** on the agent, or PATCH `record_call: false` on the number.
-  </Step>
-  <Step title="Make a call">
-    Call the number and talk for a few seconds, then hang up.
-  </Step>
-  <Step title="Check the call record">
-    `GET /v1/calls/:id` - `recording_url` should be `null`, while the transcript and summary are still there.
-  </Step>
-  <Step title="Switch it back on">
-    Set it back to `true`, or `null` on the number to inherit the agent again, and call once more. `recording_url` should be populated.
-  </Step>
-</Steps>
-
-## Related
-
-- [Update phone number](/api-reference/phone-numbers/update) - the `record_call` field
-- [Update phone number](/api-reference/phone-numbers/update) - the `recording_source` field
-- [Data retention](/concepts/data-retention) - how long recordings are kept
-- [Webhooks](/advanced/webhooks) - `recording_url` in `call.completed`
-- [Keypad input](/advanced/keypad-input) - the other per-number call setting
+- [Recording access schema](/api-reference/calls/get-calls-id-recording)
+- [Retention](/concepts/data-retention)
+- [Your own storage](/advanced/your-own-storage)

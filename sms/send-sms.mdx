@@ -1,163 +1,90 @@
 ---
-title: "Send SMS"
-description: "Send standalone text messages via the API"
-icon: "paper-plane"
+title: "Send one SMS: use an owned sender and track the outcome"
+description: "Send one text through the Nixflex API with an explicit owned sender, respect recipient contact checks and distinguish accepted messages from confirmed delivery."
 ---
 
-Beyond mid-call and post-call SMS, you can send standalone messages via the API. Useful for appointment reminders, status updates, follow-ups — anything that doesn't need a phone call.
+Send a requested update from the correct business number. This endpoint has no dry-run mode and can contact a real recipient.
 
-<CardGroup cols={3}>
-  <Card title="In-call SMS" icon="message" href="/actions/in-call-sms">
-    Text the caller while the call is happening, with the [SEND_SMS:] tag. Includes booking confirmations.
-  </Card>
-  <Card title="Post-call SMS" icon="message-check" href="/sms/post-call-sms">
-    Text automatically once the call has ended, from an agent template or your own webhook.
-  </Card>
-  <Card title="This page" icon="paper-plane">
-    Send a message via the API with no call involved. Length, tracking, carrier support, compliance and pricing.
-  </Card>
-</CardGroup>
+Using the dashboard? See [the business guide](/guides/business/sms-campaigns).
 
-## Send one message
+## Prerequisites
 
-```bash
-curl -X POST https://api.nixflex.com/v1/sms \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "to": "+447386172392",
-    "from_number": "+447446466847",
-    "message": "Reminder: your appointment is tomorrow at 2pm. Reply YES to confirm or NO to reschedule."
-  }'
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the active agent, owned sender and approved recipient.
+
+## 1. Prepare the message
+
+Keep the purpose and sender clear. Encoding and segmentation affect transport charges; the API does not declare one universal character cap or price for all destinations.
+
+## 2. Send once
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url "https://api.nixflex.com/v1/sms" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to\":\"$NXF_TO_NUMBER\",\"message\":\"Your requested update\"}"
 ```
 
-| Field | Required | Notes |
-|---|---|---|
-| `agent_id` | Yes | The agent this SMS belongs to (determines reply behaviour) |
-| `to` | Yes | Recipient in E.164 format |
-| `from_number` | Yes | One of your imported numbers, on either carrier |
-| `message` | Yes | The message text. **600 chars recommended** for reliable delivery. Carrier hard caps are typically 1600, but UK carriers often reject longer messages. See [SMS length guide](#sms-length-and-deliverability) below. |
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.sms.send({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to:process.env.NXF_TO_NUMBER,message:"Your requested update"});
+// Handle result privately; do not log secrets or call content.
+```
 
-Response:
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.sms.send(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to=os.environ["NXF_TO_NUMBER"],message="Your requested update")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex sms send --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --message "Your requested update" --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 3. Save the acceptance result
+
+The recipient field is `to`, not `to_number`. `from_number` is required and must belong to this account and agent; no agent-number fallback is used. Save receipt identities when returned.
+
+## 4. Interpret uncertainty
+
+`201` with `status:sent` means accepted for sending, not delivery. History persistence can fail after acceptance. Preserve `outcome`, `work_id`, `message_id` and `safe_to_retry` when present. A generic 500 is not proof the text was never sent.
+
+## 5. Handle replies and events
+
+Enable and configure the number’s SMS agent if automatic replies are wanted. Use documented message events or the inbox to inspect available records. There is no documented single-message GET route to invent from the send response.
+
+## Example response
+
+Illustrative accepted response:
 
 ```json
-{
-  "message_id": "SM1234567890",
-  "status": "queued",
-  "to": "+447386172392",
-  "from_number": "+447446466847"
-}
+{"status":"sent","to":"+12025550101","from":"+12025550100"}
 ```
 
-Status updates flow through your carrier's status callbacks. The final status (`delivered`, `failed`, etc.) reflects in the message record within ~30 seconds.
-## SMS length and deliverability
+Optional receipt fields depend on the enabled implementation.
 
-Even though Twilio's API accepts messages up to 1600 characters, real-world delivery is more nuanced. Carriers — especially UK mobile carriers — silently reject long messages without giving an error code.
+## Errors and limits
 
-**Recommended ceiling: 600 characters.** This stays within reliable delivery limits while leaving room for variable expansion in templates.
+| Condition | Handling |
+| --- | --- |
+| Missing sender or incorrect assignment | Correct the explicit owned sender. |
+| Contact restriction | Respect opt-out and local-hours checks. |
+| safe_to_retry false | Do not resend. |
+| Unknown error/network outcome | Reconcile receipts and history first. |
+| Long or non-basic text | Review segmentation and current external rates. |
 
-| Length | Segments | Cost | Reliability |
-|---|---|---|---|
-| 160 chars | 1 | Cheapest | 99%+ delivery |
-| 320 chars | 2 | 2× | 99%+ delivery |
-| 480 chars | 3 | 3× | 95-99% delivery |
-| 600 chars | 4 | 4× | ~95% delivery |
-| 1000+ chars | 7+ | High | Often rejected by UK carriers |
+## Next steps
 
-**Each segment costs ~£0.04 to send.** A 600-char message costs ~£0.16 per send, versus £0.04 for 160 chars.
-
-If you need longer content, consider:
-
-- Splitting into multiple SMS
-- Including a link to a webpage
-- Switching to email for that customer
-
-For Post-Call SMS templates configured in the dashboard, the textarea is hard-capped at 600 chars to enforce the safe zone.
-
-## How replies are handled
-
-When someone replies, your carrier routes the message to Nixflex and the [SMS agent](/sms/sms-agent) on that number answers it.
-
-<Warning>
-  **Replies use the number's `sms_prompt`, not the agent's `system_prompt`.** SMS is an
-  independent channel: the call prompt and the number's `custom_prompt` are deliberately
-  not used. Put your reply instructions in the call prompt and the SMS agent will never
-  see them - it falls back to a short default that knows nothing about your business.
-</Warning>
-
-So if you expect replies, set the number's `sms_prompt` **before** you send:
-
-```bash
-curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sms_reply_enabled": true,
-    "sms_prompt": "You are the text assistant for Acme Dental. If a customer replies YES to an appointment reminder, confirm the booking. If they reply NO or want to reschedule, offer alternative slots. Keep replies short."
-  }'
-```
-
-<Note>
-  **Auto-reply is off by default.** A number only answers texts once
-  `sms_reply_enabled` is `true`. Without it, replies arrive and are stored but nothing
-  is sent back. See [SMS agent](/sms/sms-agent) for the full reply behaviour, including
-  booking over text.
-</Note>
-
-## Carrier support
-
-Sending works on **both carriers**. Nixflex applies no geographic limit of its own - coverage is whatever your own Twilio or Telnyx account permits, and if your carrier refuses a destination the error tells you which setting to change.
-
-<Warning>
-  **Telnyx: delivery status is not tracked yet.** A message sent from a Telnyx number
-  goes out normally, but its status stays at `sent` and never moves to `delivered` or
-  `failed`. Use a Twilio number if you need delivery confirmation. Everything else -
-  sending, receiving, auto-reply - works on both.
-</Warning>
-
-## Tracking
-
-Every SMS gets a `message_id` you can use to fetch status:
-
-```bash
-curl https://api.nixflex.com/v1/sms/SM1234567890 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-Response includes `status` (`queued`, `sent`, `delivered`, `failed`, `undelivered`), error code if any, and the conversation thread if replies happened.
-
-<Note>
-  **Status meanings:** `delivered` means the carrier confirmed delivery to the handset. `sent` means Twilio handed off to the carrier but never got confirmation — we treat this as a soft failure in the dashboard. `failed` and `undelivered` are hard failures.
-</Note>
-
-## Mid-call and post-call SMS
-
-For sending SMS from inside a live call (booking confirmations, links) or automatically after every call (summaries), see [Send SMS action](/actions/send-sms). Those use the `[SEND_SMS:]` tag and `post_call_sms_template` on the agent — no separate API call needed.
-
-## Bulk campaigns
-
-For sending the same message to many recipients in one call, use [SMS campaigns](/sms/sms-campaigns).
-## Compliance
-
-<Warning>
-  Messages are sent through your own carrier account and numbers, so that carrier's rules apply. For example, US-bound messages require A2P 10DLC registration on your account - a US carrier requirement, not a Nixflex one. Without it, US messages are rejected by carriers.
-
-  You're responsible for:
-
-  - Opt-in records (you have permission to text these numbers)
-  - Handling STOP / UNSUBSCRIBE keywords (Twilio handles this automatically by default)
-  - Respecting time-of-day rules (no messages 9pm-9am in the recipient's timezone)
-
-  Nixflex provides infrastructure; compliance stays with you.
-</Warning>
-
-## Pricing
-
-SMS goes through your own carrier account. Your carrier charges per message at their standard rates:
-
-- UK domestic: ~£0.04 per message
-- US (after A2P): ~$0.0075 per segment
-- International: varies by country
-
-Nixflex doesn't mark up SMS pricing.
+- [Send reference](/api-reference/sms/send)
+- [SMS auto-reply](/sms/sms-agent)
+- [Contact controls](/guides/developer/contact-controls)

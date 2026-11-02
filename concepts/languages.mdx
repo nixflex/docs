@@ -1,72 +1,26 @@
 ---
-title: "Languages"
-description: "Configured language versus the languages the active voice route can hear and speak"
-icon: "globe"
+title: "Agent languages: match speech settings to your callers"
+description: "Choose Nixflex language and recognition settings, understand route-specific support and test names, numbers and mixed-language speech on actual calls."
 ---
 
-Batch 3 draft. The product recognizes 15 language codes; that is not a promise that
-every active speech provider, fallback or catalog voice supports all 15.
+The agent language guides speech recognition and the conversation. Voice support and automatic language behaviour depend on the selected route. A single worldwide language-count claim does not describe every voice or channel.
 
-## Voice language modes
+## Choosing a language
 
-A specific agent `language` such as `en` or `ar` keeps voice replies in that
-language. `multi` permits switching within the active route's supported set.
-The engine uses language evidence and explicit requests; one foreign word, name,
-number or email is not itself a language change. It is not request-only switching.
+Use the language control and current supported values for the agent's selected voice. Keep instructions in clear language and state whether the agent may switch when a caller asks. A prompt asking for a language cannot add support that the selected speech route lacks.
 
-The current registry uses fixed-language Deepgram recognition for a fixed code,
-and AssemblyAI auto-detection for multi. The backup recognition route differs.
-The usable multilingual set is the intersection of product, recognition and speech
-capabilities; fallback can shrink that set.
+## Names and unusual words
 
-| Product language | Code | Primary auto-detect registry | Backup multi registry |
-|---|---|---|---|
-| English | en | Yes | Yes |
-| Spanish | es | Yes | Yes |
-| French | fr | Yes | Yes |
-| German | de | Yes | Yes |
-| Italian | it | Yes | Yes |
-| Portuguese | pt | Yes | Yes |
-| Dutch | nl | Yes | Yes |
-| Hindi | hi | Yes | Yes |
-| Russian | ru | No | Yes |
-| Japanese | ja | Yes | Yes |
-| Arabic | ar | Yes | No |
-| Hebrew | he | Yes | No |
-| Korean | ko | No | No |
-| Chinese (Mandarin) | zh | Yes | No |
-| Polish | pl | No | No |
+Chosen recognition words help with names, services and unusual terms. New manual edits allow up to 20 entries, 50 Unicode characters each and a combined 450-byte budget including per-entry overhead. The byte limit can be reached sooner with some scripts. Keep phrases specific rather than copying whole instructions.
 
-These are the engine's registered capabilities, not live provider availability.
-For Korean, Polish or Russian on the current primary voice route, use an appropriate
-fixed language and eligible voice. Registered fixed-language recognition covers
-all 15 codes. The registered Inworld TTS-2 model covers those codes; the legacy
-Cartesia fallback registry is English-only. Catalog voice eligibility, BYO configuration
-and a provider failure can further limit a particular call. Unknown models do not
-silently gain language permissions. Test the selected route before making promises.
+Live knowledge can contribute automatic recognition hints while manual choices take priority. Hints improve the chance of recognition; they do not force a transcript or control pronunciation. Unchanged older saved lists can be retained under compatibility rules, but edited lists must meet current limits.
 
-## Initial language is not always the prompt language
+## Speech and written channels differ
 
-For voice, the resolver considers: fixed agent language, supported caller preference,
-known greeting language/template, recognized custom greeting text, developer prompt,
-then the declared fallback (normally English, with a diagnostic finding).
-Custom greetings are not automatically translated merely because they use Latin letters.
+SMS and website chat do not use speech recognition. They have their own instructions and can use agent knowledge when their channel is enabled. A successful written answer does not validate a telephone accent, voice or interruption setting.
 
-Outbound calls generate their own opener from the per-call purpose, not the inbound
-welcome text. Public website voice resolves its starting context from the website
-instructions and shares the agent's voice language setting.
+Test names, dates, prices, email addresses and a caller changing language. Confirm uncertain facts aloud. Use the actual intended time zone and country rather than a country-specific default copied from an example.
 
-## Website chat is different
-
-Website text chat follows visitor-language website rules. It does not read the
-agent's `language` as a voice-language lock, and it has no speech-recognition or
-text-to-speech route. Do not apply the voice table as a claimed text-chat language limit.
-
-## Names and pronunciation
-
-`boosted_keywords` accepts at most 50 non-empty comma-separated terms in the
-current API contract. Recognition providers apply those terms differently; it is not
-a guarantee of recognition or pronunciation. Write business pronunciation guidance
-in the relevant phone or website instructions, and verify the actual voice output.
-
-See [settings by channel](/concepts/agent-channels) and [voices](/concepts/voices).
+- [Set up your agent](/business)
+- [Voice settings](/concepts/voices)
+- [Prompting guidance](/best-practices/prompting-guide)
