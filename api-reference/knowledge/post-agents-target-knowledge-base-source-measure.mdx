@@ -1,0 +1,186 @@
+---
+title: "Measure knowledge source: Nixflex API fields and examples"
+sidebarTitle: "Measure knowledge source"
+description: "Measure knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+openapi: "/api-reference/public.openapi.json POST /agents/{target}/knowledge-base/source-measure"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Preview source token usage before an import without storing the source.
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. Personal Owner and Admin may perform this action; Member is refused. Personal dashboard visibility can hide API-origin agents. Never send owner fields to select another account.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `target` (path) | string | Yes | None | Owned agent ID. URL-encode it as a path segment. |
+| `X-Filename` (header) | string | No | Omitted | Required for a raw upload; filename up to 200 characters. Use a genuine PDF, DOCX or UTF-8 text file. Maximum 200 characters. |
+| `X-Source-Title` (header) | string | No | Omitted | Optional source title, at most 200 characters; defaults to filename. Maximum 200 characters. |
+| `X-Review` (header) | string | No | Omitted | For imports: exactly true requests review; other/omitted values mean false for API requests. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `text` | string | Yes | None | Text up to 10 MiB of UTF-8 bytes. Empty input returns allowed:false. |
+
+This authenticated POST is a read-only calculation and needs no Idempotency-Key. It does not reserve capacity, call a paid model or save a file/base. Import checks totals again.
+
+Raw upload: Content-Type application/octet-stream, X-Filename, optional X-Source-Title and X-Review; replacements also require X-Expected-Revision. File maximum 10 MiB; PDF maximum 200 pages. Accept clean UTF-8 text, PDF with selectable text, or DOCX. No raw base64/path input, RTF, executable or active-content documents. Preview scan status is not publication clearance. Without a configured scanner, local_checks_only permits bounded local checks. With a configured scanner, PDF/DOCX need a clean result; clean UTF-8 text can use local checks during an outage. Infected files never bypass. Imports may wait at safety_check/safety_waiting with next_retry_at; after 24 hours scan_expired requires a new upload. Raw files are private and never downloaded; accepted storage retains extracted text.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `tokens` | integer | Saved value. |
+| `limit` | integer | Value: `20000`. |
+| `used` | integer | Saved value. |
+| `total_limit` | integer | Value: `100000`. |
+| `projected` | integer | Saved value. |
+| `allowed` | boolean | Saved value. |
+| `scan_status` | string | Allowed: `"checked"`, `"local_checks_only"`, `"text_checks_only"`, `"pending"`, `"not_needed"`. |
+
+## Example request
+
+K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. This read-only calculation is included in the safe C8 check when a fixture is available.
+
+```json request-69.json
+{
+  "text": "Appointments are available Monday to Friday."
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents/$(node -p 'encodeURIComponent(process.env.NXF_AGENT_ID)')/knowledge-base/source-measure" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"text":"Appointments are available Monday to Friday."}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.knowledge.measureSource(process.env.NXF_AGENT_ID, {"text":"Appointments are available Monday to Friday."});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.knowledge.measure_source(os.environ["NXF_AGENT_ID"], {
+      "text": "Appointments are available Monday to Friday."
+    })
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the JSON below privately as request-69.json.
+nixflex knowledge measureSource "$env:NXF_AGENT_ID" --body '@request-69.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+</RequestExample>
+
+MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "tokens": 0,
+  "limit": 20000,
+  "used": 0,
+  "total_limit": 100000,
+  "projected": 0,
+  "allowed": false,
+  "scan_status": "checked"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 429 | [`measure_busy`](/api-reference/errors#measure_busy) | Other files are being checked. Please try again in a moment. | Wait for the stated retry/reset time. |
+| 503 | [`measure_unavailable`](/api-reference/errors#measure_unavailable) | Counting took too long. Try a smaller source or try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 413 | [`source_limit`](/api-reference/errors#source_limit) | This source contains too much text. Split it into smaller documents. | Correct the named fields or reduce the input before retrying. |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body could not be read. | Correct the named fields or reduce the input before retrying. |
+| 415 | [`wrong_type`](/api-reference/errors#wrong_type) | The file contents do not match its type. Use a genuine PDF, DOCX or plain UTF-8 text file. | Correct the named fields or reduce the input before retrying. |
+| 415 | [`unsupported_file`](/api-reference/errors#unsupported_file) | Use PDF, DOCX or plain UTF-8 text. Rich text and executable files are not accepted. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`empty_file`](/api-reference/errors#empty_file) | This file is empty. Choose a file containing text. | Correct the named fields or reduce the input before retrying. |
+| 413 | [`file_limit`](/api-reference/errors#file_limit) | This file is too big. Choose a file up to 10 MiB. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`unclean_text`](/api-reference/errors#unclean_text) | This file is not clean UTF-8 text. Save it as UTF-8 without binary data or hidden control characters. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`unsafe_file`](/api-reference/errors#unsafe_file) | This file failed the virus safety check. Use a clean copy or paste clean text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`unsafe_pdf`](/api-reference/errors#unsafe_pdf) | This PDF contains scripts, actions or embedded files. Export a clean text-only PDF or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`unsafe_word`](/api-reference/errors#unsafe_word) | This Word file contains macros, embedded files or active content. Save a clean DOCX or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`password_pdf`](/api-reference/errors#password_pdf) | This PDF is password protected. Remove the password from a copy or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`scanned_pdf`](/api-reference/errors#scanned_pdf) | This PDF has a page with no readable text. Use a text PDF, convert the scanned pages to text, or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`page_limit`](/api-reference/errors#page_limit) | This PDF has more than 200 pages. Split it into smaller documents. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`archive_limit`](/api-reference/errors#archive_limit) | This Word document expands beyond the safe size limit. Save a smaller DOCX or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`unreadable`](/api-reference/errors#unreadable) | This file is damaged or could not be read safely. Save a new copy or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 422 | [`parse_timeout`](/api-reference/errors#parse_timeout) | Reading this file took too long. Try a smaller document or paste the text. | Correct the named fields or reduce the input before retrying. |
+| 503 | [`scan_unavailable`](/api-reference/errors#scan_unavailable) | Safety check in progress. We will retry automatically. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 415 | [`unsafe_word`](/api-reference/errors#unsafe_word) | This Word file contains macros, embedded files or active content. Save a clean DOCX or paste the text. | Use a clean DOCX or paste clean text. |
+| 413 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body is too large. | Keep the transport body within 10 MiB. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id)
+- [Errors and messages](/api-reference/errors)

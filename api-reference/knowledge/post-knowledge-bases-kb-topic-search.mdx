@@ -1,0 +1,188 @@
+---
+title: "Search knowledge topics: Nixflex API fields and examples"
+sidebarTitle: "Search knowledge topics"
+description: "Search knowledge topics with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+openapi: "/api-reference/public.openapi.json POST /knowledge-bases/{kb}/topic-search"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Find related current topics for knowledge management.
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. Personal Owner and Admin may perform this action; Member is refused. Personal dashboard visibility can hide API-origin agents. Never send owner fields to select another account.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `kb` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `query` | string | Yes | None | Trimmed management search text. Maximum 200 characters. Minimum 2 characters. |
+
+This POST performs a semantic search, not public call retrieval. It needs no Idempotency-Key and does not change topics. Up to 30 related pieces are returned; use local word filtering when semantic search is unnecessary. Only similarities of at least 0.25 are returned, ordered highest first. An empty live base returns an empty items array and the revision.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `items` | array of object | Saved value. |
+| `items[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `items[].title` | string | Displayed piece title. |
+| `items[].facts` | string | Piece text. |
+| `items[].questions` | array of string | Retained manual/legacy labels; new imports do not generate questions. |
+| `items[].evidence` | array of object | Saved value. |
+| `items[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `items[].evidence[].segment` | integer | Source segment index. |
+| `items[].evidence[].quote` | string | Original evidence text. |
+| `items[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `items[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `items[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `items[].evidence[].title` | string | Title snapshot at answer time. |
+| `items[].manual` | boolean | True when manually written or corrected. |
+| `items[].valid_from` | string or null | UTC timestamp. Format: date-time. |
+| `items[].valid_until` | string or null | UTC timestamp. Format: date-time. |
+| `items[].suppressed` | boolean | True while an edited old piece must not be used. |
+| `items[].origin` | string | Optional legacy origin marker. |
+| `items[].position` | object | Stable display-order metadata. |
+| `items[].position.added_at` | string | UTC timestamp. Format: date-time. |
+| `items[].position.source` | integer | Saved value. |
+| `items[].position.segment` | integer | Saved value. |
+| `items[].page_name` | string | Optional source page label. |
+| `items[].title_page` | string | Optional label used to distinguish similar automatic titles. |
+| `items[].review_flags` | array of string | Allowed items: `"agent_instructions"`, `"suspicious_link"`, `"payment_details"`, `"sensitive_data"`, `"website_junk"`, `"code_example"`. |
+| `items[].check_required` | boolean | A flagged topic needs explicit individual approval. |
+| `items[].check_reasons` | array of string | Saved value. |
+| `items[].check_reason` | string | Compatibility joined review reasons. |
+| `items[].keyterms` | object | Read-only metadata. Refresh scheduling is still being checked separately; do not send it in writes. |
+| `items[].keyterms.version` | integer | Stored automatic-term format version. |
+| `items[].keyterms.fingerprint` | string | Digest of the source text used to validate cached terms. |
+| `items[].keyterms.terms` | array of string | Stored candidate terms. |
+| `items[].keyterms.ranks` | object | Keys are normalized terms; each value records score (1–4) and essential (boolean). |
+| `items[].score` | number | Similarity diagnostic, not correctness. |
+| `revision` | integer | Current knowledge-base revision; not a pagination cursor. Minimum 1. |
+
+## Example request
+
+K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. This read-only calculation is included in the safe C8 check when a fixture is available.
+
+```json request-117.json
+{
+  "query": "appointment times"
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/topic-search" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"query":"appointment times"}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.knowledge.searchTopics(process.env.NXF_KNOWLEDGE_BASE_ID, {"query":"appointment times"});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.knowledge.search_topics(os.environ["NXF_KNOWLEDGE_BASE_ID"], {
+      "query": "appointment times"
+    })
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the JSON below privately as request-117.json.
+nixflex knowledge searchTopics "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-117.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+</RequestExample>
+
+MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "items": [],
+  "revision": 1
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 503 | [`index_version`](/api-reference/errors#index_version) | This knowledge index needs updating before it can be searched. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 409 | [`knowledge_updating`](/api-reference/errors#knowledge_updating) | Knowledge is still changing. Your test is saved; ask again in a moment. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`index_unavailable`](/api-reference/errors#index_unavailable) | The search index could not be prepared. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body could not be read. | Correct the named fields or reduce the input before retrying. |
+| 413 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body is too large. | Keep the transport body within 10 MiB. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id)
+- [Errors and messages](/api-reference/errors)

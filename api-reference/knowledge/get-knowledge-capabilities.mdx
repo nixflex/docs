@@ -1,0 +1,173 @@
+---
+title: "Get knowledge capabilities: Nixflex API fields and examples"
+sidebarTitle: "Get knowledge capabilities"
+description: "Get knowledge capabilities with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+openapi: "/api-reference/public.openapi.json GET /knowledge/capabilities"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Read current knowledge limits, defaults and account scope marker.
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+Do not send a request body.
+
+Use returned limits instead of hard-coding runtime configuration. Legacy training/note counters remain for compatibility; their endpoints are removed. The released flag is a rollout marker.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `released` | boolean | Current rollout marker; false is not a route failure. |
+| `limits` | object | Saved value. |
+| `limits.fileBytes` | integer | Maximum raw upload bytes: 10 MiB. |
+| `limits.pages` | integer | Maximum PDF pages. |
+| `limits.sourceTokens` | integer | Maximum tokens per source. |
+| `limits.kbTokens` | integer | Maximum original-text tokens per base, including additional manual text. |
+| `limits.sources` | integer | Maximum sources per base. |
+| `limits.topics` | integer | Maximum topics per base. |
+| `limits.bases` | integer | Maximum active agent bases per account. |
+| `limits.accountBytes` | integer | Private account storage cap, 100 MiB. |
+| `limits.topicTokens` | integer | Maximum packed tokens per published piece. |
+| `limits.packTokens` | integer | Current runtime knowledge-pack budget; use the returned value. |
+| `limits.mainPromptTokens` | integer | Main prompt token limit with knowledge enabled. |
+| `limits.sessionMs` | integer | Legacy five-minute value; knowledge Test has no training wait or timer gate. |
+| `limits.kbDaily` | integer | Legacy per-base training counter; training is removed. |
+| `limits.accountDaily` | integer | Legacy account training counter; training is removed. |
+| `limits.notes` | integer | Legacy note limit; note routes are removed. |
+| `limits.noteChars` | integer | Legacy note size; note routes are removed. |
+| `limits.messageChars` | integer | Maximum question characters. |
+| `limits.messages` | integer | Latest retained conversation messages. |
+| `limits.jobs` | integer | Maximum pending/running/review jobs per account. |
+| `limits.parseMs` | integer | Bounded file-reader timeout, milliseconds. |
+| `limits.discoveryPages` | integer | Maximum discovered website pages. |
+| `limits.leaseMs` | integer | Worker lease duration, milliseconds; not a client timeout. |
+| `limits.attempts` | integer | Maximum processing attempts per job. |
+| `limits.retainedDays` | integer | Retention for transient jobs, drafts, sessions and unanswered observations. |
+| `defaults` | object | Only channels, match and not_found may be supplied. Omitted settings retain the saved value on update. |
+| `defaults.channels` | array of string | Enabled knowledge channels. An empty list turns knowledge off for all channels. Allowed items: `"inbound"`, `"outbound"`, `"web_voice"`, `"web_chat"`, `"sms"`. |
+| `defaults.match` | string | Answer matching mode. Allowed: `"Strict"`, `"Normal"`. |
+| `defaults.not_found` | string | Nonblank response when suitable knowledge is missing. Maximum 500 characters. Minimum 1 characters. |
+| `channels` | array of string | Allowed items: `"inbound"`, `"outbound"`, `"web_voice"`, `"web_chat"`, `"sms"`. |
+| `sources` | array of string | Allowed items: `"file"`, `"text"`, `"website"`. |
+| `test_questions` | string | Value: `"unlimited"`. |
+| `training` | boolean | Value: `false`. |
+| `preparation` | string | Value: `"original_words"`. |
+| `scope_id` | string | Opaque account partition marker, 24 characters. |
+| `policy_version` | string | Policy compatibility version. |
+
+## Example request
+
+K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge/capabilities" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.knowledge.capabilities();
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.knowledge.capabilities()
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex knowledge capabilities  --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+</RequestExample>
+
+MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "released": false,
+  "limits": {},
+  "defaults": {},
+  "channels": [],
+  "sources": [],
+  "test_questions": "unlimited",
+  "training": false,
+  "preparation": "original_words",
+  "scope_id": "example",
+  "policy_version": "example"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id)
+- [Errors and messages](/api-reference/errors)

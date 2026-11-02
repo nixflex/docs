@@ -61,7 +61,7 @@ test('C5 preserves old operation IDs, all other tabs and the current remaining-o
  const oldSpec=JSON.parse(previous.stdout);for(const d of defs){const old=oldSpec.paths[d.specPath]?.[d.method.toLowerCase()];if(old)assert.equal(spec.paths[d.specPath][d.method.toLowerCase()].operationId,old.operationId);}
  const previousConfig=spawnSync('git',['show','efcf970:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(previousConfig.status,0);
  const oldConfig=JSON.parse(previousConfig.stdout);for(const tab of config.navigation.tabs.filter(t=>t.tab!=='API reference'))assert.deepEqual(tab,oldConfig.navigation.tabs.find(t=>t.tab===tab.tab));
- const missing=read('MISSING-PAGES.md');assert.ok(missing.includes(read('COVERAGE.md').match(/\| toBuild \| (\d+) \|/)[1]+' public operations'));
+ const missing=read('MISSING-PAGES.md');assert.equal(read('COVERAGE.md').match(/\| toBuild \| (\d+) \|/)[1],'0');assert.match(missing,/No missing public operation pages/);
  for(const d of defs)assert.ok(!missing.split('\n').some(line=>line.startsWith('| '+d.number+' | ')));
  const coverage=read('COVERAGE.md');for(const n of [54,59,90,91,92,93,94,99,101,176,177,179,180,181,182,183])assert.ok(coverage.includes('| '+n+' | pending manual test |'));
 });

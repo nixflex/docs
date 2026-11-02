@@ -64,7 +64,7 @@ The API checks the applicable prompt limit when you submit the request; a charac
 | Field | Type | Required | Default | Limits and meaning |
 | --- | --- | --- | --- | --- |
 | `response_eagerness` | integer | No | `200` | Response delay, 0–1,000 milliseconds. |
-| `boosted_keywords` | string or null | No | `null` | Customer-supplied keyterms: up to 2,000 characters and 20 nonempty comma-separated terms. Empty or whitespace-only entries do not count; repeated terms count separately. |
+| `boosted_keywords` | string or null | No | `null` | Customer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. |
 | `greet_by_name` | boolean | No | `true` | Use a known returning caller's name. |
 | `remember_callers` | boolean | No | `true` | Save caller memory when the effective channel policy allows it. |
 | `dtmf_enabled` | boolean or null | No | `null` | Keypad input; null leaves the preference unset. |
@@ -144,6 +144,10 @@ The response includes saved settings from the request tables, with resolved defa
 
 The example response below shows selected fields. Additional compatibility fields may be present.
 Do not treat a returned preference as proof that every channel enables that feature.
+
+The safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).
 
 More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords".
 
@@ -270,3 +274,6 @@ and verify the installed CLI’s retry policy before use. Never automatically re
 - [Update an agent](/api-reference/agents/update) to change settings or retention.
 - [Delete an agent](/api-reference/agents/delete) to soft-disable it; this retains the record.
 - [Import a phone number](/api-reference/phone-numbers/import) to connect a number.
+
+- [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long): Keep each word or phrase within 50 characters to save Shorten the term. details.field is boosted_keywords; details.limit is 50.
+- [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large): This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte.

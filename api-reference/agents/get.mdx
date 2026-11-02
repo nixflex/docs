@@ -17,3 +17,7 @@ GET still returns an owned soft-disabled agent; `is_active` is false.
 | 200 | Owned agent and its settings |
 | 404 not_found | Missing or belongs to another account (same response) |
 | 503 agent_store_unavailable | Storage could not be checked; do not interpret as missing |
+
+### Read automatic knowledge terms
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms). The optional `knowledge_keyterms` array appears when knowledge is enabled and filters against the saved customer terms.

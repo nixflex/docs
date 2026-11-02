@@ -26,15 +26,15 @@ test('agent schemas allow grandfathered values while documenting the changed-lis
   const op=spec.paths[p][m],field=op.requestBody.content['application/json'].schema.properties.boosted_keywords;
   assert.equal(field['x-max-nonempty-comma-terms'],20);
   assert.match(field.description,/20 nonempty comma-separated/);
-  assert.match(field.description,/repeated terms count separately/);
-  assert.equal(op.responses['400'].content['application/json'].example.error.message,'Keep up to 20 words - remove some to save');
+  assert.match(field.description,/repeated (?:nonempty )?terms count separately/);
+  assert.equal(op.responses['400'].content['application/json'].examples.term_count.value.error.message,'Keep up to 20 words - remove some to save');
   if(m==='post')assert.equal(field.maxLength,2000);
-  else {assert.equal(field.maxLength,undefined);assert.match(field.description,/exact unchanged string/);}
+  else {assert.equal(field.maxLength,undefined);assert.match(field.description,/exact unchanged saved string/);}
  }
  for(const p of ['create','update','contract']){
   const page=read('api-reference/agents/'+p+'.mdx');assert.doesNotMatch(page,/50 (?:nonempty|comma-separated)/);
   assert.match(page,/Keep up to 20 words - remove some to save/);
-  assert.doesNotMatch(page,/knowledge_keyterms/);
+  assert.match(page,/450-byte/);
  }
 });
 test('C7 PS5.1 guard, consumed errors, bounded read retry and authenticated fixture flow',()=>{

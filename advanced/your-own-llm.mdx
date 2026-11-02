@@ -6,17 +6,17 @@ icon: "brain-circuit"
 
 By default, calls run on Nixflex's built-in AI stack. With **your own LLM**, every conversation turn is answered by a model **you** choose, on your own provider account - and the per-minute price drops by **$0.015**, because Nixflex no longer pays for the thinking.
 
-Any **OpenAI-compatible endpoint** works: OpenAI, Anthropic (Claude), Google (Gemini), Groq, Together, OpenRouter, or your own self-hosted server - one protocol covers them all.
+Use a compatible streaming chat-completion endpoint that supports the required tool-calling format. Your connection must pass the save-time checks.
 
 <Note>
-  The connection is **tested before it is saved**: Nixflex runs a real completion AND a tool-calling round trip against your endpoint. A model that cannot do OpenAI-style tool calling is refused with a clear message - bookings and custom functions depend on it - so a saved configuration is a working configuration.
+  The connection is **tested before it is saved**: Nixflex runs a real completion AND a tool-calling round trip against your endpoint. A model that cannot do compatible tool calling is refused with a clear message - bookings and custom functions depend on it - so a saved configuration is a working configuration.
 </Note>
 
 ## How it works
 
 <Steps>
   <Step title="Connect your model">
-    In **Settings → Your own LLM**, or via the API below: base URL, model name, and your provider API key.
+    In **Settings → Your own LLM**, enter the base URL, model name, and your private credential.
   </Step>
   <Step title="Your model answers every call">
     Applies account-wide - every number and every agent, whether added in the dashboard or through the API. Your full agent prompt goes to your model; your provider bills you for the tokens.
@@ -43,7 +43,7 @@ A call is never lost to a provider problem. If your endpoint errors, times out, 
 
 | | |
 |---|---|
-| Protocol | OpenAI-compatible `/chat/completions` with streaming |
+| Protocol | Compatible `/chat/completions` with streaming |
 | Tool calling | **Required** - verified at save |
 | Endpoint | `https://` base URL |
 | Speed | First token within 2.5s per turn, or the platform takes over for that call |
@@ -52,49 +52,9 @@ A call is never lost to a provider problem. If your endpoint errors, times out, 
   Model choice is a real latency decision. A large, slow model makes every reply late and the call feels broken - that is the trade you choose. Fast, small models suit voice best.
 </Warning>
 
-## Setting it up via the API
+## Private setup
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/account/llm \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "endpoint": "https://api.openai.com/v1",
-    "model": "gpt-4o-mini",
-    "api_key": "sk-..."
-  }'
-```
-
-| Field | Required | Notes |
-|---|---|---|
-| `endpoint` | Yes | OpenAI-compatible base URL |
-| `model` | Yes | The model name as your provider knows it |
-| `api_key` | Yes | **Write-only** - stored encrypted, never returned |
-
-Read the configuration (the key is never included):
-
-```bash
-curl https://api.nixflex.com/v1/account/llm \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-Disconnect (calls return to the standard stack and rate from the next call):
-
-```bash
-curl -X DELETE https://api.nixflex.com/v1/account/llm \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-## Common endpoints
-
-| Provider | Base URL |
-|---|---|
-| OpenAI | `https://api.openai.com/v1` |
-| Anthropic (Claude) | `https://api.anthropic.com/v1` |
-| Google (Gemini) | `https://generativelanguage.googleapis.com/v1beta/openai` |
-| Groq | `https://api.groq.com/openai/v1` |
-| OpenRouter (any model) | `https://openrouter.ai/api/v1` |
-| Together AI | `https://api.together.xyz/v1` |
+Use **Settings → Your own LLM** to save and verify the connection. Account model configuration is not part of the public API reference. Choose the endpoint and model from your service’s own configuration instructions and keep its credential private.
 
 ## Related
 

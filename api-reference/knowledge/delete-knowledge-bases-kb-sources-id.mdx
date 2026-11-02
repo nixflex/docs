@@ -1,0 +1,172 @@
+---
+title: "Delete knowledge source: Nixflex API fields and examples"
+sidebarTitle: "Delete knowledge source"
+description: "Delete knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+openapi: "/api-reference/public.openapi.json DELETE /knowledge-bases/{kb}/sources/{id}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Remove an accepted source with explicit confirmation of affected topics.
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. Personal Owner and Admin may perform this action; Member is refused. Personal dashboard visibility can hide API-origin agents. Never send owner fields to select another account.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `kb` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `id` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `Idempotency-Key` (header) | string | Yes | None | Unique 8–128-character operation key: letters, numbers, dot, underscore, colon or hyphen. The prompt: prefix is reserved. Reuse only with the identical operation and payload. Maximum 128 characters. Minimum 8 characters. Pattern: `^[A-Za-z0-9_.:-]{8,128}$`. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `expected_revision` | integer | Yes | None | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `topic_ids` | array of string | Yes | None | Must include every affected current topic ID. Minimum 0 items. |
+| `manual` | string | No | Omitted | Required if affected topics include manual edits. Allowed: `"keep"`, `"delete"`. |
+
+expected_revision is the base revision. Keeping manual topics detaches this source evidence. Removal revokes pending drafts, jobs and export snapshots for the base so old copies cannot restore deleted text.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `kb` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `deleted` | boolean | Value: `true`. |
+| `expected_revision` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+
+## Example request
+
+K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+
+```json request-113.json
+{
+  "expected_revision": 1,
+  "topic_ids": [
+    "22222222-2222-4222-8222-222222222222"
+  ],
+  "manual": "keep"
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/sources/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"expected_revision":1,"topic_ids":["22222222-2222-4222-8222-222222222222"],"manual":"keep"}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.knowledge.deleteSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {"expected_revision":1,"topic_ids":["22222222-2222-4222-8222-222222222222"],"manual":"keep"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.knowledge.delete_source(os.environ["NXF_KNOWLEDGE_BASE_ID"], os.environ["NXF_RESOURCE_ID"], {
+      "expected_revision": 1,
+      "topic_ids": [
+        "22222222-2222-4222-8222-222222222222"
+      ],
+      "manual": "keep"
+    }, idempotency_key=os.environ["NXF_IDEMPOTENCY_KEY"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the JSON below privately as request-113.json.
+nixflex knowledge deleteSource "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" --body '@request-113.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+</RequestExample>
+
+MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "kb": "11111111-1111-4111-8111-111111111111",
+  "deleted": true,
+  "expected_revision": 1
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 409 | [`confirm_topics`](/api-reference/errors#confirm_topics) | Confirm the affected topics before removing this source. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`manual_choice`](/api-reference/errors#manual_choice) | Choose whether to keep or remove manually edited topics. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`idempotency_conflict`](/api-reference/errors#idempotency_conflict) | Use a new Idempotency-Key for different information. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`stale_revision`](/api-reference/errors#stale_revision) | The list changed. Reload it to see the latest pieces. | Read current state, review the changes and use the fresh revision. |
+| 413 | [`storage_limit`](/api-reference/errors#storage_limit) | Your account has reached its private storage limit. Remove old sources first. | Correct the named fields or reduce the input before retrying. |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body could not be read. | Correct the named fields or reduce the input before retrying. |
+| 413 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body is too large. | Keep the transport body within 10 MiB. |
+
+</div>
+
+## Retry and idempotency
+
+Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id)
+- [Errors and messages](/api-reference/errors)

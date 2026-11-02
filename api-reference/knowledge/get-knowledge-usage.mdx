@@ -1,0 +1,172 @@
+---
+title: "Get knowledge usage: Nixflex API fields and examples"
+sidebarTitle: "Get knowledge usage"
+description: "Get knowledge usage with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+openapi: "/api-reference/public.openapi.json GET /knowledge/usage"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Read private storage inventory and compatibility allowance counters.
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `kb` (query) | string | No | Omitted | Opaque identifier. Keep it as a string. Format: uuid. |
+
+Do not send a request body.
+
+The optional kb filters the per-base compatibility allowance after ownership checks. Inventory remains account-wide. Read the authoritative reset timestamp; removed training counters do not re-enable training.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `quota` | object | Saved value. |
+| `quota.remaining_today` | integer | Legacy per-base training units. |
+| `quota.account_remaining` | integer | Legacy account training units. |
+| `quota.resets_at` | string | UTC timestamp. Format: date-time. |
+| `quota.starts_at` | string | UTC timestamp. Format: date-time. |
+| `quota.timezone` | string | Account reset timezone. |
+| `inventory` | object | Saved value. |
+| `inventory.bases` | object | Saved value. |
+| `inventory.bases.count` | integer | Owned row count. |
+| `inventory.policies` | object | Saved value. |
+| `inventory.policies.count` | integer | Owned row count. |
+| `inventory.sources` | object | Saved value. |
+| `inventory.sources.count` | integer | Owned row count. |
+| `inventory.objects` | object | Saved value. |
+| `inventory.objects.count` | integer | Owned row count. |
+| `inventory.revisions` | object | Saved value. |
+| `inventory.revisions.count` | integer | Owned row count. |
+| `inventory.topics` | object | Saved value. |
+| `inventory.topics.count` | integer | Owned row count. |
+| `inventory.drafts` | object | Saved value. |
+| `inventory.drafts.count` | integer | Owned row count. |
+| `inventory.sessions` | object | Saved value. |
+| `inventory.sessions.count` | integer | Owned row count. |
+| `inventory.jobs` | object | Saved value. |
+| `inventory.jobs.count` | integer | Owned row count. |
+| `inventory.idempotency` | object | Saved value. |
+| `inventory.idempotency.count` | integer | Owned row count. |
+| `inventory.events` | object | Saved value. |
+| `inventory.events.count` | integer | Owned row count. |
+| `inventory.accounts` | object | Saved value. |
+| `inventory.accounts.count` | integer | Owned row count. |
+| `billing` | string | Compatibility billing text; not a new charge. |
+
+## Example request
+
+K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge/usage" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.knowledge.usage();
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.knowledge.usage()
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex knowledge usage  --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+</RequestExample>
+
+MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "quota": {
+    "remaining_today": 0,
+    "account_remaining": 0,
+    "resets_at": "2026-11-02T12:00:00Z",
+    "starts_at": "2026-11-02T12:00:00Z",
+    "timezone": "example"
+  },
+  "inventory": {},
+  "billing": "example"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id)
+- [Errors and messages](/api-reference/errors)

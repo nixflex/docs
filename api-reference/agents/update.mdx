@@ -69,7 +69,7 @@ Partial update. Omitted fields remain unchanged; create defaults are never reapp
 | `transfer_number` | string or null | No | Unchanged | E.164 number, null or empty; text limit 32 characters. Maximum 32 characters. |
 | `transfer_whisper` | string or null | No | Unchanged | Up to 16,000 characters. Maximum 16000 characters. |
 | `timezone` | string | No | Unchanged | Nonempty IANA time zone. When omitted, use the valid account time zone or UTC. Maximum 100 characters. |
-| `boosted_keywords` | string or null | No | Unchanged | At most 20 nonempty comma-separated terms and 2,000 characters when changed. See the keyterms rules below. |
+| `boosted_keywords` | string or null | No | Unchanged | Changed values: 20 terms, 50 characters each, 450-byte safety budget. See keyterms rules below. |
 | `voicemail_message` | string or null | No | Unchanged | Required and nonblank when voicemail_leave_enabled is true; no endpoint default. Maximum 600 characters. |
 | `temperature` | number | No | Unchanged | 0–0.7 inclusive. Minimum 0. Maximum 0.7. |
 | `response_eagerness` | integer | No | Unchanged | Response delay, 0–1,000 milliseconds. Minimum 0. Maximum 1000. |
@@ -100,7 +100,13 @@ Send JSON booleans and numbers, not strings. A null value is allowed only where 
 
 The system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.
 
-Empty or whitespace-only entries do not count; repeated terms count separately. On update, an existing saved list of 21 or more terms is kept when omitted or sent back as the exact unchanged string. Changing it requires 20 or fewer terms within 2,000 characters. More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords".
+Customer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. On update, omitted values are retained. An exact unchanged saved string is kept even if it exceeds the newer count, term-length, size or text limits. Any change must meet all current limits.
+
+The safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).
+
+More than 20 changed terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords". The count check runs before term-length and safety-byte checks.
 
 ## Response fields
 
@@ -136,7 +142,7 @@ Empty or whitespace-only entries do not count; repeated terms count separately. 
 | `transfer_number` | string or null | Saved value. |
 | `transfer_whisper` | string or null | Saved value. |
 | `timezone` | string | Saved value. |
-| `boosted_keywords` | string or null | Saved value. |
+| `boosted_keywords` | string or null | Changed values: 20 terms, 50 characters each, 450-byte safety budget. See keyterms rules below. |
 | `voicemail_message` | string or null | Saved value. |
 | `temperature` | number | Saved value. |
 | `response_eagerness` | integer | Saved value. |
@@ -266,6 +272,8 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`voice_not_available`](/api-reference/errors#voice_not_available) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
 | 400 | [`voice_incompatible_language`](/api-reference/errors#voice_incompatible_language) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
 | 400 | [`no_approved_languages`](/api-reference/errors#no_approved_languages) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long) | Keep each word or phrase within 50 characters to save | Shorten the term. details.field is boosted_keywords; details.limit is 50. |
+| 400 | [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large) | This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. | Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte. |
 | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 

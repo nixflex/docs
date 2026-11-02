@@ -16,12 +16,12 @@ const menu=strings(config.navigation);
 const brand=/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i;
 function meta(text,key){const fm=text.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1]||'';const raw=fm.match(new RegExp('^'+key+':\\s*(.*)$','m'))?.[1]?.trim()||'';return raw.startsWith('"')?JSON.parse(raw):raw.replace(/^'|'$/g,'');}
 test('deployed bundle contains only allowlisted operations, unique IDs, no refs or provider names',()=>{
-  assert.equal(spec.openapi,'3.1.0');assert.equal(allow.length,191);
+  assert.equal(spec.openapi,'3.1.0');assert.equal(allow.length,192);
   const approved=new Set(allow.filter(r=>r.public).map(r=>r.method+' '+shape(r.path)));
   const ids=new Set();for(const [p,ms]of Object.entries(spec.paths))for(const [m,op]of Object.entries(ms)){
     assert.ok(approved.has(m.toUpperCase()+' '+shape(p)),m+' '+p);assert.ok(op.operationId);assert.ok(!ids.has(op.operationId));ids.add(op.operationId);
   }
-  assert.ok(ids.size>=81);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);assert.doesNotMatch(JSON.stringify(spec),brand);
+  assert.equal(ids.size,142);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);assert.doesNotMatch(JSON.stringify(spec),brand);
   assert.equal(spec.paths['/keys'].post.security.length,0);
   assert.ok(spec.paths['/account/retention'].get);assert.ok(spec.paths['/organisation/name'].patch);
 });

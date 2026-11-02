@@ -408,23 +408,6 @@ Codes are alphabetical. Some codes have more than one status because their read,
 
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
-| <span id="legacy-carrier-01">Legacy carrier refusal 01</span> | 400 | This service number has no API key saved. Re-import it on the Phone Numbers page. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-02">Legacy carrier refusal 02</span> | 400 | This number has no service credentials saved. Re-import it on the Phone Numbers page. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-03">Legacy carrier refusal 03</span> | 400 | This service number has no TeXML application (connection) id. Re-import it with the application id. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-04">Legacy carrier refusal 04</span> | 404 | The number was not found in the carrier account. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-05">Legacy carrier refusal 05</span> | 404 | The number was not found in the carrier account. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-06">Legacy carrier refusal 06</span> | 401 | The saved carrier credential was refused. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-07">Legacy carrier refusal 07</span> | 401 | service authentication failed. Check the service Auth Token saved on this phone number (re-import the number with its current token). | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-08">Legacy carrier refusal 08</span> | 400 | service rejected this request. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-09">Legacy carrier refusal 09</span> | 403 | Your service account is not allowed to call this destination. Check geo permissions in your service console (Voice  Geographic Permissions) or verify the number. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-10">Legacy carrier refusal 10</span> | 502 | The carrier returned an unexpected failure. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-11">Legacy carrier refusal 11</span> | 403 | service rejected this request. Check your service account permissions. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-12">Legacy carrier refusal 12</span> | 403 | Your service account doesn't have permission to dial this country. Enable it under Voice  Geographic Permissions. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-13">Legacy carrier refusal 13</span> | 401 | The saved carrier credential was refused. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-14">Legacy carrier refusal 14</span> | 404 | service could not find the requested resource. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-15">Legacy carrier refusal 15</span> | 403 | The destination number isn't verified on your service trial account. Verify it in the service console or upgrade your account. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-16">Legacy carrier refusal 16</span> | 429 | Your service account is being rate-limited. Slow down requests or contact service support. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
-| <span id="legacy-carrier-17">Legacy carrier refusal 17</span> | 404 | service could not find the resource (number SID or account). Check the service credentials saved on this phone number. | Review the number and saved carrier connection in the dashboard. If uncertain, ask support before another attempt. |
 
 <style>{`
  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
@@ -437,3 +420,124 @@ Codes are alphabetical. Some codes have more than one status because their read,
  table th:nth-child(4) { width: 35%; }
  td span[id] { scroll-margin-top: 120px; }
 `}</style>
+
+## Knowledge preparation and keyterm limits
+
+Knowledge job failures can be returned in a successful job-read response; the status below applies when raised as an HTTP error. Messages can be more specific for a particular operation.
+
+| Code | HTTP status | Message or meaning | Recovery |
+| --- | --- | --- | --- |
+| <span id="measure_busy">measure_busy</span> | 429 | Other files are being checked. Please try again in a moment. | Wait for the stated retry/reset time. |
+| <span id="number_knowledge_removed">number_knowledge_removed</span> | 410 | Knowledge belongs to an agent now. Open the attached agent’s knowledge. | Read current state and the safe details before retrying. |
+| <span id="invalid_keyterms">invalid_keyterms</span> | 422 | The automatic words could not be checked. Your saved knowledge is unchanged. | Read current state and the safe details before retrying. |
+| <span id="keyterms_term_too_long">keyterms_term_too_long</span> | 400 | Keep each word or phrase within 50 characters to save | Shorten the term. details.field is boosted_keywords; details.limit is 50. |
+| <span id="keyterms_list_too_large">keyterms_list_too_large</span> | 400 | This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. | Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte. |
+
+## Shared account and personal-session errors
+
+These codes also exist in the engine’s personal-session, account, billing or dashboard workflows. Listing a code does not make a dashboard-only route part of the public API.
+
+| Code | HTTP status | Message or meaning | Recovery |
+| --- | --- | --- | --- |
+| <span id="account_not_initialized">account_not_initialized</span> | 403 | Your account is not set up yet. Reload the dashboard. | Use the required personal session or refresh access. |
+| <span id="account_ambiguous">account_ambiguous</span> | 403 | Your account needs attention. Contact support. | Use the required personal session or refresh access. |
+| <span id="dashboard_owner_required">dashboard_owner_required</span> | 410, 403 | The engine refused this account or session operation. Read its safe message and details. | Use the required personal session or refresh access. |
+| <span id="delete_confirmation_required">delete_confirmation_required</span> | 400 | Type DELETE to confirm. | Correct the input or account state before retrying. |
+| <span id="account_close_unconfirmed">account_close_unconfirmed</span> | 503 | The engine refused this account or session operation. Read its safe message and details. | Read current state before retrying an uncertain write. |
+| <span id="internal_error">internal_error</span> | 500 | Something went wrong on our side. | Read current state before retrying an uncertain write. |
+| <span id="dashboard_session_required">dashboard_session_required</span> | 403 | Sign in to download your data. | Use the required personal session or refresh access. |
+| <span id="export_rate_limited">export_rate_limited</span> | 429 | A download was requested recently. Try again in 15 minutes. | Correct the input or account state before retrying. |
+| <span id="export_unavailable">export_unavailable</span> | 503 | Download could not finish. No data was changed. Try again later or contact support. | Read current state before retrying an uncertain write. |
+| <span id="not_configured">not_configured</span> | 503 | Google Calendar is not configured on this environment | Read current state before retrying an uncertain write. |
+| <span id="ticket_unavailable">ticket_unavailable</span> | 503 | Google connect is not available right now. Try again in a moment. | Read current state before retrying an uncertain write. |
+| <span id="guard_unavailable">guard_unavailable</span> | 503 | Could not check this connection right now. Reload this page in a moment. | Read current state before retrying an uncertain write. |
+| <span id="no_refresh_token">no_refresh_token</span> | 409 | Google did not return a refresh token. Connect again. | Correct the input or account state before retrying. |
+| <span id="already_connected">already_connected</span> | 409 | Another calendar row for this number appeared while saving. Reload the page, check the card and connect again if needed. | Correct the input or account state before retrying. |
+| <span id="save_failed">save_failed</span> | 503 | Google Calendar could not be saved. Connect it again. | Read current state before retrying an uncertain write. |
+| <span id="number_taken">number_taken</span> | 409 | That number is registered to another account | Correct the input or account state before retrying. |
+| <span id="payment_required">payment_required</span> | 402 | Add credit to use the voice preview and the browser test call. | Correct the input or account state before retrying. |
+| <span id="mfa_required">mfa_required</span> | 403 | Enter your two-factor code to continue | Use the required personal session or refresh access. |
+| <span id="reauthentication_required">reauthentication_required</span> | 403 | Sign in again before this account action. Your optional two-factor code is still required if enabled. | Use the required personal session or refresh access. |
+| <span id="invalid_signup">invalid_signup</span> | 400 | Enter your name and a password between 8 and 128 characters. | Correct the input or account state before retrying. |
+| <span id="join_unconfirmed">join_unconfirmed</span> | 503 | Your login could not be confirmed. Try Log in and join before creating it again. | Read current state before retrying an uncertain write. |
+| <span id="login_exists">login_exists</span> | 409 | Your login could not be created. If you already have one, choose Log in and join. Otherwise check your password and try again. | Correct the input or account state before retrying. |
+| <span id="login_required">login_required</span> | 503 | You joined the team. Log in to continue. | Read current state before retrying an uncertain write. |
+| <span id="invalid_payment_method">invalid_payment_method</span> | 400 | Choose a saved card. | Correct the input or account state before retrying. |
+| <span id="payment_method_not_found">payment_method_not_found</span> | 404 | That saved card was not found. | Correct the input or account state before retrying. |
+| <span id="cards_unavailable">cards_unavailable</span> | 503 | Card details unavailable right now. Try again shortly. | Read current state before retrying an uncertain write. |
+| <span id="billing_changed">billing_changed</span> | 409 | Your billing details changed. Refresh billing before choosing a card. | Correct the input or account state before retrying. |
+| <span id="invalid_payment">invalid_payment</span> | 400 | Choose a payment from your history. | Correct the input or account state before retrying. |
+| <span id="payment_not_found">payment_not_found</span> | 404 | That payment was not found. | Correct the input or account state before retrying. |
+| <span id="payment_details_unavailable">payment_details_unavailable</span> | 503 | Payment details unavailable right now. Please try again. | Read current state before retrying an uncertain write. |
+
+## Historical error-link aliases
+
+The identifiers below are documentation anchors, not literal engine error codes. They retain older error links using neutral labels.
+
+<span id="legacy-carrier-01" />
+
+This service number has no API key saved. Re-import it on the Phone Numbers page.
+
+<span id="legacy-carrier-02" />
+
+This number has no service credentials saved. Re-import it on the Phone Numbers page.
+
+<span id="legacy-carrier-03" />
+
+This service number has no TeXML application (connection) id. Re-import it with the application id.
+
+<span id="legacy-carrier-04" />
+
+The number was not found in the carrier account.
+
+<span id="legacy-carrier-05" />
+
+The number was not found in the carrier account.
+
+<span id="legacy-carrier-06" />
+
+The saved carrier credential was refused.
+
+<span id="legacy-carrier-07" />
+
+service authentication failed. Check the service Auth Token saved on this phone number (re-import the number with its current token).
+
+<span id="legacy-carrier-08" />
+
+service rejected this request.
+
+<span id="legacy-carrier-09" />
+
+Your service account is not allowed to call this destination. Check geo permissions in your service console (Voice  Geographic Permissions) or verify the number.
+
+<span id="legacy-carrier-10" />
+
+The carrier returned an unexpected failure.
+
+<span id="legacy-carrier-11" />
+
+service rejected this request. Check your service account permissions.
+
+<span id="legacy-carrier-12" />
+
+Your service account doesn't have permission to dial this country. Enable it under Voice  Geographic Permissions.
+
+<span id="legacy-carrier-13" />
+
+The saved carrier credential was refused.
+
+<span id="legacy-carrier-14" />
+
+service could not find the requested resource.
+
+<span id="legacy-carrier-15" />
+
+The destination number isn't verified on your service trial account. Verify it in the service console or upgrade your account.
+
+<span id="legacy-carrier-16" />
+
+Your service account is being rate-limited. Slow down requests or contact service support.
+
+<span id="legacy-carrier-17" />
+
+service could not find the resource (number SID or account). Check the service credentials saved on this phone number.

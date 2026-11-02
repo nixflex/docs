@@ -6,7 +6,7 @@ icon: "waveform-lines"
 
 With **your own TTS**, the agent speaks with a voice from **your own** voice-provider account - any voice in your library, cloned voices included - and the per-minute price drops by **$0.02**, because Nixflex no longer pays for the speech.
 
-Supported providers: **ElevenLabs** and **Cartesia**. Each is a hand-built streaming integration - voice is the most latency-sensitive part of a call, so this list is curated rather than open.
+Choose a supported voice service in the dashboard. Each connection uses a tested streaming integration.
 
 <Note>
   The connection is **tested before it is saved**: Nixflex runs one real synthesis against your account with the exact voice ID you enter. A wrong voice ID or a dead key is refused at save with the provider's reason - never discovered on a live call.
@@ -16,10 +16,10 @@ Supported providers: **ElevenLabs** and **Cartesia**. Each is a hand-built strea
 
 <Steps>
   <Step title="Find your voice ID">
-    In your provider's console, pick a voice and copy its ID (ElevenLabs: the Voices page; Cartesia: the voice's UUID).
+    In your provider's console, pick a voice and copy its ID .
   </Step>
   <Step title="Connect it">
-    In **Settings → Your own TTS**, or via the API below: provider, voice ID, and your provider API key.
+    In **Settings → Your own TTS**, choose the supported connection, voice ID, and your private credential.
   </Step>
   <Step title="Your voice speaks every phone call">
     Applies account-wide. Your provider bills you for the characters; the Nixflex rate drops by $0.02/min on calls your voice actually served.
@@ -36,38 +36,9 @@ Supported providers: **ElevenLabs** and **Cartesia**. Each is a hand-built strea
 - The call's **Events** tab records a `PROVIDER_FALLBACK` event with the reason.
 - **That call bills at the standard TTS rate** - the discount applies only to calls your voice actually carried.
 
-## Setting it up via the API
+## Private setup
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/account/tts \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider": "elevenlabs",
-    "voice_id": "21m00Tcm4TlvDq8ikWAM",
-    "api_key": "sk_..."
-  }'
-```
-
-| Field | Required | Notes |
-|---|---|---|
-| `provider` | Yes | `elevenlabs` or `cartesia` |
-| `voice_id` | Yes | Exactly as shown in your provider's console |
-| `api_key` | Yes | **Write-only** - stored encrypted, never returned |
-
-Read the configuration (the key is never included):
-
-```bash
-curl https://api.nixflex.com/v1/account/tts \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-Disconnect (calls return to the standard voice and rate from the next call):
-
-```bash
-curl -X DELETE https://api.nixflex.com/v1/account/tts \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
+Use **Settings → Your own TTS** to select an available connection and save its voice ID and credential privately. Account voice configuration is not part of the public API reference. Do not put private credentials in assistant conversations or public examples.
 
 ## Stacking the discounts
 
