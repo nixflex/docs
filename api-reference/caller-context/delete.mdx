@@ -54,7 +54,7 @@ Use E.164 numbers for both path values. The route removes whitespace and adds + 
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER`, `NXF_CALLER_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER`, `NXF_CALLER_NUMBER` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
@@ -65,33 +65,25 @@ curl --request DELETE \
 ```
 
 ```javascript Node
-import { Nixflex } from 'nixflex';
-
-const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
-  maxRetries: 0,
-});
-const result = await client.callers.delete(process.env.NXF_PHONE_NUMBER, process.env.NXF_CALLER_NUMBER);
-console.log('Request completed.');
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.callers.delete(process.env.NXF_PHONE_NUMBER,process.env.NXF_CALLER_NUMBER);
+// Handle result privately; do not log secrets or call content.
 ```
 
 ```python Python
-import os
+import os, json
+from pathlib import Path
 from nixflex import Nixflex
-
-with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
-    max_retries=0,
-) as client:
-    result = client.callers.delete(os.environ["NXF_PHONE_NUMBER"], os.environ["NXF_CALLER_NUMBER"])
-    print("Request completed.")
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.callers.delete(os.environ["NXF_PHONE_NUMBER"],os.environ["NXF_CALLER_NUMBER"])
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex callers delete "$NXF_PHONE_NUMBER" "$NXF_CALLER_NUMBER" --confirm \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex callers delete "$NXF_PHONE_NUMBER" "$NXF_CALLER_NUMBER" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>

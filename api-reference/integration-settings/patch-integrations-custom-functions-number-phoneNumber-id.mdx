@@ -1,0 +1,176 @@
+---
+title: "Update a custom function | Nixflex developer API reference"
+sidebarTitle: "Update a custom function"
+description: "Update a custom function with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application."
+openapi: "/api-reference/public.openapi.json PATCH /integrations/custom-functions/number/{phoneNumber}/{id}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Change only supplied fields of one owned custom function. Omitted fields keep their saved values; this does not create a missing function.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+| `id` (path) | string | Yes | None | Custom function ID returned by create or list for this number. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `name` | string | No | Unchanged | Lowercase snake_case function name. Maximum 64 characters. Pattern: `^[a-z][a-z0-9_]*$`. |
+| `description` | string | No | Unchanged | Description supplied to the agent. |
+| `url` | string | No | Unchanged | HTTPS destination; required on create. |
+| `method` | string | No | Unchanged | Uppercased before validation. Allowed: `"GET"`, `"POST"`, `"PUT"`, `"PATCH"`, `"DELETE"`. |
+| `headers` | object | No | Unchanged | Private HTTP headers. GET returns only has_headers. |
+| `parameters` | object | No | Unchanged | Function parameter JSON schema. |
+| `speak_during` | string or null | No | Unchanged | Optional phrase; a falsey value clears it. |
+| `timeout_ms` | integer | No | Unchanged | Parsed as an integer and clamped to 1,000–45,000 ms. Zero or nonnumeric values fall back to 5,000. |
+| `is_active` | boolean | No | Unchanged | Only literal false disables the function. |
+
+Headers are private and never returned by the list route. Timeout inputs are parsed and clamped; the stored range is 1,000–45,000 ms. A supplied falsey description becomes an empty string, falsey headers become an empty object, falsey parameters restore the default schema, and falsey speak_during clears the phrase.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ok` | boolean | Request succeeded. Value: `true`. |
+| `id` | string | Function identifier. |
+| `phone_number` | string | Owned phone number. |
+| `name` | string | Saved function name. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER`, `NXF_FUNCTION_ID` privately to the intended owned identifiers or integration values before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')/$(node -p 'encodeURIComponent(process.env.NXF_FUNCTION_ID)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"description":"Look up the caller booking."}'
+```
+
+```javascript Node (direct HTTP)
+const body = {
+  "description": "Look up the caller booking."
+};
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/${encodeURIComponent(process.env.NXF_PHONE_NUMBER)}/${encodeURIComponent(process.env.NXF_FUNCTION_ID)}`, {
+  method: 'PATCH',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the result privately; never log credentials or destination URLs.
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+body = {
+  "description": "Look up the caller booking."
+}
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/{quote(os.environ['NXF_PHONE_NUMBER'], safe='')}/{quote(os.environ['NXF_FUNCTION_ID'], safe='')}",
+    method="PATCH",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
+    data=json.dumps(body).encode("utf-8"),
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the result privately; never log credentials or destination URLs.
+```
+
+```bash CLI (direct HTTP)
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')/$(node -p 'encodeURIComponent(process.env.NXF_FUNCTION_ID)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"description":"Look up the caller booking."}'
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "ok": true,
+  "id": "11111111-1111-4111-8111-111111111111",
+  "phone_number": "+12025550100",
+  "name": "lookup_booking"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 400 | [`invalid_phone`](/api-reference/errors#invalid_phone) | The number is not valid E.164. | Correct the request before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 400 | [`invalid_url`](/api-reference/errors#invalid_url) | The destination URL is not accepted. | Use the required HTTPS destination. |
+| 400 | [`invalid_name`](/api-reference/errors#invalid_name) | The function name is invalid. | Correct the request before retrying. |
+| 400 | [`invalid_method`](/api-reference/errors#invalid_method) | The HTTP method is not accepted. | Correct the request before retrying. |
+| 409 | [`duplicate_function`](/api-reference/errors#duplicate_function) | Another function on this number uses that name. | Correct the request before retrying. |
+| 400 | [`no_fields`](/api-reference/errors#no_fields) | No recognised updatable fields were supplied. | Correct the request before retrying. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency token is supported. Read the function list after a timeout before resending. Creation can conflict with an existing name, and repeating a delete may remove a function recreated under the same ID.
+
+## Related endpoints
+
+- [Create a custom function](/api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber)
+- [List custom functions](/api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber)
+- [Delete a custom function](/api-reference/integration-settings/delete-integrations-custom-functions-number-phoneNumber-id)
+- [custom functions](/advanced/custom-functions)

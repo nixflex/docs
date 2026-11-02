@@ -1,0 +1,164 @@
+---
+title: "Set Zapier settings | Nixflex developer API reference"
+sidebarTitle: "Set Zapier settings"
+description: "Set Zapier settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application."
+openapi: "/api-reference/public.openapi.json PUT /integrations/zapier/number/{phoneNumber}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Save Zapier settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Send a JSON object. Credential values must stay private.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `is_active` | boolean | No | `true` | Only literal false disables this configuration. |
+| `agent_id` | string | No | Omitted | Fallback agent ID used only when the number has no assigned agent; does not move the number. |
+| `post_call_url` | string | Yes | None | HTTPS destination. The handler trims the value and requires the https:// prefix. |
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ok` | boolean | Request succeeded. Value: `true`. |
+| `phone_number` | string | Owned phone number. |
+| `provider` | string | Integration identifier. Value: `"zapier"`. |
+| `is_active` | boolean | Whether the saved integration is enabled. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER` privately to the intended owned identifiers or integration values before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request PUT \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"post_call_url":"https://example.com/events"}'
+```
+
+```javascript Node (direct HTTP)
+const body = {
+  "post_call_url": "https://example.com/events"
+};
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/${encodeURIComponent(process.env.NXF_PHONE_NUMBER)}`, {
+  method: 'PUT',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the result privately; never log credentials or destination URLs.
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+body = {
+  "post_call_url": "https://example.com/events"
+}
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/{quote(os.environ['NXF_PHONE_NUMBER'], safe='')}",
+    method="PUT",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
+    data=json.dumps(body).encode("utf-8"),
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the result privately; never log credentials or destination URLs.
+```
+
+```bash CLI (direct HTTP)
+curl --request PUT \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"post_call_url":"https://example.com/events"}'
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "ok": true,
+  "phone_number": "+12025550100",
+  "provider": "zapier",
+  "is_active": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 400 | [`invalid_phone`](/api-reference/errors#invalid_phone) | The number is not valid E.164. | Correct the request before retrying. |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | A required field is missing or has the wrong type. | Correct the request before retrying. |
+| 400 | [`invalid_url`](/api-reference/errors#invalid_url) | The destination URL is not accepted. | Use the required HTTPS destination. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a replacement write with no idempotency token. Read the current settings after a timeout before deciding whether to resend. Never overwrite a newer configuration blindly.
+
+## Related endpoints
+
+- [Get Zapier settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber)
+- [Delete Zapier settings](/api-reference/integration-settings/delete-integrations-zapier-number-phoneNumber)
+- [Authentication and permissions](/api-reference/authentication)
+- [zapier make](/integrations/zapier-make)

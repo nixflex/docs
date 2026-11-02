@@ -2,7 +2,7 @@ import {test} from 'node:test';import a from 'node:assert/strict';import {readLe
 test('organisation draft keeps safety blockers, single balance/key, personal auth and honest delivery visible',()=>{
  const text=fs.readFileSync('concepts/organisations.mdx','utf8');
  for(const s of ['not released','safe hand-back','20 invitations','50 people','24 hours','12 months','500','personal','not automatically','35-tool','not published'])a.ok(text.includes(s),s);
- a.ok(fs.readFileSync('api-reference/organisations/overview.mdx','utf8').includes('live_disconnect_pending'));
+ a.ok(fs.readFileSync('api-reference/organisation/roles.mdx','utf8').includes('live_disconnect_pending'));
 });
 test('organisation OpenAPI external paths resolve and do not offer key-based personal owner actions',()=>{
  const root=JSON.parse(fs.readFileSync('api-reference/openapi.json')),part=JSON.parse(fs.readFileSync('api-reference/organisations.openapi.json'));

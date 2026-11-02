@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'C5-Http.ps1')
 $script:C5Base = 'https://nixflex-voice-engine-staging.up.railway.app'
 $script:C5Pass = 0; $script:C5Fail = 0; $script:C5Pending = 0
+$script:C5LastStatus=0; $script:C5LastCode='none'; $script:C5LastPhase='request'
 $script:C5Run = 'C5_missing_' + [guid]::NewGuid().ToString('N')
 $script:C5Cases = @'
 [
@@ -401,7 +402,7 @@ function Assert-C5($Condition) { if (-not $Condition) { throw 'C5 assertion fail
 function Pending-C5([string]$Name, [string]$Reason) { $script:C5Pending++; Write-Output ('PENDING | ' + $Name + ' | ' + $Reason) }
 function Test-C5([string]$Name, [scriptblock]$Action) {
     try { & $Action | Out-Null; $script:C5Pass++; Write-Output ('PASS | ' + $Name) }
-    catch { $script:C5Fail++; Write-Output ('FAIL | ' + $Name + ' | assertion or request failed; response withheld') }
+    catch { $script:C5Fail++; Write-Output ('FAIL | ' + $Name + ' | '+(Get-C5SafeReason)+' | response withheld') }
 }
 function Assert-C5Request([string]$Method, [string]$Path, [string]$Body, [string]$Auth) {
     Assert-C5 ($Auth -in @('Real','Invalid'))
@@ -434,6 +435,7 @@ function Assert-C5Request([string]$Method, [string]$Path, [string]$Body, [string
     Assert-C5 ($Body -notmatch '447861926140|447457401554|pickup_delay')
 }
 function Invoke-C5Request([string]$Method, [string]$Path, [string]$Body = '', [ValidateSet('Real','Invalid')][string]$Auth = 'Real') {
+    $script:C5LastStatus=0; $script:C5LastCode='none'; $script:C5LastPhase='request'
     Assert-C5Request $Method $Path $Body $Auth
     $headers = @{}
     if ($Auth -eq 'Real') { Assert-C5 (-not [string]::IsNullOrWhiteSpace($env:NXF_STAGING_KEY)); $headers.Authorization = 'Bearer ' + $env:NXF_STAGING_KEY }
@@ -443,13 +445,31 @@ function Invoke-C5Request([string]$Method, [string]$Path, [string]$Body = '', [V
     $status=0; $content=''; $source='success'
     try { $r=Invoke-WebRequest @args; $status=[int]$r.StatusCode; $content=[string]$r.Content }
     catch { $e=Read-C5HttpError $_; $status=$e.Status; $content=$e.Content; $source=$e.Source }
+    $script:C5LastStatus=$status; $script:C5LastPhase='parse'
     $json=$null
     if ($content) { try { $json=$content | ConvertFrom-Json } catch { throw 'Non-JSON response withheld' } }
+    if ($null -ne $json -and $null -ne $json.PSObject.Properties['error']) {
+        $errorObject=$json.PSObject.Properties['error'].Value
+        if ($null -ne $errorObject -and $null -ne $errorObject.PSObject.Properties['code']) {
+            $candidate=[string]$errorObject.PSObject.Properties['code'].Value
+            $script:C5LastCode='unrecognised'
+            if ($candidate -cmatch '^[a-z][a-z0-9_]{0,79}$') { $script:C5LastCode=$candidate }
+        }
+    }
+    $script:C5LastPhase='status'
     return [pscustomobject]@{Status=$status;Json=$json;ErrorSource=$source}
 }
 function Assert-C5Fields($Object, [string[]]$Fields) {
     foreach ($field in $Fields) { Assert-C5 ($null -ne $Object -and $Object.PSObject.Properties.Name -contains $field) }
 }
+function Assert-C5FeatureResponse($Response) {
+    Assert-C5 ($Response.Status -eq 200)
+    $script:C5LastPhase='shape'
+    Assert-C5 ($null -ne $Response.Json)
+    $field=$Response.Json.PSObject.Properties['enabled']
+    Assert-C5 ($null -ne $field -and $field.Value -is [bool])
+}
+function Get-C5SafeReason { return ('HTTP='+$script:C5LastStatus+' code='+$script:C5LastCode+' phase='+$script:C5LastPhase) }
 function Resolve-C5Path($Case, [string]$Number, [string]$Thread, [string]$Campaign) {
     return $Case.path.Replace(':channel','sms').Replace(':number',[uri]::EscapeDataString($Number)).Replace(':thread',[uri]::EscapeDataString($Thread)).Replace(':id',[uri]::EscapeDataString($Campaign)) + $Case.query
 }
@@ -496,10 +516,11 @@ foreach ($case in $script:C5Cases) {
         $r=Invoke-C5Request $case.method $path $body 'Real'
         if ($r.Status -eq 503 -and $r.Json.error.code -ceq 'agent_inbox_disabled') { Pending-C5 $name 'pending manual test: inbox feature disabled'; continue }
         if ($case.number -eq 98 -and $r.Status -eq 422 -and $r.Json.error.code -ceq 'agent_timezone_required') { Pending-C5 $name 'pending manual test: agent with configured time zone required'; continue }
-        Assert-C5 ($r.Status -eq 200); Assert-C5Fields $r.Json $case.fields
+        if ($case.number -eq 55) { Assert-C5FeatureResponse $r }
+        else { Assert-C5 ($r.Status -eq 200); $script:C5LastPhase='shape'; Assert-C5Fields $r.Json $case.fields }
         if ($case.number -eq 98) { Assert-C5 ($r.Json.preview_only -eq $true -and @($r.Json.rows).Count -eq 1) }
-        $script:C5Pass++; Write-Output ('PASS | '+$name+' | read/preview wire example')
-    } catch { $script:C5Fail++; Write-Output ('FAIL | '+$name+' | assertion or request failed; response withheld') }
+        $script:C5Pass++; Write-Output ('PASS | '+$name+' | '+(Get-C5SafeReason)+' | read/preview wire example')
+    } catch { $script:C5Fail++; Write-Output ('FAIL | '+$name+' | '+(Get-C5SafeReason)+' | response withheld') }
 }
 Write-Output ('TOTAL | PASS='+$script:C5Pass+' FAIL='+$script:C5Fail+' PENDING='+$script:C5Pending)
 if ($script:C5Fail -gt 0) { exit 1 }

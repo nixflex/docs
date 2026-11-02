@@ -69,46 +69,36 @@ agent_language takes precedence over agent_id. Without either, selectable reflec
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_VOICE_KEY` to the intended account-owned identifiers or approved recipient before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_VOICE_KEY` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
 ```bash cURL
 curl --request GET \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/voices/$NXF_VOICE_KEY" \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/voices/$NXF_VOICE_KEY?agent_language=multi" \
   --header "Authorization: Bearer $NXF_STAGING_KEY"
 ```
 
-```javascript Node (direct HTTP)
-const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/voices/${encodeURIComponent(process.env.NXF_VOICE_KEY)}`, {
-  method: 'GET',
-  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}` },
-});
-if (!response.ok) throw new Error(`HTTP ${response.status}`);
-const result = await response.json();
-console.log('Request completed.');
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.voices.get(process.env.NXF_VOICE_KEY, {agent_language:"multi"});
+// Handle result privately; do not log secrets or call content.
 ```
 
-```python Python (direct HTTP)
-import os
-import json
-from urllib.request import Request, urlopen
-from urllib.parse import quote
-
-request = Request(
-    f"https://nixflex-voice-engine-staging.up.railway.app/v1/voices/{quote(os.environ['NXF_VOICE_KEY'], safe='')}",
-    method="GET",
-    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"]},
-)
-with urlopen(request, timeout=30) as response:
-    result = json.load(response)
-print("Request completed.")
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.voices.get(os.environ["NXF_VOICE_KEY"], agent_language="multi")
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
-```bash CLI (direct HTTP)
-curl --request GET \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/voices/$NXF_VOICE_KEY" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex voices get "$NXF_VOICE_KEY" --agent-language multi --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>

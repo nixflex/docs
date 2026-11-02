@@ -120,7 +120,7 @@ Read web_calls_effective from the number detail endpoint to check effective webs
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
@@ -129,44 +129,29 @@ curl --request PATCH \
   --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"custom_prompt":"Example number instructions."}'
+  --data '{"sms_reply_enabled":false}'
 ```
 
 ```javascript Node
-import { Nixflex } from 'nixflex';
-
-const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
-  maxRetries: 0,
-});
-const body = {
-  "custom_prompt": "Example number instructions."
-};
-const result = await client.phoneNumbers.update(process.env.NXF_PHONE_NUMBER, body);
-console.log('Request completed.');
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.phoneNumbers.update(process.env.NXF_PHONE_NUMBER, {sms_reply_enabled:false});
+// Handle result privately; do not log secrets or call content.
 ```
 
 ```python Python
-import os
+import os, json
+from pathlib import Path
 from nixflex import Nixflex
-
-body = {
-  "custom_prompt": "Example number instructions."
-}
-
-with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
-    max_retries=0,
-) as client:
-    result = client.phone_numbers.update(os.environ["NXF_PHONE_NUMBER"], **body)
-    print("Request completed.")
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.phone_numbers.update(os.environ["NXF_PHONE_NUMBER"], sms_reply_enabled=False)
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers update "$NXF_PHONE_NUMBER" --set custom_prompt="Example number instructions." \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers update "$NXF_PHONE_NUMBER" --set sms_reply_enabled=false --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>

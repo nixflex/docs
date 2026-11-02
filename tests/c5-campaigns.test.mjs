@@ -56,12 +56,12 @@ test('web updates require revision, expose current B18 fields and preserve read 
  assert.equal(spec.paths['/contact-hours/preview'].post.requestBody.content['application/json'].schema.properties.recipients.maxItems,20);
  assert.match(read('api-reference/contact-controls/get-contact-suppressions.mdx'),/does not combine/);
 });
-test('C5 preserves old operation IDs, all other tabs and the 84 remaining operations',()=>{
+test('C5 preserves old operation IDs, all other tabs and the current remaining-operation ledger',()=>{
  const previous=spawnSync('git',['show','efcf970:api-reference/public.openapi.json'],{cwd:root,encoding:'utf8',maxBuffer:8*1024*1024});assert.equal(previous.status,0);
  const oldSpec=JSON.parse(previous.stdout);for(const d of defs){const old=oldSpec.paths[d.specPath]?.[d.method.toLowerCase()];if(old)assert.equal(spec.paths[d.specPath][d.method.toLowerCase()].operationId,old.operationId);}
  const previousConfig=spawnSync('git',['show','efcf970:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(previousConfig.status,0);
  const oldConfig=JSON.parse(previousConfig.stdout);for(const tab of config.navigation.tabs.filter(t=>t.tab!=='API reference'))assert.deepEqual(tab,oldConfig.navigation.tabs.find(t=>t.tab===tab.tab));
- const missing=read('MISSING-PAGES.md');assert.match(missing,/84 public operations/);
+ const missing=read('MISSING-PAGES.md');assert.ok(missing.includes(read('COVERAGE.md').match(/\| toBuild \| (\d+) \|/)[1]+' public operations'));
  for(const d of defs)assert.ok(!missing.split('\n').some(line=>line.startsWith('| '+d.number+' | ')));
  const coverage=read('COVERAGE.md');for(const n of [54,59,90,91,92,93,94,99,101,176,177,179,180,181,182,183])assert.ok(coverage.includes('| '+n+' | pending manual test |'));
 });

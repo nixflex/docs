@@ -1,0 +1,145 @@
+---
+title: "Get GoHighLevel settings | Nixflex developer API reference"
+sidebarTitle: "Get GoHighLevel settings"
+description: "Get GoHighLevel settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application."
+openapi: "/api-reference/public.openapi.json GET /integrations/gohighlevel/number/{phoneNumber}"
+playground: "simple"
+---
+
+<style>{`
+  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+  table code { white-space: normal; overflow-wrap: anywhere; }
+  .agent-error-table th:nth-child(1) { width: 14%; }
+  .agent-error-table th:nth-child(2) { width: 27%; }
+  .agent-error-table th:nth-child(3) { width: 25%; }
+  .agent-error-table th:nth-child(4) { width: 34%; }
+
+  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
+  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
+  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
+  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
+  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
+  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
+`}</style>
+
+Read the saved GoHighLevel settings for an owned phone number. Secret values are represented by configuration flags.
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Do not send a request body.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | string | Owned phone number. |
+| `is_active` | boolean | Whether the saved integration is enabled. |
+| `pit_set` | boolean | A private token is configured. |
+| `location_id` | string | Saved location ID or empty string. |
+| `tags` | array of string | Saved value. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER` privately to the intended owned identifiers or integration values before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node (direct HTTP)
+const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/${encodeURIComponent(process.env.NXF_PHONE_NUMBER)}`, {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the result privately; never log credentials or destination URLs.
+```
+
+```python Python (direct HTTP)
+import os
+import json
+from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+request = Request(
+    f"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/{quote(os.environ['NXF_PHONE_NUMBER'], safe='')}",
+    method="GET",
+    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"]},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the result privately; never log credentials or destination URLs.
+```
+
+```bash CLI (direct HTTP)
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/$(node -p 'encodeURIComponent(process.env.NXF_PHONE_NUMBER)')" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": "+12025550100",
+  "is_active": true,
+  "pit_set": true,
+  "location_id": "example-location",
+  "tags": [
+    "voice"
+  ]
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Set GoHighLevel settings](/api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber)
+- [Delete GoHighLevel settings](/api-reference/integration-settings/delete-integrations-gohighlevel-number-phoneNumber)
+- [Authentication and permissions](/api-reference/authentication)
+- [gohighlevel](/integrations/gohighlevel)

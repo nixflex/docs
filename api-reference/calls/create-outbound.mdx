@@ -67,7 +67,7 @@ Use dynamic_vars for single-call substitutions; campaign recipient variables are
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_AGENT_ID`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running a successful example contacts the recipient; use only an approved test destination.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running a successful example contacts the recipient; use only an approved test destination.
 
 <RequestExample>
 
@@ -76,48 +76,29 @@ curl --request POST \
   --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/outbound" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the appointment time requested by the recipient.\"}"
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
 ```
 
 ```javascript Node
-import { Nixflex } from 'nixflex';
-
-const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
-  maxRetries: 0,
-});
-const body = {
-  "agent_id": process.env.NXF_AGENT_ID,
-  "to_number": process.env.NXF_TO_NUMBER,
-  "prompt": "Confirm the appointment time requested by the recipient."
-};
-const result = await client.calls.create(body);
-console.log('Request completed.');
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
+// Handle result privately; do not log secrets or call content.
 ```
 
 ```python Python
-import os
+import os, json
+from pathlib import Path
 from nixflex import Nixflex
-
-body = {
-  "agent_id": os.environ["NXF_AGENT_ID"],
-  "to_number": os.environ["NXF_TO_NUMBER"],
-  "prompt": "Confirm the appointment time requested by the recipient."
-}
-
-with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
-    max_retries=0,
-) as client:
-    result = client.calls.create(**body)
-    print("Request completed.")
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.create(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --to "$NXF_TO_NUMBER" --prompt "Confirm the appointment time requested by the recipient." \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>

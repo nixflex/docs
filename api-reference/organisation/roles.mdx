@@ -1,0 +1,40 @@
+---
+title: "Organisation authority and roles | Nixflex API reference"
+sidebarTitle: "Roles and permissions"
+description: "Understand organisation API-key and personal-session authority in Nixflex. Check Owner, Admin and Member permissions, invitations and uncertain changes."
+---
+
+<style>{`
+ table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+ table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
+ div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
+ div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
+ table th:nth-child(1) { width: 28%; }
+ table th:nth-child(2), table th:nth-child(3) { width: 20%; }
+ table th:nth-child(5) { width: 18%; }
+ table th:nth-child(4) { width: 14%; white-space: nowrap; }
+`}</style>
+
+The organisation API key is Owner-level server-side authority. Keep it private. A personal dashboard session uses the person’s current membership and MFA; never share the organisation key to bypass a personal role. These routes require organisations to be enabled in the environment. A disabled environment returns 404.
+
+## Role permissions
+
+| Action | Owner | Admin | Member | Organisation API key |
+| --- | --- | --- | --- | --- |
+| Read own organisation context | Yes | Yes | Yes | Yes |
+| Read team and activity | Yes | Yes | No | Yes |
+| Invite, resend or revoke | Admin or Member invitations | Member invitations only | No | Owner authority |
+| Remove a teammate | Non-Owners only | Members only | No | Non-Owners only |
+| Change a role | Non-Owners to Admin or Member | No | No | Yes |
+| Rename or reveal signing secret | Yes | No | No | Yes |
+| Claim an unclaimed API-only account | Personal session refused | Personal session refused | Personal session refused | Existing unclaimed account only |
+
+[Read organisation context](/api-reference/organisation/get-organisation), [list members](/api-reference/organisation/get-organisation-members) or [read activity](/api-reference/organisation/get-organisation-activity) before changing team access. No request may choose a different account or grant itself a role.
+
+An invitation lasts 24 hours. A sent receipt means the email service accepted it, not that the person received or accepted it. Resend replaces the old link and consumes invitation quota. The invited person must accept using their own verified login. Ownership offers, acceptance, leaving and account closure remain personal dashboard flows; they are not API-key methods.
+
+Removal and role-change responses include `live_disconnect_pending`. A 202 response confirms the membership change but leaves live disconnection unconfirmed. Neither a 200 nor a 202 promises an AI hand-back or ends an ongoing human call. Read the current state after an uncertain response before retrying.
+
+Activity JSON pages contain up to 50 events with a `next_cursor`. CSV exports stream all matching events in 500-row chunks, with a permission check on each chunk. Activity is retained for up to 12 months. The request fields and response shape are documented on the activity operation page.
+
+[Get the signing secret](/api-reference/organisation/get-organisation-signing-secret) is an explicit private read. It is absent from context and member lists and has no candidate SDK, CLI or MCP reveal method. Never place that response in logs or automatic tool output.

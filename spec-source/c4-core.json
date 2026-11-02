@@ -105,7 +105,15 @@
         "key_secret": "nxfs_REPLACE_WITH_SAVED_SECRET"
       },
       "anonymous": true,
-      "retry": "No idempotency key is documented. Each successful signup creates a different account. A lost response can leave a created account whose secret you did not receive. Do not automatically repeat signup; reconcile through support. There is no public API-only account deletion endpoint."
+      "retry": "No idempotency key is documented. Each successful signup creates a different account. A lost response can leave a created account whose secret you did not receive. Do not automatically repeat signup; reconcile through support. There is no public API-only account deletion endpoint.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst result = await Nixflex.createKey({name:\"Example API account\"}, baseUrl);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex keys create --name \"Example API account\" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json > \"$NXF_SECRET_RESPONSE_FILE\"",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nresult = Nixflex.create_key(name=\"Example API account\", base_url=base_url)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "2": {
       "number": 2,
@@ -162,7 +170,15 @@
         "key_id": "nxf_EXAMPLE",
         "key_secret": "nxfs_NEW_SECRET_EXAMPLE"
       },
-      "retry": "Never automatically retry rotation. A repeated successful request invalidates the previous newly issued secret. Save the response in a secret store, update all consumers, and verify authentication without printing credentials."
+      "retry": "Never automatically retry rotation. A repeated successful request invalidates the previous newly issued secret. Save the response in a secret store, update all consumers, and verify authentication without printing credentials.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.keys.rotate();\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex keys rotate --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json > \"$NXF_SECRET_RESPONSE_FILE\"",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.keys.rotate()\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "51": {
       "number": 51,
@@ -226,6 +242,14 @@
         "call_retention_days": 90,
         "applies_to": "new_agents",
         "processing_enabled": true
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.account.retention();\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex account retention --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.account.retention()\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "64": {
@@ -1090,8 +1114,8 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "name": "Updated example agent",
-        "temperature": 0.2
+        "name": "Support",
+        "call_retention_days": 30
       },
       "exampleResponse": {
         "agent_id": "agent_0123456789abcdef",
@@ -1102,7 +1126,15 @@
         "dynamic_greeting": true,
         "is_active": true
       },
-      "retry": "Never automatically retry PUT. Read the agent after a timeout and compare the fields you intended to change. Repeating a setting is not a guarantee that audit, validation, or retention effects are absent."
+      "retry": "Never automatically retry PUT. Read the agent after a timeout and compare the fields you intended to change. Repeating a setting is not a guarantee that audit, validation, or retention effects are absent.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.agents.update(process.env.NXF_AGENT_ID, {name:\"Support\",call_retention_days:30});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex agents update \"$NXF_AGENT_ID\" --name Support --set call_retention_days=30 --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.agents.update(os.environ[\"NXF_AGENT_ID\"], name=\"Support\",call_retention_days=30)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "84": {
       "number": 84,
@@ -1804,8 +1836,16 @@
           }
         ]
       },
-      "query": "?limit=1",
-      "exampleResponse": []
+      "query": "?limit=25&offset=0",
+      "exampleResponse": [],
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.list({limit:25,offset:0});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls list --limit 25 --offset 0 --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.calls.list(limit=25,offset=0)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "87": {
       "number": 87,
@@ -2349,6 +2389,14 @@
         "transcript": null,
         "recording_url": null,
         "recording_status": "unknown"
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.read(process.env.NXF_CALL_ID);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls read \"$NXF_CALL_ID\" --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.calls.read(os.environ[\"NXF_CALL_ID\"])\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "89": {
@@ -2453,6 +2501,14 @@
         "status": "unknown",
         "url": null,
         "expires_at": null
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.recording(process.env.NXF_CALL_ID);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls recording \"$NXF_CALL_ID\" --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.calls.recording(os.environ[\"NXF_CALL_ID\"])\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "95": {
@@ -3036,7 +3092,7 @@
         "description": "",
         "additionalProperties": false
       },
-      "query": "?limit=1&period=all",
+      "query": "?period=month&outcome=failed&limit=25",
       "exampleResponse": {
         "data": [],
         "totals": {
@@ -3061,6 +3117,14 @@
         "offset": 0,
         "has_more": false,
         "next_cursor": null
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.history({period:\"month\",outcome:\"failed\",limit:25});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls history --period month --outcome failed --limit 25 --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.calls.history(period=\"month\",outcome=\"failed\",limit=25)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "96": {
@@ -3361,8 +3425,9 @@
       },
       "exampleBody": {
         "agent_id": "$NXF_AGENT_ID",
+        "from_number": "$NXF_PHONE_NUMBER",
         "to_number": "$NXF_TO_NUMBER",
-        "prompt": "Confirm the appointment time requested by the recipient."
+        "prompt": "Confirm the requested appointment"
       },
       "exampleResponse": {
         "call_id": "call_example",
@@ -3370,7 +3435,15 @@
         "to": "+12025550101",
         "from": "+12025550100"
       },
-      "retry": "Never automatically retry POST, including after 429, a timeout or 5xx. A failed response can be uncertain after dispatch. Save call_id, work_id and safe error details when returned; inspect call history and known IDs before any deliberate new call. An initiated response with persistence: unconfirmed must not be replayed."
+      "retry": "Never automatically retry POST, including after 429, a timeout or 5xx. A failed response can be uncertain after dispatch. Save call_id, work_id and safe error details when returned; inspect call history and known IDs before any deliberate new call. An initiated response with persistence: unconfirmed must not be replayed.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:\"Confirm the requested appointment\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls create --agent \"$NXF_AGENT_ID\" --from \"$NXF_PHONE_NUMBER\" --to \"$NXF_TO_NUMBER\" --prompt \"Confirm the requested appointment\" --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.calls.create(agent_id=os.environ[\"NXF_AGENT_ID\"],from_number=os.environ[\"NXF_PHONE_NUMBER\"],to_number=os.environ[\"NXF_TO_NUMBER\"],prompt=\"Confirm the requested appointment\")\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "102": {
       "number": 102,
@@ -3526,7 +3599,7 @@
         "description": "",
         "additionalProperties": false
       },
-      "query": "?period=today",
+      "query": "?period=7d",
       "exampleResponse": {
         "period": "today",
         "timezone": "UTC",
@@ -3545,6 +3618,14 @@
             "requests": 12
           }
         ]
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.keys.activity({period:\"7d\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex keys activity --period 7d --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.keys.activity(period=\"7d\")\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "165": {
@@ -3750,7 +3831,15 @@
         }
       },
       "bodyFile": true,
-      "retry": "Never automatically retry an import. Save any returned operation_id from safe error details. A pending completion may allow an exact, deliberate reconciliation request after state is checked; an uncertain routing outcome needs support. Do not re-import to work around number_cleanup_uncertain."
+      "retry": "Never automatically retry an import. Save any returned operation_id from safe error details. A pending completion may allow an exact, deliberate reconciliation request after state is checked; an uncertain routing outcome needs support. Do not re-import to work around number_cleanup_uncertain.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nimport { readFileSync } from 'node:fs';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.phoneNumbers.import(JSON.parse(readFileSync(\"import.json\",\"utf8\")));\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex numbers import --body @import.json --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.phone_numbers.import_(**json.loads(Path(\"import.json\").read_text()))\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "166": {
       "number": 166,
@@ -3874,7 +3963,15 @@
           "deleted": true
         }
       },
-      "retry": "Never automatically retry DELETE. Read the number after an uncertain result and preserve safe operation_id details. A confirmed missing number may be consistent with a completed removal; it does not prove every external routing action or data deletion occurred."
+      "retry": "Never automatically retry DELETE. Read the number after an uncertain result and preserve safe operation_id details. A confirmed missing number may be consistent with a completed removal; it does not prove every external routing action or data deletion occurred.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex numbers delete \"$NXF_PHONE_NUMBER\" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.phone_numbers.delete(os.environ[\"NXF_PHONE_NUMBER\"])\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "168": {
       "number": 168,
@@ -4524,7 +4621,7 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "custom_prompt": "Example number instructions."
+        "sms_reply_enabled": false
       },
       "exampleResponse": {
         "phone_number": {
@@ -4533,7 +4630,15 @@
           "custom_prompt": "Example number instructions."
         }
       },
-      "retry": "Never automatically retry PATCH. Read the number after an uncertain settings write or move. Do not change routing to compensate for an unconfirmed move."
+      "retry": "Never automatically retry PATCH. Read the number after an uncertain settings write or move. Do not change routing to compensate for an unconfirmed move.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.phoneNumbers.update(process.env.NXF_PHONE_NUMBER, {sms_reply_enabled:false});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex numbers update \"$NXF_PHONE_NUMBER\" --set sms_reply_enabled=false --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.phone_numbers.update(os.environ[\"NXF_PHONE_NUMBER\"], sms_reply_enabled=False)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "169": {
       "number": 169,
@@ -4631,7 +4736,15 @@
         "caller_number": "+12025550101",
         "deleted": true
       },
-      "retry": "There is no documented idempotency-key replay guarantee. A repeat after successful deletion returns 404 caller_not_found. After an uncertain result, read the caller record before another attempt; repeating later could remove newly created context. Disable automatic write retries."
+      "retry": "There is no documented idempotency-key replay guarantee. A repeat after successful deletion returns 404 caller_not_found. After an uncertain result, read the caller record before another attempt; repeating later could remove newly created context. Disable automatic write retries.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.callers.delete(process.env.NXF_PHONE_NUMBER,process.env.NXF_CALLER_NUMBER);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex callers delete \"$NXF_PHONE_NUMBER\" \"$NXF_CALLER_NUMBER\" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.callers.delete(os.environ[\"NXF_PHONE_NUMBER\"],os.environ[\"NXF_CALLER_NUMBER\"])\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "172": {
       "number": 172,
@@ -4828,8 +4941,8 @@
         "callers": [
           {
             "caller_number": "+12025550101",
-            "name": "Example customer",
-            "reference_id": "example-001"
+            "name": "Sam",
+            "preference": null
           }
         ]
       },
@@ -4837,7 +4950,15 @@
         "phone_number": "+12025550100",
         "imported": 1
       },
-      "retry": "There is no documented idempotency-key replay guarantee. After a database error or timeout, read the affected caller records before a deliberate retry: some rows may already be saved. A repeat can overwrite newer context. Disable automatic write retries."
+      "retry": "There is no documented idempotency-key replay guarantee. After a database error or timeout, read the affected caller records before a deliberate retry: some rows may already be saved. A repeat can overwrite newer context. Disable automatic write retries.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nimport { readFileSync } from 'node:fs';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.callers.import(process.env.NXF_PHONE_NUMBER,JSON.parse(readFileSync(\"callers.json\",\"utf8\")).callers);\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex callers import \"$NXF_PHONE_NUMBER\" --body @callers.json --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.callers.import_(os.environ[\"NXF_PHONE_NUMBER\"],json.loads(Path(\"callers.json\").read_text())[\"callers\"])\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "174": {
       "number": 174,
@@ -5065,14 +5186,22 @@
         "agent_id": "$NXF_AGENT_ID",
         "from_number": "$NXF_PHONE_NUMBER",
         "to": "$NXF_TO_NUMBER",
-        "message": "Your requested appointment reminder."
+        "message": "Your requested update"
       },
       "exampleResponse": {
         "status": "sent",
         "to": "+12025550101",
         "from": "+12025550100"
       },
-      "retry": "Never automatically retry an SMS write. Preserve the accepted message/work IDs where available. If a timeout, connection failure or sms_outcome_unknown occurs, inspect receipts/history before deliberately sending again. An error’s retry hint does not override the no-automatic-write-retry rule."
+      "retry": "Never automatically retry an SMS write. Preserve the accepted message/work IDs where available. If a timeout, connection failure or sms_outcome_unknown occurs, inspect receipts/history before deliberately sending again. An error’s retry hint does not override the no-automatic-write-retry rule.",
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.sms.send({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to:process.env.NXF_TO_NUMBER,message:\"Your requested update\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex sms send --agent \"$NXF_AGENT_ID\" --from \"$NXF_PHONE_NUMBER\" --to \"$NXF_TO_NUMBER\" --message \"Your requested update\" --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.sms.send(agent_id=os.environ[\"NXF_AGENT_ID\"],from_number=os.environ[\"NXF_PHONE_NUMBER\"],to=os.environ[\"NXF_TO_NUMBER\"],message=\"Your requested update\")\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      }
     },
     "186": {
       "number": 186,
@@ -5197,6 +5326,14 @@
         "occupied_call_slots": 0,
         "capacity_source": "owned_reservations",
         "capacity_measured_since": "2026-11-01T00:00:00.000Z"
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.usage.get();\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex usage --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.usage.get()\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "187": {
@@ -5512,7 +5649,7 @@
         "description": "",
         "additionalProperties": false
       },
-      "query": "?limit=1",
+      "query": "?limit=25&language=en&agent_language=multi",
       "exampleResponse": {
         "data": [
           {
@@ -5535,6 +5672,14 @@
           }
         ],
         "next_cursor": null
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.voices.list({limit:25,language:\"en\",agent_language:\"multi\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex voices list --limit 25 --language en --agent-language multi --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.voices.list(limit=25,language=\"en\",agent_language=\"multi\")\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
       }
     },
     "188": {
@@ -5768,7 +5913,23 @@
         "previewLanguage": null,
         "previewStatus": "none",
         "previewUrl": null
-      }
+      },
+      "kitExamples": {
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.voices.get(process.env.NXF_VOICE_KEY, {agent_language:\"multi\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex voices get \"$NXF_VOICE_KEY\" --agent-language multi --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.voices.get(os.environ[\"NXF_VOICE_KEY\"], agent_language=\"multi\")\n# AsyncNixflex supports the same calls with await (and async with).",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI"
+      },
+      "query": "?agent_language=multi"
     }
+  },
+  "kitEvidence": {
+    "round": "K2",
+    "node": "0.10.0 candidate (unpublished)",
+    "cli": "0.10.0 candidate (unpublished)",
+    "python": "0.3.0 candidate (unpublished)",
+    "mcp": "0.4.0 candidate; 44 tools; no signup or bulk delete"
   }
 }

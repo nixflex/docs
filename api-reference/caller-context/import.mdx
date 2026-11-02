@@ -63,7 +63,7 @@ Use a business number that belongs to the authenticated account. Each caller row
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running. The CSV example sends the same single caller row. Blank CSV cells are omitted by the CLI; use the HTTP or SDK form to clear a field with null.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running. Prepare `callers.json` with the same JSON body shown by cURL. The CLI JSON form preserves null values. MCP bulk import accepts strings only; clear a single field with set_caller_context after an explicit request.
 
 <RequestExample>
 
@@ -72,60 +72,30 @@ curl --request POST \
   --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER/callers/import" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"callers":[{"caller_number":"+12025550101","name":"Example customer","reference_id":"example-001"}]}'
+  --data '{"callers":[{"caller_number":"+12025550101","name":"Sam","preference":null}]}'
 ```
 
 ```javascript Node
-import { Nixflex } from 'nixflex';
-
-const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
-  maxRetries: 0,
-});
-const body = {
-  "callers": [
-    {
-      "caller_number": "+12025550101",
-      "name": "Example customer",
-      "reference_id": "example-001"
-    }
-  ]
-};
-const result = await client.callers.import(process.env.NXF_PHONE_NUMBER, body.callers);
-console.log('Request completed.');
+import Nixflex from 'nixflex';
+import { readFileSync } from 'node:fs';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.callers.import(process.env.NXF_PHONE_NUMBER,JSON.parse(readFileSync("callers.json","utf8")).callers);
+// Handle result privately; do not log secrets or call content.
 ```
 
 ```python Python
-import os
+import os, json
+from pathlib import Path
 from nixflex import Nixflex
-
-body = {
-  "callers": [
-    {
-      "caller_number": "+12025550101",
-      "name": "Example customer",
-      "reference_id": "example-001"
-    }
-  ]
-}
-
-with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
-    max_retries=0,
-) as client:
-    result = client.callers.import_(os.environ["NXF_PHONE_NUMBER"], body["callers"])
-    print("Request completed.")
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.callers.import_(os.environ["NXF_PHONE_NUMBER"],json.loads(Path("callers.json").read_text())["callers"])
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-cat > callers.csv <<'CSV'
-caller_number,name,reference_id
-+12025550101,Example customer,example-001
-CSV
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex callers import "$NXF_PHONE_NUMBER" callers.csv \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex callers import "$NXF_PHONE_NUMBER" --body @callers.json --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>

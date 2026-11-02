@@ -49,7 +49,7 @@ No path, query or body fields are required. Use the current account credential. 
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_SECRET_RESPONSE_FILE` to a new file in a private, access-restricted location before using cURL or CLI. Save the returned secret in your secret store; do not log or commit the response.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_SECRET_RESPONSE_FILE` to a new file in a private, access-restricted location before using cURL or CLI. Save the returned secret in your secret store; do not log or commit the response.
 
 <RequestExample>
 
@@ -61,33 +61,25 @@ curl --request POST \
 ```
 
 ```javascript Node
-import { Nixflex } from 'nixflex';
-
-const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
-  maxRetries: 0,
-});
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
 const result = await client.keys.rotate();
-// Save result.key_secret in your secret store; do not log it.
+// Handle result privately; do not log secrets or call content.
 ```
 
 ```python Python
-import os
+import os, json
+from pathlib import Path
 from nixflex import Nixflex
-
-with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
-    max_retries=0,
-) as client:
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.keys.rotate()
-    # Save result["key_secret"] in your secret store; do not log it.
+# AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex keys rotate --confirm \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" --json > "$NXF_SECRET_RESPONSE_FILE"
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex keys rotate --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json > "$NXF_SECRET_RESPONSE_FILE"
 ```
 
 </RequestExample>

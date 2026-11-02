@@ -89,7 +89,7 @@ const result = {
   paths: clean(paths),
   components: { securitySchemes: { bearerAuth: {
     type: 'http', scheme: 'bearer',
-    description: 'KEY_ID:KEY_SECRET from the owning account. Keep it server-side.'
+    description: 'KEY_ID:KEY_SECRET from the owning account. Keep it server-side. A verified personal dashboard Bearer session may be used where the operation documents role-based access.'
   } } }
 };
 let count = 0;
