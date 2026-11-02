@@ -1,12 +1,12 @@
-# Pages still to build or replace — after C6
+# Pages still to build or replace — after C7
 
-C6 completes all 11 Organisation and 34 Integration settings operation pages at engine `b01e5f817075e9ab59d576756f1ec52de9ade365`. The API menu contains 111 pages, including the six basics pages and the roles guide. There are **39 public operations still to build or correct**, all Knowledge pages reserved for Chat B.
+C6 completed all 11 Organisation and 34 Integration settings operation pages. C7 refreshes 27 C5 pages with K3 examples and the customer keyterms limit at engine `5e00fa58f808d5d90eafde1256778a3cb5895d64`. The API menu contains 111 pages, including the six basics pages and the roles guide. There are **39 public operations still to build or correct**, all Knowledge pages reserved for Chat B.
 
 | Group | Operations still to build/correct | Without a current page |
 | --- | --- | --- |
 | Knowledge | 39 | 39 |
 
-Ten replaced aggregate URLs redirect to the new operation pages or the organisation roles guide. The earlier C4 redirects remain. C4, C5 and C6 successful-write checks stay listed as **pending manual test** in COVERAGE.md; they are testing work, not missing pages.
+Ten replaced aggregate URLs redirect to the new operation pages or the organisation roles guide. The earlier C4 redirects remain. C4, C5, C6 and C7 successful-write checks stay listed as **pending manual test** in COVERAGE.md; they are testing work, not missing pages.
 
 | # | Operation | Current page retained | Planned page | Required work |
 | --- | --- | --- | --- | --- |

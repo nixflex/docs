@@ -1,8 +1,8 @@
 {
-  "engineRef": "7da62902695444658366a63447e7de7de165ba13",
-  "nodeRef": "3a7726a008b12bd000c18aff0d07b585a29ad60e",
-  "pythonRef": "62ba9161674a9a5160f1256d2e895def4b64ad03",
-  "mcpRef": "fc719c1",
+  "engineRef": "5e00fa58f808d5d90eafde1256778a3cb5895d64",
+  "nodeRef": "02bbb9f11703f91dd4d53200e73f30be93d0e7bb",
+  "pythonRef": "5fc70c7a7ab1aae62ac7f2d146a6785e5a069705",
+  "mcpRef": "60ad0942631da1b230e6de11333010f75ef73240",
   "operations": {
     "52": {
       "number": 52,
@@ -155,7 +155,7 @@
       "side": "List inbox conversations",
       "description": "List Nixflex SMS or web inbox conversations for an owned number. Apply archive, unread, search and UTC-period filters and read conversation-level totals.",
       "summary": "List conversations for one owned number and channel. Read-only listing does not mark messages as read.",
-      "query": "?limit=1&period=all",
+      "query": "?archived=false&unread=true&search=one%20%2B%20two&period=7&limit=2&offset=0",
       "response": {
         "type": "object",
         "properties": {
@@ -263,7 +263,19 @@
         "archived_new": 0,
         "unread_total": 0
       },
-      "notes": "Unknown query fields are refused. Boolean query values must be the literal strings true or false. period and since are mutually exclusive. Sort order is last_at descending then thread_key ascending. There is no cursor; continue by offset while needed, recognising that incoming messages can move rows between pages. archived_new and unread_total count conversations, not messages. Requests return Cache-Control: no-store."
+      "notes": "Unknown query fields are refused. Boolean query values must be the literal strings true or false. period and since are mutually exclusive. Sort order is last_at descending then thread_key ascending. There is no cursor; continue by offset while needed, recognising that incoming messages can move rows between pages. archived_new and unread_total count conversations, not messages. Requests return Cache-Control: no-store.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/web/%2B12025550123?archived=false&unread=true&search=one%20%2B%20two&period=7&limit=2&offset=0\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.list(\"web\", \"+12025550123\", {\"archived\": false, \"unread\": true, \"search\": \"one + two\", \"period\": \"7\", \"limit\": 2, \"offset\": 0});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.list('web', '+12025550123', archived=False, unread=True, search='one + two', period='7', limit=2, offset=0)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex inbox list web '+12025550123' --archived false --unread true --search 'one + two' --period 7 --limit 2 --offset 0 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"list_inbox_conversations\",\n  \"arguments\": {\n    \"channel\": \"web\",\n    \"number\": \"+12025550123\",\n    \"archived\": false,\n    \"unread\": true,\n    \"search\": \"one + two\",\n    \"period\": \"7\",\n    \"limit\": 2,\n    \"offset\": 0\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/52.md; setup added; first-page cursors omitted where applicable."
     },
     "53": {
       "number": 53,
@@ -376,7 +388,7 @@
       "side": "Read an inbox thread",
       "description": "Read retained Nixflex SMS or web messages with timestamp and ID cursors. Preserve the returned read version and mark messages read only with an explicit update.",
       "summary": "Read retained messages in one owned inbox conversation. The newest page is selected first and returned in chronological order; this read does not mark messages as read.",
-      "query": "?limit=1",
+      "query": "?limit=2",
       "response": {
         "type": "object",
         "properties": {
@@ -503,7 +515,19 @@
         "read_version": "0",
         "has_more": false
       },
-      "notes": "Use both created_at and id from the oldest message in the returned page to request older messages. Rows are selected newest-first with an ID tie-break, then returned oldest-first within the selected page. With SMS, thread is the contact key; with web, it is the session key from the list response. URL-encode either.\n\nAn owned number with no matching messages can return 200 and an empty list. Retention can remove content between reads. read_version covers the entire thread, not only the returned page: acknowledge it only if your application intends to mark all messages through that version read. Requests return Cache-Control: no-store."
+      "notes": "Use both created_at and id from the oldest message in the returned page to request older messages. Rows are selected newest-first with an ID tie-break, then returned oldest-first within the selected page. With SMS, thread is the contact key; with web, it is the session key from the list response. URL-encode either.\n\nAn owned number with no matching messages can return 200 and an empty list. Retention can remove content between reads. read_version covers the entire thread, not only the returned page: acknowledge it only if your application intends to mark all messages through that version read. Requests return Cache-Control: no-store.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/web/%2B12025550123/thread/visitor%2Fplus%2B%20%C3%BC?limit=2\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.thread(\"web\", \"+12025550123\", \"visitor/plus+ \\u00fc\", {\"limit\": 2});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.thread('web', '+12025550123', 'visitor/plus+ ü', limit=2)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex inbox thread web '+12025550123' --thread 'visitor/plus+ ü' --limit 2 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"get_inbox_thread\",\n  \"arguments\": {\n    \"channel\": \"web\",\n    \"number\": \"+12025550123\",\n    \"thread\": \"visitor/plus+ ü\",\n    \"limit\": 2\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/53.md; setup added; first-page cursors omitted where applicable."
     },
     "54": {
       "number": 54,
@@ -635,14 +659,28 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "archived": true
+        "archived": false,
+        "read_version": "999999999999999999"
       },
       "exampleResponse": {
         "ok": true,
         "archived": true
       },
       "notes": "Use the read_version string returned by a thread read. Decimal numeric input is also accepted but strings avoid precision loss. Versions beyond received messages are refused. Read acknowledgements only advance; an older acknowledgement cannot mark later arrivals as read. A missing conversation is 404 inbox_not_found even though reading it may return an empty list. Archiving does not change retention. Requests return Cache-Control: no-store.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Reapplying an intended archive boolean or an already acknowledged version preserves that state, but a concurrent archive edit can change user intent. Reload after uncertainty."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Reapplying an intended archive boolean or an already acknowledged version preserves that state, but a concurrent archive edit can change user intent. Reload after uncertainty.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/web/%2B12025550123/thread/visitor%2Fplus%2B%20%C3%BC\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"archived\":false,\"read_version\":\"999999999999999999\"}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.update(\"web\", \"+12025550123\", \"visitor/plus+ \\u00fc\", {\"archived\": false, \"read_version\": \"999999999999999999\"});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.update('web', '+12025550123', 'visitor/plus+ ü', archived=False, read_version='999999999999999999')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"archived\": false,\n  \"read_version\": \"999999999999999999\"\n}\n'@\n[IO.File]::WriteAllText('request-54.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex inbox update web '+12025550123' --thread 'visitor/plus+ ü' --body '@request-54.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"update_inbox_thread\",\n  \"arguments\": {\n    \"channel\": \"web\",\n    \"number\": \"+12025550123\",\n    \"thread\": \"visitor/plus+ ü\",\n    \"body\": {\n      \"archived\": false,\n      \"read_version\": \"999999999999999999\"\n    },\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/54.md; setup added; first-page cursors omitted where applicable."
     },
     "55": {
       "number": 55,
@@ -678,7 +716,20 @@
       },
       "exampleResponse": {
         "enabled": true
-      }
+      },
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/features\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.features();",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.features()",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex inbox features --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"get_inbox_features\",\n  \"arguments\": {}\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/55.md; setup added; first-page cursors omitted where applicable."
     },
     "56": {
       "number": 56,
@@ -860,7 +911,19 @@
         "has_more": false
       },
       "query": "?offset=0",
-      "notes": "Numbers are ordered by phone_number ascending. Increase offset by 100 while has_more is true, up to the offset limit. Agent labels are a separate list capped at 1,000 and have no pagination field here. Requests return Cache-Control: no-store."
+      "notes": "Numbers are ordered by phone_number ascending. Increase offset by 100 while has_more is true, up to the offset limit. Agent labels are a separate list capped at 1,000 and have no pagination field here. Requests return Cache-Control: no-store.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/numbers?offset=0\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.numbers({\"offset\": 0});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.numbers(offset=0)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex inbox numbers --offset 0 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"list_inbox_numbers\",\n  \"arguments\": {\n    \"offset\": 0\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/56.md; setup added; first-page cursors omitted where applicable."
     },
     "57": {
       "number": 57,
@@ -996,7 +1059,20 @@
         "sms_processing_enabled": true,
         "web_processing_enabled": true
       },
-      "notes": "Only number is accepted as a query field. URL-encode + in a query value. Without number, web_days is null rather than the account default. Zero days means cleanup on the next cleanup run after reply, not an immediate response-time deletion guarantee. Archiving does not extend retention. Requests return Cache-Control: no-store."
+      "notes": "Only number is accepted as a query field. URL-encode + in a query value. Without number, web_days is null rather than the account default. Zero days means cleanup on the next cleanup run after reply, not an immediate response-time deletion guarantee. Archiving does not extend retention. Requests return Cache-Control: no-store.",
+      "query": "?number=%2B12025550123",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention?number=%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.inbox.retention({\"number\": \"+12025550123\"});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.inbox.retention(number='+12025550123')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex inbox retention --number '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"get_inbox_retention\",\n  \"arguments\": {\n    \"number\": \"+12025550123\"\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/57.md; setup added; first-page cursors omitted where applicable."
     },
     "58": {
       "number": 58,
@@ -1598,7 +1674,20 @@
         "first_seen_at": null,
         "last_seen_at": null
       },
-      "notes": "Read defaults describe the displayed value, not necessarily a persisted setting. web_agent_enabled is read-only on this endpoint. The inbox feature must be enabled; responses use Cache-Control: no-store. The appearance object is null until saved. Its footer is always returned as Powered by Nixflex. Installation timestamps can be null when the widget has not been seen."
+      "notes": "Read defaults describe the displayed value, not necessarily a persisted setting. web_agent_enabled is read-only on this endpoint. The inbox feature must be enabled; responses use Cache-Control: no-store. The appearance object is null until saved. Its footer is always returned as Powered by Nixflex. Installation timestamps can be null when the widget has not been seen.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.webAgent.get(\"+12025550123\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.web_agent.get('+12025550123')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex web-agent get '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"get_web_agent\",\n  \"arguments\": {\n    \"number\": \"+12025550123\"\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/58.md; setup added; first-page cursors omitted where applicable."
     },
     "59": {
       "number": 59,
@@ -2158,9 +2247,11 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "revision": "$NXF_WEB_REVISION",
+        "revision": "999999999999999999",
         "settings": {
-          "web_name": "Example support"
+          "web_prompt": "",
+          "web_name": "",
+          "web_calls_enabled": false
         }
       },
       "response": {
@@ -2709,7 +2800,20 @@
         "last_seen_at": null
       },
       "notes": "Read defaults describe the displayed value, not necessarily a persisted setting. web_agent_enabled is read-only on this endpoint. The inbox feature must be enabled; responses use Cache-Control: no-store. Read this number’s settings first and preserve revision as a string. Numeric decimal revisions are also accepted, but strings avoid precision loss. An accepted change increments the revision. The entire web_appearance object is replaced when supplied: preserve the fields you intend to keep. Its footer is always Powered by Nixflex. Contact field IDs must be unique; custom before-call fields must exist in contactFields. No nested merge is performed.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Do not retry a stale revision unchanged. Reload after 409, compare the changed settings, then submit only the intended edit with the new revision."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Do not retry a stale revision unchanged. Reload after 409, compare the changed settings, then submit only the intended edit with the new revision.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"revision\":\"999999999999999999\",\"settings\":{\"web_prompt\":\"\",\"web_name\":\"\",\"web_calls_enabled\":false}}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.webAgent.update(\"+12025550123\", {\"revision\": \"999999999999999999\", \"settings\": {\"web_prompt\": \"\", \"web_name\": \"\", \"web_calls_enabled\": false}});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.web_agent.update('+12025550123', revision='999999999999999999', settings={'web_prompt': '', 'web_name': '', 'web_calls_enabled': False})",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"revision\": \"999999999999999999\",\n  \"settings\": {\n    \"web_prompt\": \"\",\n    \"web_name\": \"\",\n    \"web_calls_enabled\": false\n  }\n}\n'@\n[IO.File]::WriteAllText('request-59.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex web-agent update '+12025550123' --body '@request-59.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"update_web_agent\",\n  \"arguments\": {\n    \"number\": \"+12025550123\",\n    \"body\": {\n      \"revision\": \"999999999999999999\",\n      \"settings\": {\n        \"web_prompt\": \"\",\n        \"web_name\": \"\",\n        \"web_calls_enabled\": false\n      }\n    },\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/59.md; setup added; first-page cursors omitted where applicable."
     },
     "90": {
       "number": 90,
@@ -3252,12 +3356,12 @@
         "description": "Scheduled creation or immediate launch result."
       },
       "exampleBody": {
-        "agent_id": "$NXF_AGENT_ID",
-        "from_number": "$NXF_PHONE_NUMBER",
+        "agent_id": "agent_fixture",
+        "from_number": "+12025550123",
         "prompt": "Confirm the appointment requested by the recipient.",
         "recipients": [
           {
-            "phone": "$NXF_TO_NUMBER",
+            "phone": "+12025550124",
             "variables": {
               "name": "Example customer"
             },
@@ -3268,7 +3372,9 @@
         "schedule_type": "schedule",
         "scheduled_date": "2030-11-04",
         "duplicate_policy": "reject",
-        "consent_confirmed": true
+        "consent_confirmed": true,
+        "window_start_minutes": 0,
+        "timezone": null
       },
       "exampleResponse": {
         "campaign_id": "campaign_example",
@@ -3283,7 +3389,20 @@
         "duplicate_choice_required": false
       },
       "notes": "### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. No public voice campaign delete route is available. Reuse replaces the recipient list and settings only while the owned campaign has never launched.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
-      "retry": "Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery."
+      "retry": "Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"agent_id\":\"agent_fixture\",\"from_number\":\"+12025550123\",\"prompt\":\"Confirm the appointment requested by the recipient.\",\"recipients\":[{\"phone\":\"+12025550124\",\"variables\":{\"name\":\"Example customer\"},\"country\":\"GB\",\"timezone\":\"Europe/London\"}],\"schedule_type\":\"schedule\",\"scheduled_date\":\"2030-11-04\",\"duplicate_policy\":\"reject\",\"consent_confirmed\":true,\"window_start_minutes\":0,\"timezone\":null}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.create({\"agent_id\": \"agent_fixture\", \"from_number\": \"+12025550123\", \"prompt\": \"Confirm the appointment requested by the recipient.\", \"recipients\": [{\"phone\": \"+12025550124\", \"variables\": {\"name\": \"Example customer\"}, \"country\": \"GB\", \"timezone\": \"Europe/London\"}], \"schedule_type\": \"schedule\", \"scheduled_date\": \"2030-11-04\", \"duplicate_policy\": \"reject\", \"consent_confirmed\": true, \"window_start_minutes\": 0, \"timezone\": null});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', prompt='Confirm the appointment requested by the recipient.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, timezone=None)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"agent_id\": \"agent_fixture\",\n  \"from_number\": \"+12025550123\",\n  \"prompt\": \"Confirm the appointment requested by the recipient.\",\n  \"recipients\": [\n    {\n      \"phone\": \"+12025550124\",\n      \"variables\": {\n        \"name\": \"Example customer\"\n      },\n      \"country\": \"GB\",\n      \"timezone\": \"Europe/London\"\n    }\n  ],\n  \"schedule_type\": \"schedule\",\n  \"scheduled_date\": \"2030-11-04\",\n  \"duplicate_policy\": \"reject\",\n  \"consent_confirmed\": true,\n  \"window_start_minutes\": 0,\n  \"timezone\": null\n}\n'@\n[IO.File]::WriteAllText('request-90.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex campaigns create --body '@request-90.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"create_campaign\",\n  \"arguments\": {\n    \"agent_id\": \"agent_fixture\",\n    \"from_number\": \"+12025550123\",\n    \"prompt\": \"Confirm the appointment requested by the recipient.\",\n    \"recipients\": [\n      {\n        \"phone\": \"+12025550124\",\n        \"variables\": {\n          \"name\": \"Example customer\"\n        },\n        \"country\": \"GB\",\n        \"timezone\": \"Europe/London\"\n      }\n    ],\n    \"schedule_type\": \"schedule\",\n    \"scheduled_date\": \"2030-11-04\",\n    \"duplicate_policy\": \"reject\",\n    \"consent_confirmed\": true,\n    \"window_start_minutes\": 0\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/90.md; setup added; first-page cursors omitted where applicable."
     },
     "91": {
       "number": 91,
@@ -3381,7 +3500,20 @@
         "in_progress_may_finish": true
       },
       "notes": "The body is unused. Cancellation does not recall accepted messages, undo completed calls, or remove contact records. A repeated cancellation can return already_terminal.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A confirmed already_terminal response is a state refusal, not proof that nothing previously ran."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A confirmed already_terminal response is a state refusal, not proof that nothing previously ran.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/cancel\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.cancel(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.cancel('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex campaigns cancel campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"cancel_campaign\",\n  \"arguments\": {\n    \"id\": \"campaign_fixture\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/91.md; setup added; first-page cursors omitted where applicable."
     },
     "92": {
       "number": 92,
@@ -3494,7 +3626,20 @@
         "recorded": true
       },
       "notes": "confirmed must be true for either event. Omitted fields and false are refused. This endpoint does not launch a campaign or clear suppression. Recording consent can unblock otherwise eligible scheduled or running work. Missing campaigns and unconfirmed database results currently return 503 outcome_unknown.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Each accepted request appends a decision event; it is not a deduplicated update."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Each accepted request appends a decision event; it is not a deduplicated update.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/consent\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"event\":\"consent\",\"confirmed\":true}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.consent(\"campaign_fixture\", {\"event\": \"consent\", \"confirmed\": true});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.consent('campaign_fixture', event='consent', confirmed=True)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"event\": \"consent\",\n  \"confirmed\": true\n}\n'@\n[IO.File]::WriteAllText('request-92.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex campaigns consent campaign_fixture --body '@request-92.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": null,
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": "MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python."
+      },
+      "kitEvidence": "K3 examples-c5/92.md; setup added; first-page cursors omitted where applicable."
     },
     "93": {
       "number": 93,
@@ -3607,7 +3752,20 @@
         "message": "Jobs queued for final permission, local-hours and capacity checks; queued does not mean dialed"
       },
       "notes": "No request body is used. This can contact real recipients. A second launch is refused after a campaign has been claimed, including finished runs. A missing or foreign campaign is reported as 400 invalid_request.\n\nConsent, suppression, recipient-local windows and capacity remain normal contact gates. A manual launch is not permission to bypass them. The response counts enqueued jobs, not ringing or completed calls.",
-      "retry": "No idempotency key is documented. A launch claim prevents a second first launch, but it does not make blind HTTP retries safe. After a timeout or uncertain result, read the same campaign before acting. Resume only verified unattempted rows of the current running campaign; create a new campaign only as an intentional new run."
+      "retry": "No idempotency key is documented. A launch claim prevents a second first launch, but it does not make blind HTTP retries safe. After a timeout or uncertain result, read the same campaign before acting. Resume only verified unattempted rows of the current running campaign; create a new campaign only as an intentional new run.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/launch\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.launch(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.launch('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex campaigns launch campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"launch_campaign\",\n  \"arguments\": {\n    \"campaign_id\": \"campaign_fixture\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/93.md; setup added; first-page cursors omitted where applicable."
     },
     "94": {
       "number": 94,
@@ -3816,7 +3974,20 @@
         "message": "Queued for final permission, local-hours and capacity checks; queued does not mean sent."
       },
       "notes": "The body is unused and there is no public cursor field. At most 100 verified unattempted recipients are processed per request. Only status running with a current launch claim is resumable; paused, cancelled and finished campaigns are refused. A 200 may still contain paused or held in page_result. Queued jobs still pass final permission, local-hours and capacity checks.",
-      "retry": "Do not automatically repeat resume after a timeout, 5xx or safe_to_retry:false. Inspect the same campaign and its recipient evidence first. Resume selects verified unattempted work; it never grants permission to replay accepted or uncertain attempts."
+      "retry": "Do not automatically repeat resume after a timeout, 5xx or safe_to_retry:false. Inspect the same campaign and its recipient evidence first. Resume selects verified unattempted work; it never grants permission to replay accepted or uncertain attempts.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/resume\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.resume(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.resume('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex campaigns resume campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": null,
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": "MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python."
+      },
+      "kitEvidence": "K3 examples-c5/94.md; setup added; first-page cursors omitted where applicable."
     },
     "97": {
       "number": 97,
@@ -4051,8 +4222,20 @@
       "exampleResponse": {
         "campaigns": []
       },
-      "query": "?limit=1",
-      "notes": "Sort order is created_at descending. There is no tie-break cursor, offset, total or full-history paging contract. Unknown query keys are ignored. Counts describe stored campaign state, not delivery guarantees."
+      "query": "?status=running&limit=2",
+      "notes": "Sort order is created_at descending. There is no tie-break cursor, offset, total or full-history paging contract. Unknown query keys are ignored. Counts describe stored campaign state, not delivery guarantees.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/campaigns?status=running&limit=2\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.campaigns.list({\"status\": \"running\", \"limit\": 2});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.campaigns.list(status='running', limit=2)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex campaigns list --status running --limit 2 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"list_campaigns\",\n  \"arguments\": {\n    \"status\": \"running\",\n    \"limit\": 2\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/97.md; setup added; first-page cursors omitted where applicable."
     },
     "98": {
       "number": 98,
@@ -4555,7 +4738,7 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "agent_id": "$NXF_AGENT_ID",
+        "agent_id": "agent_fixture",
         "recipients": [
           {
             "phone": "+12025550101",
@@ -4598,7 +4781,20 @@
         ]
       },
       "notes": "The campaign preview uses start and end as HH:mm, unlike campaign creation’s minute fields. Omitted period settings use the current policy. Unknown or ambiguous locations, holidays and unverified policy data can hold a row rather than promise a future window. Multiple possible zones must satisfy the applicable checks.\n\nnext_allowed is a bounded estimate: computation can stop for budget, horizon or missing policy data. windows describe current recipient-local-date windows, not an unlimited future schedule. allow_wider_hours only changes the preview assumption; it does not save the required campaign confirmation. The example versions and times are illustrative.",
-      "retry": "This POST is read-only and can be retried with bounded backoff. Its result expires after one minute and is never a send-permission token. Respect 429 and compute a fresh preview when inputs or timing change."
+      "retry": "This POST is read-only and can be retried with bounded backoff. Its result expires after one minute and is never a send-permission token. Respect 429 and compute a fresh preview when inputs or timing change.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/contact-hours/preview\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"agent_id\":\"agent_fixture\",\"recipients\":[{\"phone\":\"+12025550101\",\"country\":\"US\",\"timezone\":\"America/New_York\"}]}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.contacts.preview({\"agent_id\": \"agent_fixture\", \"recipients\": [{\"phone\": \"+12025550101\", \"country\": \"US\", \"timezone\": \"America/New_York\"}]});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.contacts.preview(agent_id='agent_fixture', recipients=[{'phone': '+12025550101', 'country': 'US', 'timezone': 'America/New_York'}])",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"agent_id\": \"agent_fixture\",\n  \"recipients\": [\n    {\n      \"phone\": \"+12025550101\",\n      \"country\": \"US\",\n      \"timezone\": \"America/New_York\"\n    }\n  ]\n}\n'@\n[IO.File]::WriteAllText('request-98.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex contacts preview --body '@request-98.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"preview_contact_hours\",\n  \"arguments\": {\n    \"agent_id\": \"agent_fixture\",\n    \"recipients\": [\n      {\n        \"phone\": \"+12025550101\",\n        \"country\": \"US\",\n        \"timezone\": \"America/New_York\"\n      }\n    ]\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/98.md; setup added; first-page cursors omitted where applicable."
     },
     "99": {
       "number": 99,
@@ -4727,7 +4923,20 @@
         "channel": "all"
       },
       "notes": "The request uses a JSON body even though the method is DELETE. Choose the exact bucket to remove; removing voice leaves any all or sms entry intact. Removing a suppression can make scheduled work eligible again; it does not grant campaign consent.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A repeat after confirmed removal can return 404 not_found."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A repeat after confirmed removal can return 404 not_found.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"phone_number\":\"+12025550101\",\"channel\":\"all\"}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.contacts.remove({\"phone_number\": \"+12025550101\", \"channel\": \"all\"});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.contacts.remove(phone_number='+12025550101', channel='all')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"phone_number\": \"+12025550101\",\n  \"channel\": \"all\"\n}\n'@\n[IO.File]::WriteAllText('request-99.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex contacts remove --body '@request-99.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": null,
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": "MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python."
+      },
+      "kitEvidence": "K3 examples-c5/99.md; setup added; first-page cursors omitted where applicable."
     },
     "100": {
       "number": 100,
@@ -4787,7 +4996,7 @@
       "side": "List contact suppressions",
       "description": "List a Nixflex account’s contact suppressions by stored channel with cursor paging. Distinguish owner entries from locked recipient opt-outs and evidence.",
       "summary": "List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all channels; it does not combine the voice and SMS buckets.",
-      "query": "?channel=all",
+      "query": "?channel=sms&after=%2B12025550123",
       "response": {
         "type": "object",
         "properties": {
@@ -4882,7 +5091,19 @@
         "entries": [],
         "next_cursor": null
       },
-      "notes": "Pages contain at most 200 rows in phone_number ascending order. There is no configurable limit. Nonempty pages return their last number as next_cursor even when short; pass it as after until an empty page returns null. For a full inventory, page all, voice and sms separately. Contact checks can apply an all-channel entry as well as a channel-specific entry."
+      "notes": "Pages contain at most 200 rows in phone_number ascending order. There is no configurable limit. Nonempty pages return their last number as next_cursor even when short; pass it as after until an empty page returns null. For a full inventory, page all, voice and sms separately. Contact checks can apply an all-channel entry as well as a channel-specific entry.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions?channel=sms&after=%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.contacts.list({\"channel\": \"sms\", \"after\": \"+12025550123\"});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.contacts.list(channel='sms', after='+12025550123')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex contacts list --channel sms --after '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"list_contact_suppressions\",\n  \"arguments\": {\n    \"channel\": \"sms\",\n    \"after\": \"+12025550123\"\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/100.md; setup added; first-page cursors omitted where applicable."
     },
     "101": {
       "number": 101,
@@ -5005,7 +5226,20 @@
         "channel": "all"
       },
       "notes": "Repeated values do not create duplicate entries in the same account/channel bucket. This changes future contact permission, not already accepted contact. Existing opt-outs remain enforced even if adding owner suppressions is temporarily paused.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Repeating the same values does not add duplicate rows, but an uncertain result should still be checked with the list endpoint."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Repeating the same values does not add duplicate rows, but an uncertain result should still be checked with the list endpoint.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"phone_numbers\":[\"+12025550101\"],\"channel\":\"all\"}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.contacts.add({\"phone_numbers\": [\"+12025550101\"], \"channel\": \"all\"});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.contacts.add(phone_numbers=['+12025550101'], channel='all')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"phone_numbers\": [\n    \"+12025550101\"\n  ],\n  \"channel\": \"all\"\n}\n'@\n[IO.File]::WriteAllText('request-101.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex contacts add --body '@request-101.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"add_contact_suppressions\",\n  \"arguments\": {\n    \"phone_numbers\": [\n      \"+12025550101\"\n    ],\n    \"channel\": \"all\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/101.md; setup added; first-page cursors omitted where applicable."
     },
     "175": {
       "number": 175,
@@ -5311,8 +5545,20 @@
         "campaigns": [],
         "next_cursor": null
       },
-      "query": "?limit=1",
-      "notes": "Sort order is created_at descending then row id descending. Send next_cursor back as before and keep the same status filter. Continue until an empty page returns null; a nonnull cursor does not prove that another row exists. A malformed before cursor currently returns 500 server_error.\n\nSent and failed totals are distinct measures and may overlap after a later delivery failure. Do not add them to infer a unique recipient total. Segments are estimates."
+      "query": "?status=running&limit=2",
+      "notes": "Sort order is created_at descending then row id descending. Send next_cursor back as before and keep the same status filter. Continue until an empty page returns null; a nonnull cursor does not prove that another row exists. A malformed before cursor currently returns 500 server_error.\n\nSent and failed totals are distinct measures and may overlap after a later delivery failure. Do not add them to infer a unique recipient total. Segments are estimates.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns?status=running&limit=2\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.list({\"status\": \"running\", \"limit\": 2});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.list(status='running', limit=2)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns list --status running --limit 2 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"list_sms_campaigns\",\n  \"arguments\": {\n    \"status\": \"running\",\n    \"limit\": 2\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/175.md; setup added; first-page cursors omitted where applicable."
     },
     "176": {
       "number": 176,
@@ -5881,12 +6127,12 @@
         "description": "Scheduled creation or immediate launch result."
       },
       "exampleBody": {
-        "agent_id": "$NXF_AGENT_ID",
-        "from_number": "$NXF_PHONE_NUMBER",
+        "agent_id": "agent_fixture",
+        "from_number": "+12025550123",
         "message_template": "Hello {{name}}, your requested appointment reminder.",
         "recipients": [
           {
-            "phone": "$NXF_TO_NUMBER",
+            "phone": "+12025550124",
             "variables": {
               "name": "Example customer"
             },
@@ -5897,7 +6143,9 @@
         "schedule_type": "schedule",
         "scheduled_date": "2030-11-04",
         "duplicate_policy": "reject",
-        "consent_confirmed": true
+        "consent_confirmed": true,
+        "window_start_minutes": 0,
+        "timezone": null
       },
       "exampleResponse": {
         "campaign_id": "campaign_example",
@@ -5912,7 +6160,20 @@
         "duplicate_choice_required": false
       },
       "notes": "### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation always creates a new campaign. reuse_campaign_id does not implement SMS reuse; do not send it.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
-      "retry": "Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery."
+      "retry": "Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"agent_id\":\"agent_fixture\",\"from_number\":\"+12025550123\",\"message_template\":\"Hello {{name}}, your requested appointment reminder.\",\"recipients\":[{\"phone\":\"+12025550124\",\"variables\":{\"name\":\"Example customer\"},\"country\":\"GB\",\"timezone\":\"Europe/London\"}],\"schedule_type\":\"schedule\",\"scheduled_date\":\"2030-11-04\",\"duplicate_policy\":\"reject\",\"consent_confirmed\":true,\"window_start_minutes\":0,\"timezone\":null}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.create({\"agent_id\": \"agent_fixture\", \"from_number\": \"+12025550123\", \"message_template\": \"Hello {{name}}, your requested appointment reminder.\", \"recipients\": [{\"phone\": \"+12025550124\", \"variables\": {\"name\": \"Example customer\"}, \"country\": \"GB\", \"timezone\": \"Europe/London\"}], \"schedule_type\": \"schedule\", \"scheduled_date\": \"2030-11-04\", \"duplicate_policy\": \"reject\", \"consent_confirmed\": true, \"window_start_minutes\": 0, \"timezone\": null});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', message_template='Hello {{name}}, your requested appointment reminder.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, timezone=None)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"agent_id\": \"agent_fixture\",\n  \"from_number\": \"+12025550123\",\n  \"message_template\": \"Hello {{name}}, your requested appointment reminder.\",\n  \"recipients\": [\n    {\n      \"phone\": \"+12025550124\",\n      \"variables\": {\n        \"name\": \"Example customer\"\n      },\n      \"country\": \"GB\",\n      \"timezone\": \"Europe/London\"\n    }\n  ],\n  \"schedule_type\": \"schedule\",\n  \"scheduled_date\": \"2030-11-04\",\n  \"duplicate_policy\": \"reject\",\n  \"consent_confirmed\": true,\n  \"window_start_minutes\": 0,\n  \"timezone\": null\n}\n'@\n[IO.File]::WriteAllText('request-176.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex sms campaigns create --body '@request-176.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"create_sms_campaign\",\n  \"arguments\": {\n    \"agent_id\": \"agent_fixture\",\n    \"from_number\": \"+12025550123\",\n    \"message_template\": \"Hello {{name}}, your requested appointment reminder.\",\n    \"recipients\": [\n      {\n        \"phone\": \"+12025550124\",\n        \"variables\": {\n          \"name\": \"Example customer\"\n        },\n        \"country\": \"GB\",\n        \"timezone\": \"Europe/London\"\n      }\n    ],\n    \"schedule_type\": \"schedule\",\n    \"scheduled_date\": \"2030-11-04\",\n    \"duplicate_policy\": \"reject\",\n    \"consent_confirmed\": true,\n    \"window_start_minutes\": 0\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/176.md; setup added; first-page cursors omitted where applicable."
     },
     "177": {
       "number": 177,
@@ -5974,7 +6235,20 @@
         "message": "Campaign deleted"
       },
       "notes": "No body is used. A missing owned campaign also returns 200 with the same acknowledgement. Deletion does not cancel an active run, recall accepted messages, or prove erasure of every message copy. The CLI may read detail before deletion for its confirmation preview.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Repeating deletion of an already absent ID returns 200, but an earlier unknown request still needs state reconciliation."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Repeating deletion of an already absent ID returns 200, but an earlier unknown request still needs state reconciliation.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.delete(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.delete('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns delete campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"delete_sms_campaign\",\n  \"arguments\": {\n    \"campaign_id\": \"campaign_fixture\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/177.md; setup added; first-page cursors omitted where applicable."
     },
     "178": {
       "number": 178,
@@ -6050,7 +6324,7 @@
       "side": "Get an SMS campaign",
       "description": "Read a Nixflex SMS campaign with complete delivery totals and separate recipient and message pages. Use each cursor correctly and protect retained content.",
       "summary": "Read one owned SMS campaign with recipient and message history. The campaign counters cover the whole campaign; the two history lists have independent cursors.",
-      "query": "?limit=1",
+      "query": "?limit=2",
       "response": {
         "type": "object",
         "properties": {
@@ -6685,7 +6959,19 @@
           "paged": true
         }
       },
-      "notes": "Provide limit to request bounded pages. Each list is ordered by id ascending and advances independently. Keep an exhausted list finished in your client; omitting its cursor restarts that list. A full page can return a cursor even at the end, so another empty read may be needed.\n\nWithout limit or cursors, the server collects history in 200-row chunks, with a 100,000-row ceiling per list, then sorts by created_at ascending with missing timestamps last. This compatibility mode is not a snapshot. Invalid limits or malformed UUID cursors currently return 500 server_error; a missing campaign or failed initial lookup returns 404 not_found. Retention can remove content between reads."
+      "notes": "Provide limit to request bounded pages. Each list is ordered by id ascending and advances independently. Keep an exhausted list finished in your client; omitting its cursor restarts that list. A full page can return a cursor even at the end, so another empty read may be needed.\n\nWithout limit or cursors, the server collects history in 200-row chunks, with a 100,000-row ceiling per list, then sorts by created_at ascending with missing timestamps last. This compatibility mode is not a snapshot. Invalid limits or malformed UUID cursors currently return 500 server_error; a missing campaign or failed initial lookup returns 404 not_found. Retention can remove content between reads.",
+      "kitExamples": {
+        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture?limit=2\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.get(\"campaign_fixture\", {\"limit\": 2});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.get('campaign_fixture', limit=2)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns get campaign_fixture --limit 2 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"get_sms_campaign\",\n  \"arguments\": {\n    \"limit\": 2,\n    \"campaign_id\": \"campaign_fixture\"\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/178.md; setup added; first-page cursors omitted where applicable."
     },
     "179": {
       "number": 179,
@@ -6970,8 +7256,9 @@
         "additionalProperties": false
       },
       "exampleBody": {
-        "reply_context_prompt": "Answer questions about this requested appointment reminder.",
-        "reply_window_hours": 24
+        "is_active": false,
+        "reply_context_prompt": null,
+        "reply_window_hours": 1
       },
       "exampleResponse": {
         "campaign_id": "campaign_example",
@@ -7006,7 +7293,20 @@
         "total_segments": 0
       },
       "notes": "The response is the campaign object directly, with no campaign wrapper. It contains saved counters, rather than the recomputed totals returned by list/detail. This route currently has no strict type/length validation before the database; empty updates, missing campaigns and database failures may return 500 server_error. Read detail after an uncertain save.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"is_active\":false,\"reply_context_prompt\":null,\"reply_window_hours\":1}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.update(\"campaign_fixture\", {\"is_active\": false, \"reply_context_prompt\": null, \"reply_window_hours\": 1});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.update('campaign_fixture', is_active=False, reply_context_prompt=None, reply_window_hours=1)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"is_active\": false,\n  \"reply_context_prompt\": null,\n  \"reply_window_hours\": 1\n}\n'@\n[IO.File]::WriteAllText('request-179.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex sms campaigns update campaign_fixture --body '@request-179.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"update_sms_campaign\",\n  \"arguments\": {\n    \"id\": \"campaign_fixture\",\n    \"body\": {\n      \"is_active\": false,\n      \"reply_context_prompt\": null,\n      \"reply_window_hours\": 1\n    },\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/179.md; setup added; first-page cursors omitted where applicable."
     },
     "180": {
       "number": 180,
@@ -7104,7 +7404,20 @@
         "in_progress_may_finish": true
       },
       "notes": "The body is unused. Cancellation does not recall accepted messages, undo completed calls, or remove contact records. A repeated cancellation can return already_terminal.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A confirmed already_terminal response is a state refusal, not proof that nothing previously ran."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. A confirmed already_terminal response is a state refusal, not proof that nothing previously ran.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture/cancel\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.cancel(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.cancel('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns cancel campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"cancel_sms_campaign\",\n  \"arguments\": {\n    \"id\": \"campaign_fixture\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/180.md; setup added; first-page cursors omitted where applicable."
     },
     "181": {
       "number": 181,
@@ -7217,7 +7530,20 @@
         "recorded": true
       },
       "notes": "confirmed must be true for either event. Omitted fields and false are refused. This endpoint does not launch a campaign or clear suppression. Recording consent can unblock otherwise eligible scheduled or running work. Missing campaigns and unconfirmed database results currently return 503 outcome_unknown.",
-      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Each accepted request appends a decision event; it is not a deduplicated update."
+      "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Each accepted request appends a decision event; it is not a deduplicated update.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture/consent\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data '{\"event\":\"consent\",\"confirmed\":true}'",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.consent(\"campaign_fixture\", {\"event\": \"consent\", \"confirmed\": true});",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.consent('campaign_fixture', event='consent', confirmed=True)",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n$body = @'\n{\n  \"event\": \"consent\",\n  \"confirmed\": true\n}\n'@\n[IO.File]::WriteAllText('request-181.json', $body, (New-Object Text.UTF8Encoding $false))\nnixflex sms campaigns consent campaign_fixture --body '@request-181.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": null,
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": "MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python."
+      },
+      "kitEvidence": "K3 examples-c5/181.md; setup added; first-page cursors omitted where applicable."
     },
     "182": {
       "number": 182,
@@ -7367,7 +7693,20 @@
         "safe_to_retry": false
       },
       "notes": "No request body is used. This can contact real recipients. A second launch is refused after a campaign has been claimed, including finished runs. A missing or foreign campaign is reported as 400 invalid_request.\n\nConsent, suppression, recipient-local windows and capacity remain normal contact gates. A manual launch is not permission to bypass them. A 200 response may report running with held recipients. A refusal after some sends does not undo those sends.",
-      "retry": "No idempotency key is documented. A launch claim prevents a second first launch, but it does not make blind HTTP retries safe. After a timeout or uncertain result, read the same campaign before acting. Resume only verified unattempted rows of the current running campaign; create a new campaign only as an intentional new run."
+      "retry": "No idempotency key is documented. A launch claim prevents a second first launch, but it does not make blind HTTP retries safe. After a timeout or uncertain result, read the same campaign before acting. Resume only verified unattempted rows of the current running campaign; create a new campaign only as an intentional new run.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture/launch\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.launch(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.launch('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns launch campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": "{\n  \"name\": \"launch_sms_campaign\",\n  \"arguments\": {\n    \"campaign_id\": \"campaign_fixture\",\n    \"confirm\": true\n  }\n}",
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": null
+      },
+      "kitEvidence": "K3 examples-c5/182.md; setup added; first-page cursors omitted where applicable."
     },
     "183": {
       "number": 183,
@@ -7576,7 +7915,20 @@
         "message": "Queued for final permission, local-hours and capacity checks; queued does not mean sent."
       },
       "notes": "The body is unused and there is no public cursor field. At most 100 verified unattempted recipients are processed per request. Only status running with a current launch claim is resumable; paused, cancelled and finished campaigns are refused. A 200 may still contain paused or held in page_result. Inspect page_result.outcome and dispatchSafety: a page can stop safely after earlier messages were accepted; the top-level message is not proof of sending.",
-      "retry": "Do not automatically repeat resume after a timeout, 5xx or safe_to_retry:false. Inspect the same campaign and its recipient evidence first. Resume selects verified unattempted work; it never grants permission to replay accepted or uncertain attempts."
+      "retry": "Do not automatically repeat resume after a timeout, 5xx or safe_to_retry:false. Inspect the same campaign and its recipient evidence first. Resume selects verified unattempted work; it never grants permission to replay accepted or uncertain attempts.",
+      "query": "",
+      "kitExamples": {
+        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture/resume\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\n\nconst c = new Nixflex({\n  apiKey: process.env.NXF_STAGING_KEY,\n  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',\n  maxRetries: 0,\n});\nconst result = await c.sms.campaigns.resume(\"campaign_fixture\");",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(\n    api_key=os.environ[\"NXF_STAGING_KEY\"],\n    base_url=\"https://nixflex-voice-engine-staging.up.railway.app\",\n    max_retries=0,\n) as c:\n    result = c.sms.campaigns.resume('campaign_fixture')",
+        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex sms campaigns resume campaign_fixture --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "mcp": null,
+        "nt": "Node",
+        "pt": "Python",
+        "ct": "CLI (PowerShell)",
+        "mcpException": "MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python."
+      },
+      "kitEvidence": "K3 examples-c5/183.md; setup added; first-page cursors omitted where applicable."
     }
   }
 }

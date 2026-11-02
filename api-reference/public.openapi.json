@@ -5725,7 +5725,10 @@
                       "null"
                     ],
                     "maxLength": 2000,
-                    "default": null
+                    "default": null,
+                    "description": "Customer-supplied keyterms: up to 2,000 characters and 20 nonempty comma-separated terms. Empty or whitespace-only entries do not count; repeated terms count separately.",
+                    "x-max-nonempty-comma-terms": 20,
+                    "example": "Nixflex, Sam, appointment"
                   },
                   "voicemail_message": {
                     "type": [
@@ -5918,7 +5921,8 @@
               },
               "example": {
                 "name": "Reception",
-                "system_prompt": "Answer business enquiries clearly."
+                "system_prompt": "Answer business enquiries clearly.",
+                "boosted_keywords": "Nixflex, Sam, appointment"
               }
             }
           }
@@ -6338,11 +6342,12 @@
                 },
                 "example": {
                   "error": {
-                    "type": "invalid_request",
                     "code": "invalid_agent_field",
-                    "message": "Check the named field and its documented type or limit.",
-                    "doc_url": "https://docs.nixflex.com/errors/invalid_agent_field",
-                    "details": {}
+                    "message": "Keep up to 20 words - remove some to save",
+                    "details": {
+                      "field": "boosted_keywords"
+                    },
+                    "doc_url": "https://docs.nixflex.com/errors/invalid_agent_field"
                   }
                 }
               }
@@ -8449,6 +8454,16 @@
                   ],
                   "description": "",
                   "additionalProperties": false
+                },
+                "example": {
+                  "error": {
+                    "code": "invalid_agent_field",
+                    "message": "Keep up to 20 words - remove some to save",
+                    "details": {
+                      "field": "boosted_keywords"
+                    },
+                    "doc_url": "https://docs.nixflex.com/errors/invalid_agent_field"
+                  }
                 }
               }
             }
@@ -8824,8 +8839,9 @@
                       "string",
                       "null"
                     ],
-                    "maxLength": 2000,
-                    "description": "Up to 2,000 characters and 50 nonempty comma-separated terms."
+                    "description": "Customer-supplied keyterms: up to 2,000 characters and 20 nonempty comma-separated terms. Empty or whitespace-only entries do not count; repeated terms count separately. On update, an existing saved list of 21 or more terms is kept when omitted or sent back as the exact unchanged string. Changing it requires 20 or fewer terms within 2,000 characters.",
+                    "x-max-nonempty-comma-terms": 20,
+                    "example": "Nixflex, Sam, appointment"
                   },
                   "voicemail_message": {
                     "type": [
@@ -9022,8 +9038,9 @@
                 "minProperties": 1
               },
               "example": {
-                "name": "Updated example agent",
-                "temperature": 0.2
+                "name": "Support",
+                "call_retention_days": 30,
+                "boosted_keywords": "Nixflex, Sam, appointment"
               }
             }
           }

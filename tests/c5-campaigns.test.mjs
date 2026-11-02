@@ -14,7 +14,7 @@ test('C5 has all 27 approved pages, complete sections, matching bindings and val
   assert.deepEqual([...page.matchAll(/^## (.+)$/gm)].map(m=>m[1]),['Authentication','Request fields','Response fields','Example request','Example response','Errors','Retry and idempotency','Related endpoints']);
   assert.ok(page.includes('/api-reference/public.openapi.json '+d.method+' '+d.specPath));
   assert.ok(spec.paths[d.specPath][d.method.toLowerCase()].responses[d.status]);
-  assert.equal((page.match(/\x60\x60\x60(?:bash|javascript|python) /g)||[]).length,4);
+  assert.equal((page.match(/\x60\x60\x60(?:bash|javascript|python|powershell) /g)||[]).length,4);
   assert.doesNotMatch(page,/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i);
   for(const match of page.matchAll(/\]\((\/[^)]+)\)/g)){const [target,anchor]=match[1].split('#');assert.ok(fs.existsSync(path.join(root,target+'.mdx')),target);if(target==='/api-reference/errors'&&anchor)assert.ok(catalog.includes('id="'+anchor+'"'),anchor);}
  }

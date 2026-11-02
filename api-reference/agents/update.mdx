@@ -69,7 +69,7 @@ Partial update. Omitted fields remain unchanged; create defaults are never reapp
 | `transfer_number` | string or null | No | Unchanged | E.164 number, null or empty; text limit 32 characters. Maximum 32 characters. |
 | `transfer_whisper` | string or null | No | Unchanged | Up to 16,000 characters. Maximum 16000 characters. |
 | `timezone` | string | No | Unchanged | Nonempty IANA time zone. When omitted, use the valid account time zone or UTC. Maximum 100 characters. |
-| `boosted_keywords` | string or null | No | Unchanged | Up to 2,000 characters and 50 nonempty comma-separated terms. Maximum 2000 characters. |
+| `boosted_keywords` | string or null | No | Unchanged | At most 20 nonempty comma-separated terms and 2,000 characters when changed. See the keyterms rules below. |
 | `voicemail_message` | string or null | No | Unchanged | Required and nonblank when voicemail_leave_enabled is true; no endpoint default. Maximum 600 characters. |
 | `temperature` | number | No | Unchanged | 0–0.7 inclusive. Minimum 0. Maximum 0.7. |
 | `response_eagerness` | integer | No | Unchanged | Response delay, 0–1,000 milliseconds. Minimum 0. Maximum 1000. |
@@ -99,6 +99,8 @@ Partial update. Omitted fields remain unchanged; create defaults are never reapp
 Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.
 
 The system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.
+
+Empty or whitespace-only entries do not count; repeated terms count separately. On update, an existing saved list of 21 or more terms is kept when omitted or sent back as the exact unchanged string. Changing it requires 20 or fewer terms within 2,000 characters. More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords".
 
 ## Response fields
 
@@ -189,14 +191,14 @@ curl --request PUT \
   --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents/$NXF_AGENT_ID" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"name":"Support","call_retention_days":30}'
+  --data '{"name":"Support","call_retention_days":30,"boosted_keywords":"Nixflex, Sam, appointment"}'
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
 const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
 const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
-const result = await client.agents.update(process.env.NXF_AGENT_ID, {name:"Support",call_retention_days:30});
+const result = await client.agents.update(process.env.NXF_AGENT_ID, {name:"Support",call_retention_days:30,boosted_keywords:"Nixflex, Sam, appointment"});
 // Handle result privately; do not log secrets or call content.
 ```
 
@@ -206,12 +208,12 @@ from pathlib import Path
 from nixflex import Nixflex
 base_url = "https://nixflex-voice-engine-staging.up.railway.app"
 with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
-    result = client.agents.update(os.environ["NXF_AGENT_ID"], name="Support",call_retention_days=30)
+    result = client.agents.update(os.environ["NXF_AGENT_ID"], name="Support",call_retention_days=30,boosted_keywords="Nixflex, Sam, appointment")
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents update "$NXF_AGENT_ID" --name Support --set call_retention_days=30 --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents update "$NXF_AGENT_ID" --name Support --set call_retention_days=30 --set 'boosted_keywords=Nixflex, Sam, appointment' --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>
@@ -230,7 +232,8 @@ Illustrative `200` response. Identifiers and values are examples; some optional 
   "max_call_duration_seconds": 300,
   "silence_hangup_seconds": 10,
   "dynamic_greeting": true,
-  "is_active": true
+  "is_active": true,
+  "boosted_keywords": "Nixflex, Sam, appointment"
 }
 ```
 
@@ -245,7 +248,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | Status | Code | Meaning | What to do |
 | --- | --- | --- | --- |
 | 400 | [`empty_agent_update`](/api-reference/errors#empty_agent_update) | No supported field was supplied. | Send at least one documented field. |
-| 400 | [`invalid_agent_field`](/api-reference/errors#invalid_agent_field) | A field has the wrong type or exceeds its limit. | Read error.details.field and correct that value. |
+| 400 | [`invalid_agent_field`](/api-reference/errors#invalid_agent_field) | A field has the wrong type or exceeds its limit, including more than 20 changed keyterms. | Read error.details.field. For boosted_keywords, keep 20 or fewer terms. |
 | 400 | [`invalid_call_retention_days`](/api-reference/errors#invalid_call_retention_days) | Retention is not one of the supported day values. | Use 90, 30, 7, 1 or 0. |
 | 400 | [`prompt_too_long`](/api-reference/errors#prompt_too_long) | The prompt exceeds the applicable limit. | Shorten the prompt; a character estimate is not a token count. |
 | 400 | [`voicemail_message_required`](/api-reference/errors#voicemail_message_required) | Voicemail would be enabled without a message. | Supply a nonblank message or disable voicemail in the same request. |

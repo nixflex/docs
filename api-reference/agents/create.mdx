@@ -64,7 +64,7 @@ The API checks the applicable prompt limit when you submit the request; a charac
 | Field | Type | Required | Default | Limits and meaning |
 | --- | --- | --- | --- | --- |
 | `response_eagerness` | integer | No | `200` | Response delay, 0–1,000 milliseconds. |
-| `boosted_keywords` | string or null | No | `null` | Up to 2,000 characters and 50 nonempty comma-separated terms. |
+| `boosted_keywords` | string or null | No | `null` | Customer-supplied keyterms: up to 2,000 characters and 20 nonempty comma-separated terms. Empty or whitespace-only entries do not count; repeated terms count separately. |
 | `greet_by_name` | boolean | No | `true` | Use a known returning caller's name. |
 | `remember_callers` | boolean | No | `true` | Save caller memory when the effective channel policy allows it. |
 | `dtmf_enabled` | boolean or null | No | `null` | Keypad input; null leaves the preference unset. |
@@ -145,9 +145,11 @@ The response includes saved settings from the request tables, with resolved defa
 The example response below shows selected fields. Additional compatibility fields may be present.
 Do not treat a returned preference as proof that every channel enables that feature.
 
+More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords".
+
 ## Example request
 
-All four examples send the same `name` and `system_prompt`, leaving the call limits and greeting at their defaults.
+All four examples send the same `name`, `system_prompt` and three `boosted_keywords`, leaving the call limits and greeting at their defaults.
 The examples use staging. Set `NXF_STAGING_KEY` to your staging credential in your own environment;
 the CLI reads the same credential through `NIXFLEX_API_KEY`. Do not put a key in a URL or source file.
 
@@ -158,7 +160,7 @@ curl --request POST \
   --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"name":"C2 API sample","system_prompt":"You are a helpful assistant. Answer questions clearly."}'
+  --data '{"name":"C2 API sample","system_prompt":"You are a helpful assistant. Answer questions clearly.","boosted_keywords":"Nixflex, Sam, appointment"}'
 ```
 
 ```javascript Node
@@ -172,6 +174,7 @@ const client = new Nixflex({
 const agent = await client.agents.create({
   name: 'C2 API sample',
   system_prompt: 'You are a helpful assistant. Answer questions clearly.',
+  boosted_keywords: 'Nixflex, Sam, appointment',
 });
 console.log(agent.agent_id);
 ```
@@ -188,6 +191,7 @@ with Nixflex(
     agent = client.agents.create(
         name="C2 API sample",
         system_prompt="You are a helpful assistant. Answer questions clearly.",
+        boosted_keywords="Nixflex, Sam, appointment",
     )
     print(agent["agent_id"])
 ```
@@ -197,6 +201,7 @@ NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents create \
   --base-url "https://nixflex-voice-engine-staging.up.railway.app" \
   --name "C2 API sample" \
   --prompt "You are a helpful assistant. Answer questions clearly." \
+  --set 'boosted_keywords=Nixflex, Sam, appointment' \
   --json
 ```
 
@@ -213,6 +218,7 @@ Illustrative `201 Created` response, shortened to the fields used here. Identifi
   "agent_id": "agent_0123456789abcdef",
   "name": "C2 API sample",
   "system_prompt": "You are a helpful assistant. Answer questions clearly.",
+  "boosted_keywords": "Nixflex, Sam, appointment",
   "dynamic_greeting": true,
   "max_call_duration_seconds": 300,
   "silence_hangup_seconds": 10,

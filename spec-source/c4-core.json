@@ -257,7 +257,7 @@
       "method": "PUT",
       "path": "/v1/agents/:id",
       "group": "Agents",
-      "notes": "Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.\n\nThe system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.",
+      "notes": "Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.\n\nThe system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.\n\nEmpty or whitespace-only entries do not count; repeated terms count separately. On update, an existing saved list of 21 or more terms is kept when omitted or sent back as the exact unchanged string. Changing it requires 20 or fewer terms within 2,000 characters. More than 20 terms returns 400 invalid_agent_field with message \"Keep up to 20 words - remove some to save\" and details.field \"boosted_keywords\".",
       "slug": "api-reference/agents/update",
       "specPath": "/agents/{id}",
       "params": [
@@ -282,8 +282,8 @@
         [
           400,
           "invalid_agent_field",
-          "A field has the wrong type or exceeds its limit.",
-          "Read error.details.field and correct that value."
+          "A field has the wrong type or exceeds its limit, including more than 20 changed keyterms.",
+          "Read error.details.field. For boosted_keywords, keep 20 or fewer terms."
         ],
         [
           400,
@@ -551,8 +551,10 @@
               "string",
               "null"
             ],
-            "maxLength": 2000,
-            "description": "Up to 2,000 characters and 50 nonempty comma-separated terms."
+            "description": "Customer-supplied keyterms: up to 2,000 characters and 20 nonempty comma-separated terms. Empty or whitespace-only entries do not count; repeated terms count separately. On update, an existing saved list of 21 or more terms is kept when omitted or sent back as the exact unchanged string. Changing it requires 20 or fewer terms within 2,000 characters.",
+            "x-max-nonempty-comma-terms": 20,
+            "example": "Nixflex, Sam, appointment",
+            "x-docs-summary": "At most 20 nonempty comma-separated terms and 2,000 characters when changed. See the keyterms rules below."
           },
           "voicemail_message": {
             "type": [
@@ -1115,7 +1117,8 @@
       },
       "exampleBody": {
         "name": "Support",
-        "call_retention_days": 30
+        "call_retention_days": 30,
+        "boosted_keywords": "Nixflex, Sam, appointment"
       },
       "exampleResponse": {
         "agent_id": "agent_0123456789abcdef",
@@ -1124,13 +1127,14 @@
         "max_call_duration_seconds": 300,
         "silence_hangup_seconds": 10,
         "dynamic_greeting": true,
-        "is_active": true
+        "is_active": true,
+        "boosted_keywords": "Nixflex, Sam, appointment"
       },
       "retry": "Never automatically retry PUT. Read the agent after a timeout and compare the fields you intended to change. Repeating a setting is not a guarantee that audit, validation, or retention effects are absent.",
       "kitExamples": {
-        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.agents.update(process.env.NXF_AGENT_ID, {name:\"Support\",call_retention_days:30});\n// Handle result privately; do not log secrets or call content.",
-        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex agents update \"$NXF_AGENT_ID\" --name Support --set call_retention_days=30 --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
-        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.agents.update(os.environ[\"NXF_AGENT_ID\"], name=\"Support\",call_retention_days=30)\n# AsyncNixflex supports the same calls with await (and async with).",
+        "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.agents.update(process.env.NXF_AGENT_ID, {name:\"Support\",call_retention_days:30,boosted_keywords:\"Nixflex, Sam, appointment\"});\n// Handle result privately; do not log secrets or call content.",
+        "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex agents update \"$NXF_AGENT_ID\" --name Support --set call_retention_days=30 --set 'boosted_keywords=Nixflex, Sam, appointment' --base-url https://nixflex-voice-engine-staging.up.railway.app --json",
+        "python": "import os, json\nfrom pathlib import Path\nfrom nixflex import Nixflex\nbase_url = \"https://nixflex-voice-engine-staging.up.railway.app\"\nwith Nixflex(os.environ[\"NXF_STAGING_KEY\"], base_url=base_url,max_retries=0) as client:\n    result = client.agents.update(os.environ[\"NXF_AGENT_ID\"], name=\"Support\",call_retention_days=30,boosted_keywords=\"Nixflex, Sam, appointment\")\n# AsyncNixflex supports the same calls with await (and async with).",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI"

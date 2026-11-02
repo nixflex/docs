@@ -1,0 +1,432 @@
+[
+  {
+    "number": 52,
+    "method": "GET",
+    "path": "/v1/agent-inbox/:channel/:number",
+    "query": "?archived=false&unread=true&search=one%20%2B%20two&period=7&limit=2&offset=0",
+    "fields": [
+      "conversations",
+      "total",
+      "archived_new",
+      "unread_total"
+    ],
+    "write": false,
+    "needsNumber": true
+  },
+  {
+    "number": 53,
+    "method": "GET",
+    "path": "/v1/agent-inbox/:channel/:number/thread/:thread",
+    "query": "?limit=2",
+    "fields": [
+      "messages",
+      "read_version",
+      "has_more"
+    ],
+    "write": false,
+    "needsNumber": true
+  },
+  {
+    "number": 54,
+    "method": "PATCH",
+    "path": "/v1/agent-inbox/:channel/:number/thread/:thread",
+    "query": "",
+    "fields": [
+      "ok",
+      "archived"
+    ],
+    "write": true,
+    "needsNumber": true
+  },
+  {
+    "number": 55,
+    "method": "GET",
+    "path": "/v1/agent-inbox/features",
+    "query": "",
+    "fields": [
+      "enabled"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 56,
+    "method": "GET",
+    "path": "/v1/agent-inbox/numbers",
+    "query": "?offset=0",
+    "fields": [
+      "numbers",
+      "agents",
+      "has_more"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 57,
+    "method": "GET",
+    "path": "/v1/agent-inbox/retention",
+    "query": "?number=%2B12025550123",
+    "fields": [
+      "call_retention_days",
+      "web_days",
+      "web_expiry_confirmed",
+      "applies_to",
+      "legacy_web_policy",
+      "zero_days_means",
+      "archive_changes_retention",
+      "sms_days",
+      "sms_processing_enabled",
+      "web_processing_enabled"
+    ],
+    "write": false,
+    "needsNumber": true
+  },
+  {
+    "number": 58,
+    "method": "GET",
+    "path": "/v1/agent-web/:number",
+    "query": "",
+    "fields": [
+      "phone_number",
+      "agent_id",
+      "web_prompt",
+      "web_appearance",
+      "appearance_version",
+      "web_design",
+      "web_color",
+      "web_name",
+      "web_chips",
+      "web_calls_enabled",
+      "web_agent_enabled",
+      "revision",
+      "install_id",
+      "first_seen_at",
+      "last_seen_at"
+    ],
+    "write": false,
+    "needsNumber": true
+  },
+  {
+    "number": 59,
+    "method": "PATCH",
+    "path": "/v1/agent-web/:number",
+    "query": "",
+    "fields": [
+      "phone_number",
+      "agent_id",
+      "web_prompt",
+      "web_appearance",
+      "appearance_version",
+      "web_design",
+      "web_color",
+      "web_name",
+      "web_chips",
+      "web_calls_enabled",
+      "web_agent_enabled",
+      "revision",
+      "install_id",
+      "first_seen_at",
+      "last_seen_at"
+    ],
+    "write": true,
+    "needsNumber": true
+  },
+  {
+    "number": 90,
+    "method": "POST",
+    "path": "/v1/calls/batch",
+    "query": "",
+    "fields": [],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 91,
+    "method": "POST",
+    "path": "/v1/calls/batch/:id/cancel",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "in_progress_may_finish"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 92,
+    "method": "POST",
+    "path": "/v1/calls/batch/:id/consent",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "recorded"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 93,
+    "method": "POST",
+    "path": "/v1/calls/batch/:id/launch",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "total_recipients",
+      "enqueued",
+      "failed_to_enqueue",
+      "message"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 94,
+    "method": "POST",
+    "path": "/v1/calls/batch/:id/resume",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "page_result",
+      "safe_to_retry",
+      "message"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 97,
+    "method": "GET",
+    "path": "/v1/campaigns",
+    "query": "?status=running&limit=2",
+    "fields": [
+      "campaigns"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 98,
+    "method": "POST",
+    "path": "/v1/contact-hours/preview",
+    "query": "",
+    "fields": [
+      "preview_only",
+      "mode",
+      "policy_version",
+      "runtime_timezone_version",
+      "as_of",
+      "expires_at",
+      "agent_timezone",
+      "rows"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 99,
+    "method": "DELETE",
+    "path": "/v1/contact-suppressions",
+    "query": "",
+    "fields": [
+      "removed",
+      "phone_number",
+      "channel"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 100,
+    "method": "GET",
+    "path": "/v1/contact-suppressions",
+    "query": "?channel=sms&after=%2B12025550123",
+    "fields": [
+      "entries",
+      "next_cursor"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 101,
+    "method": "POST",
+    "path": "/v1/contact-suppressions",
+    "query": "",
+    "fields": [
+      "added",
+      "submitted",
+      "channel"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 175,
+    "method": "GET",
+    "path": "/v1/sms/campaigns",
+    "query": "?status=running&limit=2",
+    "fields": [
+      "campaigns",
+      "next_cursor"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 176,
+    "method": "POST",
+    "path": "/v1/sms/campaigns",
+    "query": "",
+    "fields": [],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 177,
+    "method": "DELETE",
+    "path": "/v1/sms/campaigns/:id",
+    "query": "",
+    "fields": [
+      "message"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 178,
+    "method": "GET",
+    "path": "/v1/sms/campaigns/:id",
+    "query": "?limit=2",
+    "fields": [
+      "campaign",
+      "recipients",
+      "messages",
+      "pagination"
+    ],
+    "write": false,
+    "needsNumber": false
+  },
+  {
+    "number": 179,
+    "method": "PATCH",
+    "path": "/v1/sms/campaigns/:id",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "agent_id",
+      "name",
+      "from_number",
+      "schedule_type",
+      "scheduled_date",
+      "window_start_minutes",
+      "window_end_minutes",
+      "window_days",
+      "timezone",
+      "source",
+      "status",
+      "total_count",
+      "started_at",
+      "completed_at",
+      "created_at",
+      "updated_at",
+      "allow_wider_hours",
+      "id",
+      "api_key_id",
+      "message_template",
+      "reply_context_prompt",
+      "reply_window_hours",
+      "is_active",
+      "claimed_at",
+      "sent_count",
+      "delivered_count",
+      "failed_count",
+      "reply_count",
+      "total_segments"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 180,
+    "method": "POST",
+    "path": "/v1/sms/campaigns/:id/cancel",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "in_progress_may_finish"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 181,
+    "method": "POST",
+    "path": "/v1/sms/campaigns/:id/consent",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "recorded"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 182,
+    "method": "POST",
+    "path": "/v1/sms/campaigns/:id/launch",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "sent",
+      "failed",
+      "total_segments",
+      "held",
+      "reason",
+      "safe_to_retry",
+      "stopped",
+      "stop_reason",
+      "not_sent"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 183,
+    "method": "POST",
+    "path": "/v1/sms/campaigns/:id/resume",
+    "query": "",
+    "fields": [
+      "campaign_id",
+      "status",
+      "page_result",
+      "safe_to_retry",
+      "message"
+    ],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 61,
+    "method": "POST",
+    "path": "/v1/agents",
+    "query": "",
+    "fields": [],
+    "write": true,
+    "needsNumber": false
+  },
+  {
+    "number": 64,
+    "method": "PUT",
+    "path": "/v1/agents/:id",
+    "query": "",
+    "fields": [],
+    "write": true,
+    "needsNumber": false
+  }
+]

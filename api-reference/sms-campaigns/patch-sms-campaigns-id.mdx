@@ -87,60 +87,67 @@ The response is the campaign object directly, with no campaign wrapper. It conta
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Set `NXF_CAMPAIGN_ID` to the intended account-owned identifiers or approved recipient before running. Tabs labelled **direct HTTP** do not rely on an SDK or CLI method; the reviewed kit has no matching method.
+These examples use the unpublished K3 candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is a successful-write example, pending manual test. Run it only with an approved disposable fixture.
 
 <RequestExample>
 
 ```bash cURL
 curl --request PATCH \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/$(node -p 'encodeURIComponent(process.env.NXF_CAMPAIGN_ID)')" \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture" \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"reply_context_prompt":"Answer questions about this requested appointment reminder.","reply_window_hours":24}'
+  --data '{"is_active":false,"reply_context_prompt":null,"reply_window_hours":1}'
 ```
 
-```javascript Node (direct HTTP)
-const body = {
-  "reply_context_prompt": "Answer questions about this requested appointment reminder.",
-  "reply_window_hours": 24
-};
-const response = await fetch(`https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/${encodeURIComponent(process.env.NXF_CAMPAIGN_ID)}`, {
-  method: 'PATCH',
-  headers: { Authorization: `Bearer ${process.env.NXF_STAGING_KEY}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
 });
-if (!response.ok) throw new Error(`HTTP ${response.status}`);
-const result = await response.json();
-console.log('Request completed.');
+const result = await c.sms.campaigns.update("campaign_fixture", {"is_active": false, "reply_context_prompt": null, "reply_window_hours": 1});
 ```
 
-```python Python (direct HTTP)
+```python Python
 import os
-import json
-from urllib.request import Request, urlopen
-from urllib.parse import quote
+from nixflex import Nixflex
 
-body = {
-  "reply_context_prompt": "Answer questions about this requested appointment reminder.",
-  "reply_window_hours": 24
-}
-request = Request(
-    f"https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/{quote(os.environ['NXF_CAMPAIGN_ID'], safe='')}",
-    method="PATCH",
-    headers={"Authorization": "Bearer " + os.environ["NXF_STAGING_KEY"], "Content-Type": "application/json"},
-    data=json.dumps(body).encode("utf-8"),
-)
-with urlopen(request, timeout=30) as response:
-    result = json.load(response)
-print("Request completed.")
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.sms.campaigns.update('campaign_fixture', is_active=False, reply_context_prompt=None, reply_window_hours=1)
 ```
 
-```bash CLI (direct HTTP)
-curl --request PATCH \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/$(node -p 'encodeURIComponent(process.env.NXF_CAMPAIGN_ID)')" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{"reply_context_prompt":"Answer questions about this requested appointment reminder.","reply_window_hours":24}'
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+$body = @'
+{
+  "is_active": false,
+  "reply_context_prompt": null,
+  "reply_window_hours": 1
+}
+'@
+[IO.File]::WriteAllText('request-179.json', $body, (New-Object Text.UTF8Encoding $false))
+nixflex sms campaigns update campaign_fixture --body '@request-179.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "update_sms_campaign",
+  "arguments": {
+    "id": "campaign_fixture",
+    "body": {
+      "is_active": false,
+      "reply_context_prompt": null,
+      "reply_window_hours": 1
+    },
+    "confirm": true
+  }
+}
 ```
 
 </RequestExample>
