@@ -1,11 +1,11 @@
 ---
-title: "Read an agent inbox thread: messages and read versions"
+title: "Read an inbox thread"
 sidebarTitle: "Read an inbox thread"
-description: "Read retained Nixflex SMS or web messages with timestamp and ID cursors. Preserve the returned read version and mark messages read only with an explicit update."
+description: "Read an inbox thread with the Nixflex API. Read retained messages in one owned inbox conversation. The newest page is selected first and returned in."
 openapi: "/api-reference/public.openapi.json GET /agent-inbox/{channel}/{number}/thread/{thread}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -72,7 +72,7 @@ An owned number with no matching messages can return 200 and an empty list. Rete
 
 ## Example request
 
-These examples use the unpublished K3 candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is the first page; use only cursors returned by the API for subsequent pages.
+These examples use the unpublished client candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is the first page; use only cursors returned by the API for subsequent pages.
 
 <RequestExample>
 

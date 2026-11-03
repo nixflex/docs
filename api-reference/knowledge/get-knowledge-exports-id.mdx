@@ -1,11 +1,11 @@
 ---
-title: "Download knowledge export: Nixflex API fields and examples"
+title: "Download knowledge export"
 sidebarTitle: "Download knowledge export"
-description: "Download knowledge export with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Download knowledge export with the Nixflex API. Download a ready private export as structured JSON or readable text."
 openapi: "/api-reference/public.openapi.json GET /knowledge/exports/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-exports-id"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -123,7 +123,7 @@ No new export is created by this GET. The export must be ready, unexpired (one h
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 ```json request-128.json
 {
@@ -179,7 +179,7 @@ nixflex knowledge downloadExport "$env:NXF_RESOURCE_ID" --body '@request-128.jso
 
 </RequestExample>
 
-MCP does not offer this operation because it exports bulk private content; use a local SDK or CLI file.
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
 
 ## Example response
 

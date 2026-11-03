@@ -1,11 +1,11 @@
 ---
-title: "Create an outbound call: purpose and safe API requests"
+title: "Create an outbound call"
 sidebarTitle: "Create an outbound call"
-description: "Start an outbound call with an owned agent and eligible number. Check required fields, contact checks, uncertain outcomes and safe API request examples."
+description: "Create an outbound call with the Nixflex API. Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the."
 openapi: "/api-reference/public.openapi.json POST /calls/outbound"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/calls/create-outbound"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -48,7 +48,7 @@ Send a JSON object.
 
 Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.
 
-Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks.
+Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
 
 ## Response fields
 
@@ -146,15 +146,15 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 503 | [`number_lookup_unavailable`](/api-reference/errors#number_lookup_unavailable) | Number ownership or availability could not be confirmed. | Check current state before another send. |
 | 502 | [`carrier_error`](/api-reference/errors#carrier_error) | The connection service refused the call. | Read the refusal and correct the cause; do not blindly redial. |
 | 504 | [`carrier_outcome_unknown`](/api-reference/errors#carrier_outcome_unknown) | The service did not confirm whether a call was placed. | Check call history and receipts; never automatically redial. |
-| 409 | [`needs_timezone`](/api-reference/errors#needs_timezone) | The recipient location does not establish a usable time zone. | Supply the recipient time zone after checking it. |
+| 409 | [`needs_timezone`](/api-reference/errors#needs_timezone) | Time zone unknown - add their time zone or country. Nothing was sent or charged for this attempt. | Supply a valid recipient_timezone or recipient_country and recheck policy. |
 | 409 | [`invalid_recipient_timezone`](/api-reference/errors#invalid_recipient_timezone) | The recipient time zone is invalid. | Use a valid IANA time zone. |
 | 409 | [`invalid_recipient_country`](/api-reference/errors#invalid_recipient_country) | The recipient country is invalid. | Use a valid two-letter country code. |
-| 409 | [`outside_hours`](/api-reference/errors#outside_hours) | The recipient is outside permitted contact hours. | Wait for an allowed window; do not bypass the policy. |
+| 409 | [`outside_hours`](/api-reference/errors#outside_hours) | This recipient is outside the permitted local contact hours. Nothing was sent or charged for this attempt. | Use the contact-hours advice and wait for an allowed window. Do not automatically resend. |
 | 409 | [`not_due_local`](/api-reference/errors#not_due_local) | The recipient is not due for contact in the current local window. | Follow the returned contact-hours guidance. |
 | 409 | [`country_policy_review`](/api-reference/errors#country_policy_review) | The recipient country requires policy review. | Resolve that review before contacting the recipient. |
 | 409 | [`holiday_data_unavailable`](/api-reference/errors#holiday_data_unavailable) | Holiday checks could not confirm an allowed window. | Wait for a confirmed policy result. |
 | 409 | [`public_holiday`](/api-reference/errors#public_holiday) | The recipient-local date is a restricted holiday. | Use the next permitted contact window. |
-| 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact policy could not be checked. | Wait for recovery; do not automatically retry a send. |
+| 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt. | Wait and recheck; resend only after confirming this attempt was not sent. |
 | 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | Dispatch safety could not be confirmed. | Reconcile any existing receipt before deciding on a new request. |
 | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |

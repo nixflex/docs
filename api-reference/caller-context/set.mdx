@@ -1,31 +1,38 @@
 ---
-title: "Set caller context | Nixflex API guide and examples"
+title: "Set caller context"
 description: "Explore set caller context with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "PUT https://api.nixflex.com/v1/phone-numbers/{phone_number}/callers/{caller_number}"
+openapi: "/api-reference/public.openapi.json PUT /phone-numbers/{phoneNumber}/callers/{callerNumber}"
+playground: "simple"
 sidebarTitle: "Set caller context"
+canonical: "https://docs.nixflex.com/api-reference/caller-context/set"
 ---
+Sets the details for one caller on one of your numbers. Creates the record if needed. A field left out keeps its value; send null to remove it. last_call and open_item are engine-only and are rejected.
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | One of your numbers in E.164 format. URL-encode the leading + as %2B. |
+| `callerNumber` (path) | string | Yes | The caller's number in E.164 format. URL-encode the leading + as %2B. |
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `name` | string or null | No | Unchanged | Full name - first and last. At most 120 characters |
+| `email` | string or null | No | Unchanged | At most 120 characters |
+| `phone` | string or null | No | Unchanged | A contact number other than the one they call from. At most 40 characters |
+| `location` | string or null | No | Unchanged | Free text - city, area or postal code. At most 120 characters |
+| `reference_id` | string or null | No | Unchanged | An account, order or booking reference the caller uses. At most 64 characters |
+| `preference` | string or null | No | Unchanged | At most 200 characters |
 
 Sets what your agent knows about one caller on one of your numbers. Creates the record if it does not exist.
 
 See [Caller context](/concepts/caller-context) for how the agent uses these details on a call.
 
-## Request
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/phone-numbers/+447450307843/callers/+447453573770 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Sam Carter",
-    "email": "sam.carter@example.com",
-    "location": "London SW1A 1AA",
-    "reference_id": "4827"
-  }'
-```
-
-URL-encode the `+` if your HTTP client does not do it automatically: `%2B447450307843`.
-
-## Body parameters
+### Body parameters
 
 Send at least one field. A field you leave out keeps its current value; send `null` to remove it.
 
@@ -40,15 +47,91 @@ Send at least one field. A field you leave out keeps its current value; send `nu
 
 `last_call` and `open_item` are written by the engine after each call and cannot be set here - sending them returns `engine_only_field`. An unrecognised field name is rejected rather than ignored, so a typo never disappears silently.
 
-## Response
+### Behaviour
 
-`200 OK`
+- **Last write wins per field.** If the caller confirms a different email on a call, the engine stores the new one and the next call uses it. Send the field again to set it back.
+- **An empty value never erases.** Only an explicit `null` removes a field.
+- **One record per number, per caller.** The same person on another of your numbers is a separate record - import them to each number you want them recognised on.
+- Takes effect on the caller's next call or text. Calls already in progress are unaffected.
 
-```json
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `caller` | object | Always returned. |
+| `caller.phone_number` | string | Always returned. |
+| `caller.caller_number` | string | Always returned. |
+| `caller.context` | object | Only fields with a value are present. |
+| `caller.context.name` | string or null | Full name - first and last. At most 120 characters |
+| `caller.context.email` | string or null | At most 120 characters |
+| `caller.context.phone` | string or null | A contact number other than the one they call from. At most 40 characters |
+| `caller.context.location` | string or null | Free text - city, area or postal code. At most 120 characters |
+| `caller.context.reference_id` | string or null | An account, order or booking reference the caller uses. At most 64 characters |
+| `caller.context.preference` | string or null | At most 200 characters |
+| `caller.context.last_call` | string | Engine-written. What the caller wanted on their last call - never what happened. |
+| `caller.context.open_item` | string | Engine-written. Something still pending for the caller. |
+
+`context` is the whole record - your fields together with anything the engine has learned.
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request PUT \
++  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101' \
++  --header "Authorization: Bearer $NXF_API_KEY" \
++  --header 'Content-Type: application/json' \
++  --data '{"name":"Example customer","reference_id":"example-001"}'
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101', {
+  method: 'PUT',
+  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({"name":"Example customer","reference_id":"example-001"}),
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101', method='PUT',
+    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY'], 'Content-Type': 'application/json'},
+    data=json.dumps({"name":"Example customer","reference_id":"example-001"}).encode("utf-8"))
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$body = '{"name":"Example customer","reference_id":"example-001"}'
+$result = Invoke-RestMethod -Method PUT -Uri 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101' -Headers $headers -DisableKeepAlive -ContentType "application/json" -Body ([Text.Encoding]::UTF8.GetBytes($body))
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
 {
   "caller": {
-    "phone_number": "+447450307843",
-    "caller_number": "+447453573770",
+    "phone_number": "+12025550123",
+    "caller_number": "+12025550101",
     "context": {
       "name": "Sam Carter",
       "email": "sam.carter@example.com",
@@ -59,16 +142,19 @@ Send at least one field. A field you leave out keeps its current value; send `nu
 }
 ```
 
-`context` is the whole record - your fields together with anything the engine has learned.
-
-## Behaviour
-
-- **Last write wins per field.** If the caller confirms a different email on a call, the engine stores the new one and the next call uses it. Send the field again to set it back.
-- **An empty value never erases.** Only an explicit `null` removes a field.
-- **One record per number, per caller.** The same person on another of your numbers is a separate record - import them to each number you want them recognised on.
-- Takes effect on the caller's next call or text. Calls already in progress are unaffected.
+</ResponseExample>
 
 ## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Invalid request - missing or malformed parameters. |
+| 401 | Authentication failed - bad or missing API key. |
+| 404 | Not found on your account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. |
+| 500 | Server error. |
 
 | Code | Cause |
 |---|---|
@@ -78,3 +164,13 @@ Send at least one field. A field you leave out keeps its current value; send `nu
 | `invalid_email` | `email` is not a valid address |
 | `field_too_long` | A value is over its maximum length |
 | `missing_field` | No fields were sent |
+
+## Retry and idempotency
+
+Disable automatic write retries. A lost response leaves the result uncertain; read the affected resource before another deliberate action. No general Idempotency-Key replay guarantee applies. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Pagination](/api-reference/pagination)

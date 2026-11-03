@@ -1,10 +1,10 @@
 ---
-title: "Nixflex API overview: accounts, resources and requests"
-sidebarTitle: "API overview"
-description: "Start with the Nixflex API: choose the right resource, authenticate requests, understand response shapes, and follow links to errors and safe retries."
+title: "Nixflex API reference"
+sidebarTitle: "Nixflex API reference"
+description: "Explore the Nixflex API for voice agents, calls, numbers, SMS and knowledge. Find authentication, request fields, response shapes and examples."
+canonical: "https://docs.nixflex.com/api-reference/introduction"
 ---
-
-Build voice, messaging, and knowledge workflows with the Nixflex API. Requests use HTTPS and the versioned base URL `https://api.nixflex.com/v1`.
+Build voice, messaging, and knowledge workflows with the Nixflex API. The production base URL is **`https://api.nixflex.com`**. Requests use HTTPS with the `/v1` prefix, for example `https://api.nixflex.com/v1/agents`.
 
 ## Start here
 
@@ -25,7 +25,7 @@ Successful statuses and response shapes vary by operation. Some lists are bare a
 
 The public reference covers accounts and keys, agents, voices, phone numbers, calls, campaigns, SMS, contact controls, caller context, web agents, inboxes, knowledge, organisations, and integration settings. A product feature does not automatically provide a public API operation. Only documented public operations belong in an integration.
 
-The [public OpenAPI file](/api-reference/public.openapi.json) is a bundled foundation. It describes the operations currently included in that file; it does not claim that every future resource page is complete. Existing resource pages remain available while the reference expands.
+The [public OpenAPI file](/api-reference/public.openapi.json) describes all 142 documented public operations in this reference. Its operation IDs are stable. Download it for client generation and contract checks.
 
 ## Normal agent defaults
 
@@ -33,8 +33,14 @@ A new agent has a maximum call duration of **300 seconds**, a silence hang-up de
 
 ## Environments
 
-Production uses `https://api.nixflex.com/v1`. A staging key belongs to its staging service and must not be sent to production. Examples use placeholders. Set the correct base URL and key together.
+Production uses `https://api.nixflex.com`. The staging service is for testing only. Endpoint examples labeled staging use `https://nixflex-voice-engine-staging.up.railway.app` with `NXF_STAGING_KEY`; use your production origin and production key together in a live integration. Never send a staging credential to production.
 
 ## Next steps
 
 See [Node](/sdks/node), [Python](/sdks/python), [CLI](/cli/overview), and [MCP](/mcp/overview) for client setup. Check a client's operation support and retry settings before using it for a write.
+
+## Shared contracts
+
+Read [Rate limits](/api-reference/rate-limits), [Idempotency](/api-reference/idempotency) and [Webhooks](/api-reference/webhooks) before connecting background jobs. Each endpoint includes authentication, fields, examples, errors and retry rules.
+
+MCP has **89 registered tools**, including **19 Knowledge tools**. Knowledge endpoint pages show registered tool calls or explain why a tool is unavailable. Node, Python and CLI examples identify methods supported by the documented kit versions.

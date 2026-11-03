@@ -1,11 +1,11 @@
 ---
-title: "Launch an SMS campaign: contact checks and outcomes"
+title: "Launch an SMS campaign"
 sidebarTitle: "Launch an SMS campaign"
-description: "Request launch for an owned Nixflex SMS campaign. Understand held recipients, consent, local contact hours and safe handling of uncertain sending results."
+description: "Launch an SMS campaign with the Nixflex API. Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before."
 openapi: "/api-reference/public.openapi.json POST /sms/campaigns/{id}/launch"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-launch"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -64,7 +64,7 @@ Consent, suppression, recipient-local windows and capacity remain normal contact
 
 ## Example request
 
-These examples use the unpublished K3 candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is a successful-write example, pending manual test. Run it only with an approved disposable fixture. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
+These examples use the unpublished client candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
 
 <RequestExample>
 

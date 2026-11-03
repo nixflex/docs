@@ -151,9 +151,9 @@
         "api-reference/agent-inbox/get-agent-inbox-retention"
       ],
       "status": 200,
-      "title": "List agent inbox conversations: filters and unread counts",
+      "title": "List inbox conversations",
       "side": "List inbox conversations",
-      "description": "List Nixflex SMS or web inbox conversations for an owned number. Apply archive, unread, search and UTC-period filters and read conversation-level totals.",
+      "description": "List inbox conversations with the Nixflex API. List conversations for one owned number and channel. Read-only listing does not mark messages as read.",
       "summary": "List conversations for one owned number and channel. Read-only listing does not mark messages as read.",
       "query": "?archived=false&unread=true&search=one%20%2B%20two&period=7&limit=2&offset=0",
       "response": {
@@ -384,9 +384,9 @@
         "api-reference/agent-inbox/get-agent-inbox-retention"
       ],
       "status": 200,
-      "title": "Read an agent inbox thread: messages and read versions",
+      "title": "Read an inbox thread",
       "side": "Read an inbox thread",
-      "description": "Read retained Nixflex SMS or web messages with timestamp and ID cursors. Preserve the returned read version and mark messages read only with an explicit update.",
+      "description": "Read an inbox thread with the Nixflex API. Read retained messages in one owned inbox conversation. The newest page is selected first and returned in.",
       "summary": "Read retained messages in one owned inbox conversation. The newest page is selected first and returned in chronological order; this read does not mark messages as read.",
       "query": "?limit=2",
       "response": {
@@ -616,9 +616,9 @@
         "api-reference/agent-inbox/get-agent-inbox-retention"
       ],
       "status": 200,
-      "title": "Update an inbox thread: archive and acknowledge reads",
+      "title": "Update an inbox thread",
       "side": "Update an inbox thread",
-      "description": "Archive or unarchive a Nixflex inbox conversation and acknowledge a read version. Preserve new incoming messages and understand retention and retry behaviour.",
+      "description": "Update an inbox thread with the Nixflex API. Change an owned conversation’s archive state or acknowledge messages through a known read version. This does.",
       "summary": "Change an owned conversation’s archive state or acknowledge messages through a known read version. This does not delete content or extend retention.",
       "request": {
         "type": "object",
@@ -696,9 +696,9 @@
         "api-reference/agent-inbox/get-agent-inbox-channel-number"
       ],
       "status": 200,
-      "title": "Check agent inbox availability: authenticated feature flag",
+      "title": "Check inbox availability",
       "side": "Check inbox availability",
-      "description": "Read the Nixflex agent inbox feature flag for this environment using account authentication. A disabled flag does not prove that conversation data is empty.",
+      "description": "Check inbox availability with the Nixflex API. Read whether the agent inbox feature is enabled in this environment. This check remains available when inbox.",
       "summary": "Read whether the agent inbox feature is enabled in this environment. This check remains available when inbox operations are disabled.",
       "response": {
         "type": "object",
@@ -784,9 +784,9 @@
         "api-reference/agent-inbox/get-agent-inbox-features"
       ],
       "status": 200,
-      "title": "List agent inbox numbers: owned numbers and active agents",
+      "title": "List inbox numbers",
       "side": "List inbox numbers",
-      "description": "List owned Nixflex inbox numbers in fixed pages and get up to 1,000 active agent labels. Read per-number channel switches without changing any settings.",
+      "description": "List inbox numbers with the Nixflex API. List owned numbers available to the inbox and active agent labels. Pending number imports are excluded; both API.",
       "summary": "List owned numbers available to the inbox and active agent labels. Pending number imports are excluded; both API and dashboard number sources can appear.",
       "response": {
         "type": "object",
@@ -976,9 +976,9 @@
         "api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread"
       ],
       "status": 200,
-      "title": "Read inbox retention: web policy and SMS cleanup status",
+      "title": "Read inbox retention",
       "side": "Read inbox retention",
-      "description": "Read Nixflex inbox retention defaults and optional number-specific web policy. Distinguish saved policy from cleanup processing and understand zero days.",
+      "description": "Read inbox retention with the Nixflex API. Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned.",
       "summary": "Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned agent’s web-message retention policy.",
       "response": {
         "type": "object",
@@ -1125,9 +1125,9 @@
         "api-reference/agent-inbox/get-agent-inbox-channel-number"
       ],
       "status": 200,
-      "title": "Read web agent settings: appearance and current revision",
+      "title": "Read web agent settings",
       "side": "Read web agent settings",
-      "description": "Read Nixflex website agent instructions, appearance, contact fields and current revision for an owned number. Use the revision to prepare a guarded update.",
+      "description": "Read web agent settings with the Nixflex API. Read website agent settings for one owned number, including its current revision and optional appearance.",
       "summary": "Read website agent settings for one owned number, including its current revision and optional appearance configuration.",
       "response": {
         "type": "object",
@@ -1764,9 +1764,9 @@
         "api-reference/agent-inbox/get-agent-inbox-channel-number"
       ],
       "status": 200,
-      "title": "Update web agent settings: appearance and revision checks",
+      "title": "Update web agent settings",
       "side": "Update web agent settings",
-      "description": "Update Nixflex website agent settings using the current revision. Configure appearance and contact fields, respect limits and reload after concurrent changes.",
+      "description": "Update web agent settings with the Nixflex API. Update website agent settings for one owned number using its current revision. A stale revision is refused.",
       "summary": "Update website agent settings for one owned number using its current revision. A stale revision is refused so another editor’s change is preserved.",
       "request": {
         "type": "object",
@@ -2892,9 +2892,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 201,
-      "title": "Create a voice campaign: recipients, consent and hours",
+      "title": "Create a voice campaign",
       "side": "Create a voice campaign",
-      "description": "Create a Nixflex voice campaign with validated recipients, explicit duplicate handling, consent and local contact hours. Check launch and retry outcomes.",
+      "description": "Create a voice campaign with the Nixflex API. Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule.",
       "summary": "Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.",
       "request": {
         "type": "object",
@@ -3464,9 +3464,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Cancel a voice campaign: stop future recipient work",
+      "title": "Cancel voice campaign",
       "side": "Cancel voice campaign",
-      "description": "Cancel an owned Nixflex voice campaign and stop future recipient work. Read terminal-state refusals and understand why in-progress contact may still finish.",
+      "description": "Cancel voice campaign with the Nixflex API. Cancel future work for an owned voice campaign. Calls or messages already in progress may finish.",
       "summary": "Cancel future work for an owned voice campaign. Calls or messages already in progress may finish.",
       "response": {
         "type": "object",
@@ -3569,9 +3569,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Record voice campaign consent or withdraw permission",
+      "title": "Record voice consent",
       "side": "Record voice consent",
-      "description": "Record or withdraw consent for an owned Nixflex voice campaign. Confirm the decision explicitly and reconcile uncertain responses before sending it again.",
+      "description": "Record voice consent with the Nixflex API. Record a consent or consent-withdrawal decision for the current voice campaign policy revision. The owner.",
       "summary": "Record a consent or consent-withdrawal decision for the current voice campaign policy revision. The owner confirms the selected event explicitly.",
       "request": {
         "type": "object",
@@ -3698,9 +3698,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Launch a voice campaign: consent and queue admission",
+      "title": "Launch a voice campaign",
       "side": "Launch a voice campaign",
-      "description": "Request launch for an owned Nixflex voice campaign. Understand consent, local contact checks, queue counts and how to handle an uncertain launch result.",
+      "description": "Launch a voice campaign with the Nixflex API. Request the first launch of an owned voice campaign. Ownership, readiness and launch state are checked before.",
       "summary": "Request the first launch of an owned voice campaign. Ownership, readiness and launch state are checked before dispatch; each recipient still passes current contact checks.",
       "response": {
         "type": "object",
@@ -3827,9 +3827,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Resume a voice campaign: retry only unattempted rows",
+      "title": "Resume voice campaign",
       "side": "Resume voice campaign",
-      "description": "Resume verified unattempted rows of a running Nixflex voice campaign. Keep the same launch claim and inspect page results, holds and uncertain outcomes.",
+      "description": "Resume voice campaign with the Nixflex API. Resume one bounded page of verified unattempted recipients in the current running voice campaign. This can.",
       "summary": "Resume one bounded page of verified unattempted recipients in the current running voice campaign. This can dispatch contact and keeps the existing launch generation.",
       "response": {
         "type": "object",
@@ -4033,9 +4033,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "List voice campaigns: status, counts and saved hours",
+      "title": "List voice campaigns",
       "side": "List voice campaigns",
-      "description": "List owned Nixflex voice campaigns with saved schedules, recipient counts and confirmed wider-hours settings. Learn the limit behaviour and response fields.",
+      "description": "List voice campaigns with the Nixflex API. List this account’s voice campaigns, newest first. This bounded list has no offset or cursor.",
       "summary": "List this account’s voice campaigns, newest first. This bounded list has no offset or cursor.",
       "response": {
         "type": "object",
@@ -4295,9 +4295,9 @@
         "api-reference/contact-controls/get-contact-suppressions"
       ],
       "status": 200,
-      "title": "Preview contact hours: recipient-local campaign windows",
+      "title": "Preview contact hours",
       "side": "Preview contact hours",
-      "description": "Preview Nixflex contact windows without sending calls or SMS. Check recipient-local time estimates, expiry, unresolved locations and advisory hold reasons.",
+      "description": "Preview contact hours with the Nixflex API. Preview recipient-local contact windows without sending calls, SMS or campaign work. The result is advisory and.",
       "summary": "Preview recipient-local contact windows without sending calls, SMS or campaign work. The result is advisory and expires after one minute; final dispatch checks still apply.",
       "request": {
         "type": "object",
@@ -4853,9 +4853,9 @@
         "api-reference/contact-controls/post-contact-suppressions"
       ],
       "status": 200,
-      "title": "Remove a contact suppression: owner entries and locks",
+      "title": "Remove a contact suppression",
       "side": "Remove a contact suppression",
-      "description": "Remove one owner-created Nixflex contact suppression in a chosen channel. Respect locked recipient opt-outs and reconcile missing or uncertain results.",
+      "description": "Remove a contact suppression with the Nixflex API. Remove one explicitly removable owner-created suppression. Recipient opt-outs and entries without.",
       "summary": "Remove one explicitly removable owner-created suppression. Recipient opt-outs and entries without verified owner-removal permission remain locked.",
       "request": {
         "type": "object",
@@ -4992,9 +4992,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "List contact suppressions: channels and locked opt-outs",
+      "title": "List contact suppressions",
       "side": "List contact suppressions",
-      "description": "List a Nixflex account’s contact suppressions by stored channel with cursor paging. Distinguish owner entries from locked recipient opt-outs and evidence.",
+      "description": "List contact suppressions with the Nixflex API. List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all.",
       "summary": "List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all channels; it does not combine the voice and SMS buckets.",
       "query": "?channel=sms&after=%2B12025550123",
       "response": {
@@ -5150,9 +5150,9 @@
         "api-reference/contact-controls/delete-contact-suppressions"
       ],
       "status": 200,
-      "title": "Add contact suppressions: prevent future calls and SMS",
+      "title": "Add contact suppressions",
       "side": "Add contact suppressions",
-      "description": "Add owner-controlled Nixflex do-not-contact entries for all, voice or SMS channels. Check accepted counts, validation limits and uncertain write results.",
+      "description": "Add contact suppressions with the Nixflex API. Add account-owned do-not-contact entries for future contact checks. Existing entries are retained; a new.",
       "summary": "Add account-owned do-not-contact entries for future contact checks. Existing entries are retained; a new owner request cannot replace recipient opt-out evidence.",
       "request": {
         "type": "object",
@@ -5294,9 +5294,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "List SMS campaigns: delivery counts and cursor pages",
+      "title": "List SMS campaigns",
       "side": "List SMS campaigns",
-      "description": "List owned Nixflex SMS campaigns with whole-campaign delivery totals and stable cursor ordering. Follow next_cursor and distinguish sends from delivery.",
+      "description": "List SMS campaigns with the Nixflex API. List this account’s SMS campaigns, newest first. Delivery totals cover all campaign recipients, not just the.",
       "summary": "List this account’s SMS campaigns, newest first. Delivery totals cover all campaign recipients, not just the returned page.",
       "response": {
         "type": "object",
@@ -5649,9 +5649,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 201,
-      "title": "Create an SMS campaign: recipients, consent and hours",
+      "title": "Create an SMS campaign",
       "side": "Create an SMS campaign",
-      "description": "Create a Nixflex SMS campaign with message variables, consent and recipient-local hours. Handle duplicate decisions, validation errors and uncertain sends.",
+      "description": "Create an SMS campaign with the Nixflex API. Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode.",
       "summary": "Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.",
       "request": {
         "type": "object",
@@ -6213,9 +6213,9 @@
         "api-reference/sms/campaigns-list"
       ],
       "status": 200,
-      "title": "Delete an SMS campaign: allowed states and safe cleanup",
+      "title": "Delete an SMS campaign",
       "side": "Delete an SMS campaign",
-      "description": "Delete an owned Nixflex SMS campaign only in an allowed inactive or finished state. Understand active-state refusals, missing IDs and uncertain cleanup.",
+      "description": "Delete an SMS campaign with the Nixflex API. Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other.",
       "summary": "Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other active states are refused.",
       "response": {
         "type": "object",
@@ -6320,9 +6320,9 @@
         "api-reference/sms/campaigns-delete"
       ],
       "status": 200,
-      "title": "Get an SMS campaign: recipient and message page data",
+      "title": "Get an SMS campaign",
       "side": "Get an SMS campaign",
-      "description": "Read a Nixflex SMS campaign with complete delivery totals and separate recipient and message pages. Use each cursor correctly and protect retained content.",
+      "description": "Get an SMS campaign with the Nixflex API. Read one owned SMS campaign with recipient and message history. The campaign counters cover the whole campaign.",
       "summary": "Read one owned SMS campaign with recipient and message history. The campaign counters cover the whole campaign; the two history lists have independent cursors.",
       "query": "?limit=2",
       "response": {
@@ -7016,9 +7016,9 @@
         "api-reference/sms-campaigns/post-sms-campaigns-id-cancel"
       ],
       "status": 200,
-      "title": "Update an SMS campaign: reply context and reply window",
+      "title": "Update SMS reply settings",
       "side": "Update SMS reply settings",
-      "description": "Update an owned Nixflex SMS campaign’s reply instructions, reply window and active flag. Read the direct response shape and reconcile uncertain saves.",
+      "description": "Update SMS reply settings with the Nixflex API. Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or.",
       "summary": "Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or message template, and it is not a cancellation control.",
       "request": {
         "type": "object",
@@ -7368,9 +7368,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Cancel an SMS campaign: stop future recipient dispatch",
+      "title": "Cancel SMS campaign",
       "side": "Cancel SMS campaign",
-      "description": "Cancel an owned Nixflex SMS campaign and stop future recipient work. Read terminal-state refusals and understand why in-progress contact may still finish.",
+      "description": "Cancel SMS campaign with the Nixflex API. Cancel future work for an owned SMS campaign. Calls or messages already in progress may finish.",
       "summary": "Cancel future work for an owned SMS campaign. Calls or messages already in progress may finish.",
       "response": {
         "type": "object",
@@ -7473,9 +7473,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Record SMS campaign consent or withdraw permission",
+      "title": "Record SMS consent",
       "side": "Record SMS consent",
-      "description": "Record or withdraw consent for an owned Nixflex SMS campaign. Confirm the decision explicitly and reconcile uncertain responses before sending it again.",
+      "description": "Record SMS consent with the Nixflex API. Record a consent or consent-withdrawal decision for the current SMS campaign policy revision. The owner confirms.",
       "summary": "Record a consent or consent-withdrawal decision for the current SMS campaign policy revision. The owner confirms the selected event explicitly.",
       "request": {
         "type": "object",
@@ -7620,9 +7620,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Launch an SMS campaign: contact checks and outcomes",
+      "title": "Launch an SMS campaign",
       "side": "Launch an SMS campaign",
-      "description": "Request launch for an owned Nixflex SMS campaign. Understand held recipients, consent, local contact hours and safe handling of uncertain sending results.",
+      "description": "Launch an SMS campaign with the Nixflex API. Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before.",
       "summary": "Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before dispatch; each recipient still passes current contact checks.",
       "response": {
         "type": "object",
@@ -7768,9 +7768,9 @@
         "api-reference/contact-controls/post-contact-hours-preview"
       ],
       "status": 200,
-      "title": "Resume an SMS campaign: retry only unattempted rows",
+      "title": "Resume SMS campaign",
       "side": "Resume SMS campaign",
-      "description": "Resume verified unattempted rows of a running Nixflex SMS campaign. Keep the same launch claim and inspect page results, holds and uncertain outcomes.",
+      "description": "Resume SMS campaign with the Nixflex API. Resume one bounded page of verified unattempted recipients in the current running SMS campaign. This can dispatch.",
       "summary": "Resume one bounded page of verified unattempted recipients in the current running SMS campaign. This can dispatch contact and keeps the existing launch generation.",
       "response": {
         "type": "object",

@@ -1,11 +1,11 @@
 ---
-title: "Cancel knowledge test: Nixflex API fields and examples"
+title: "Cancel knowledge test"
 sidebarTitle: "Cancel knowledge test"
-description: "Cancel knowledge test with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Cancel knowledge test with the Nixflex API. Cancel a simulated test session and related unfinished work."
 openapi: "/api-reference/public.openapi.json POST /knowledge/test-sessions/{id}/cancel"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/post-knowledge-test-sessions-id-cancel"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -91,7 +91,7 @@ The session becomes cancelled; this never reverses an already published revision
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-134.json
 {}
@@ -130,9 +130,20 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge cancelSession "$env:NXF_RESOURCE_ID" --body '@request-134.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "cancel_knowledge_test",
+  "arguments": {
+    "id": "id/example",
+    "confirm": true,
+    "idempotency_key": "example-k5-operation"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

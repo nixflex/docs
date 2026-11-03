@@ -82,7 +82,7 @@ const result = {
   openapi: '3.1.0',
   info: {
     title: 'Nixflex public API', version: '1.0.0',
-    description: 'Public API foundation. Operation coverage is tracked in COVERAGE.md; this file is not a production release announcement.'
+    description: 'Nixflex API reference for agents, calls, messaging, knowledge, organisations and integrations. Authenticate with the owning account and follow each operation’s permissions, response and retry contract.'
   },
   servers: [{ url: 'https://api.nixflex.com/v1' }],
   security: [{ bearerAuth: [] }],
@@ -97,6 +97,25 @@ const ids = new Set();
 for (const [p, item] of Object.entries(result.paths)) {
   for (const [method, op] of Object.entries(item)) {
     count++;
+    // Error field examples in older fragments described a different status.
+    // Keep operation-specific wire examples, but remove misleading generic defaults.
+    for (const [status, response] of Object.entries(op.responses || {})) {
+      if (Number(status) < 400) continue;
+      const error = response.content?.['application/json']?.schema?.properties?.error;
+      if (error?.properties) {
+        for (const field of Object.values(error.properties)) delete field.example;
+        error.required = [...new Set([...(error.required || []), 'type', 'code', 'message', 'doc_url'])];
+      }
+      const media=response.content?.['application/json'];
+      const values=[media?.example,...Object.values(media?.examples||{}).map(e=>e.value)];
+      for(const value of values){
+        if(!value?.error?.code)continue;
+        const e=value.error;
+        e.type=({400:'invalid_request',401:'authentication_error',402:'payment_required',403:'permission_denied',404:'not_found',409:'conflict',422:'invalid_request',429:'rate_limit'})[status]||(Number(status)>=500?'server_error':'error');
+        e.doc_url||='https://docs.nixflex.com/errors/'+e.code;
+        e.details||={};
+      }
+    }
     op.operationId ||= method + p.replace(/[^a-zA-Z0-9]+/g, '_');
     if (ids.has(op.operationId)) throw Error('Duplicate operationId: ' + op.operationId);
     ids.add(op.operationId);

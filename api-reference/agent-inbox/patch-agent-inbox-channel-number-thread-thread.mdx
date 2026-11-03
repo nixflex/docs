@@ -1,11 +1,11 @@
 ---
-title: "Update an inbox thread: archive and acknowledge reads"
+title: "Update an inbox thread"
 sidebarTitle: "Update an inbox thread"
-description: "Archive or unarchive a Nixflex inbox conversation and acknowledge a read version. Preserve new incoming messages and understand retention and retry behaviour."
+description: "Update an inbox thread with the Nixflex API. Change an owned conversation’s archive state or acknowledge messages through a known read version. This does."
 openapi: "/api-reference/public.openapi.json PATCH /agent-inbox/{channel}/{number}/thread/{thread}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -60,7 +60,7 @@ Use the read_version string returned by a thread read. Decimal numeric input is 
 
 ## Example request
 
-These examples use the unpublished K3 candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is a successful-write example, pending manual test. Run it only with an approved disposable fixture.
+These examples use the unpublished client candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
 
 <RequestExample>
 

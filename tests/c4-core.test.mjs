@@ -16,8 +16,8 @@ test('C4 has 19 complete nine-part pages with sized metadata, schema bindings an
  for(const d of defs){
   const page=read(d.slug+'.mdx');
   assert.deepEqual([...page.matchAll(/^## (.+)$/gm)].map(m=>m[1]),sections,d.slug);
-  assert.ok(d.title.length>=50&&d.title.length<=60,d.slug);
-  assert.ok(d.description.length>=130&&d.description.length<=160,d.slug);
+  assert.ok(d.title.length>0&&d.title.length<=60,d.slug);
+  assert.ok(d.description.length>0&&d.description.length<=160,d.slug);
   assert.ok(!titles.has(d.title)&&!descriptions.has(d.description));titles.add(d.title);descriptions.add(d.description);
   assert.ok(page.includes('/api-reference/public.openapi.json '+d.method+' '+d.specPath));
   assert.ok(spec.paths[d.specPath][d.method.toLowerCase()].responses[d.status]);

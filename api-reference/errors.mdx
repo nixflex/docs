@@ -1,9 +1,9 @@
 ---
-title: "API error codes and recovery steps for Nixflex requests"
-sidebarTitle: "Errors"
-description: "Find Nixflex API error codes, HTTP statuses, response fields, and recovery steps for authentication, validation, paging, conflicts, and uncertain results."
+title: "API errors and status codes"
+sidebarTitle: "API errors and status codes"
+description: "Find Nixflex API error codes, HTTP statuses and recovery steps. Distinguish invalid input, permission failures, temporary errors and uncertain results."
+canonical: "https://docs.nixflex.com/api-reference/errors"
 ---
-
 <style>{`
  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -327,7 +327,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
-| <span id="rate_limit_exceeded">rate_limit_exceeded</span> | 429 | Please wait a minute and try again. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
+| <span id="rate_limit_exceeded">rate_limit_exceeded</span> | 429 | Rate limit exceeded. Retry after N seconds. N is the returned wait. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
 | <span id="recording_cleanup_pending">recording_cleanup_pending</span> | 409 | Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="retention_inherited">retention_inherited</span> | 400 | inherits the account default on create; use PUT to change it | Omit call_retention_days on create. Read the created agent and use PUT to change it. |
 | <span id="retention_unavailable">retention_unavailable</span> | 503 | Could not check the saved data setting. Please try again. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
@@ -541,3 +541,9 @@ Your service account is being rate-limited. Slow down requests or contact servic
 <span id="legacy-carrier-17" />
 
 service could not find the resource (number SID or account). Check the service credentials saved on this phone number.
+
+## Contact-policy names and outcomes
+
+Single-call and single-SMS refusals use `outside_hours` or `needs_timezone` (409), or `contact_policy_unavailable` (503). Their details can explicitly report `outcome: not_sent`, `sent: false` and `charged: false`. The message ends with `Nothing was sent or charged for this attempt.` Local-window advice can change the preceding text.
+
+`single_contact_policy` is the internal policy-check name; `refused_before_dispatch` is a dispatch outcome marker. Neither is a universal HTTP error code. Match `error.code` and inspect the documented receipt. An unknown outcome is not proof of a refusal or a safe resend.

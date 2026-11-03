@@ -1,11 +1,11 @@
 ---
-title: "Cancel knowledge job: Nixflex API fields and examples"
+title: "Cancel knowledge job"
 sidebarTitle: "Cancel knowledge job"
-description: "Cancel knowledge job with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Cancel knowledge job with the Nixflex API. Cancel pending work before installation while keeping published knowledge."
 openapi: "/api-reference/public.openapi.json POST /knowledge/jobs/{id}/cancel"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/post-knowledge-jobs-id-cancel"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -91,7 +91,7 @@ Cancellation is best effort before installation; it never reverses confirmed pub
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-130.json
 {}
@@ -132,7 +132,7 @@ nixflex knowledge cancelJob "$env:NXF_RESOURCE_ID" --body '@request-130.json' --
 
 </RequestExample>
 
-MCP does not offer this operation because it can interrupt or repeat publication; use Node, CLI or Python after reviewing the job.
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
 
 ## Example response
 

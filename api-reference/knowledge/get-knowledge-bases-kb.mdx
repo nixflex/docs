@@ -1,11 +1,11 @@
 ---
-title: "Get knowledge base: Nixflex API fields and examples"
+title: "Get knowledge base"
 sidebarTitle: "Get knowledge base"
-description: "Get knowledge base with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Get knowledge base with the Nixflex API. Read a knowledge base’s settings, revision and active published index."
 openapi: "/api-reference/public.openapi.json GET /knowledge-bases/{kb}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-bases-kb"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -74,7 +74,7 @@ rev is the integer used for expected_revision. active identifies the published i
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -105,9 +105,18 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge getBase "$env:NXF_KNOWLEDGE_BASE_ID" --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "get_knowledge_base",
+  "arguments": {
+    "kb": "kb/example"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

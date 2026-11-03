@@ -1,9 +1,9 @@
 ---
-title: "API authentication and permissions for Nixflex accounts"
-sidebarTitle: "Authentication and permissions"
-description: "Explore api authentication and permissions for nixflex accounts with Nixflex. Review settings, responses, to connect your application and handle results safely."
+title: "API authentication and permissions"
+sidebarTitle: "API authentication and permissions"
+description: "Authenticate Nixflex API requests with a server-side key. Understand account ownership, personal sessions and Owner, Admin and Member permissions."
+canonical: "https://docs.nixflex.com/api-reference/authentication"
 ---
-
 ## Send your API key
 
 Most public operations require this header:
@@ -13,7 +13,7 @@ Authorization: Bearer KEY_ID:KEY_SECRET
 Content-Type: application/json
 ```
 
-The credential is the key ID, a colon, and the key secret. Do not send a dashboard login token as an API key. Keep the entire credential server-side; never put it in a widget, query string, or support screenshot.
+The credential is the key ID, a colon, and the key secret. A verified personal dashboard Bearer session is a separate credential and is accepted only where an operation explicitly documents it. Keep the entire credential server-side; never put it in a widget, query string, or support screenshot.
 
 ## Accounts and permissions
 
@@ -22,10 +22,10 @@ The credential is the key ID, a colon, and the key secret. Do not send a dashboa
 | Missing or invalid API key | HTTP 401, `unauthorized` | Check the complete credential and environment. |
 | Key belongs to another account | It cannot access your resources | Use the owning account's key and resource IDs. |
 | Organisation policy refuses an operation | HTTP 403, usually `permission_denied` | Check authority and the operation's permissions. |
-| Organisation API key | Acts for the organisation with API-key authority | Restrict it to trusted server processes. |
+| Organisation API key | Acts for the organisation with Owner authority | Restrict it to trusted server processes. |
 | Invitation or ownership acceptance | Requires the person's verified dashboard sign-in | Complete the human workflow there. An API key cannot accept ownership. |
 
-Where organisation controls are enabled, Owner, Admin, and Member roles govern human dashboard actions. Do not infer a human role from possession of an organisation key. Resources remain with the organisation when ownership changes.
+Where organisation controls are enabled, Owner, Admin, and Member roles govern human dashboard actions. An organisation API key has Owner authority; it is not an individual Member or Admin session. Personal sessions use their current organisation role. Resources remain with the organisation when ownership changes.
 
 ## Create an account once
 

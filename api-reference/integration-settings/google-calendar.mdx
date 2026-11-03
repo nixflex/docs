@@ -1,0 +1,15 @@
+---
+title: "Google Calendar API (coming)"
+description: "Google Calendar API documentation is coming. Review current booking-calendar conflicts and Cal.com settings without relying on unannounced endpoints."
+sidebarTitle: "Google Calendar (coming)"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/google-calendar"
+---
+<Note>
+Google Calendar API documentation is coming. The public endpoint contract and examples will be added after the API is ready. No route or release date is promised here.
+</Note>
+
+## Current booking behavior
+
+A number can use only one booking calendar at a time, including the calendar inherited from its agent. [Set Cal.com](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber) returns **409 `booking_provider_conflict`** when another calendar is connected. The response identifies it in `error.details.connected_provider`.
+
+Disconnect the existing calendar intentionally before connecting a different one. Do not guess Google Calendar routes or send credentials to an undocumented endpoint.

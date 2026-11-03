@@ -1,11 +1,11 @@
 ---
-title: "Discard knowledge draft: Nixflex API fields and examples"
+title: "Discard knowledge draft"
 sidebarTitle: "Discard knowledge draft"
-description: "Discard knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Discard knowledge draft with the Nixflex API. Discard a review draft while retaining currently published knowledge."
 openapi: "/api-reference/public.openapi.json DELETE /knowledge-bases/{kb}/drafts/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/delete-knowledge-bases-kb-drafts-id"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -59,7 +59,7 @@ Accepted/publishing drafts cannot be discarded. An associated import job is canc
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-104.json
 {
@@ -104,7 +104,7 @@ nixflex knowledge discardDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_I
 
 </RequestExample>
 
-MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
 
 ## Example response
 

@@ -45,7 +45,7 @@ test('C6 integration schemas preserve secret flags, defaults, replacement and pa
 });
 test('C6 covers only the approved groups and keeps all successful writes pending',()=>{
  const missing=read('MISSING-PAGES.md'),coverage=read('COVERAGE.md');assert.match(missing,/No missing public operation pages/);
- const rows=missing.split('\n').filter(l=>/^\| \d+ \|/.test(l));assert.equal(rows.length,20);assert.ok(rows.every(l=>l.includes('knowledge')));
+ const rows=missing.split('\n').filter(l=>/^\| \d+ \|/.test(l));assert.equal(rows.length,0);assert.match(missing,/19 registered Knowledge tool examples/);
  for(const d of defs){assert.ok(!rows.some(l=>l.startsWith('| '+d.number+' |')));if(d.method!=='GET'||d.sensitive)assert.ok(coverage.includes('| '+d.number+' | pending manual test |'));}
  const previous=spawnSync('git',['show','ad36141:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(previous.status,0);
  const config=JSON.parse(read('docs.json')),old=JSON.parse(previous.stdout);for(const tab of config.navigation.tabs.filter(t=>t.tab!=='API reference'))assert.deepEqual(tab,old.navigation.tabs.find(t=>t.tab===tab.tab));

@@ -150,7 +150,7 @@
         "is_active": true
       },
       "retry": "This is a replacement write with no idempotency token. Read the current settings after a timeout before deciding whether to resend. Never overwrite a newer configuration blindly.",
-      "notes": "Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
+      "notes": "Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.",
       "requestTable": {
         "type": "object",
         "properties": {
@@ -198,8 +198,8 @@
         "is_active": false,
         "agent_id": "agent/example"
       },
-      "title": "Set Cal.com settings | Nixflex developer API reference",
-      "description": "Set Cal.com settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set Cal.com settings",
+      "description": "Set Cal.com settings with the Nixflex API. Save Cal.com settings for an owned phone number. This replaces the saved configuration for this integration.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -360,8 +360,8 @@
         "default_timezone": "Europe/London",
         "api_key_set": true
       },
-      "title": "Get Cal.com settings | Nixflex developer API reference",
-      "description": "Get Cal.com settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get Cal.com settings",
+      "description": "Get Cal.com settings with the Nixflex API. Read the saved Cal.com settings for an owned phone number. Secret values are represented by configuration flags.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -471,8 +471,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "The delete is scoped to this account and number and also succeeds when no configuration exists. After a timeout, read the setting before resending; another update may have occurred.",
-      "title": "Delete Cal.com settings | Nixflex developer API reference",
-      "description": "Delete Cal.com settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete Cal.com settings",
+      "description": "Delete Cal.com settings with the Nixflex API. Remove the saved Cal.com configuration scoped to this account and number. This does not disconnect the phone.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -669,8 +669,8 @@
         "webhook_url": "https://hooks.slack.com/services/FIXTURE",
         "is_active": false
       },
-      "title": "Set Slack settings | Nixflex developer API reference",
-      "description": "Set Slack settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set Slack settings",
+      "description": "Set Slack settings with the Nixflex API. Save Slack settings for an owned phone number. This replaces the saved configuration for this integration; omitted.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -813,8 +813,8 @@
         "is_active": true,
         "webhook_url_set": true
       },
-      "title": "Get Slack settings | Nixflex developer API reference",
-      "description": "Get Slack settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get Slack settings",
+      "description": "Get Slack settings with the Nixflex API. Read the saved Slack settings for an owned phone number. Secret values are represented by configuration flags.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -923,8 +923,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "The delete is scoped to this account and number and also succeeds when no configuration exists. After a timeout, read the setting before resending; another update may have occurred.",
-      "title": "Delete Slack settings | Nixflex developer API reference",
-      "description": "Delete Slack settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete Slack settings",
+      "description": "Delete Slack settings with the Nixflex API. Remove the saved Slack configuration scoped to this account and number. This does not disconnect the phone.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1120,8 +1120,8 @@
         "post_call_url": "https://example.invalid/private",
         "is_active": false
       },
-      "title": "Set Zapier settings | Nixflex developer API reference",
-      "description": "Set Zapier settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set Zapier settings",
+      "description": "Set Zapier settings with the Nixflex API. Save Zapier settings for an owned phone number. This replaces the saved configuration for this integration.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1264,8 +1264,8 @@
         "is_active": true,
         "post_call_url_set": true
       },
-      "title": "Get Zapier settings | Nixflex developer API reference",
-      "description": "Get Zapier settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get Zapier settings",
+      "description": "Get Zapier settings with the Nixflex API. Read the saved Zapier settings for an owned phone number. Secret values are represented by configuration flags.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1374,8 +1374,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "The delete is scoped to this account and number and also succeeds when no configuration exists. After a timeout, read the setting before resending; another update may have occurred.",
-      "title": "Delete Zapier settings | Nixflex developer API reference",
-      "description": "Delete Zapier settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete Zapier settings",
+      "description": "Delete Zapier settings with the Nixflex API. Remove the saved Zapier configuration scoped to this account and number. This does not disconnect the phone.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1639,8 +1639,8 @@
         },
         "is_active": false
       },
-      "title": "Set Make settings | Nixflex developer API reference",
-      "description": "Set Make settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set Make settings",
+      "description": "Set Make settings with the Nixflex API. Save Make settings for an owned phone number. This replaces the saved configuration for this integration; omitted.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1817,8 +1817,8 @@
         "tool_description": null,
         "parameters": null
       },
-      "title": "Get Make settings | Nixflex developer API reference",
-      "description": "Get Make settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get Make settings",
+      "description": "Get Make settings with the Nixflex API. Read the saved Make settings for an owned phone number. Secret values are represented by configuration flags.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -1927,8 +1927,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "The delete is scoped to this account and number and also succeeds when no configuration exists. After a timeout, read the setting before resending; another update may have occurred.",
-      "title": "Delete Make settings | Nixflex developer API reference",
-      "description": "Delete Make settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete Make settings",
+      "description": "Delete Make settings with the Nixflex API. Remove the saved Make configuration scoped to this account and number. This does not disconnect the phone number.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2169,8 +2169,8 @@
         ],
         "is_active": false
       },
-      "title": "Set GoHighLevel settings | Nixflex developer API reference",
-      "description": "Set GoHighLevel settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set GoHighLevel settings",
+      "description": "Set GoHighLevel settings with the Nixflex API. Save GoHighLevel settings for an owned phone number. This replaces the saved configuration for this.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2325,8 +2325,8 @@
           "voice"
         ]
       },
-      "title": "Get GoHighLevel settings | Nixflex developer API reference",
-      "description": "Get GoHighLevel settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get GoHighLevel settings",
+      "description": "Get GoHighLevel settings with the Nixflex API. Read the saved GoHighLevel settings for an owned phone number. Secret values are represented by configuration.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2435,8 +2435,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "The delete is scoped to this account and number and also succeeds when no configuration exists. After a timeout, read the setting before resending; another update may have occurred.",
-      "title": "Delete GoHighLevel settings | Nixflex API reference",
-      "description": "Delete GoHighLevel settings with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete GoHighLevel settings",
+      "description": "Delete GoHighLevel settings with the Nixflex API. Remove the saved GoHighLevel configuration scoped to this account and number. This does not disconnect the.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2592,8 +2592,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination.",
-      "title": "Set first webhook | Nixflex developer API reference",
-      "description": "Set first webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set first webhook",
+      "description": "Set first webhook with the Nixflex API. Set the first webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2740,8 +2740,8 @@
         "is_set": false
       },
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination.\n\nThe K4 MCP get_webhook response masks the saved URL. Its delete_webhook preview also masks the URL; SDK responses remain private wire data. Do not log them.",
-      "title": "Get first webhook | Nixflex developer API reference",
-      "description": "Get first webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get first webhook",
+      "description": "Get first webhook with the Nixflex API. Read the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -2857,8 +2857,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination. MCP delete preview masks the configured webhook URL; it does not expose the destination.",
-      "title": "Clear first webhook | Nixflex developer API reference",
-      "description": "Clear first webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Clear first webhook",
+      "description": "Clear first webhook with the Nixflex API. Clear the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3020,8 +3020,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination.",
-      "title": "Set second webhook | Nixflex developer API reference",
-      "description": "Set second webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set second webhook",
+      "description": "Set second webhook with the Nixflex API. Set the second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3168,8 +3168,8 @@
         "is_set": false
       },
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination.\n\nThe K4 MCP get_webhook response masks the saved URL. Its delete_webhook preview also masks the URL; SDK responses remain private wire data. Do not log them.",
-      "title": "Get second webhook | Nixflex developer API reference",
-      "description": "Get second webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get second webhook",
+      "description": "Get second webhook with the Nixflex API. Read the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3319,8 +3319,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
-      "title": "Set web calls for a phone number | Nixflex API reference",
-      "description": "Set web calls with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set web calls",
+      "description": "Set web calls with the Nixflex API. Set the web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3447,8 +3447,8 @@
         "web_calls_enabled": false
       },
       "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
-      "title": "Get web calls for a phone number | Nixflex API reference",
-      "description": "Get web calls with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get web calls",
+      "description": "Get web calls with the Nixflex API. Read the saved web calls setting for an owned number. This controls the saved number switch for website voice calls.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3565,8 +3565,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
-      "title": "Clear web calls for a phone number | Nixflex API reference",
-      "description": "Clear web calls with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Clear web calls",
+      "description": "Clear web calls with the Nixflex API. Clear the saved web calls setting for an owned number. This controls the saved number switch for website voice calls.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3682,8 +3682,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination. MCP delete preview masks the configured webhook URL; it does not expose the destination.",
-      "title": "Clear second webhook | Nixflex developer API reference",
-      "description": "Clear second webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Clear second webhook",
+      "description": "Clear second webhook with the Nixflex API. Clear the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3845,8 +3845,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Set pre-call gate for number | Nixflex API reference",
-      "description": "Set pre-call gate for number with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set pre-call gate for number",
+      "description": "Set pre-call gate for number with the Nixflex API. Set the pre-call gate setting for an owned number. A number-specific gate overrides its agent default.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -3993,8 +3993,8 @@
         "is_set": false
       },
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Get pre-call gate for number | Nixflex API reference",
-      "description": "Get pre-call gate for number with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get pre-call gate for number",
+      "description": "Get pre-call gate for number with the Nixflex API. Read the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4110,8 +4110,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Clear pre-call gate for number | Nixflex API reference",
-      "description": "Clear pre-call gate for number with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Clear pre-call gate for number",
+      "description": "Clear pre-call gate for number with the Nixflex API. Clear the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4267,8 +4267,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Set pre-call gate for agent | Nixflex API reference",
-      "description": "Set pre-call gate for agent with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Set pre-call gate for agent",
+      "description": "Set pre-call gate for agent with the Nixflex API. Set the pre-call gate setting for an owned agent. This is the default for numbers on the agent; a.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4409,8 +4409,8 @@
         "is_set": false
       },
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Get pre-call gate for agent | Nixflex API reference",
-      "description": "Get pre-call gate for agent with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get pre-call gate for agent",
+      "description": "Get pre-call gate for agent with the Nixflex API. Read the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent; a.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4526,8 +4526,8 @@
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
       "notes": "GET shows only the URL at this level. An unset number URL can still inherit the agent gate. This settings endpoint does not invoke the gate or validate its response.",
-      "title": "Clear pre-call gate for agent | Nixflex API reference",
-      "description": "Clear pre-call gate for agent with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Clear pre-call gate for agent",
+      "description": "Clear pre-call gate for agent with the Nixflex API. Clear the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4782,8 +4782,8 @@
       },
       "retry": "No idempotency token is supported. Read the function list after a timeout before resending. Creation can conflict with an existing name, and repeating a delete may remove a function recreated under the same ID.",
       "notes": "Headers are private and never returned by the list route. Timeout inputs are parsed and clamped; the stored range is 1,000–45,000 ms. A supplied falsey description becomes an empty string, falsey headers become an empty object, falsey parameters restore the default schema, and falsey speak_during clears the phrase.",
-      "title": "Create a custom function | Nixflex developer API reference",
-      "description": "Create a custom function with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Create a custom function",
+      "description": "Create a custom function with the Nixflex API. Create one function for an owned number. Each number can have at most 15 functions; names must be unique for.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -4996,8 +4996,8 @@
         "phone_number": "+12025550100",
         "functions": []
       },
-      "title": "List custom functions | Nixflex developer API reference",
-      "description": "List custom functions with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "List custom functions",
+      "description": "List custom functions with the Nixflex API. Read up to 15 saved custom functions for this account and number. No matching rows returns an empty list; the.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -5115,8 +5115,8 @@
         "phone_number": "+12025550100"
       },
       "retry": "No idempotency token is supported. Read the function list after a timeout before resending. Creation can conflict with an existing name, and repeating a delete may remove a function recreated under the same ID.",
-      "title": "Delete a custom function | Nixflex developer API reference",
-      "description": "Delete a custom function with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Delete a custom function",
+      "description": "Delete a custom function with the Nixflex API. Remove one custom function scoped to the account, number and function ID. A missing matching row also returns.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -5354,8 +5354,8 @@
       },
       "retry": "No idempotency token is supported. Read the function list after a timeout before resending. Creation can conflict with an existing name, and repeating a delete may remove a function recreated under the same ID.",
       "notes": "Headers are private and never returned by the list route. Timeout inputs are parsed and clamped; the stored range is 1,000–45,000 ms. A supplied falsey description becomes an empty string, falsey headers become an empty object, falsey parameters restore the default schema, and falsey speak_during clears the phrase.",
-      "title": "Update a custom function | Nixflex developer API reference",
-      "description": "Update a custom function with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Update a custom function",
+      "description": "Update a custom function with the Nixflex API. Change only supplied fields of one owned custom function. Omitted fields keep their saved values; this does.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
       "allErrors": [
         [
@@ -5604,8 +5604,8 @@
         ]
       },
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner, Admin and Member personal sessions may read their own context. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
-      "title": "Get organisation context | Nixflex developer API reference",
-      "description": "Get organisation context with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get organisation context",
+      "description": "Get organisation context with the Nixflex API. Read the organisation selected by the authenticated credential. The result includes current permissions and.",
       "allErrors": [
         [
           404,
@@ -5858,8 +5858,8 @@
       },
       "notes": "The from date must precede the exclusive day after to and cannot be in the future. Dates must be real YYYY-MM-DD dates. CSV uses 500-row chunks and streams the full matching result; 500 is not a total export limit. Permissions are checked for every chunk. An interrupted download is incomplete. CSV columns are When, Action and Result. K4 supports date filters and streamed CSV; activity IDs are strings. The filtered MCP tool accepts an 18-digit cursor; the older frozen MCP activity tool retains its 19-digit input limit.\n\nFor CSV, Node uses organisation.activityCsv and Python uses organisation.activity_csv as byte iterators; the CLI uses organisation activityCsv --set from=2026-10-01 --set to=2026-10-31 --output activity.csv. The CLI publishes only a completed new file and never overwrites. Discard partial SDK output on failure. CSV is not an MCP tool.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
-      "title": "List organisation activity | Nixflex API reference",
-      "description": "List organisation activity with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "List organisation activity",
+      "description": "List organisation activity with the Nixflex API. Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin.",
       "allErrors": [
         [
           404,
@@ -6125,8 +6125,8 @@
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. This claim route accepts the existing API key only and refuses personal sessions. The account must have no active member or linked owner. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Request an owner claim | Nixflex developer API reference",
-      "description": "Request an owner claim with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Request an owner claim",
+      "description": "Request an owner claim with the Nixflex API. Start an email invitation to claim this existing, unclaimed API-only account. The verified recipient must.",
       "allErrors": [
         [
           404,
@@ -6456,8 +6456,8 @@
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Invite a teammate | Nixflex developer API reference",
-      "description": "Invite a teammate with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Invite a teammate",
+      "description": "Invite a teammate with the Nixflex API. Send a 24-hour team invitation. The invited person accepts using their own verified login. Opening an email does not.",
       "allErrors": [
         [
           404,
@@ -6710,8 +6710,8 @@
       },
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Revoke a team invitation | Nixflex developer API reference",
-      "description": "Revoke a team invitation with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Revoke a team invitation",
+      "description": "Revoke a team invitation with the Nixflex API. Revoke a pending or expired invitation before it is accepted. This invalidates its link; it does not remove.",
       "allErrors": [
         [
           404,
@@ -6988,8 +6988,8 @@
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Resend a team invitation | Nixflex developer API reference",
-      "description": "Resend a team invitation with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Resend a team invitation",
+      "description": "Resend a team invitation with the Nixflex API. Invalidate the old invitation and send a replacement with a new ID and 24-hour link. Resending uses the daily.",
       "allErrors": [
         [
           404,
@@ -7329,8 +7329,8 @@
         }
       },
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
-      "title": "List organisation members | Nixflex developer API reference",
-      "description": "List organisation members with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "List organisation members",
+      "description": "List organisation members with the Nixflex API. Read active members, up to 100 pending or expired invitations, and current safety limits. The Owner and.",
       "allErrors": [
         [
           404,
@@ -7515,8 +7515,8 @@
       ],
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. The Owner may remove non-Owners. An Admin may remove Members only. Members cannot use this route. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Remove an organisation member | Nixflex API reference",
-      "description": "Remove an organisation member with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Remove an organisation member",
+      "description": "Remove an organisation member with the Nixflex API. Remove one non-Owner member from this organisation. Shared work and the shared API key remain. A.",
       "allErrors": [
         [
           404,
@@ -7757,8 +7757,8 @@
       ],
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Change an organisation role | Nixflex API reference",
-      "description": "Change an organisation role with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Change an organisation role",
+      "description": "Change an organisation role with the Nixflex API. Change a non-Owner member to Admin or Member. Only Owner authority may change roles. This is not an.",
       "allErrors": [
         [
           404,
@@ -7969,8 +7969,8 @@
       },
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
-      "title": "Rename an organisation | Nixflex developer API reference",
-      "description": "Rename an organisation with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Rename an organisation",
+      "description": "Rename an organisation with the Nixflex API. Set the business name shown for this organisation. Only the Owner personal session or the organisation API key.",
       "allErrors": [
         [
           404,
@@ -8128,8 +8128,8 @@
       "sensitive": true,
       "notes": "The organisation context and member list never contain this secret. Signing-secret retrieval is a private Owner action in the dashboard and is excluded from every kit. No executable request is provided. Successful retrieval is pending manual test; do not use an assistant or smoke test to retrieve it.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
-      "title": "Get the signing secret | Nixflex developer API reference",
-      "description": "Get the signing secret with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application.",
+      "title": "Get the signing secret",
+      "description": "Get the signing secret with the Nixflex API. Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a.",
       "allErrors": [
         [
           404,

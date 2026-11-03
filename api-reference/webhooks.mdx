@@ -1,0 +1,39 @@
+---
+title: "Webhooks and signature verification"
+description: "Receive Nixflex call and booking events. Verify raw-body signatures, handle duplicate delivery and fetch private recording links when playback is needed."
+sidebarTitle: "Webhooks and signature verification"
+canonical: "https://docs.nixflex.com/api-reference/webhooks"
+---
+Receive events at your HTTPS endpoint using the [first webhook](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber) and optional [second webhook](/api-reference/integration-settings/put-integrations-webhook2-number-phoneNumber) settings. Each slot is independent.
+
+## Events and payloads
+
+| Event or callback | Body and handling |
+| --- | --- |
+| `call.started` | Flat call object, scheduled after connection. Late delivery can contain later call fields. |
+| `call.completed` | Flat call object with identifiers, direction, times, transcript, summary, bookings and recording metadata. No nested `call` wrapper. |
+| `sms.booking` | `event`, `from`, `to`, `agent_id`, `conversation`, `booking` and `at`. A `call_id` is not promised. |
+| Pre-call `call.inbound` | `event`, `from`, `to` and `call_id`. An explicit `action: reject` blocks the call; invalid or missing replies let it continue. |
+| Dashboard `webhook.test` | Reachability sample. This path is unsigned and does not prove a real signed event works. |
+
+Call payloads include `call_id`, `agent_id`, `direction`, `from`, `to`, `status`, `ended_reason`, `started_at`, `ended_at`, `duration_seconds`, `transcript`, `summary`, `sentiment`, `successful`, `extracted`, `bookings`, `recording_url`, `recording_duration_seconds`, `voicemail_detected`, `campaign_id` and `avg_latency_ms`. Missing values can be null; `bookings` is an array. Accept additive fields.
+
+With private recording access, `recording_url` is null and `recording_status` and `recording_endpoint` are added. Save the call ID and [request recording access](/api-reference/calls/get-calls-id-recording) when playback is needed. Do not treat a webhook as a permanent recording URL or final billing receipt.
+
+## Verify the signature
+
+The header format is `X-Nixflex-Signature: t=UNIX_SECONDS,v1=HEX_HMAC`. Calculate HMAC-SHA256 over the timestamp, a dot, and the **exact raw request body**. Preserve those bytes before parsing JSON.
+
+Use the organisation signing secret, which is separate from the API key secret when organisation accounts are enabled. Key rotation does not rotate that signing secret. Provision it privately through the [Owner-only signing-secret workflow](/api-reference/organisation/get-organisation-signing-secret). Older account mode can use the key secret.
+
+Check the timestamp against a short tolerance, then compare equal-length digests in constant time. Reject or quarantine missing and invalid signatures for business events. A secret lookup failure can produce an unsigned delivery; do not silently bypass verification.
+
+Custom-function GET signatures cover an empty body, not the query arguments. Prefer a signed non-GET request for consequential arguments. See [custom functions](/api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber) and [pre-call settings](/api-reference/integration-settings/get-integrations-precall-number-phoneNumber) for their distinct contracts.
+
+## Delivery and duplicates
+
+Persist a validated event before returning a successful 2xx response. Delivery can be duplicated, delayed or missed. For call events, deduplicate using event type, call ID and destination; call ID alone would discard `call.completed` after `call.started`.
+
+Queued delivery has up to five attempts. Network failures, 408, 429 and 5xx can be retried; other 4xx are permanent failures. The queue treats 3xx as delivered, so return 2xx directly instead of redirecting. Default retry delays are five minutes, five minutes, five minutes, then sixty minutes. Retention and account state can stop delivery; this is not a guaranteed schedule.
+
+Reconcile missed call events using [call reads](/api-reference/calls/get). Store caller data only where your application needs it and keep webhook bodies out of ordinary logs.

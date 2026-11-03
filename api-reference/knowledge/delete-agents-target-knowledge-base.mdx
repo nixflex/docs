@@ -1,11 +1,11 @@
 ---
-title: "Delete agent knowledge: Nixflex API fields and examples"
+title: "Delete agent knowledge"
 sidebarTitle: "Delete agent knowledge"
-description: "Delete agent knowledge with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Delete agent knowledge with the Nixflex API. Revoke an agent’s live knowledge immediately and queue private-data deletion."
 openapi: "/api-reference/public.openapi.json DELETE /agents/{target}/knowledge-base"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/delete-agents-target-knowledge-base"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -91,7 +91,7 @@ Deletion revokes access before the job finishes. Read the deletion job until del
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-65.json
 {
@@ -136,7 +136,7 @@ nixflex knowledge deleteScope "$env:NXF_AGENT_ID" --body '@request-65.json' --id
 
 </RequestExample>
 
-MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
 
 ## Example response
 

@@ -1,11 +1,11 @@
 ---
-title: "List knowledge sources: Nixflex API fields and examples"
+title: "List knowledge sources"
 sidebarTitle: "List knowledge sources"
-description: "List knowledge sources with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "List knowledge sources with the Nixflex API. List accepted sources that still have unsuppressed live pieces."
 openapi: "/api-reference/public.openapi.json GET /knowledge-bases/{kb}/sources"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-bases-kb-sources"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -63,7 +63,7 @@ Sources with no live pieces are omitted. Sources are ordered by ID; use next_cur
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 ```json request-111.json
 {
@@ -103,9 +103,20 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge listSources "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-111.json' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "list_knowledge_sources",
+  "arguments": {
+    "kb": "kb/example",
+    "limit": 25,
+    "cursor": "source/cursor"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

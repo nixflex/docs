@@ -1,9 +1,26 @@
 ---
-title: "Phone number usage | Nixflex API guide and examples"
+title: "Get number usage"
 description: "Explore phone number usage with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "GET https://api.nixflex.com/v1/phone-numbers/{phoneNumber}/usage"
+openapi: "/api-reference/public.openapi.json GET /phone-numbers/{phoneNumber}/usage"
+playground: "simple"
 sidebarTitle: "Get number usage"
+canonical: "https://docs.nixflex.com/api-reference/phone-numbers/usage"
 ---
+Get number usage in the authenticated account.
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | Owned public E.164 number. URL-encode the plus. |
+| `period` (query) | string | No | Calendar days including today, not rolling hours. All means retained history. Allowed: today, 7, 14, 30, 90, all Default: "all" |
+| `time_zone` (query) | string | No | IANA zone such as Europe/London, or UTC. Match the dashboard browser zone. At most 64 characters Default: "UTC" |
+
+Do not send a request body.
 
 Draft for API Area 1 Group 3. Requires its staging release. The kit changes below
 are local/unpublished until separately released. This is a read-only request.
@@ -13,7 +30,7 @@ URL-encode the plus in E.164: `/v1/phone-numbers/%2B447457401554/usage`.
 Absent, another owner's, pending and internal browser-test numbers return
 `404 number_not_found`. Both API-imported and dashboard-imported owned numbers work.
 
-## Period and time zone
+### Period and time zone
 
 - `period`: `today`, `7`, `14`, `30`, `90`, or `all` (default).
 - `time_zone`: an IANA zone such as `Europe/London`, or `UTC` (default).
@@ -26,7 +43,7 @@ Absent, another owner's, pending and internal browser-test numbers return
   can differ if new activity arrives, costs settle or retention removes history.
 - Duplicate parameters, unknown parameters and invalid values return 400.
 
-## Response and meaning
+### Response and meaning
 
 The envelope is `{ "usage": { ... } }`. It includes the number, period, zone,
 boundaries and these fields:
@@ -55,14 +72,16 @@ number-row generation; old/unbound generations are excluded. This is not lifetim
 carrier usage, a payment statement, a ledger, or a guarantee that a call is settled.
 No raw calls, messages, recordings, credentials or internal account IDs are returned.
 
-## Query budget and failures
+### Query budget and failures
 
 The aggregate has a three-second database RPC budget and a five-second engine
 wait limit, with number/owner/time indexes. It returns full totals or
 `503 usage_unavailable`, never a partial aggregate or false zero. Try a smaller
 period or retry later; do not loop aggressively. The normal API rate limit applies.
 
-## Local kit examples
+### Client method examples
+
+
 
 ```javascript
 const { usage } = await client.phoneNumbers.usage('+447457401554', {
@@ -89,3 +108,137 @@ The existing read-only MCP `list_phone_numbers` tool has an additive usage mode:
 Do not combine usage with list filters/paging. Without `usage:true`, the existing
 list/single-settings tool behaviour remains unchanged. No new credentials or
 permissions are needed. Browser RPC grants have not been expanded.
+
+
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `usage` | object | Always returned. |
+| `usage.phone_number` | string | Always returned. |
+| `usage.period` | string | Allowed: today, 7, 14, 30, 90, all |
+| `usage.time_zone` | string | Always returned. |
+| `usage.period_start` | string or null | Inclusive boundary; null for all retained history. |
+| `usage.period_end` | string | Inclusive server query cutoff. |
+| `usage.start_inclusive` | boolean | Always returned. |
+| `usage.end_inclusive` | boolean | Always returned. |
+| `usage.currency` | string | Always returned. |
+| `usage.duration_unit` | string | Always returned. |
+| `usage.call_count` | integer | Minimum 0 |
+| `usage.total_ms` | integer | Minimum 0 |
+| `usage.minutes` | number | total_ms / 60000, rounded to six decimals. total_ms is authoritative. |
+| `usage.last_call` | string or null | Always returned. |
+| `usage.total_cost` | string | Exact decimal USD sum of retained calls.cost. No repricing. Display to two decimals to match the dashboard. |
+| `usage.unpriced_calls` | integer | Retained calls where cost IS NULL, not zero. Minimum 0 |
+| `usage.sms_sent` | integer | Minimum 0 |
+| `usage.sms_received` | integer | Minimum 0 |
+| `usage.sms_count` | integer | Minimum 0 |
+| `usage.web_chats` | integer | Distinct session IDs with messages in the period, bound to the current number row and owner. Minimum 0 |
+| `usage.unused` | boolean | Zero calls AND zero SMS in this period; web chats do not affect this field. |
+| `usage.history_note` | string | Retained history, not a billing ledger; only recorded call charges, no provider SMS charges. |
+
+
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
++  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage' \
++  --header "Authorization: Bearer $NXF_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage', method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$result = Invoke-RestMethod -Method GET -Uri 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{
+  "usage": {
+    "phone_number": "+12025550123",
+    "period": "all",
+    "time_zone": "UTC",
+    "period_start": null,
+    "period_end": "2026-11-02T12:00:00Z",
+    "start_inclusive": true,
+    "end_inclusive": true,
+    "currency": "USD",
+    "duration_unit": "milliseconds",
+    "call_count": 0,
+    "total_ms": 0,
+    "minutes": 0,
+    "last_call": null,
+    "total_cost": "0",
+    "unpriced_calls": 0,
+    "sms_sent": 0,
+    "sms_received": 0,
+    "sms_count": 0,
+    "web_chats": 0,
+    "unused": true,
+    "history_note": "Usage reflects retained records for this number generation."
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | invalid_phone_format, invalid_period, invalid_timezone or invalid_query. Duplicate/unknown query fields are rejected. |
+| 401 | Missing/invalid API key or inactive account at authentication. |
+| 403 | account_unavailable: account became inactive before the database read. |
+| 404 | number_not_found: absent, foreign, pending or internal identity. |
+| 429 | Existing API rate limit. |
+| 503 | usage_unavailable: timeout, unavailable schema/database or invalid result. Not zero usage; use a shorter period or retry later. |
+
+
+
+## Retry and idempotency
+
+Use bounded retries only for temporary read failures. Keep the same filters while paging. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Pagination](/api-reference/pagination)

@@ -1,0 +1,187 @@
+[
+  {
+    "slug": "api-reference/agents/list",
+    "method": "GET",
+    "path": "/agents",
+    "summary": "Owned agents; active by default. Optional status/search. Stable created_at DESC, agent_id DESC ordering. Bare array. Strict bounds: invalid queries return 400 invalid_agent_list.",
+    "notes": "Returns a bare array of your agents; active only unless status is supplied.\nEach item has the same safe settings projection as create/update/get.\nDisabled agents can be listed with status=disabled or status=all, or fetched by owned ID.\nCarrier auth tokens and unreviewed future columns are never returned.\n\n| Parameter | Contract |\n|---|---|\n| limit | Integer 1..200, default 100 |\n| offset | Integer 0..1000000, default 0 |\n| status | active (default), disabled, all |\n| search | Case-insensitive literal substring of name or agent_id; up to 200 characters, no control characters; leading/trailing whitespace trimmed; empty = no search |\n\nNumbers must be decimal digits without signs, leading zeros (except 0), fractions,\nexponents or trailing text. Repeated/array/object values are rejected.\nInvalid query values return `400 invalid_agent_list`, not silent clamping/defaults.\nUse the documented bounds and encode query values.\n\nOrder is `created_at DESC, agent_id DESC`, including tied creation times. Pages are\nnot a snapshot: concurrent creation, enabling/disabling or edits may shift offsets.\nEvery filter remains scoped to the authenticated API key. Search cannot change that.\nSpecial characters such as %, _, *, quotes and parentheses are literal, not wildcards.\n\nExample: `GET /v1/agents?status=all&search=Support&limit=50&offset=50`.\nURL-encode search values (the kits do this automatically).\n\nNode: `client.agents.list({status:'all',search:'Support',limit:50,offset:50})`.\n`client.agents.iter(200)` walks active agents until a short/empty page. Its page size\nmust be an integer 1..200 (larger sizes throw before HTTP); it does not silently stop\nafter 200 total agents. At the maximum offset it throws rather than truncate silently.\nCLI: `nixflex agents list --status all --search Support --limit 50 --offset 50`.\nPython (sync or await): `client.agents.list(status='all', search='Support', limit=50, offset=50)`.\nMCP: `list_agents` takes the same four fields; no new tool or confirmation needed.\n\nDatabase failures return `503 agent_store_unavailable`, not an empty successful list.\n\n### Read automatic knowledge terms\n\nAutomatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms). The optional `knowledge_keyterms` array appears when knowledge is enabled and filters against the saved customer terms.",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": null
+  },
+  {
+    "slug": "api-reference/agents/get",
+    "method": "GET",
+    "path": "/agents/{id}",
+    "summary": "Get an agent in the authenticated account.",
+    "notes": "Fetch an owned agent using its `agent_id`.\nReturns the same reviewed safe settings as create/update/list, including response delay,\nSTT controls, timezone, SMS settings, extraction, voicemail and retention.\nNo carrier auth token or unreviewed future column is returned.\n\nGET still returns an owned soft-disabled agent; `is_active` is false.\n\n| HTTP/code | Meaning |\n|---|---|\n| 200 | Owned agent and its settings |\n| 404 not_found | Missing or belongs to another account (same response) |\n| 503 agent_store_unavailable | Storage could not be checked; do not interpret as missing |\n\n### Read automatic knowledge terms\n\nAutomatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms). The optional `knowledge_keyterms` array appears when knowledge is enabled and filters against the saved customer terms.",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": null
+  },
+  {
+    "slug": "api-reference/agents/delete",
+    "method": "DELETE",
+    "path": "/agents/{id}",
+    "summary": "Switch an owned agent off by setting is_active to false. GET still returns the inactive record. This is not permanent erasure.",
+    "notes": "This operation only writes `is_active=false` and updates the timestamp.\nIn plain words: **switch off**, not permanent deletion or a wait-for-live-calls operation.\nIt does not detach phone numbers, erase the row/history, or send carrier requests.\n\nThe existing response is kept for compatibility, but its wording means **soft disable**:\n\n\n\nGET by ID can still return the owned disabled agent. List defaults to active only;\nuse `status=disabled` or `status=all` to include it.\nPUT `{\"is_active\":true}` can re-enable it. This is not the dashboard's permanent erasure process.\n\nThe update must affect an owned row before success is returned.\nMissing/foreign rows return `404 not_found`; database failures return\n`503 agent_store_unavailable`. Check the agent before retrying an uncertain result.",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": {
+      "message": "Agent deleted"
+    }
+  },
+  {
+    "slug": "api-reference/phone-numbers/list",
+    "method": "GET",
+    "path": "/phone-numbers",
+    "summary": "Owned public numbers only; pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, phone_number DESC; live traversal, not a snapshot.",
+    "notes": "Returns public numbers owned by your API key. Pending imports and internal\nbrowser-test identities are hidden. Both API-added and dashboard-added numbers\nare included. The dashboard Phone numbers page is unchanged.\n\n### Query parameters\n\n| Parameter | Type | Notes |\n|---|---|---|\n| `agent_id` | string | Optional exact agent filter |\n| `provider` | `twilio` or `telnyx` | Optional exact carrier filter |\n| `limit` | integer 1–100 | Opt into cursor paging |\n| `cursor` | string | Opaque `next_cursor` from the previous page. With cursor alone limit defaults to 50 |\n\nWithout pagination parameters the existing `{ phone_numbers, count }` envelope\nstays unchanged. The configured database row cap still applies; there is no\nguaranteed 1,000-row contract. Use paging to traverse large accounts.\n`count` ALWAYS means rows in this response, never the account total.\n\n\n\nPaged responses add `next_cursor` (string or null) and `has_more` (boolean).\nKeep the account and filters unchanged; pass the cursor unchanged and URL-encoded.\nInvalid limit, provider or cursor returns `400 invalid_number_query`.\n\n\n\nNumbers are newest first. Paged reads break equal timestamps by phone number\ndescending and put missing timestamps last. Follow `next_cursor` until null,\neven if fewer than `limit` rows arrive. This is a live list, not a snapshot:\nnew imports appear on a fresh traversal; removed rows can disappear between pages.\n\nEmpty lists return 200 with count 0, not 404. The existing Twilio number SID stays\nfor compatibility. Credentials and internal row/account IDs never appear.\n`source` is descriptive api/dashboard (null for unknown legacy origin),\nnot writable and never a permission. See [Get phone number](/api-reference/phone-numbers/get)\nfor full saved settings and [seven switches](/api-reference/phone-numbers/switches).",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": {
+      "phone_numbers": [
+        {
+          "phone_number": "+12025550100",
+          "agent_id": "agent_example",
+          "provider": "telnyx",
+          "twilio_number_sid": null,
+          "inbound_enabled": true,
+          "outbound_enabled": true,
+          "sms_reply_enabled": false,
+          "web_agent_enabled": true,
+          "web_calls_enabled": false,
+          "web_functions_enabled": false,
+          "monitor_enabled": false,
+          "custom_prompt": null,
+          "created_at": "2026-10-25T10:00:00.123456+00:00",
+          "source": "api"
+        }
+      ],
+      "count": 1,
+      "next_cursor": null,
+      "has_more": false
+    }
+  },
+  {
+    "slug": "api-reference/phone-numbers/get",
+    "method": "GET",
+    "path": "/phone-numbers/{phoneNumber}",
+    "summary": "Get a phone number in the authenticated account.",
+    "notes": "Use E.164 and URL-encode the leading plus: `/v1/phone-numbers/%2B12025550100`.\nRequires an active API key/account. Unknown numbers, other accounts, pending imports\nand internal browser-test numbers all return `404 number_not_found`.\n\nThe response is `{ \"phone_number\": { ... } }`. Every field below is present;\nunset saved overrides remain null. This is not a dump of the database row.\n\n| Fields | Meaning |\n|---|---|\n| `phone_number`, `agent_id`, `provider`, `created_at` | Public number, assigned public agent identifier, carrier and creation date |\n| `source` | Read-only `api` / `dashboard`; null for unknown legacy origin. Descriptive, not a permission |\n| `inbound_enabled`, `outbound_enabled`, `sms_reply_enabled` | Incoming calls, outbound call permission, automatic SMS replies |\n| `web_agent_enabled`, `web_calls_enabled`, `web_functions_enabled`, `monitor_enabled` | Saved website and monitoring switches |\n| `web_calls_effective` | Read-only website voice switch eligibility: saved voice ON and Web agent not OFF |\n| `record_call`, `recording_source` | Saved recording override and source; null inherits agent |\n| `custom_prompt`, `sms_prompt`, `web_prompt` | Separate call business profile, SMS instructions and website instructions |\n| `voice_id`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation` | Saved voice, speed, keypad and booking-confirmation overrides |\n| `voicemail_leave_enabled`, `voicemail_message` | Saved per-number voicemail; dashboard-origin numbers use the agent policy instead |\n| `telnyx_key_status` | Safe status below; no full key or full fingerprint |\n\nEffective voice is only a switch calculation, not a guarantee that a call can start.\nAccount/agent activity, billing, authorization and existing admission checks still apply.\nLegacy null Web agent values retain the existing engine's enabled interpretation.\nNo value is written by this request; it never changes the saved voice switch.\n\n### Telnyx key status\n\nSame projection as the dashboard:\n\n\n\n`fingerprint` is at most 16 characters; the previous-key deadline is null when\nabsent/expired. `set` and `verified` describe stored key state, not provider health.\nTwilio numbers normally have false/false/null/null key metadata.\n\nTo install or rotate a Telnyx signature key, send `telnyx_public_key` through the\nexisting import/PATCH candidate flow. A successful save is NOT verification.\nOnly the engine's valid signed-callback flow can verify a candidate; read back this\nstatus after the normal callback test. There is no API field to force verified.\nSee [update](/api-reference/phone-numbers/update) and [import](/api-reference/phone-numbers/import).\n\nCredentials, carrier account secrets, full signature keys, full fingerprints,\ninternal row/account/import IDs and operation tokens are never returned.",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": null
+  },
+  {
+    "slug": "api-reference/phone-numbers/usage",
+    "method": "GET",
+    "path": "/phone-numbers/{phoneNumber}/usage",
+    "summary": "Get number usage in the authenticated account.",
+    "notes": "Draft for API Area 1 Group 3. Requires its staging release. The kit changes below\nare local/unpublished until separately released. This is a read-only request.\n\nUse an active API key. Ownership comes only from that key, never a request field.\nURL-encode the plus in E.164: `/v1/phone-numbers/%2B447457401554/usage`.\nAbsent, another owner's, pending and internal browser-test numbers return\n`404 number_not_found`. Both API-imported and dashboard-imported owned numbers work.\n\n### Period and time zone\n\n- `period`: `today`, `7`, `14`, `30`, `90`, or `all` (default).\n- `time_zone`: an IANA zone such as `Europe/London`, or `UTC` (default).\n- Finite periods start at local midnight, including today: 7 means today plus\n  six earlier calendar dates, not the previous 168 hours. DST is respected.\n- `period_start` is inclusive; `null` for all retained history. `period_end` is\n  the inclusive server query cutoff, not a future day-end. All returned ISO times\n  identify absolute instants; an offset may differ from the selected zone.\n- Use the dashboard browser's zone to compare. Requests at different instants\n  can differ if new activity arrives, costs settle or retention removes history.\n- Duplicate parameters, unknown parameters and invalid values return 400.\n\n### Response and meaning\n\nThe envelope is `{ \"usage\": { ... } }`. It includes the number, period, zone,\nboundaries and these fields:\n\n| Field | Meaning |\n|---|---|\n| `call_count` | Retained call rows in this period, including unpriced/zero-duration rows |\n| `total_ms`, `minutes` | Sum of stored duration in milliseconds; minutes = total_ms / 60000, rounded to six decimals |\n| `last_call` | Latest call creation timestamp in the period, or null |\n| `total_cost`, `currency` | Exact decimal string of recorded call charges; currency USD |\n| `unpriced_calls` | Number of calls with NULL cost; a known zero cost is not unpriced |\n| `sms_sent`, `sms_received`, `sms_count` | Outbound, inbound and all retained SMS rows; counts are messages, not billable segments |\n| `web_chats` | Distinct session IDs with messages in the period, scoped to the current number row |\n| `unused` | Zero calls AND zero SMS. A number with only web chat is still “Unused” |\n| `history_note` | Retained history, not a billing ledger; provider SMS charges are not included |\n\n`duration_unit` is `milliseconds`; `start_inclusive` and `end_inclusive` are true.\nFor display, round minutes to at most two decimals and cost to two decimals, as\nthe dashboard does. Do not recompute cost from minutes or a current price.\n\nRetention can reduce these totals. Calls and SMS are attributed by owner plus\nbusiness E.164 number (outbound = from; otherwise = to), exactly like the dashboard.\nSame-owner re-import can therefore include that owner's older call/SMS history;\nanother owner's rows are excluded. Web chats additionally require the current\nnumber-row generation; old/unbound generations are excluded. This is not lifetime\ncarrier usage, a payment statement, a ledger, or a guarantee that a call is settled.\nNo raw calls, messages, recordings, credentials or internal account IDs are returned.\n\n### Query budget and failures\n\nThe aggregate has a three-second database RPC budget and a five-second engine\nwait limit, with number/owner/time indexes. It returns full totals or\n`503 usage_unavailable`, never a partial aggregate or false zero. Try a smaller\nperiod or retry later; do not loop aggressively. The normal API rate limit applies.\n\n### Client method examples\n\n\n\n```javascript\nconst { usage } = await client.phoneNumbers.usage('+447457401554', {\n  period: '30', time_zone: 'Europe/London'\n});\nconsole.log(usage.total_cost); // exact decimal USD string\n```\n\n```python\nresult = client.phone_numbers.usage('+447457401554', period='30', time_zone='Europe/London')\n# Same method on AsyncNixflex: await client.phone_numbers.usage(...)\n```\n\n```shell\nnixflex numbers usage +447457401554 --period 30 --time-zone Europe/London --json\n```\n\nThe existing read-only MCP `list_phone_numbers` tool has an additive usage mode:\n\n```json\n{\"phone_number\":\"+447457401554\",\"usage\":true,\"period\":\"30\",\"time_zone\":\"Europe/London\"}\n```\n\nDo not combine usage with list filters/paging. Without `usage:true`, the existing\nlist/single-settings tool behaviour remains unchanged. No new credentials or\npermissions are needed. Browser RPC grants have not been expanded.\n",
+    "responseNotes": "",
+    "errorNotes": "",
+    "exampleResponse": {
+      "usage": {
+        "phone_number": "+12025550123",
+        "period": "all",
+        "time_zone": "UTC",
+        "period_start": null,
+        "period_end": "2026-11-02T12:00:00Z",
+        "start_inclusive": true,
+        "end_inclusive": true,
+        "currency": "USD",
+        "duration_unit": "milliseconds",
+        "call_count": 0,
+        "total_ms": 0,
+        "minutes": 0,
+        "last_call": null,
+        "total_cost": "0",
+        "unpriced_calls": 0,
+        "sms_sent": 0,
+        "sms_received": 0,
+        "sms_count": 0,
+        "web_chats": 0,
+        "unused": true,
+        "history_note": "Usage reflects retained records for this number generation."
+      }
+    }
+  },
+  {
+    "slug": "api-reference/calls/delete",
+    "method": "DELETE",
+    "path": "/calls/{id}",
+    "summary": "Guarded cleanup request for an owned call. Can refuse with 409/503 for in-progress/unsettled work or pending/failed cleanup. Not a promise of immediate all-copy erasure. Never blindly retry an uncertain response.",
+    "notes": "Requests guarded cleanup of one owned call. This is **not** a promise of immediate\nerasure of every copy. The current public deletion guard can refuse nonempty\ncleanup until original storage/transfer-audio safety is confirmed. A separate\nsafe-delete design is pending; this documentation does not bypass that fence.\n\n### Not reversible\n\n<Warning>\n  Completed removal cannot be undone through this API. Do not promise immediate\n  completion, automatic retry or deletion from customer-owned storage and external\n  copies. Lost replies mean outcome unknown: check before retrying.\n</Warning>\n\n### What this does NOT do\n\n- Billing is unaffected. The call's usage remains on your invoice - a delivered call is still a billed call, and billing records are retained for tax purposes.\n- Webhook delivery logs for the call are not removed.",
+    "responseNotes": "Legacy  shape if cleanup is permitted and completes:\n\n\n\n`recording_deleted` reflects the legacy cleanup path's count, not proof that a\nrecording existed or every copy was erased. That path also requests removal of a\npossible transfer-whisper object, even when no such object exists. Never use this\nboolean as an erasure certificate. A refused request must not be shown as deleted.",
+    "errorNotes": "| Status | Code | Meaning |\n|---|---|---|\n| 404 | `not_found` | No call with that ID on your account. Also returned for a call you have already deleted. |\n| 409 | `call_in_progress`, `campaign_in_progress` | Work still running; wait for it to end or resolve the campaign. |\n| 409 | `deletion_unsettled` | Outcome/charge is not confirmed; do not claim deletion. |\n| 409 | `recording_cleanup_pending`, `cleanup_pending_confirmation` | Storage/transfer-audio cleanup needs confirmation; contact support. |\n| 409 | `deletion_cleanup_failed` | Cleanup did not finish; contact support before retrying. |\n| 503 | `deletion_unavailable` | Safety could not be checked; deletion is not confirmed. |\n\nOnly calls made with your own API key can be deleted; another account's call ID returns the same `404`.",
+    "exampleResponse": {
+      "call_id": "call_example",
+      "deleted": true,
+      "recording_deleted": true
+    }
+  },
+  {
+    "slug": "api-reference/calls/delete-all",
+    "method": "DELETE",
+    "path": "/calls",
+    "summary": "Guarded call cleanup request; does not delete SMS or close the account. Can refuse with 409/503 while work or cleanup confirmation is pending. Legacy recording counters are not all-copy erasure proof. Never blindly retry an uncertain response.",
+    "notes": "Requests guarded cleanup of owned call history. The current public guard can\nhold nonempty cleanup for storage/transfer-audio confirmation. This is not an\nimmediate account-erasure workflow and does **not** delete SMS messages. The\nseparate reviewed safe-delete design remains pending; no safety fence is removed.\n\n### Not reversible\n\n<Warning>\n  This is destructive if allowed. SDK changes never automatically retry it;\n  a lost reply may follow partial progress. Check before retrying. There is no\n  undo through this API; no promise about customer-owned or exported copies.\n</Warning>\n\n### What this does NOT do\n\n- This call-data request does not delete your agents, phone numbers or API keys.\n- Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.\n- Account deletion is a separate dashboard-owner workflow with pending states;\n  this endpoint does not close an account or certify its complete erasure.",
+    "responseNotes": "Legacy  shape; an already-empty scope can return:\n\n\n\n| Field | Type | Notes |\n|---|---|---|\n| `calls_deleted` | number | Call records removed. |\n| `recordings_deleted` | number | Legacy requested-storage-path count, including possible whisper paths; not proof of objects found or every copy erased. |\n| `sms_deleted` | number | Compatibility field; this route does not delete SMS and returns zero. |\n\nRefusals use 409 for in-progress, unsettled or pending/failed cleanup, and 503 when\nsafety cannot be checked. See [Delete call](/api-reference/calls/delete) for the\ncodes. A safety refusal includes `details.deleted=false` and\n`details.safe_to_retry=false`; show the reason instead of “deleted”. No completion\ndeadline or all-copy erasure guarantee is made by this response.",
+    "errorNotes": "",
+    "exampleResponse": {
+      "deleted": true,
+      "calls_deleted": 0,
+      "recordings_deleted": 0,
+      "sms_deleted": 0
+    }
+  },
+  {
+    "slug": "api-reference/caller-context/get",
+    "method": "GET",
+    "path": "/phone-numbers/{phoneNumber}/callers/{callerNumber}",
+    "summary": "What your agent knows about one caller on one of your numbers - what you set and what the engine learned, in one record.",
+    "notes": "Returns what your agent knows about one caller on one of your numbers - what you set and what the engine has learned, in one record.\n\nAn owned business number with no caller record returns **404 caller_not_found**, with message `No caller record for CALLER on BUSINESS.` A number outside the account returns **404 phone_number_not_found**, with message `Phone number BUSINESS is not on this account.` Check the code as well as the status.",
+    "responseNotes": "Only fields that have a value are returned. `last_call` and `open_item` are written by the engine after a call - `last_call` is what the caller **wanted**, never what happened.",
+    "errorNotes": "| Code | Cause |\n|---|---|\n| `phone_number_not_found` | The number is not on this account |\n| `caller_not_found` | No record for that caller on that number |",
+    "exampleResponse": {
+      "caller": {
+        "phone_number": "+12025550123",
+        "caller_number": "+12025550101",
+        "context": {
+          "name": "Sam Carter",
+          "email": "sam.carter@example.com",
+          "location": "London SW1A 1AA",
+          "reference_id": "4827",
+          "last_call": "wanted to book an appointment",
+          "open_item": "waiting for a callback about a refund"
+        }
+      }
+    }
+  },
+  {
+    "slug": "api-reference/caller-context/set",
+    "method": "PUT",
+    "path": "/phone-numbers/{phoneNumber}/callers/{callerNumber}",
+    "summary": "Sets the details for one caller on one of your numbers. Creates the record if needed. A field left out keeps its value; send null to remove it. last_call and open_item are engine-only and are rejected.",
+    "notes": "Sets what your agent knows about one caller on one of your numbers. Creates the record if it does not exist.\n\nSee [Caller context](/concepts/caller-context) for how the agent uses these details on a call.\n\n### Body parameters\n\nSend at least one field. A field you leave out keeps its current value; send `null` to remove it.\n\n| Field | Type | Max length | Notes |\n|---|---|---|---|\n| `name` | string or null | 120 | Full name - first and last. The agent uses it naturally and confirms it before booking. |\n| `email` | string or null | 120 | Must be a valid address. Confirmed with the caller before it is used for an action. |\n| `phone` | string or null | 40 | A contact number other than the one they call from. |\n| `location` | string or null | 120 | Free text - city, area, postal code, whatever suits your market. |\n| `reference_id` | string or null | 64 | An account, order or booking reference the caller uses. |\n| `preference` | string or null | 200 | A short preference, for example `prefers morning appointments`. |\n\n`last_call` and `open_item` are written by the engine after each call and cannot be set here - sending them returns `engine_only_field`. An unrecognised field name is rejected rather than ignored, so a typo never disappears silently.\n\n### Behaviour\n\n- **Last write wins per field.** If the caller confirms a different email on a call, the engine stores the new one and the next call uses it. Send the field again to set it back.\n- **An empty value never erases.** Only an explicit `null` removes a field.\n- **One record per number, per caller.** The same person on another of your numbers is a separate record - import them to each number you want them recognised on.\n- Takes effect on the caller's next call or text. Calls already in progress are unaffected.",
+    "responseNotes": "`context` is the whole record - your fields together with anything the engine has learned.",
+    "errorNotes": "| Code | Cause |\n|---|---|\n| `phone_number_not_found` | The number is not on this account |\n| `engine_only_field` | `last_call` or `open_item` was sent |\n| `unknown_field` | A field name that is not in the table above |\n| `invalid_email` | `email` is not a valid address |\n| `field_too_long` | A value is over its maximum length |\n| `missing_field` | No fields were sent |",
+    "exampleResponse": {
+      "caller": {
+        "phone_number": "+12025550123",
+        "caller_number": "+12025550101",
+        "context": {
+          "name": "Sam Carter",
+          "email": "sam.carter@example.com",
+          "location": "London SW1A 1AA",
+          "reference_id": "4827"
+        }
+      }
+    },
+    "exampleBody": {
+      "name": "Example customer",
+      "reference_id": "example-001"
+    }
+  }
+]

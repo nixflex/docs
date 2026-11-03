@@ -1,11 +1,11 @@
 ---
-title: "Get knowledge topic: Nixflex API fields and examples"
+title: "Get knowledge topic"
 sidebarTitle: "Get knowledge topic"
-description: "Get knowledge topic with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Get knowledge topic with the Nixflex API. Read one current piece, its evidence and saved metadata."
 openapi: "/api-reference/public.openapi.json GET /knowledge-bases/{kb}/topics/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-bases-kb-topics-id"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -84,7 +84,7 @@ The identifier must belong to the current active revision. A deleted or inaccess
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -115,9 +115,19 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge getTopic "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "get_knowledge_topic",
+  "arguments": {
+    "kb": "kb/example",
+    "id": "id/example"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

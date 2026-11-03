@@ -1,11 +1,11 @@
 ---
-title: "Read automatic keyterms: Nixflex API fields and examples"
+title: "Read automatic keyterms"
 sidebarTitle: "Read automatic keyterms"
-description: "Read automatic keyterms with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Read automatic keyterms with the Nixflex API. Read ranked automatic speech terms from an agent’s current live knowledge."
 openapi: "/api-reference/public.openapi.json GET /agents/{target}/knowledge-keyterms"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-agents-target-knowledge-keyterms"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -40,7 +40,7 @@ Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server
 
 Do not send a request body.
 
-This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not.
+This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations.
 
 ## Response fields
 
@@ -49,10 +49,15 @@ This dedicated read returns automatic candidates. Agent list/detail reads also e
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `knowledge_keyterms` | array of string | Ranked automatic candidates; default cap 80 per agent, operator-configurable from 0 to 100. Maximum 100 items. |
+| `knowledge_keyterms_count` | integer | Length of knowledge_keyterms. Minimum 0. |
+| `knowledge_keyterms_limit` | integer | Configured automatic candidate limit; default 80. Minimum 0. Maximum 100. |
+| `manual_keyterms` | array of string | Saved customer entries, trimmed and nonempty. Compare with unsaved form values in your UI. |
+| `manual_keyterms_count` | integer | Length of manual_keyterms; an unchanged legacy list can exceed today’s edit limit. Minimum 0. |
+| `manual_keyterms_limit` | integer | Maximum nonempty terms for newly edited manual lists; unchanged saved lists may exceed this value. Value: `20`. |
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -83,9 +88,18 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge keyterms "$env:NXF_AGENT_ID" --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "get_agent_knowledge_keyterms",
+  "arguments": {
+    "target": "target/example"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 
@@ -96,9 +110,13 @@ Illustrative response; identifiers are placeholders and optional fields can be a
 ```json Response
 {
   "knowledge_keyterms": [
-    "Nixflex",
-    "appointment"
-  ]
+    "Evening appointments"
+  ],
+  "knowledge_keyterms_count": 1,
+  "knowledge_keyterms_limit": 80,
+  "manual_keyterms": [],
+  "manual_keyterms_count": 0,
+  "manual_keyterms_limit": 20
 }
 ```
 

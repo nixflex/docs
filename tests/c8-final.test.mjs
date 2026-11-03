@@ -21,7 +21,14 @@ test('B49f keyterm schemas document conditional limits without rejecting grandfa
  assert.ok(spec.paths['/agents/{target}/knowledge-keyterms'].get.responses['200'].content['application/json'].schema.properties.knowledge_keyterms);
 });
 test('C8 consolidated PS5.1 runner refuses writes, protects fixtures and checks all read shapes',()=>{
- const r=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(root,'tests/support/c8-safe-harness.ps1')],{cwd:root,encoding:'utf8',timeout:60000});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/89 unsafe requests blocked/);assert.match(r.stdout,/57 mocked read\/calculation examples and six no-save keyterm refusals/);
+ const r=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(root,'tests/support/c8-safe-harness.ps1')],{cwd:root,encoding:'utf8',timeout:60000});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/15 unsafe requests blocked/);assert.match(r.stdout,/54 public read shapes \+ 4 GET tombstones; 88 manual exclusions/);
 });
 
-test("K5 knowledge examples use verified kit methods and preserve unregistered MCP status",()=>{for(const d of defs){const p=read(d.slug+".mdx");assert.ok(d.kitExamples.node.includes("c.knowledge."+d.kitMethod.node));assert.ok(d.kitExamples.python.includes("c.knowledge."+d.kitMethod.python));assert.doesNotMatch(p,/direct HTTP/);assert.match(p,/MCP does not offer this operation/);assert.doesNotMatch(p,/```json MCP/);}assert.equal(defs.filter(d=>d.kitExamples.mcpPending).length,20);});
+test("K5 knowledge examples use verified methods and 19 registered MCP tools",()=>{
+ let registered=0,excluded=0;
+ for(const d of defs){const p=read(d.slug+".mdx");assert.ok(d.kitExamples.node.includes("c.knowledge."+d.kitMethod.node));assert.ok(d.kitExamples.python.includes("c.knowledge."+d.kitMethod.python));assert.doesNotMatch(p,/direct HTTP/);
+  if(d.kitExamples.mcp){assert.ok(JSON.parse(d.kitExamples.mcp).name);assert.match(p,/```json MCP/);registered++;}
+  else {assert.match(p,/MCP does not offer this operation/);assert.doesNotMatch(p,/```json MCP/);excluded++;}
+ }
+ assert.equal(registered,19);assert.equal(excluded,21);assert.equal(defs.filter(d=>d.kitExamples.mcpPending).length,0);
+});

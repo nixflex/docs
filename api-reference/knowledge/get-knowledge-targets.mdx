@@ -1,11 +1,11 @@
 ---
-title: "List knowledge agents: Nixflex API fields and examples"
+title: "List knowledge agents"
 sidebarTitle: "List knowledge agents"
-description: "List knowledge agents with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "List knowledge agents with the Nixflex API. List active owned agents and their live knowledge state."
 openapi: "/api-reference/public.openapi.json GET /knowledge/targets"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-targets"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -65,7 +65,7 @@ Only active agents are listed. The API can manage API-origin agents; personal da
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 ```json request-132.json
 {
@@ -105,9 +105,21 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge targets  --body '@request-132.json' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "list_knowledge_targets",
+  "arguments": {
+    "limit": 30,
+    "cursor": "agent/cursor",
+    "q": "Example",
+    "target": "agent/example"
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

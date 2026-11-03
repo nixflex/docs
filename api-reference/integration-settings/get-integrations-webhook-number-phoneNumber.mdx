@@ -1,11 +1,11 @@
 ---
-title: "Get first webhook | Nixflex developer API reference"
+title: "Get first webhook"
 sidebarTitle: "Get first webhook"
-description: "Get first webhook with the Nixflex API. Review fields, response examples, permissions, errors and retry rules before connecting your application."
+description: "Get first webhook with the Nixflex API. Read the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations."
 openapi: "/api-reference/public.openapi.json GET /integrations/webhook/number/{phoneNumber}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/get-integrations-webhook-number-phoneNumber"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -42,7 +42,7 @@ Do not send a request body.
 
 The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination.
 
-The K4 MCP get_webhook response masks the saved URL. Its delete_webhook preview also masks the URL; SDK responses remain private wire data. Do not log them.
+The MCP get_webhook response masks the saved URL. Its delete_webhook preview also masks the URL; SDK responses remain private wire data. Do not log them.
 
 ## Response fields
 
@@ -56,7 +56,7 @@ The K4 MCP get_webhook response masks the saved URL. Its delete_webhook preview 
 
 ## Example request
 
-K4 examples use the unpublished Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0 candidates. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
+These examples use the unpublished Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0 candidates. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
 
 <RequestExample>
 
@@ -137,4 +137,4 @@ This is a read-only request. Retry transient connection or server failures with 
 - [Set first webhook](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber)
 - [Clear first webhook](/api-reference/integration-settings/delete-integrations-webhook-number-phoneNumber)
 - [Authentication and permissions](/api-reference/authentication)
-- [webhooks](/advanced/webhooks)
+- [webhooks](/api-reference/webhooks)

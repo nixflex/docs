@@ -1,42 +1,59 @@
 ---
-title: "Delete all call data | Nixflex API reference guide"
+title: "Delete all calls"
 description: "Explore delete all call data with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
-api: "DELETE https://api.nixflex.com/v1/calls"
+openapi: "/api-reference/public.openapi.json DELETE /calls"
+playground: "simple"
 sidebarTitle: "Delete all calls"
+canonical: "https://docs.nixflex.com/api-reference/calls/delete-all"
 ---
+Guarded call cleanup request; does not delete SMS or close the account. Can refuse with 409/503 while work or cleanup confirmation is pending. Legacy recording counters are not all-copy erasure proof. Never blindly retry an uncertain response.
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+
+
+Do not send a request body.
 
 Requests guarded cleanup of owned call history. The current public guard can
 hold nonempty cleanup for storage/transfer-audio confirmation. This is not an
 immediate account-erasure workflow and does **not** delete SMS messages. The
 separate reviewed safe-delete design remains pending; no safety fence is removed.
 
-## Request
+### Not reversible
 
-```bash
-curl -X DELETE https://api.nixflex.com/v1/calls \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
+<Warning>
+  This is destructive if allowed. SDK changes never automatically retry it;
+  a lost reply may follow partial progress. Check before retrying. There is no
+  undo through this API; no promise about customer-owned or exported copies.
+</Warning>
 
-Or with the [SDK](https://www.npmjs.com/package/nixflex):
+### What this does NOT do
 
-```javascript
-await client.calls.deleteAll();
-```
+- This call-data request does not delete your agents, phone numbers or API keys.
+- Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.
+- Account deletion is a separate dashboard-owner workflow with pending states;
+  this endpoint does not close an account or certify its complete erasure.
 
-Do not assume dashboard deletion jobs use this same public API lifecycle.
+## Response fields
 
-## Response
+`200` returns the following shape.
 
-Legacy `200 OK` shape; an already-empty scope can return:
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `deleted` | boolean | Optional saved value. |
+| `calls_deleted` | integer | Optional saved value. |
+| `recordings_deleted` | integer | Optional saved value. |
+| `sms_deleted` | integer | Optional saved value. |
 
-```json
-{
-  "deleted": true,
-  "calls_deleted": 0,
-  "recordings_deleted": 0,
-  "sms_deleted": 0
-}
-```
+Legacy  shape; an already-empty scope can return:
+
+
 
 | Field | Type | Notes |
 |---|---|---|
@@ -50,17 +67,84 @@ codes. A safety refusal includes `details.deleted=false` and
 `details.safe_to_retry=false`; show the reason instead of “deleted”. No completion
 deadline or all-copy erasure guarantee is made by this response.
 
-## Not reversible
+## Example request
 
-<Warning>
-  This is destructive if allowed. SDK changes never automatically retry it;
-  a lost reply may follow partial progress. Check before retrying. There is no
-  undo through this API; no promise about customer-owned or exported copies.
-</Warning>
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
 
-## What this does NOT do
+<RequestExample>
 
-- This call-data request does not delete your agents, phone numbers or API keys.
-- Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.
-- Account deletion is a separate dashboard-owner workflow with pending states;
-  this endpoint does not close an account or certify its complete erasure.
+```bash cURL (Bash)
+curl --request DELETE \
++  --url 'https://api.nixflex.com/v1/calls' \
++  --header "Authorization: Bearer $NXF_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/calls', {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/calls', method='DELETE',
+    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$result = Invoke-RestMethod -Method DELETE -Uri 'https://api.nixflex.com/v1/calls' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{
+  "deleted": true,
+  "calls_deleted": 0,
+  "recordings_deleted": 0,
+  "sms_deleted": 0
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Invalid request - missing or malformed parameters. |
+| 401 | Authentication failed - bad or missing API key. |
+| 404 | Not found on your account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. |
+| 500 | Server error. |
+
+
+
+## Retry and idempotency
+
+Disable automatic write retries. A lost response leaves the result uncertain; read the affected resource before another deliberate action. No general Idempotency-Key replay guarantee applies. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Pagination](/api-reference/pagination)

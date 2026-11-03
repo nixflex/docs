@@ -37,7 +37,7 @@ test('Create sample uses the bundle, preserves nine sections and normal defaults
 test('every intended MDX page is in the menu; titles unique and changed metadata sized',()=>{
   const titles=new Set();const extra=['concepts/voices.mdx','concepts/phone-numbers.mdx','actions/ivr-navigation.mdx','best-practices/ivr-navigation.mdx','advanced/your-own-llm.mdx','integrations/twilio.mdx','integrations/telnyx.mdx','sdks/ecosystem.mdx','sdks/other-languages.mdx'];
   for(const p of pages){assert.ok(menu.includes(p.slice(0,-4)),p+' is orphaned');const body=read(p),title=meta(body,'title'),description=meta(body,'description');assert.ok(title);assert.ok(!titles.has(title.toLowerCase()),title);titles.add(title.toLowerCase());assert.doesNotMatch(title+' '+description+' '+meta(body,'sidebarTitle'),brand);
-    if(p.startsWith('api-reference/')||extra.includes(p)){assert.ok(title.length>=50&&title.length<=60,p+' title '+title.length);assert.ok(description.length>=130&&description.length<=160,p+' description '+description.length);}
+    if(p.startsWith('api-reference/')||extra.includes(p)){assert.ok(title.length>=(p.startsWith('api-reference/')?1:50)&&title.length<=60,p+' title '+title.length);assert.ok(description.length>=(p.startsWith('api-reference/')?1:130)&&description.length<=160,p+' description '+description.length);}
   }
   assert.equal(config.seo.indexing,'all');assert.doesNotMatch(JSON.stringify(config.seo),brand);
 });

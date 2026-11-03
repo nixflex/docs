@@ -8,9 +8,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/delete-agents-target-knowledge-base",
       "specPath": "/agents/{target}/knowledge-base",
-      "title": "Delete agent knowledge: Nixflex API fields and examples",
+      "title": "Delete agent knowledge",
       "side": "Delete agent knowledge",
-      "description": "Delete agent knowledge with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Delete agent knowledge with the Nixflex API. Revoke an agent’s live knowledge immediately and queue private-data deletion.",
       "summary": "Revoke an agent’s live knowledge immediately and queue private-data deletion.",
       "params": [
         {
@@ -404,8 +404,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "deleteScope",
@@ -427,9 +426,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-agents-target-knowledge-base",
       "specPath": "/agents/{target}/knowledge-base",
-      "title": "Get agent knowledge: Nixflex API fields and examples",
+      "title": "Get agent knowledge",
       "side": "Get agent knowledge",
-      "description": "Get agent knowledge with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get agent knowledge with the Nixflex API. Read the agent’s own knowledge base, settings and current revision.",
       "summary": "Read the agent’s own knowledge base, settings and current revision.",
       "params": [
         {
@@ -906,8 +905,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_agent_knowledge\",\n  \"arguments\": {\n    \"target\": \"target/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "getScope",
@@ -927,9 +925,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/put-agents-target-knowledge-base",
       "specPath": "/agents/{target}/knowledge-base",
-      "title": "Set agent knowledge: Nixflex API fields and examples",
+      "title": "Set agent knowledge",
       "side": "Set agent knowledge",
-      "description": "Set agent knowledge with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Set agent knowledge with the Nixflex API. Create the agent’s singleton knowledge base or update its settings.",
       "summary": "Create the agent’s singleton knowledge base or update its settings.",
       "params": [
         {
@@ -1517,8 +1515,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"settings\": {\n    \"channels\": [\n      \"inbound\"\n    ],\n    \"match\": \"Strict\",\n    \"not_found\": \"I don't have that information right now.\"\n  }\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "putScope",
@@ -1546,9 +1543,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-agents-target-knowledge-base-source-measure",
       "specPath": "/agents/{target}/knowledge-base/source-measure",
-      "title": "Measure knowledge source: Nixflex API fields and examples",
+      "title": "Measure knowledge source",
       "side": "Measure knowledge source",
-      "description": "Measure knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Measure knowledge source with the Nixflex API. Preview source token usage before an import without storing the source.",
       "summary": "Preview source token usage before an import without storing the source.",
       "params": [
         {
@@ -1869,8 +1866,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"text\": \"Appointments are available Monday to Friday.\"\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"measure_knowledge_source\",\n  \"arguments\": {\n    \"target\": \"target/example\",\n    \"text\": \"Example source text.\"\n  }\n}"
       },
       "kitMethod": {
         "node": "measureSource",
@@ -1892,9 +1888,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-agents-target-knowledge-base-test-sessions",
       "specPath": "/agents/{target}/knowledge-base/test-sessions",
-      "title": "Start knowledge test: Nixflex API fields and examples",
+      "title": "Start knowledge test",
       "side": "Start knowledge test",
-      "description": "Start knowledge test with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Start knowledge test with the Nixflex API. Start a knowledge-only simulated test session for an agent with live knowledge.",
       "summary": "Start a knowledge-only simulated test session for an agent with live knowledge.",
       "params": [
         {
@@ -2321,8 +2317,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"mode\": \"knowledge\",\n  \"channel\": \"inbound\"\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"start_knowledge_test\",\n  \"arguments\": {\n    \"target\": \"target/example\",\n    \"mode\": \"knowledge\",\n    \"channel\": \"inbound\",\n    \"confirm\": true,\n    \"idempotency_key\": \"example-k5-operation\"\n  }\n}"
       },
       "kitMethod": {
         "node": "startSession",
@@ -2345,9 +2340,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb",
       "specPath": "/knowledge-bases/{kb}",
-      "title": "Get knowledge base: Nixflex API fields and examples",
+      "title": "Get knowledge base",
       "side": "Get knowledge base",
-      "description": "Get knowledge base with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge base with the Nixflex API. Read a knowledge base’s settings, revision and active published index.",
       "summary": "Read a knowledge base’s settings, revision and active published index.",
       "params": [
         {
@@ -2621,8 +2616,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_base\",\n  \"arguments\": {\n    \"kb\": \"kb/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "getBase",
@@ -2642,9 +2636,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/delete-knowledge-bases-kb-drafts-id",
       "specPath": "/knowledge-bases/{kb}/drafts/{id}",
-      "title": "Discard knowledge draft: Nixflex API fields and examples",
+      "title": "Discard knowledge draft",
       "side": "Discard knowledge draft",
-      "description": "Discard knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Discard knowledge draft with the Nixflex API. Discard a review draft while retaining currently published knowledge.",
       "summary": "Discard a review draft while retaining currently published knowledge.",
       "params": [
         {
@@ -2838,8 +2832,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_draft_revision\": 0\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "discardDraft",
@@ -2862,9 +2855,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-drafts-id",
       "specPath": "/knowledge-bases/{kb}/drafts/{id}",
-      "title": "Get knowledge draft: Nixflex API fields and examples",
+      "title": "Get knowledge draft",
       "side": "Get knowledge draft",
-      "description": "Get knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge draft with the Nixflex API. Read proposed pieces, review flags, reminders and draft revision.",
       "summary": "Read proposed pieces, review flags, reminders and draft revision.",
       "params": [
         {
@@ -3365,8 +3358,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcpException": "MCP does not offer this operation because the legacy draft read can save repairs. Use the documented SDK or HTTP operation only as an intentional action."
       },
       "kitMethod": {
         "node": "getDraft",
@@ -3387,9 +3379,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/patch-knowledge-bases-kb-drafts-id",
       "specPath": "/knowledge-bases/{kb}/drafts/{id}",
-      "title": "Edit knowledge draft: Nixflex API fields and examples",
+      "title": "Edit knowledge draft",
       "side": "Edit knowledge draft",
-      "description": "Edit knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Edit knowledge draft with the Nixflex API. Edit one proposed piece while preserving evidence and review requirements.",
       "summary": "Edit one proposed piece while preserving evidence and review requirements.",
       "params": [
         {
@@ -4021,8 +4013,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"expected_draft_revision\": 0,\n  \"topic_id\": \"22222222-2222-4222-8222-222222222222\",\n  \"topic\": {\n    \"title\": \"Appointments\",\n    \"facts\": \"Appointments are available Monday to Friday.\"\n  }\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "updateDraft",
@@ -4051,9 +4042,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-drafts-id-accept",
       "specPath": "/knowledge-bases/{kb}/drafts/{id}/accept",
-      "title": "Accept knowledge draft: Nixflex API fields and examples",
+      "title": "Accept knowledge draft",
       "side": "Accept knowledge draft",
-      "description": "Accept knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Accept knowledge draft with the Nixflex API. Approve an explicit selection of reviewed pieces and queue publication.",
       "summary": "Approve an explicit selection of reviewed pieces and queue publication.",
       "params": [
         {
@@ -4517,8 +4508,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"expected_draft_revision\": 0,\n  \"topic_ids\": [\n    \"22222222-2222-4222-8222-222222222222\"\n  ]\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "acceptDraft",
@@ -4545,9 +4535,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-exports",
       "specPath": "/knowledge-bases/{kb}/exports",
-      "title": "Create knowledge export: Nixflex API fields and examples",
+      "title": "Create knowledge export",
       "side": "Create knowledge export",
-      "description": "Create knowledge export with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Create knowledge export with the Nixflex API. Queue a private export of accepted knowledge and settings.",
       "summary": "Queue a private export of accepted knowledge and settings.",
       "params": [
         {
@@ -4938,8 +4928,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{}",
-        "mcpException": "MCP does not offer this operation because it creates a private export job; use Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "createExport",
@@ -4959,9 +4948,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-overview",
       "specPath": "/knowledge-bases/{kb}/overview",
-      "title": "Get knowledge overview: Nixflex API fields and examples",
+      "title": "Get knowledge overview",
       "side": "Get knowledge overview",
-      "description": "Get knowledge overview with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge overview with the Nixflex API. Read topic, token, publication, review and seven-day observation totals.",
       "summary": "Read topic, token, publication, review and seven-day observation totals.",
       "params": [
         {
@@ -5124,8 +5113,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_overview\",\n  \"arguments\": {\n    \"kb\": \"kb/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "overview",
@@ -5145,9 +5133,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/patch-knowledge-bases-kb-settings",
       "specPath": "/knowledge-bases/{kb}/settings",
-      "title": "Update knowledge settings: Nixflex API fields and examples",
+      "title": "Update knowledge settings",
       "side": "Update knowledge settings",
-      "description": "Update knowledge settings with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Update knowledge settings with the Nixflex API. Change enabled channels, matching mode or the not-found sentence.",
       "summary": "Change enabled channels, matching mode or the not-found sentence.",
       "params": [
         {
@@ -5532,8 +5520,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"settings\": {\n    \"match\": \"Normal\"\n  }\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "updateSettings",
@@ -5558,9 +5545,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-sources",
       "specPath": "/knowledge-bases/{kb}/sources",
-      "title": "List knowledge sources: Nixflex API fields and examples",
+      "title": "List knowledge sources",
       "side": "List knowledge sources",
-      "description": "List knowledge sources with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "List knowledge sources with the Nixflex API. List accepted sources that still have unsuppressed live pieces.",
       "summary": "List accepted sources that still have unsuppressed live pieces.",
       "params": [
         {
@@ -5756,8 +5743,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"limit\": 2\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"list_knowledge_sources\",\n  \"arguments\": {\n    \"kb\": \"kb/example\",\n    \"limit\": 25,\n    \"cursor\": \"source/cursor\"\n  }\n}"
       },
       "kitMethod": {
         "node": "listSources",
@@ -5779,9 +5765,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources",
       "specPath": "/knowledge-bases/{kb}/sources",
-      "title": "Import knowledge source: Nixflex API fields and examples",
+      "title": "Import knowledge source",
       "side": "Import knowledge source",
-      "description": "Import knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Import knowledge source with the Nixflex API. Submit pasted text or a raw file and queue preparation of original-word pieces.",
       "summary": "Submit pasted text or a raw file and queue preparation of original-word pieces.",
       "params": [
         {
@@ -6350,8 +6336,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"source\": {\n    \"type\": \"text\",\n    \"title\": \"Appointments\",\n    \"text\": \"Appointments are available Monday to Friday.\"\n  },\n  \"review\": true\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "addSource",
@@ -6378,9 +6363,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/delete-knowledge-bases-kb-sources-id",
       "specPath": "/knowledge-bases/{kb}/sources/{id}",
-      "title": "Delete knowledge source: Nixflex API fields and examples",
+      "title": "Delete knowledge source",
       "side": "Delete knowledge source",
-      "description": "Delete knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Delete knowledge source with the Nixflex API. Remove an accepted source with explicit confirmation of affected topics.",
       "summary": "Remove an accepted source with explicit confirmation of affected topics.",
       "params": [
         {
@@ -6609,8 +6594,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"topic_ids\": [\n    \"22222222-2222-4222-8222-222222222222\"\n  ],\n  \"manual\": \"keep\"\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "deleteSource",
@@ -6637,9 +6621,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/patch-knowledge-bases-kb-sources-id",
       "specPath": "/knowledge-bases/{kb}/sources/{id}",
-      "title": "Rename knowledge source: Nixflex API fields and examples",
+      "title": "Rename knowledge source",
       "side": "Rename knowledge source",
-      "description": "Rename knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Rename knowledge source with the Nixflex API. Change a source name without changing facts or the published index.",
       "summary": "Change a source name without changing facts or the published index.",
       "params": [
         {
@@ -6868,8 +6852,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"title\": \"Appointment guide\",\n  \"expected_revision\": 1\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "renameSource",
@@ -6893,9 +6876,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources-id-replacements",
       "specPath": "/knowledge-bases/{kb}/sources/{id}/replacements",
-      "title": "Replace knowledge source: Nixflex API fields and examples",
+      "title": "Replace knowledge source",
       "side": "Replace knowledge source",
-      "description": "Replace knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Replace knowledge source with the Nixflex API. Prepare replacement source text while preserving the accepted version until publication.",
       "summary": "Prepare replacement source text while preserving the accepted version until publication.",
       "params": [
         {
@@ -7483,8 +7466,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"source\": {\n    \"type\": \"text\",\n    \"text\": \"Appointments are available Monday through Saturday.\"\n  },\n  \"expected_revision\": 1,\n  \"review\": true\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "replaceSource",
@@ -7512,9 +7494,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources-refresh",
       "specPath": "/knowledge-bases/{kb}/sources/refresh",
-      "title": "Refresh website sources: Nixflex API fields and examples",
+      "title": "Refresh website sources",
       "side": "Refresh website sources",
-      "description": "Refresh website sources with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Refresh website sources with the Nixflex API. Refresh explicitly selected saved website sources.",
       "summary": "Refresh explicitly selected saved website sources.",
       "params": [
         {
@@ -7934,8 +7916,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"source_ids\": [\n    \"11111111-1111-4111-8111-111111111111\"\n  ],\n  \"review\": true\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "refreshSources",
@@ -7960,9 +7941,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-topic-search",
       "specPath": "/knowledge-bases/{kb}/topic-search",
-      "title": "Search knowledge topics: Nixflex API fields and examples",
+      "title": "Search knowledge topics",
       "side": "Search knowledge topics",
-      "description": "Search knowledge topics with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Search knowledge topics with the Nixflex API. Find related current topics for knowledge management.",
       "summary": "Find related current topics for knowledge management.",
       "params": [
         {
@@ -8351,8 +8332,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"query\": \"appointment times\"\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"search_knowledge_topics\",\n  \"arguments\": {\n    \"kb\": \"kb/example\",\n    \"query\": \"Example question\"\n  }\n}"
       },
       "kitMethod": {
         "node": "searchTopics",
@@ -8374,9 +8354,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-topics",
       "specPath": "/knowledge-bases/{kb}/topics",
-      "title": "List knowledge topics: Nixflex API fields and examples",
+      "title": "List knowledge topics",
       "side": "List knowledge topics",
-      "description": "List knowledge topics with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "List knowledge topics with the Nixflex API. List current pieces in their stable display order.",
       "summary": "List current pieces in their stable display order.",
       "params": [
         {
@@ -8743,8 +8723,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"limit\": 2\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"list_knowledge_topics\",\n  \"arguments\": {\n    \"kb\": \"kb/example\",\n    \"limit\": 25,\n    \"cursor\": \"topic/cursor\"\n  }\n}"
       },
       "kitMethod": {
         "node": "listTopics",
@@ -8766,9 +8745,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-topics",
       "specPath": "/knowledge-bases/{kb}/topics",
-      "title": "Create knowledge topic: Nixflex API fields and examples",
+      "title": "Create knowledge topic",
       "side": "Create knowledge topic",
-      "description": "Create knowledge topic with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Create knowledge topic with the Nixflex API. Create a manually written piece and prepare a fresh index.",
       "summary": "Create a manually written piece and prepare a fresh index.",
       "params": [
         {
@@ -9259,8 +9238,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"topic\": {\n    \"title\": \"Appointments\",\n    \"facts\": \"Appointments are available Monday to Friday.\"\n  }\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "createTopic",
@@ -9286,9 +9264,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/delete-knowledge-bases-kb-topics-id",
       "specPath": "/knowledge-bases/{kb}/topics/{id}",
-      "title": "Delete knowledge topic: Nixflex API fields and examples",
+      "title": "Delete knowledge topic",
       "side": "Delete knowledge topic",
-      "description": "Delete knowledge topic with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Delete knowledge topic with the Nixflex API. Remove a current piece and prevent source refresh from restoring it.",
       "summary": "Remove a current piece and prevent source refresh from restoring it.",
       "params": [
         {
@@ -9482,8 +9460,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "deleteTopic",
@@ -9506,9 +9483,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-topics-id",
       "specPath": "/knowledge-bases/{kb}/topics/{id}",
-      "title": "Get knowledge topic: Nixflex API fields and examples",
+      "title": "Get knowledge topic",
       "side": "Get knowledge topic",
-      "description": "Get knowledge topic with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge topic with the Nixflex API. Read one current piece, its evidence and saved metadata.",
       "summary": "Read one current piece, its evidence and saved metadata.",
       "params": [
         {
@@ -9836,8 +9813,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_topic\",\n  \"arguments\": {\n    \"kb\": \"kb/example\",\n    \"id\": \"id/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "getTopic",
@@ -9858,9 +9834,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/patch-knowledge-bases-kb-topics-id",
       "specPath": "/knowledge-bases/{kb}/topics/{id}",
-      "title": "Update knowledge topic: Nixflex API fields and examples",
+      "title": "Update knowledge topic",
       "side": "Update knowledge topic",
-      "description": "Update knowledge topic with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Update knowledge topic with the Nixflex API. Correct a live piece and prepare its replacement index.",
       "summary": "Correct a live piece and prepare its replacement index.",
       "params": [
         {
@@ -10360,8 +10336,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"expected_revision\": 1,\n  \"topic\": {\n    \"facts\": \"Appointments are available Monday through Saturday.\"\n  }\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "updateTopic",
@@ -10387,9 +10362,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-bases-kb-unanswered",
       "specPath": "/knowledge-bases/{kb}/unanswered",
-      "title": "List unanswered questions: Nixflex API fields and examples",
+      "title": "List unanswered questions",
       "side": "List unanswered questions",
-      "description": "List unanswered questions with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "List unanswered questions with the Nixflex API. Read recent real questions from delivered turns without a retrieval match.",
       "summary": "Read recent real questions from delivered turns without a retrieval match.",
       "params": [
         {
@@ -10570,8 +10545,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"limit\": 2\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"list_knowledge_unanswered\",\n  \"arguments\": {\n    \"kb\": \"kb/example\",\n    \"limit\": 20,\n    \"cursor\": \"question/cursor\"\n  }\n}"
       },
       "kitMethod": {
         "node": "unanswered",
@@ -10593,9 +10567,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-website-discoveries",
       "specPath": "/knowledge-bases/{kb}/website-discoveries",
-      "title": "Discover website pages: Nixflex API fields and examples",
+      "title": "Discover website pages",
       "side": "Discover website pages",
-      "description": "Discover website pages with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Discover website pages with the Nixflex API. Discover selectable public pages without importing or publishing them.",
       "summary": "Discover selectable public pages without importing or publishing them.",
       "params": [
         {
@@ -11008,8 +10982,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"url\": \"https://example.com\"\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "discoverWebsite",
@@ -11031,9 +11004,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-bases-kb-website-imports",
       "specPath": "/knowledge-bases/{kb}/website-imports",
-      "title": "Import selected pages: Nixflex API fields and examples",
+      "title": "Import selected pages",
       "side": "Import selected pages",
-      "description": "Import selected pages with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Import selected pages with the Nixflex API. Import only pages chosen from a completed owned website discovery.",
       "summary": "Import only pages chosen from a completed owned website discovery.",
       "params": [
         {
@@ -11460,8 +11433,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"discovery_id\": \"11111111-1111-4111-8111-111111111111\",\n  \"page_ids\": [\n    \"page_fixture\"\n  ],\n  \"review\": true\n}",
-        "mcpException": "MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "importWebsite",
@@ -11487,9 +11459,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-capabilities",
       "specPath": "/knowledge/capabilities",
-      "title": "Get knowledge capabilities: Nixflex API fields and examples",
+      "title": "Get knowledge capabilities",
       "side": "Get knowledge capabilities",
-      "description": "Get knowledge capabilities with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge capabilities with the Nixflex API. Read current knowledge limits, defaults and account scope marker.",
       "summary": "Read current knowledge limits, defaults and account scope marker.",
       "params": [],
       "request": null,
@@ -11821,8 +11793,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_capabilities\",\n  \"arguments\": {}\n}"
       },
       "kitMethod": {
         "node": "capabilities",
@@ -11840,9 +11811,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-events",
       "specPath": "/knowledge/events",
-      "title": "Read knowledge events: Nixflex API fields and examples",
+      "title": "Read knowledge events",
       "side": "Read knowledge events",
-      "description": "Read knowledge events with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Read knowledge events with the Nixflex API. Read ordered owner-scoped knowledge events for reconciliation.",
       "summary": "Read ordered owner-scoped knowledge events for reconciliation.",
       "params": [
         {
@@ -12043,8 +12014,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"cursor\": \"0\"\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"list_knowledge_events\",\n  \"arguments\": {\n    \"cursor\": \"9007199254740993\"\n  }\n}"
       },
       "kitMethod": {
         "node": "events",
@@ -12064,9 +12034,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-exports-id",
       "specPath": "/knowledge/exports/{id}",
-      "title": "Download knowledge export: Nixflex API fields and examples",
+      "title": "Download knowledge export",
       "side": "Download knowledge export",
-      "description": "Download knowledge export with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Download knowledge export with the Nixflex API. Download a ready private export as structured JSON or readable text.",
       "summary": "Download a ready private export as structured JSON or readable text.",
       "params": [
         {
@@ -12691,8 +12661,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"format\": \"text\"\n}",
-        "mcpException": "MCP does not offer this operation because it exports bulk private content; use a local SDK or CLI file.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "downloadExport",
@@ -12714,9 +12683,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-jobs-id",
       "specPath": "/knowledge/jobs/{id}",
-      "title": "Get knowledge job: Nixflex API fields and examples",
+      "title": "Get knowledge job",
       "side": "Get knowledge job",
-      "description": "Get knowledge job with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge job with the Nixflex API. Poll authoritative job state, progress, result and safe failure details.",
       "summary": "Poll authoritative job state, progress, result and safe failure details.",
       "params": [
         {
@@ -13448,8 +13417,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_job\",\n  \"arguments\": {\n    \"id\": \"id/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "getJob",
@@ -13469,9 +13437,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-jobs-id-cancel",
       "specPath": "/knowledge/jobs/{id}/cancel",
-      "title": "Cancel knowledge job: Nixflex API fields and examples",
+      "title": "Cancel knowledge job",
       "side": "Cancel knowledge job",
-      "description": "Cancel knowledge job with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Cancel knowledge job with the Nixflex API. Cancel pending work before installation while keeping published knowledge.",
       "summary": "Cancel pending work before installation while keeping published knowledge.",
       "params": [
         {
@@ -13856,8 +13824,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{}",
-        "mcpException": "MCP does not offer this operation because it can interrupt or repeat publication; use Node, CLI or Python after reviewing the job.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "cancelJob",
@@ -13877,9 +13844,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-jobs-id-retry",
       "specPath": "/knowledge/jobs/{id}/retry",
-      "title": "Retry knowledge job: Nixflex API fields and examples",
+      "title": "Retry knowledge job",
       "side": "Retry knowledge job",
-      "description": "Retry knowledge job with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Retry knowledge job with the Nixflex API. Retry a failed job when its revision and attempt limit still permit it.",
       "summary": "Retry a failed job when its revision and attempt limit still permit it.",
       "params": [
         {
@@ -14270,8 +14237,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{}",
-        "mcpException": "MCP does not offer this operation because it can interrupt or repeat publication; use Node, CLI or Python after reviewing the job.",
-        "mcpPending": false
+        "mcpException": "MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority."
       },
       "kitMethod": {
         "node": "retryJob",
@@ -14291,9 +14257,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-targets",
       "specPath": "/knowledge/targets",
-      "title": "List knowledge agents: Nixflex API fields and examples",
+      "title": "List knowledge agents",
       "side": "List knowledge agents",
-      "description": "List knowledge agents with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "List knowledge agents with the Nixflex API. List active owned agents and their live knowledge state.",
       "summary": "List active owned agents and their live knowledge state.",
       "params": [
         {
@@ -14511,8 +14477,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"limit\": 2\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"list_knowledge_targets\",\n  \"arguments\": {\n    \"limit\": 30,\n    \"cursor\": \"agent/cursor\",\n    \"q\": \"Example\",\n    \"target\": \"agent/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "targets",
@@ -14532,9 +14497,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-test-sessions-id",
       "specPath": "/knowledge/test-sessions/{id}",
-      "title": "Get knowledge test session: Nixflex API fields and examples",
+      "title": "Get knowledge test session",
       "side": "Get knowledge test session",
-      "description": "Get knowledge test session with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge test session with the Nixflex API. Read the saved knowledge-only conversation and its current state.",
       "summary": "Read the saved knowledge-only conversation and its current state.",
       "params": [
         {
@@ -14881,8 +14846,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_test\",\n  \"arguments\": {\n    \"id\": \"id/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "getSession",
@@ -14902,9 +14866,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-test-sessions-id-cancel",
       "specPath": "/knowledge/test-sessions/{id}/cancel",
-      "title": "Cancel knowledge test: Nixflex API fields and examples",
+      "title": "Cancel knowledge test",
       "side": "Cancel knowledge test",
-      "description": "Cancel knowledge test with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Cancel knowledge test with the Nixflex API. Cancel a simulated test session and related unfinished work.",
       "summary": "Cancel a simulated test session and related unfinished work.",
       "params": [
         {
@@ -15299,8 +15263,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"cancel_knowledge_test\",\n  \"arguments\": {\n    \"id\": \"id/example\",\n    \"confirm\": true,\n    \"idempotency_key\": \"example-k5-operation\"\n  }\n}"
       },
       "kitMethod": {
         "node": "cancelSession",
@@ -15320,9 +15283,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/post-knowledge-test-sessions-id-messages",
       "specPath": "/knowledge/test-sessions/{id}/messages",
-      "title": "Ask a knowledge test question: API fields and examples",
+      "title": "Ask a knowledge test question",
       "side": "Ask a knowledge test question",
-      "description": "Ask a knowledge test question with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Ask a knowledge test question with the Nixflex API. Ask a simulated question using current knowledge and return supplied-piece evidence.",
       "summary": "Ask a simulated question using current knowledge and return supplied-piece evidence.",
       "params": [
         {
@@ -15650,8 +15613,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": "{\n  \"text\": \"When are appointments available?\"\n}",
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"ask_knowledge_test\",\n  \"arguments\": {\n    \"id\": \"id/example\",\n    \"text\": \"Example question?\",\n    \"confirm\": true,\n    \"idempotency_key\": \"example-k5-operation\"\n  }\n}"
       },
       "kitMethod": {
         "node": "ask",
@@ -15673,9 +15635,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-knowledge-usage",
       "specPath": "/knowledge/usage",
-      "title": "Get knowledge usage: Nixflex API fields and examples",
+      "title": "Get knowledge usage",
       "side": "Get knowledge usage",
-      "description": "Get knowledge usage with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Get knowledge usage with the Nixflex API. Read private storage inventory and compatibility allowance counters.",
       "summary": "Read private storage inventory and compatibility allowance counters.",
       "params": [
         {
@@ -16002,8 +15964,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_knowledge_usage\",\n  \"arguments\": {\n    \"kb\": \"kb/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "usage",
@@ -16021,9 +15982,9 @@
       "group": "Knowledge",
       "slug": "api-reference/knowledge/get-agents-target-knowledge-keyterms",
       "specPath": "/agents/{target}/knowledge-keyterms",
-      "title": "Read automatic keyterms: Nixflex API fields and examples",
+      "title": "Read automatic keyterms",
       "side": "Read automatic keyterms",
-      "description": "Read automatic keyterms with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps.",
+      "description": "Read automatic keyterms with the Nixflex API. Read ranked automatic speech terms from an agent’s current live knowledge.",
       "summary": "Read ranked automatic speech terms from an agent’s current live knowledge.",
       "params": [
         {
@@ -16048,10 +16009,43 @@
             },
             "description": "Ranked automatic candidates; default cap 80 per agent, operator-configurable from 0 to 100.",
             "maxItems": 100
+          },
+          "knowledge_keyterms_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Length of knowledge_keyterms."
+          },
+          "knowledge_keyterms_limit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Configured automatic candidate limit; default 80."
+          },
+          "manual_keyterms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Saved customer entries, trimmed and nonempty. Compare with unsaved form values in your UI."
+          },
+          "manual_keyterms_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Length of manual_keyterms; an unchanged legacy list can exceed today’s edit limit."
+          },
+          "manual_keyterms_limit": {
+            "type": "integer",
+            "const": 20,
+            "description": "Maximum nonempty terms for newly edited manual lists; unchanged saved lists may exceed this value."
           }
         },
         "required": [
-          "knowledge_keyterms"
+          "knowledge_keyterms",
+          "knowledge_keyterms_count",
+          "knowledge_keyterms_limit",
+          "manual_keyterms",
+          "manual_keyterms_count",
+          "manual_keyterms_limit"
         ],
         "additionalProperties": true,
         "description": ""
@@ -16059,7 +16053,7 @@
       "status": 200,
       "exampleBody": null,
       "auth": "Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.",
-      "notes": "This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not.",
+      "notes": "This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations.",
       "errors": [
         [
           400,
@@ -16140,8 +16134,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.",
-        "mcpPending": true
+        "mcp": "{\n  \"name\": \"get_agent_knowledge_keyterms\",\n  \"arguments\": {\n    \"target\": \"target/example\"\n  }\n}"
       },
       "kitMethod": {
         "node": "keyterms",
@@ -16152,6 +16145,16 @@
         "query": {},
         "body": null,
         "idempotency": false
+      },
+      "exampleResponse": {
+        "knowledge_keyterms": [
+          "Evening appointments"
+        ],
+        "knowledge_keyterms_count": 1,
+        "knowledge_keyterms_limit": 80,
+        "manual_keyterms": [],
+        "manual_keyterms_count": 0,
+        "manual_keyterms_limit": 20
       }
     }
   }

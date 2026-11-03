@@ -1,11 +1,11 @@
 ---
-title: "Rename knowledge source: Nixflex API fields and examples"
+title: "Rename knowledge source"
 sidebarTitle: "Rename knowledge source"
-description: "Rename knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Rename knowledge source with the Nixflex API. Change a source name without changing facts or the published index."
 openapi: "/api-reference/public.openapi.json PATCH /knowledge-bases/{kb}/sources/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/patch-knowledge-bases-kb-sources-id"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -66,7 +66,7 @@ expected_revision is the SOURCE revision. Success increments source revision onl
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This successful operation is pending manual test; the C8 check does not run it.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-114.json
 {
@@ -113,7 +113,7 @@ nixflex knowledge renameSource "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_I
 
 </RequestExample>
 
-MCP does not offer this operation because it changes knowledge or drafts, or imports customer content; use the API, Node, CLI or Python.
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
 
 ## Example response
 

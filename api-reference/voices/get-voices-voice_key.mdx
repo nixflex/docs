@@ -1,11 +1,11 @@
 ---
-title: "Get a voice: availability and agent language compatibility"
+title: "Get a voice"
 sidebarTitle: "Get a voice"
-description: "Read one Nixflex voice by its catalog key. Check availability, approved languages, preview fields, and compatibility with an owned or proposed agent."
+description: "Get a voice with the Nixflex API. Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return."
 openapi: "/api-reference/public.openapi.json GET /voices/{voice_key}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/voices/get-voices-voice_key"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -41,7 +41,7 @@ Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s serv
 
 Do not send a request body.
 
-agent_language takes precedence over agent_id. Without either, selectable reflects availability and approved languages, not a particular agent. A fixed-language agent needs approval for that language; a multi-language agent uses its server-derived language set. Preview absence is separate from availability.
+agent_language takes precedence over agent_id. Without either, selectable reflects availability and approved languages, not a particular agent. A fixed-language agent needs approval for that language; a multi-language agent uses its server-derived language set. Preview absence is separate from availability. Accent language, locale and label can each be null; keep unknown metadata as null.
 
 ## Response fields
 
@@ -55,9 +55,9 @@ agent_language takes precedence over agent_id. Without either, selectable reflec
 | `nativeLanguage` | string or null | Native language code, when known. |
 | `locale` | string or null | Locale label, when known. |
 | `accents` | array of object | Available accent labels. |
-| `accents[].language` | string | Accent language. |
+| `accents[].language` | string or null | Accent language. Null when not supplied in the catalog. |
 | `accents[].locale` | string or null | Accent locale. |
-| `accents[].label` | string | Neutral accent label. |
+| `accents[].label` | string or null | Neutral accent label. Null when not supplied in the catalog. |
 | `languages` | array of string | Languages approved for this voice. |
 | `origin` | string | Standard catalog or a connection belonging to this account. Allowed: `"standard"`, `"connected"`. |
 | `availability` | string | Current catalog availability. Allowed: `"active"`, `"temporarily_unavailable"`, `"unavailable"`. |

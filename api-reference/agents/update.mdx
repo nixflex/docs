@@ -1,11 +1,11 @@
 ---
-title: "Update an agent: change saved settings with the API"
+title: "Update an agent"
 sidebarTitle: "Update an agent"
-description: "Update an owned AI agent with partial settings. Check field limits, retained values, response fields, voice validation and cURL, Node, Python and CLI examples."
+description: "Update an agent with the Nixflex API. Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted."
 openapi: "/api-reference/public.openapi.json PUT /agents/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agents/update"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -106,7 +106,7 @@ The safety byte count normalizes each trimmed term (NFKD, removes combining mark
 
 Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).
 
-More than 20 changed terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords". The count check runs before term-length and safety-byte checks.
+More than 20 changed terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords". The count check runs before term-length and safety-byte checks. DELETE switches is_active to false; it does not remove the record. GET by owned agent ID still returns the inactive agent. The default active-only list omits it; status=disabled or status=all includes it.
 
 ## Response fields
 

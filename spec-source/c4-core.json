@@ -43,9 +43,9 @@
         "api-reference/authentication",
         "api-reference/account/usage"
       ],
-      "title": "Create an API account: credentials and signup limits",
+      "title": "Create an API account",
       "side": "Create an API account",
-      "description": "Create a Nixflex API account and save its credential securely. Understand anonymous signup, rate limits, response fields, and uncertain-result handling.",
+      "description": "Create an API account with the Nixflex API. Create a separate API-only account and its credential. This does not add another key to an existing.",
       "summary": "Create a separate API-only account and its credential. This does not add another key to an existing organisation, create a dashboard login, or grant trial credit.",
       "request": {
         "type": "object",
@@ -136,9 +136,9 @@
         "api-reference/authentication",
         "api-reference/account/create-key"
       ],
-      "title": "Rotate an API key: replace account credentials safely",
+      "title": "Rotate the API key",
       "side": "Rotate the API key",
-      "description": "Rotate a Nixflex API secret while keeping the account identifier. Plan application updates, protect the returned secret, and handle uncertain results safely.",
+      "description": "Rotate the API key with the Nixflex API. Replace the current account secret immediately. The key ID remains the same; the old secret stops working when.",
       "summary": "Replace the current account secret immediately. The key ID remains the same; the old secret stops working when rotation succeeds. The organisation signing secret is separate and does not rotate here.",
       "status": 200,
       "response": {
@@ -201,9 +201,9 @@
         "api-reference/agents/update",
         "api-reference/account/usage"
       ],
-      "title": "Get account retention defaults with the Nixflex API",
+      "title": "Get account retention",
       "side": "Get account retention",
-      "description": "Read the saved Nixflex account retention default and processing state. Understand which new agents inherit it and why a saved policy does not prove erasure.",
+      "description": "Get account retention with the Nixflex API. Read the account retention default for new agents. Existing agents keep their saved retention settings; use.",
       "summary": "Read the account retention default for new agents. Existing agents keep their saved retention settings; use Update an agent to change one agent.",
       "status": 200,
       "response": {
@@ -257,7 +257,7 @@
       "method": "PUT",
       "path": "/v1/agents/:id",
       "group": "Agents",
-      "notes": "Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.\n\nThe system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.\n\nCustomer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. On update, omitted values are retained. An exact unchanged saved string is kept even if it exceeds the newer count, term-length, size or text limits. Any change must meet all current limits.\n\nThe safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.\n\nAutomatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).\n\nMore than 20 changed terms returns 400 invalid_agent_field with message \"Keep up to 20 words - remove some to save\" and details.field \"boosted_keywords\". The count check runs before term-length and safety-byte checks.",
+      "notes": "Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.\n\nThe system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.\n\nCustomer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. On update, omitted values are retained. An exact unchanged saved string is kept even if it exceeds the newer count, term-length, size or text limits. Any change must meet all current limits.\n\nThe safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.\n\nAutomatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).\n\nMore than 20 changed terms returns 400 invalid_agent_field with message \"Keep up to 20 words - remove some to save\" and details.field \"boosted_keywords\". The count check runs before term-length and safety-byte checks. DELETE switches is_active to false; it does not remove the record. GET by owned agent ID still returns the inactive agent. The default active-only list omits it; status=disabled or status=all includes it.",
       "slug": "api-reference/agents/update",
       "specPath": "/agents/{id}",
       "params": [
@@ -406,9 +406,9 @@
         "api-reference/agents/contract",
         "api-reference/account-and-keys/get-account-retention"
       ],
-      "title": "Update an agent: change saved settings with the API",
+      "title": "Update an agent",
       "side": "Update an agent",
-      "description": "Update an owned AI agent with partial settings. Check field limits, retained values, response fields, voice validation and cURL, Node, Python and CLI examples.",
+      "description": "Update an agent with the Nixflex API. Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted.",
       "summary": "Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted fields keep their saved values. Creation defaults are not reapplied.",
       "request": {
         "type": "object",
@@ -1228,9 +1228,9 @@
         "api-reference/calls/get-calls-history",
         "api-reference/calls/get"
       ],
-      "title": "List calls: legacy array and paging with the Nixflex API",
+      "title": "List calls",
       "side": "List calls",
-      "description": "List legacy call records with limit and offset paging. Check response fields, defaults, errors and examples, or choose the filtered call history endpoint.",
+      "description": "List calls with the Nixflex API. Read the legacy call list as a bare array, newest creation time first. Use the history operation when you need filters.",
       "summary": "Read the legacy call list as a bare array, newest creation time first. Use the history operation when you need filters, totals, failed-start entries or cursor paging.",
       "status": 200,
       "response": {
@@ -1926,9 +1926,9 @@
         "api-reference/calls/get-calls-id-recording",
         "api-reference/calls/list"
       ],
-      "title": "Get a call: saved details and retained data with the API",
+      "title": "Get a call",
       "side": "Get a call",
-      "description": "Read an owned call by ID with its detailed view. Check retained records, nullable fields, response data, errors and cURL, Node, Python and CLI examples.",
+      "description": "Get a call with the Nixflex API. Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata.",
       "summary": "Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata stubs. Omitting view keeps the legacy row response.",
       "status": 200,
       "response": {
@@ -2468,9 +2468,9 @@
         "api-reference/calls/get",
         "api-reference/calls/get-calls-history"
       ],
-      "title": "Get a call recording: availability and download links",
+      "title": "Get a call recording",
       "side": "Get a call recording",
-      "description": "Read recording availability for an owned call. Check status meanings, temporary URL expiry, response fields, errors and safe request and retry examples.",
+      "description": "Get a call recording with the Nixflex API. Read recording status and obtain a fresh signed download link when the managed recording is available. This.",
       "summary": "Read recording status and obtain a fresh signed download link when the managed recording is available. This operation does not read or verify an account-connected storage object.",
       "status": 200,
       "response": {
@@ -2730,9 +2730,9 @@
         "api-reference/calls/get-calls-id-recording",
         "api-reference/pagination"
       ],
-      "title": "Get call history: filters, totals and cursor pagination",
+      "title": "Get call history",
       "side": "Get call history",
-      "description": "Read filtered Nixflex call history with matching totals and cursor paging. Distinguish unknown costs, failed starts, retained metadata, and changing records.",
+      "description": "Get call history with the Nixflex API. Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts.",
       "summary": "Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs.",
       "status": 200,
       "response": {
@@ -3155,7 +3155,7 @@
       "method": "POST",
       "path": "/v1/calls/outbound",
       "group": "Calls",
-      "notes": "Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks.",
+      "notes": "Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
       "slug": "api-reference/calls/create-outbound",
       "specPath": "/calls/outbound",
       "params": [],
@@ -3271,8 +3271,8 @@
         [
           409,
           "needs_timezone",
-          "The recipient location does not establish a usable time zone.",
-          "Supply the recipient time zone after checking it."
+          "Time zone unknown - add their time zone or country. Nothing was sent or charged for this attempt.",
+          "Supply a valid recipient_timezone or recipient_country and recheck policy."
         ],
         [
           409,
@@ -3289,8 +3289,8 @@
         [
           409,
           "outside_hours",
-          "The recipient is outside permitted contact hours.",
-          "Wait for an allowed window; do not bypass the policy."
+          "This recipient is outside the permitted local contact hours. Nothing was sent or charged for this attempt.",
+          "Use the contact-hours advice and wait for an allowed window. Do not automatically resend."
         ],
         [
           409,
@@ -3319,8 +3319,8 @@
         [
           503,
           "contact_policy_unavailable",
-          "Contact policy could not be checked.",
-          "Wait for recovery; do not automatically retry a send."
+          "Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt.",
+          "Wait and recheck; resend only after confirming this attempt was not sent."
         ],
         [
           503,
@@ -3336,9 +3336,9 @@
         "api-reference/retries",
         "api-reference/calls/client-safety"
       ],
-      "title": "Create an outbound call: purpose and safe API requests",
+      "title": "Create an outbound call",
       "side": "Create an outbound call",
-      "description": "Start an outbound call with an owned agent and eligible number. Check required fields, contact checks, uncertain outcomes and safe API request examples.",
+      "description": "Create an outbound call with the Nixflex API. Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the.",
       "summary": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome.",
       "request": {
         "type": "object",
@@ -3511,9 +3511,9 @@
         "api-reference/account/usage",
         "api-reference/authentication"
       ],
-      "title": "Get API key activity: request counts and usage periods",
+      "title": "Get key activity",
       "side": "Get key activity",
-      "description": "Read retained Nixflex API request and error counts for today or seven days, with UTC snapshot times and the five busiest endpoint and method pairs.",
+      "description": "Get key activity with the Nixflex API. Read a single snapshot of retained API request activity for the authenticated account. This is request activity.",
       "summary": "Read a single snapshot of retained API request activity for the authenticated account. This is request activity, separate from organisation audit events and call usage.",
       "status": 200,
       "response": {
@@ -3769,9 +3769,9 @@
         "api-reference/phone-numbers/update",
         "api-reference/phone-numbers/delete"
       ],
-      "title": "Import a phone number: account ownership and API rules",
+      "title": "Import a phone number",
       "side": "Import a phone number",
-      "description": "Import an owned number into Nixflex using a prepared connection payload. Review routing effects, public fields, response data, and uncertain import recovery.",
+      "description": "Import a phone number with the Nixflex API. Connect a number you already own to an active agent on the same account. Import can replace existing number.",
       "summary": "Connect a number you already own to an active agent on the same account. Import can replace existing number routing, so another application using that routing can stop receiving calls or texts.",
       "request": {
         "type": "object",
@@ -3945,9 +3945,9 @@
         "api-reference/phone-numbers/import",
         "api-reference/phone-numbers/update"
       ],
-      "title": "Remove a phone number from your Nixflex API account",
+      "title": "Remove a phone number",
       "side": "Remove a phone number",
-      "description": "Remove an owned phone number from Nixflex. Check the removal scope, response fields, cleanup errors and safe cURL, Node, Python and CLI request examples.",
+      "description": "Remove a phone number with the Nixflex API. Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the.",
       "summary": "Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the number from its carrier account or end that account’s charges.",
       "status": 200,
       "response": {
@@ -4132,9 +4132,9 @@
         "api-reference/phone-numbers/delete",
         "api-reference/agents/get"
       ],
-      "title": "Update a phone number: settings and agent assignment",
+      "title": "Update a phone number",
       "side": "Update a phone number",
-      "description": "Update Nixflex number settings or move a number to an owned agent. Check field limits, inheritance, exclusive move requests, response shapes, and safe retries.",
+      "description": "Update a phone number with the Nixflex API. Change per-number settings, or move the number to another active agent on the same account. A move and a.",
       "summary": "Change per-number settings, or move the number to another active agent on the same account. A move and a settings update are separate requests.",
       "request": {
         "oneOf": [
@@ -4724,9 +4724,9 @@
         "api-reference/caller-context/set",
         "api-reference/caller-context/import"
       ],
-      "title": "Delete caller context: scope, response and API examples",
+      "title": "Delete caller context",
       "side": "Delete caller context",
-      "description": "Delete one caller context record for an owned business number. Understand the deletion scope, response fields, missing-record errors and safe retry rules.",
+      "description": "Delete caller context with the Nixflex API. Delete the complete caller-context record for one caller on one account-owned business number. This removes both.",
       "summary": "Delete the complete caller-context record for one caller on one account-owned business number. This removes both customer-supplied and engine-learned context in that record.",
       "status": 200,
       "response": {
@@ -4856,9 +4856,9 @@
         "api-reference/caller-context/set",
         "api-reference/caller-context/delete"
       ],
-      "title": "Import caller context: request fields and API examples",
+      "title": "Import caller context",
       "side": "Import caller context",
-      "description": "Import up to 1,000 caller context rows for an owned phone number. Learn field limits, merge rules, partial failure handling and safe API request examples.",
+      "description": "Import caller context with the Nixflex API. Import customer-supplied context for callers on one account-owned business number. Each row merges supplied.",
       "summary": "Import customer-supplied context for callers on one account-owned business number. Each row merges supplied fields into that caller’s saved record; omitted fields stay unchanged.",
       "request": {
         "type": "object",
@@ -4988,7 +4988,7 @@
       "method": "POST",
       "path": "/v1/sms",
       "group": "SMS",
-      "notes": "The endpoint has no dry-run mode. Only send to an authorised recipient. Do not infer a sender from agent settings, and do not send API credentials to a browser. The response can gain receipt fields when that feature is enabled; older successful responses contain only status, to and from.\n\nAn accepted message can still return 201 if later local history persistence fails. A receipt-path failure can include outcome, work_id, message_id and safe_to_retry both alongside the error and inside details. Do not infer not-sent from a generic 500 response.",
+      "notes": "The endpoint has no dry-run mode. Only send to an authorised recipient. Do not infer a sender from agent settings, and do not send API credentials to a browser. The response can gain receipt fields when that feature is enabled; older successful responses contain only status, to and from.\n\nAn accepted message can still return 201 if later local history persistence fails. A receipt-path failure can include outcome, work_id, message_id and safe_to_retry both alongside the error and inside details. Do not infer not-sent from a generic 500 response. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
       "slug": "api-reference/sms/send",
       "specPath": "/sms",
       "params": [],
@@ -5032,8 +5032,8 @@
         [
           409,
           "needs_timezone",
-          "The recipient location does not establish a usable time zone.",
-          "Supply the recipient time zone after checking it."
+          "Time zone unknown - add their time zone or country. Nothing was sent or charged for this attempt.",
+          "Supply a valid recipient_timezone or recipient_country and recheck policy."
         ],
         [
           409,
@@ -5050,8 +5050,8 @@
         [
           409,
           "outside_hours",
-          "The recipient is outside permitted contact hours.",
-          "Wait for an allowed window; do not bypass the policy."
+          "This recipient is outside the permitted local contact hours. Nothing was sent or charged for this attempt.",
+          "Use the contact-hours advice and wait for an allowed window. Do not automatically resend."
         ],
         [
           409,
@@ -5080,8 +5080,8 @@
         [
           503,
           "contact_policy_unavailable",
-          "Contact policy could not be checked.",
-          "Wait for recovery; do not automatically retry a send."
+          "Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt.",
+          "Wait and recheck; resend only after confirming this attempt was not sent."
         ],
         [
           503,
@@ -5096,9 +5096,9 @@
         "api-reference/errors",
         "api-reference/retries"
       ],
-      "title": "Send an SMS: sender ownership and safe Nixflex requests",
+      "title": "Send an SMS",
       "side": "Send an SMS",
-      "description": "Send one SMS using an owned agent and explicit sender. Check required fields, contact checks, acceptance responses, errors and safe API request examples.",
+      "description": "Send an SMS with the Nixflex API. Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means.",
       "summary": "Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means the send was accepted; it is not proof of delivery to the recipient.",
       "request": {
         "type": "object",
@@ -5247,9 +5247,9 @@
         "api-reference/account-and-keys/get-keys-activity",
         "api-reference/calls/list"
       ],
-      "title": "Get account usage and call capacity with the Nixflex API",
+      "title": "Get account usage",
       "side": "Get account usage",
-      "description": "Read Nixflex account call totals, request limits, and current call capacity. Interpret optional reservation fields and distinguish usage counters from billing.",
+      "description": "Get account usage with the Nixflex API. Read stored account usage and call-capacity information. Occupancy can include unresolved reservations, so it is not.",
       "summary": "Read stored account usage and call-capacity information. Occupancy can include unresolved reservations, so it is not simply the number of connected conversations.",
       "status": 200,
       "response": {
@@ -5364,7 +5364,7 @@
       "method": "GET",
       "path": "/v1/voices",
       "group": "Voices",
-      "notes": "Native language matches sort first, then matching locale, display name, and voice key. Compatibility context changes selectable; it does not remove every incompatible voice from the list. Keep filters unchanged while following next_cursor. Stop at null. The server does not return total_in_scope.",
+      "notes": "Native language matches sort first, then matching locale, display name, and voice key. Compatibility context changes selectable; it does not remove every incompatible voice from the list. Keep filters unchanged while following next_cursor. Stop at null. The server does not return total_in_scope. Accent language, locale and label can each be null; keep unknown metadata as null.",
       "slug": "api-reference/voices/get-voices",
       "specPath": "/voices",
       "params": [
@@ -5506,9 +5506,9 @@
         "api-reference/voices/get-voices-voice_key",
         "api-reference/agents/update"
       ],
-      "title": "List available voices and language options with the API",
+      "title": "List voices",
       "side": "List voices",
-      "description": "List neutral Nixflex voice identifiers with language and availability details. Filter the catalog, check agent compatibility, and follow revision-bound cursors.",
+      "description": "List voices with the Nixflex API. List the voices visible to this account. Compatibility is calculated for the optional agent context; catalog availability.",
       "summary": "List the voices visible to this account. Compatibility is calculated for the optional agent context; catalog availability can change before a call.",
       "status": 200,
       "response": {
@@ -5556,8 +5556,11 @@
                     "type": "object",
                     "properties": {
                       "language": {
-                        "type": "string",
-                        "description": "Accent language."
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "Accent language. Null when not supplied in the catalog."
                       },
                       "locale": {
                         "type": [
@@ -5567,8 +5570,11 @@
                         "description": "Accent locale."
                       },
                       "label": {
-                        "type": "string",
-                        "description": "Neutral accent label."
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "Neutral accent label. Null when not supplied in the catalog."
                       }
                     },
                     "required": [
@@ -5710,7 +5716,7 @@
       "method": "GET",
       "path": "/v1/voices/:voice_key",
       "group": "Voices",
-      "notes": "agent_language takes precedence over agent_id. Without either, selectable reflects availability and approved languages, not a particular agent. A fixed-language agent needs approval for that language; a multi-language agent uses its server-derived language set. Preview absence is separate from availability.",
+      "notes": "agent_language takes precedence over agent_id. Without either, selectable reflects availability and approved languages, not a particular agent. A fixed-language agent needs approval for that language; a multi-language agent uses its server-derived language set. Preview absence is separate from availability. Accent language, locale and label can each be null; keep unknown metadata as null.",
       "slug": "api-reference/voices/get-voices-voice_key",
       "specPath": "/voices/{voice_key}",
       "params": [
@@ -5775,9 +5781,9 @@
         "api-reference/voices/get-voices",
         "api-reference/agents/update"
       ],
-      "title": "Get a voice: availability and agent language compatibility",
+      "title": "Get a voice",
       "side": "Get a voice",
-      "description": "Read one Nixflex voice by its catalog key. Check availability, approved languages, preview fields, and compatibility with an owned or proposed agent.",
+      "description": "Get a voice with the Nixflex API. Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return.",
       "summary": "Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return selectable: false; read the reason before using the voice.",
       "status": 200,
       "response": {
@@ -5820,8 +5826,11 @@
               "type": "object",
               "properties": {
                 "language": {
-                  "type": "string",
-                  "description": "Accent language."
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Accent language. Null when not supplied in the catalog."
                 },
                 "locale": {
                   "type": [
@@ -5831,8 +5840,11 @@
                   "description": "Accent locale."
                 },
                 "label": {
-                  "type": "string",
-                  "description": "Neutral accent label."
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Neutral accent label. Null when not supplied in the catalog."
                 }
               },
               "required": [

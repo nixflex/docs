@@ -1,11 +1,11 @@
 ---
-title: "Get knowledge draft: Nixflex API fields and examples"
+title: "Get knowledge draft"
 sidebarTitle: "Get knowledge draft"
-description: "Get knowledge draft with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Get knowledge draft with the Nixflex API. Read proposed pieces, review flags, reminders and draft revision."
 openapi: "/api-reference/public.openapi.json GET /knowledge-bases/{kb}/drafts/{id}"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-bases-kb-drafts-id"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -41,7 +41,7 @@ Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server
 
 Do not send a request body.
 
-Legacy draft reads can normalize and save the draft, and rebuild empty generated pieces from retained input. Re-read data.edit_revision before editing or accepting. C8’s no-write smoke test leaves this read pending manual test.
+Legacy draft reads can normalize and save the draft, and rebuild empty generated pieces from retained input. Re-read data.edit_revision before editing or accepting. Treat this GET as an intentional action because it can persist repairs.
 
 ## Response fields
 
@@ -112,7 +112,7 @@ Legacy draft reads can normalize and save the draft, and rebuild empty generated
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -145,7 +145,7 @@ nixflex knowledge getDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" -
 
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP does not offer this operation because the legacy draft read can save repairs. Use the documented SDK or HTTP operation only as an intentional action.
 
 ## Example response
 

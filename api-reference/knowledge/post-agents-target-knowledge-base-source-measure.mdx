@@ -1,11 +1,11 @@
 ---
-title: "Measure knowledge source: Nixflex API fields and examples"
+title: "Measure knowledge source"
 sidebarTitle: "Measure knowledge source"
-description: "Measure knowledge source with the Nixflex API. Review permissions, request and response fields, limits, examples, error codes and safe retry steps."
+description: "Measure knowledge source with the Nixflex API. Preview source token usage before an import without storing the source."
 openapi: "/api-reference/public.openapi.json POST /agents/{target}/knowledge-base/source-measure"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/post-agents-target-knowledge-base-source-measure"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -67,7 +67,7 @@ Raw upload: Content-Type application/octet-stream, X-Filename, optional X-Source
 
 ## Example request
 
-K5 examples use unpublished Node/CLI 0.10.0 and Python 0.3.0. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. This read-only calculation is included in the safe C8 check when a fixture is available.
+These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Submit this calculation deliberately.
 
 ```json request-69.json
 {
@@ -109,9 +109,19 @@ $env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 nixflex knowledge measureSource "$env:NXF_AGENT_ID" --body '@request-69.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
 ```
 
+```json MCP
+{
+  "name": "measure_knowledge_source",
+  "arguments": {
+    "target": "target/example",
+    "text": "Example source text."
+  }
+}
+```
+
 </RequestExample>
 
-MCP does not offer this operation yet because the proposed knowledge tools await approval and registration.
+MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

@@ -1,11 +1,11 @@
 ---
-title: "List available voices and language options with the API"
+title: "List voices"
 sidebarTitle: "List voices"
-description: "List neutral Nixflex voice identifiers with language and availability details. Filter the catalog, check agent compatibility, and follow revision-bound cursors."
+description: "List voices with the Nixflex API. List the voices visible to this account. Compatibility is calculated for the optional agent context; catalog availability."
 openapi: "/api-reference/public.openapi.json GET /voices"
 playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/voices/get-voices"
 ---
-
 <style>{`
   table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
@@ -46,7 +46,7 @@ Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s serv
 
 Do not send a request body.
 
-Native language matches sort first, then matching locale, display name, and voice key. Compatibility context changes selectable; it does not remove every incompatible voice from the list. Keep filters unchanged while following next_cursor. Stop at null. The server does not return total_in_scope.
+Native language matches sort first, then matching locale, display name, and voice key. Compatibility context changes selectable; it does not remove every incompatible voice from the list. Keep filters unchanged while following next_cursor. Stop at null. The server does not return total_in_scope. Accent language, locale and label can each be null; keep unknown metadata as null.
 
 ## Response fields
 
@@ -61,9 +61,9 @@ Native language matches sort first, then matching locale, display name, and voic
 | `data[].nativeLanguage` | string or null | Native language code, when known. |
 | `data[].locale` | string or null | Locale label, when known. |
 | `data[].accents` | array of object | Available accent labels. |
-| `data[].accents[].language` | string | Accent language. |
+| `data[].accents[].language` | string or null | Accent language. Null when not supplied in the catalog. |
 | `data[].accents[].locale` | string or null | Accent locale. |
-| `data[].accents[].label` | string | Neutral accent label. |
+| `data[].accents[].label` | string or null | Neutral accent label. Null when not supplied in the catalog. |
 | `data[].languages` | array of string | Languages approved for this voice. |
 | `data[].origin` | string | Standard catalog or a connection belonging to this account. Allowed: `"standard"`, `"connected"`. |
 | `data[].availability` | string | Current catalog availability. Allowed: `"active"`, `"temporarily_unavailable"`, `"unavailable"`. |
