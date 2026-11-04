@@ -50,6 +50,8 @@ The endpoint has no dry-run mode. Only send to an authorised recipient. Do not i
 
 An accepted message can still return 201 if later local history persistence fails. A receipt-path failure can include outcome, work_id, message_id and safe_to_retry both alongside the error and inside details. Do not infer not-sent from a generic 500 response. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
 
+Compatibility change: suppressed single SMS now returns HTTP 409, error.type=conflict, error.code=do_not_contact. It previously returned HTTP 400 invalid_request. The message was not sent. Stop; never automatically retry a known opt-out. SMS campaigns keep per-recipient hold_reason:do_not_contact instead of returning a blanket 409.
+
 ## Response fields
 
 `201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
@@ -142,6 +144,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 409 | [`public_holiday`](/api-reference/errors#public_holiday) | The recipient-local date is a restricted holiday. | Use the next permitted contact window. |
 | 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt. | Wait and recheck; resend only after confirming this attempt was not sent. |
 | 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | Dispatch safety could not be confirmed. | Reconcile any existing receipt before deciding on a new request. |
+| 409 | [`do_not_contact`](/api-reference/errors#do_not_contact) | The recipient is suppressed; the message was not sent. | Stop. Respect the opt-out; do not retry or remove it automatically. |
 | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 

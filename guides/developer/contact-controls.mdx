@@ -1,8 +1,8 @@
 ---
 title: "Contact controls: preview timing with the Nixflex API"
 description: "Preview recipient contact hours, manage business suppressions and handle locked opt-outs with the Nixflex API without treating a preview as permission to send."
+canonical: "https://docs.nixflex.com/guides/developer/contact-controls"
 ---
-
 Check contact timing and restrictions before creating outbound work. The preview is advisory and expires; dispatch repeats the current admission checks.
 
 Using the dashboard? See [the business guide](/guides/business/contact-controls).
@@ -100,3 +100,7 @@ Preview replies describe current guidance and any next allowed time. `advisory_o
 - [Contact preview](/api-reference/contact-controls/post-contact-hours-preview)
 - [List restrictions](/api-reference/contact-controls/get-contact-suppressions)
 - [Remove business restriction](/api-reference/contact-controls/delete-contact-suppressions)
+
+## Single-SMS suppression response change
+
+Single `POST /v1/sms` now returns **409 `do_not_contact`**, type `conflict`, when the recipient is suppressed. It previously returned **400 `invalid_request`**. Nothing was sent. Stop and respect the opt-out; never automatically retry or remove the suppression. SMS campaigns still hold affected recipients individually with `hold_reason: do_not_contact`.

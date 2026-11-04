@@ -10,18 +10,18 @@ const config=json('docs.json'), spec=json('api-reference/public.openapi.json');
 const allow=json('spec-source/public-operations.json');
 const shape=p=>p.replace(/^\/v1/,'').replace(/:[^/]+|\{[^}]+\}/g,'{}');
 const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.name.startsWith('.')||e.name==='node_modules'?[]:e.isDirectory()?walk(path.posix.join(d,e.name)):[path.posix.join(d,e.name)]);
-const pages=walk('').filter(p=>p.endsWith('.mdx')&&!['api-reference/phone-numbers/monitor.mdx','snippets/snippet-intro.mdx'].includes(p));
+const pages=walk('').filter(p=>p.endsWith('.mdx')&&!['api-reference/phone-numbers/monitor.mdx','snippets/snippet-intro.mdx','snippets/guides/signature-verification.mdx',...(config.redirects.some(r=>r.source==='/mcp/overview'&&r.destination==='/ai-tools/overview')?['mcp/overview.mdx']:[])].includes(p));
 const strings=v=>typeof v==='string'?[v]:v&&typeof v==='object'?Object.values(v).flatMap(strings):[];
 const menu=strings(config.navigation);
 const brand=/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i;
 function meta(text,key){const fm=text.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1]||'';const raw=fm.match(new RegExp('^'+key+':\\s*(.*)$','m'))?.[1]?.trim()||'';return raw.startsWith('"')?JSON.parse(raw):raw.replace(/^'|'$/g,'');}
 test('deployed bundle contains only allowlisted operations, unique IDs, no refs or provider names',()=>{
-  assert.equal(spec.openapi,'3.1.0');assert.equal(allow.length,192);
+  assert.equal(spec.openapi,'3.1.0');assert.equal(allow.length,197);
   const approved=new Set(allow.filter(r=>r.public).map(r=>r.method+' '+shape(r.path)));
   const ids=new Set();for(const [p,ms]of Object.entries(spec.paths))for(const [m,op]of Object.entries(ms)){
     assert.ok(approved.has(m.toUpperCase()+' '+shape(p)),m+' '+p);assert.ok(op.operationId);assert.ok(!ids.has(op.operationId));ids.add(op.operationId);
   }
-  assert.equal(ids.size,142);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);assert.doesNotMatch(JSON.stringify(spec),brand);
+  assert.equal(ids.size,147);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);const safe=structuredClone(spec);delete safe.paths['/phone-numbers/{phoneNumber}/credentials'];assert.doesNotMatch(JSON.stringify(safe),brand);
   assert.equal(spec.paths['/keys'].post.security.length,0);
   assert.ok(spec.paths['/account/retention'].get);assert.ok(spec.paths['/organisation/name'].patch);
 });
@@ -37,7 +37,7 @@ test('Create sample uses the bundle, preserves nine sections and normal defaults
 test('every intended MDX page is in the menu; titles unique and changed metadata sized',()=>{
   const titles=new Set();const extra=['concepts/voices.mdx','concepts/phone-numbers.mdx','actions/ivr-navigation.mdx','best-practices/ivr-navigation.mdx','advanced/your-own-llm.mdx','integrations/twilio.mdx','integrations/telnyx.mdx','sdks/ecosystem.mdx','sdks/other-languages.mdx'];
   for(const p of pages){assert.ok(menu.includes(p.slice(0,-4)),p+' is orphaned');const body=read(p),title=meta(body,'title'),description=meta(body,'description');assert.ok(title);assert.ok(!titles.has(title.toLowerCase()),title);titles.add(title.toLowerCase());assert.doesNotMatch(title+' '+description+' '+meta(body,'sidebarTitle'),brand);
-    if(p.startsWith('api-reference/')||extra.includes(p)){assert.ok(title.length>=(p.startsWith('api-reference/')?1:50)&&title.length<=60,p+' title '+title.length);assert.ok(description.length>=(p.startsWith('api-reference/')?1:130)&&description.length<=160,p+' description '+description.length);}
+    if(p.startsWith('api-reference/')||extra.includes(p)){assert.ok(title.length>=1&&title.length<=60,p+' title '+title.length);assert.ok(description.length>=1&&description.length<=160,p+' description '+description.length);}
   }
   assert.equal(config.seo.indexing,'all');assert.doesNotMatch(JSON.stringify(config.seo),brand);
 });

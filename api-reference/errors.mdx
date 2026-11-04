@@ -127,7 +127,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="deletion_unsettled">deletion_unsettled</span> | 409 | Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="deprecated_field">deprecated_field</span> | 400 | An unsupported legacy setting was supplied. | Remove the legacy setting and use the documented resource settings. |
 | <span id="dispatch_safety_unavailable">dispatch_safety_unavailable</span> | 503 | Dispatch safety could not be confirmed; this attempt sent and charged nothing. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="do_not_contact">do_not_contact</span> | 409 | This recipient is on your do-not-contact list. The call was not placed. | Respect the suppression. Do not resend or remove it automatically. |
+| <span id="do_not_contact">do_not_contact</span> | 409 | This recipient is on your do-not-contact list. The call was not placed or the message was not sent. | Respect the suppression. Do not resend or remove it automatically. |
 | <span id="draft_changed">draft_changed</span> | 409 | The preview changed. Reopen the review to test it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="draft_closed">draft_closed</span> | 409 | This review has already been accepted. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="duplicate_function">duplicate_function</span> | 409 | A function with that name already exists for this number | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
@@ -547,3 +547,28 @@ service could not find the resource (number SID or account). Check the service c
 Single-call and single-SMS refusals use `outside_hours` or `needs_timezone` (409), or `contact_policy_unavailable` (503). Their details can explicitly report `outcome: not_sent`, `sent: false` and `charged: false`. The message ends with `Nothing was sent or charged for this attempt.` Local-window advice can change the preceding text.
 
 `single_contact_policy` is the internal policy-check name; `refused_before_dispatch` is a dispatch outcome marker. Neither is a universal HTTP error code. Match `error.code` and inspect the documented receipt. An unknown outcome is not proof of a refusal or a safe resend.
+
+## Calendar and credential errors
+
+Google Calendar and in-place credential updates return the standard error envelope. Treat unknown writes as uncertain until reconciled.
+
+| Code | Status | Recovery |
+| --- | --- | --- |
+| <span id="invalid_return_url">invalid_return_url</span> | 400 | Use HTTPS or an approved app scheme and remove forbidden URL parts. |
+| <span id="agent_not_assigned">agent_not_assigned</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="expired_link">expired_link</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="calendar_unavailable">calendar_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_settings">invalid_settings</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_hours">invalid_hours</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_slot_minutes">invalid_slot_minutes</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_calendar_id">invalid_calendar_id</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_send_invites">invalid_send_invites</span> | 400 | Send the JSON boolean true or false. |
+| <span id="not_connected">not_connected</span> | 409 | Connect the calendar before changing settings. |
+| <span id="invalid_credentials">invalid_credentials</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="number_not_in_account">number_not_in_account</span> | 404 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="carrier_mismatch">carrier_mismatch</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="carrier_unavailable">carrier_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="credential_update_unavailable">credential_update_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="credential_save_pending">credential_save_pending</span> | 503 | Carrier change confirmed; deliberately retry identical details to finish the local save. |
+
+Single-SMS suppression changed from 400 `invalid_request` to 409 `do_not_contact` (type `conflict`). The message was not sent. Stop rather than retrying a known opt-out. Campaigns retain per-recipient holds.

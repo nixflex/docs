@@ -37,3 +37,22 @@ Persist a validated event before returning a successful 2xx response. Delivery c
 Queued delivery has up to five attempts. Network failures, 408, 429 and 5xx can be retried; other 4xx are permanent failures. The queue treats 3xx as delivered, so return 2xx directly instead of redirecting. Default retry delays are five minutes, five minutes, five minutes, then sixty minutes. Retention and account state can stop delivery; this is not a guaranteed schedule.
 
 Reconcile missed call events using [call reads](/api-reference/calls/get). Store caller data only where your application needs it and keep webhook bodies out of ordinary logs.
+
+## Booking object
+
+Both `call.completed.bookings[]` and the `booking` property of `sms.booking` use the same public object. All keys shown below are present.
+
+```json
+{"action":"created","booking_uid":"event_example","start":"2030-11-04T10:00:00.000Z","end":"2030-11-04T10:30:00.000Z","attendee_name":"Test Person","attendee_email":"test@example.test","service":"appointment","timezone":"Europe/London"}
+```
+
+| Field | Type and meaning |
+| --- | --- |
+| `action` | `created`, `rescheduled` or `cancelled` |
+| `booking_uid` | String or null; Google event ID or Cal.com booking UID |
+| `start`, `end` | Date-time or null; actual provider interval, never a guessed end |
+| `attendee_name`, `attendee_email` | String or null |
+| `service` | String, number or null; older Cal.com event types can be numeric |
+| `timezone` | String or null |
+
+Google creation and move include actual end time; cancellation includes the looked-up interval and person. Older or upstream omissions remain null. An already-existing booking lookup is not a new public mutation event, so it must not trigger a second booking-created automation. The payload does not prove email or SMS delivery.

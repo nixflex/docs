@@ -1,8 +1,8 @@
 ---
 title: "Organisation roles: manage access with the Nixflex API"
 description: "Read Nixflex organisation context, manage team invitations and permitted roles, and separate shared-key authority from personal login and ownership actions."
+canonical: "https://docs.nixflex.com/guides/developer/organisations"
 ---
-
 Build team administration around the organisation’s current roles. The account, work and balance stay together; people use personal logins. A shared API credential is not a Member-scoped credential.
 
 Using the dashboard? See [the business guide](/guides/business/team).
@@ -55,7 +55,7 @@ List Activity with the returned paging information and supported filters. The da
 
 ## 5. Keep personal actions personal
 
-Invitation acceptance, Leave, ownership acceptance/transfer and organisation closure require the person’s authenticated dashboard flow. Only the Owner reveals the shared key and signing secret. Removing a person does not rotate an externally shared key; committed human takeover may finish its one call.
+Invitation acceptance, Leave, ownership acceptance/transfer and organisation closure require the person’s authenticated dashboard flow. Only the Owner reveals the shared key in the dashboard. Signing-secret retrieval allows the organisation server key; among personal browser roles, only Owner can retrieve it. Removing a person does not rotate an externally shared key; committed human takeover may finish its one call.
 
 ## Example response
 
@@ -69,7 +69,7 @@ The organisation context response describes the account and current permissions.
 | Invitation limit or conflict | Inspect members and pending invites before sending again. |
 | `live_disconnect_pending` | Retain pending status until disconnection is confirmed. |
 | Unknown mutation response | Reconcile current membership/invitation before repeating. |
-| Secret retrieval | Owner dashboard flow only; keep it out of client logs. |
+| Signing-secret retrieval | Organisation server key or Owner personal flow; keep it out of client logs. |
 
 ## Next steps
 

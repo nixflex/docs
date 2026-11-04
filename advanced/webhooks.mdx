@@ -1,8 +1,8 @@
 ---
 title: "Webhooks: verify Nixflex events and process them safely"
 description: "Receive Nixflex call and message events, verify raw-body signatures, deduplicate work and handle delayed processing without repeating business actions."
+canonical: "https://docs.nixflex.com/advanced/webhooks"
 ---
-
 import SignatureVerification from "/snippets/guides/signature-verification.mdx";
 
 Build an HTTPS event receiver that verifies the sender before accepting work and can safely receive the same event more than once.
@@ -162,3 +162,22 @@ The signature timestamp describes delivery, not call start. Compare it with the 
 - [Webhook settings](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber)
 - [Call results](/guides/developer/call-history)
 - [Custom functions](/advanced/custom-functions)
+
+## Booking object
+
+Both `call.completed.bookings[]` and the `booking` property of `sms.booking` use the same public object. All keys shown below are present.
+
+```json
+{"action":"created","booking_uid":"event_example","start":"2030-11-04T10:00:00.000Z","end":"2030-11-04T10:30:00.000Z","attendee_name":"Test Person","attendee_email":"test@example.test","service":"appointment","timezone":"Europe/London"}
+```
+
+| Field | Type and meaning |
+| --- | --- |
+| `action` | `created`, `rescheduled` or `cancelled` |
+| `booking_uid` | String or null; Google event ID or Cal.com booking UID |
+| `start`, `end` | Date-time or null; actual provider interval, never a guessed end |
+| `attendee_name`, `attendee_email` | String or null |
+| `service` | String, number or null; older Cal.com event types can be numeric |
+| `timezone` | String or null |
+
+Google creation and move include actual end time; cancellation includes the looked-up interval and person. Older or upstream omissions remain null. An already-existing booking lookup is not a new public mutation event, so it must not trigger a second booking-created automation. The payload does not prove email or SMS delivery.

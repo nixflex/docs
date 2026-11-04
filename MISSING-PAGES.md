@@ -1,7 +1,7 @@
-# Missing API pages — C9
+# Public API coverage — C10
 
-No missing public operation pages. 0 public operations require a new page. All 142 public operations have endpoint pages; the tab has 155 pages including shared contracts and the Google Calendar (coming) slot.
+147 approved public operations have 147 endpoint pages. Twelve shared reference pages bring the API menu to 159 pages. The former Google Calendar placeholder is now the connect operation at the same URL; status, settings, disconnect and in-place number credentials are added.
 
-MCP has 89 registered tools. All 19 registered Knowledge tool examples from K5 are now shown. The other 21 Knowledge operations have explicit reasons for exclusion, including the legacy draft GET that can save repairs. K5b confirms this surface and the six-field keyterm read.
+No missing public operation pages: 0 public operations remain to build. The 19 registered Knowledge tool examples from C9 remain available; new HTTP routes do not imply new MCP registration.
 
-Google Calendar is intentionally a coming slot; its future contract and examples remain pending B50, without guessed routes.
+Business/AI content and any remaining D-owned metadata changes depend on the separate D2 join. See the C10 report for generated-site gates and pending manual tests; source coverage does not prove deployed sitemap coverage or live write success.

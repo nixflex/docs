@@ -6,7 +6,7 @@ import {spawnSync} from 'node:child_process';
 const root=path.resolve(import.meta.dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const defs=Object.values(JSON.parse(read('spec-source/c8-knowledge.json')).operations),spec=JSON.parse(read('api-reference/public.openapi.json'));
 test('all historical public operations plus the requested keyterm read have stable, linked pages',()=>{
- const allow=JSON.parse(read('spec-source/public-operations.json'));assert.equal(allow.filter(r=>r.number<=191&&r.public).length,141);assert.equal(allow.filter(r=>r.public).length,142);assert.equal(defs.length,40);
+ const allow=JSON.parse(read('spec-source/public-operations.json'));assert.equal(allow.filter(r=>r.number<=191&&r.public).length,141);assert.equal(allow.filter(r=>r.public).length,147);assert.equal(defs.length,40);
  const nav=JSON.parse(read('docs.json')).navigation.tabs.find(t=>t.tab==='API reference').groups.find(g=>g.group==='Knowledge');assert.equal(nav.pages.length,40);
  const before=spawnSync('git',['show','2da2612:api-reference/public.openapi.json'],{cwd:root,encoding:'utf8',maxBuffer:20*1024*1024});assert.equal(before.status,0);for(const [p,item]of Object.entries(JSON.parse(before.stdout).paths))for(const [m,op]of Object.entries(item))assert.equal(spec.paths[p][m].operationId,op.operationId);
  const errors=read('api-reference/errors.mdx');for(const d of defs){const page=read(d.slug+'.mdx');assert.ok(nav.pages.includes(d.slug));assert.equal((page.match(/^## /gm)||[]).length,8);assert.ok(spec.paths[d.specPath][d.method.toLowerCase()]);for(const e of d.errors)assert.ok(errors.includes('id="'+e[1]+'"'),e[1]);assert.doesNotMatch(page,/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i);}
@@ -21,7 +21,7 @@ test('B49f keyterm schemas document conditional limits without rejecting grandfa
  assert.ok(spec.paths['/agents/{target}/knowledge-keyterms'].get.responses['200'].content['application/json'].schema.properties.knowledge_keyterms);
 });
 test('C8 consolidated PS5.1 runner refuses writes, protects fixtures and checks all read shapes',()=>{
- const r=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(root,'tests/support/c8-safe-harness.ps1')],{cwd:root,encoding:'utf8',timeout:60000});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/15 unsafe requests blocked/);assert.match(r.stdout,/54 public read shapes \+ 4 GET tombstones; 88 manual exclusions/);
+ const r=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(root,'tests/support/c8-safe-harness.ps1')],{cwd:root,encoding:'utf8',timeout:60000});assert.equal(r.status,0,r.stdout+'\n'+r.stderr);assert.match(r.stdout,/15 unsafe requests blocked/);assert.match(r.stdout,/55 public read shapes \+ 4 GET tombstones; 92 manual exclusions/);
 });
 
 test("K5 knowledge examples use verified methods and 19 registered MCP tools",()=>{

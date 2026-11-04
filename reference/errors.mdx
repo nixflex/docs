@@ -2,8 +2,8 @@
 title: "Errors & debugging"
 description: "How the API reports errors, and how to find and replay any failing request"
 icon: "triangle-exclamation"
+canonical: "https://docs.nixflex.com/reference/errors"
 ---
-
 The API uses standard HTTP status codes. A `2xx` status means success, a `4xx` status means something was wrong with your request, and a `5xx` status means something went wrong on our side.
 
 Every error response has the **same shape**: a JSON body with an `error` object. This is consistent across every endpoint, so you can parse errors the same way everywhere.
@@ -59,14 +59,13 @@ The `type` field is derived from the HTTP status code:
 | `402` | Payment required - insufficient balance | Top up your credit. |
 | `404` | Not found - the agent, call, or resource does not exist | Check the ID in your request. |
 | `409` | Conflict - the resource already exists | Read the message; you may be creating a duplicate. |
-| `500` | Server error - something went wrong on our side | Safe to retry, ideally with a short backoff. |
+| `500` | Server error - something went wrong on our side | Retry safe reads with a bounded backoff. Reconcile writes before repeating them. |
 
 ## Common errors
 
 Missing or invalid API key:
 
 ```json
-// 401
 {
   "error": {
     "type": "authentication_error",
@@ -81,7 +80,6 @@ Missing or invalid API key:
 A field is too long:
 
 ```json
-// 400
 {
   "error": {
     "type": "invalid_request",
@@ -96,7 +94,6 @@ A field is too long:
 A field the engine owns:
 
 ```json
-// 400
 {
   "error": {
     "type": "invalid_request",
@@ -110,7 +107,6 @@ A field the engine owns:
 Resource not found:
 
 ```json
-// 404
 {
   "error": {
     "type": "not_found",
@@ -125,7 +121,6 @@ Resource not found:
 Server error:
 
 ```json
-// 500
 {
   "error": {
     "type": "server_error",

@@ -37,8 +37,8 @@ function global:Invoke-WebRequest {
 }
 Remove-Item Env:NXF_STAGING_KEY -ErrorAction SilentlyContinue
 $out=@(& $runner)
-if($global:Requests -ne 1 -or -not ($out -match 'TOTAL \| PASS=1 FAIL=0 PENDING=145')){throw ('No-key run: '+$out[-1])}
-Write-Output 'PASS | no-key run: only unauthenticated account tombstone, 145 explicit pending checks'
+if($global:Requests -ne 1 -or -not ($out -match 'TOTAL \| PASS=1 FAIL=0 PENDING=150')){throw ('No-key run: '+$out[-1])}
+Write-Output 'PASS | no-key run: only unauthenticated account tombstone, 150 explicit pending checks'
 . $runner -LoadFunctionsOnly
 $blocked=0
 foreach($method in @('POST','PUT','PATCH','DELETE','HEAD','OPTIONS')){
@@ -100,5 +100,5 @@ $out=@(& $runner)
 
 $fails=@($out|Where-Object {$_ -match '^FAIL'})
 if($fails.Count){$fails|Write-Output;throw 'Full synthetic run failed'}
-if(-not ($out -match 'TOTAL \| PASS=58 FAIL=0 PENDING=88')){throw ('Unexpected full totals: '+$out[-1])}
-Write-Output 'PASS | full synthetic run: 54 public read shapes + 4 GET tombstones; 88 manual exclusions'
+if(-not ($out -match 'TOTAL \| PASS=59 FAIL=0 PENDING=92')){throw ('Unexpected full totals: '+$out[-1])}
+Write-Output 'PASS | full synthetic run: 55 public read shapes + 4 GET tombstones; 92 manual exclusions'

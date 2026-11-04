@@ -1,0 +1,19 @@
+---
+title: "Build reliable pagination for API lists"
+description: "Page through Nixflex resources using each endpoint's cursor or offset. Keep filters stable, handle empty pages and avoid duplicate processing."
+canonical: "https://docs.nixflex.com/guides/developer/pagination"
+---
+Build a separate list adapter for each response shape. The API does not have one universal `page` parameter.
+
+| List | Next request | Stop condition |
+| --- | --- | --- |
+| Phone numbers | Send the returned opaque `next_cursor` as `cursor`; keep `limit` and filters | `has_more` is false and `next_cursor` is null |
+| Agents | Increase `offset` by the returned array length | Empty array or fewer rows than `limit` |
+| Organisation Activity | Send `next_cursor` as `before` | No next cursor; a full page may need one final empty read |
+| Voice catalog | Use the returned cursor | No next page; restart if the cursor expires |
+
+For numbers, opt in with `limit` (1–100). With neither limit nor cursor the legacy response has no cursor fields. Agents return a bare array and allow limit 1–200. Other lists have their own envelopes: inspect the [pagination reference](/api-reference/pagination) before choosing an adapter.
+
+Keep the account, filters and order unchanged while paging. URL-encode cursors without decoding or modifying their contents. Reject a repeated cursor to avoid an endless loop. Deduplicate resource IDs when concurrent changes can shift rows; offset pagination is not a snapshot.
+
+Store progress only after processing a page successfully. Respect rate limits and use a bounded deadline. An empty list is a valid result, not proof that a request failed.

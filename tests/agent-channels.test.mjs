@@ -10,8 +10,8 @@ test('Batch3 navigation and channel matrix distinguish public website from owner
   for (const text of ['Inbound phone', 'Outbound phone', 'Website chat', 'Website voice',
     'separate authenticated browser-call path', 'Per-call `prompt`', "Number's `web_prompt`",
     '300 seconds', '10 seconds', 'switch off']) a.ok(matrix.includes(text), text);
-  a.match(matrix, /phone welcome cleared/); a.match(matrix, /Catalog|catalog key now reaches/);
-  a.match(read('concepts/voices.mdx'), /prioritizes the agent's non-null `voice_key`/);
+  a.match(matrix, /phone welcome cleared/); a.match(matrix, /catalog mode prioritizes agent/);
+  a.match(read('concepts/voices.mdx'), /non-null agent catalog key takes priority/);
 });
 
 test('Batch3 inert fields stay inert in prose and schema descriptions', () => {
@@ -38,22 +38,22 @@ test('Batch3 website functions are per-number and do not grant built-in phone ac
   a.match(page, /`web_functions_enabled` defaults OFF/);
   a.match(page, /not an agent-wide or per-function website approval/);
   a.match(page, /does not enable built-in website booking, availability,/);
-  a.match(web, /Collecting a mobile number does not enable/);
+  a.match(web, /does not enable built-in calendar booking, SMS, transfers, keypad or telephone-menu navigation/);
   a.doesNotMatch(web, /Everything is inherited|Same agent, same prompt|have it collect a mobile number first/);
 });
 
 test('Batch3 language page gives route-specific coverage, not a universal ten-language promise', () => {
   const page = read('concepts/languages.mdx');
-  a.match(page, /Arabic \| ar \| Yes \| No/); a.match(page, /Russian \| ru \| No \| Yes/);
-  a.match(page, /Korean \| ko \| No \| No/); a.match(page, /intersection/);
-  a.match(page, /English-only/); a.match(page, /Website chat is different/);
+  a.match(page, /depend on the selected route/); a.match(page, /cannot add support/);
+  a.match(page, /20 entries/); a.match(page, /450-byte/);
+  a.match(page, /SMS and website chat do not use speech recognition/);
   a.doesNotMatch(page, /Automatic switching between these ten|All 15 work end to end/);
 });
 
 test('Batch3 recording and retention avoid universal deletion/compliance promises', () => {
   const recording = read('advanced/call-recording.mdx'), retention = read('concepts/data-retention.mdx');
-  a.match(recording, /agent OFF \+ number ON still records/);
-  a.match(recording, /90\/30\/7\/1\/0-day/); a.match(retention, /processing_enabled/);
+  a.match(recording, /Agent off plus number on still enables/);
+  a.match(recording, /Customer-bucket files need the customer/); a.match(retention, /processing_enabled/);
   a.match(retention, /not the\s+customer's own bucket/);
   a.doesNotMatch(retention, /GDPR compliant by default|every day at \*\*3 AM|Call deletion is immediate/);
   a.match(read('actions/end-call.mdx'), /Carrier AMD can end the call/);

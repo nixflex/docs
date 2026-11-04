@@ -26,7 +26,7 @@ Draft for API Area 1 Group 3. Requires its staging release. The kit changes belo
 are local/unpublished until separately released. This is a read-only request.
 
 Use an active API key. Ownership comes only from that key, never a request field.
-URL-encode the plus in E.164: `/v1/phone-numbers/%2B447457401554/usage`.
+URL-encode the plus in E.164: `/v1/phone-numbers/%2B12025550123/usage`.
 Absent, another owner's, pending and internal browser-test numbers return
 `404 number_not_found`. Both API-imported and dashboard-imported owned numbers work.
 
@@ -84,25 +84,25 @@ period or retry later; do not loop aggressively. The normal API rate limit appli
 
 
 ```javascript
-const { usage } = await client.phoneNumbers.usage('+447457401554', {
+const { usage } = await client.phoneNumbers.usage('+12025550123', {
   period: '30', time_zone: 'Europe/London'
 });
 console.log(usage.total_cost); // exact decimal USD string
 ```
 
 ```python
-result = client.phone_numbers.usage('+447457401554', period='30', time_zone='Europe/London')
+result = client.phone_numbers.usage('+12025550123', period='30', time_zone='Europe/London')
 # Same method on AsyncNixflex: await client.phone_numbers.usage(...)
 ```
 
 ```shell
-nixflex numbers usage +447457401554 --period 30 --time-zone Europe/London --json
+nixflex numbers usage +12025550123 --period 30 --time-zone Europe/London --json
 ```
 
 The existing read-only MCP `list_phone_numbers` tool has an additive usage mode:
 
 ```json
-{"phone_number":"+447457401554","usage":true,"period":"30","time_zone":"Europe/London"}
+{"phone_number":"+12025550123","usage":true,"period":"30","time_zone":"Europe/London"}
 ```
 
 Do not combine usage with list filters/paging. Without `usage:true`, the existing
@@ -149,8 +149,8 @@ Production HTTP examples. Replace the placeholder identifiers with resources own
 
 ```bash cURL (Bash)
 curl --request GET \
-+  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage' \
-+  --header "Authorization: Bearer $NXF_API_KEY"
+  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/usage' \
+  --header "Authorization: Bearer $NXF_API_KEY"
 ```
 
 ```javascript Node (HTTP)

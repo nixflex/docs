@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {paths as c10Paths} from './c10-contracts.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = async p => {
@@ -46,6 +47,7 @@ for (const [p, item] of Object.entries(source.paths)) {
   }
 }
 const overrides = await read('spec-source/public-overrides.json');
+Object.assign(overrides.paths,c10Paths);
 for (const [p, item] of Object.entries(overrides.paths)) {
   for (const [method, operation] of Object.entries(item)) {
     if (!publicKeys.has(method.toUpperCase() + ' ' + shape(p))) throw Error('Override is not public: ' + method + ' ' + p);
@@ -93,6 +95,8 @@ const result = {
   } } }
 };
 let count = 0;
+// Carrier field names and enum values are required for this setup operation.
+result.paths['/phone-numbers/{phoneNumber}/credentials']=structuredClone(c10Paths['/phone-numbers/{phoneNumber}/credentials']);
 const ids = new Set();
 for (const [p, item] of Object.entries(result.paths)) {
   for (const [method, op] of Object.entries(item)) {

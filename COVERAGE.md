@@ -1,4 +1,8 @@
-# API operation coverage — C9
+# API operation coverage — C10
+
+**Current C10:** 159 API pages: 147 endpoint templates and 12 shared reference pages. The five tabs contain 264 pages before D2 joins. All 63 repository tests pass. OpenAPI validates 1,083 schemas, 315 examples and 25 accepted/refused contract cases. The GET-only staging run has 1 PASS, 0 FAIL and 150 PENDING because NXF_STAGING_KEY is absent. Successful writes stay pending manual test individually below. D-owned metadata and generated-site gates are reported separately; this is not approval to publish.
+
+## Historical C9 handover
 
 **Current C9:** 155 API pages, 142 endpoint templates, MCP 89 tools with 19 registered Knowledge examples. All source/build checks pass. The current run has no staging key: authenticated reads and successful writes remain pending manual test. The current evidence and each pending write are listed in the final C9 section below. Earlier results remain here as history.
 
@@ -435,3 +439,19 @@ The runner is strictly GET-only, including diagnostics. It makes no key rotation
 | 158 | GET | `/v1/organisation/signing-secret` | pending manual test — private Owner workflow, excluded from automated retrieval |
 
 Google Calendar remains a coming slot. No new Calendar route is claimed. Generated sitemap/live hosting settings remain pending post-publication. Four desktop visual spot checks passed; evidence is in SEO-CHECK.md and FINAL-REPORT.md.
+
+## C10 additions — engine deb63749, 4 November 2026
+
+147 supported public operations. No successful write below was executed. C8 remains GET-only and rejects protected numbers, signing-secret reads and repair-capable draft reads.
+
+| Row | Status | Operation and remaining proof |
+| --- | --- | --- |
+| 193 | pending manual test | POST Google Calendar connect: approved disposable number and controlled browser consent/redirect flow. |
+| 194 | pending manual test | GET Google Calendar status with a real authorised unprotected staging fixture; offline nullable fields and boolean shape are covered. |
+| 195 | pending manual test | DELETE Google Calendar disconnect: controlled fixture, verify local access removed and other connections unaffected. |
+| 196 | pending manual test | PATCH Google Calendar settings: each setting, send_invites true/false, omitted-field preservation and invalid types. |
+| 197 | pending manual test | POST phone-number credentials: Twilio and Telnyx successful in-place updates, preservation, pending/unknown recovery. Never use either protected staging number. |
+| SMS B51 | pending manual test | Controlled suppressed recipient returns 409 do_not_contact and no dispatch; successful unsuppressed send/delivery separately. |
+| Booking B52 | pending manual test | Real consent, separate name/email approvals, create/move/cancel, signed booking payload, Google invite on/off and actual inbox delivery. |
+
+Existing account creation, key rotation, number import/removal/routing and other successful-write checks remain individually pending manual test in the prior tables. Never rotate the staging key, create real accounts, or import/remove/re-route +447861926140 or +447457401554. No credentials were read, copied or printed.

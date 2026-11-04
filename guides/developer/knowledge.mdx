@@ -1,8 +1,8 @@
 ---
 title: "Knowledge base: manage agent facts with the Nixflex API"
 description: "Build an agent knowledge workflow with sources, jobs, reviewed drafts and publication. Handle revisions, test sessions, errors, exports and safe polling."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge"
 ---
-
 Build a review-first workflow: **agent base → source → preparation job → draft → accept → publication job → live topics**. Knowledge belongs to the agent, and all its attached numbers use that base when the channel is enabled.
 
 Using the dashboard? See [teach your agent about your business](/guides/business/knowledge).
@@ -133,6 +133,27 @@ Refresh selected saved website sources explicitly. Topic deletion prevents a sam
 
 Create an [export job](/api-reference/knowledge/post-knowledge-bases-kb-exports), poll it, then read `/v1/knowledge/exports/{id}`. Default JSON preserves developer metadata; `?format=text` returns `filename`, `content_type` and `text`. Exports last one hour and require an unchanged revision. Rebuild a stale export with bounded retries. Raw uploaded files are excluded. Whole-base deletion revokes access first and returns a cleanup job; track it to completion.
 
+## Read automatic and manual keyterms
+
+With knowledge enabled, agent list/detail reads include the read-only `knowledge_keyterms` array. Read `GET /v1/agents/{agent_id}/knowledge-keyterms` for the automatic and saved manual lists, counts and current limits:
+
+```json
+{
+  "knowledge_keyterms": ["Willow Studio"],
+  "knowledge_keyterms_count": 1,
+  "knowledge_keyterms_limit": 80,
+  "manual_keyterms": ["Willow"],
+  "manual_keyterms_count": 1,
+  "manual_keyterms_limit": 20
+}
+```
+
+This is an illustrative response; use the returned limits. Automatic candidates are ordered by importance and do not consume the manual allowance. Owner, Admin and Member logins can read owned-agent terms. The reviewed, unpublished MCP 0.4.0 candidate exposes this read as `get_agent_knowledge_keyterms` with `target` set to the agent ID.
+
+The dashboard shows **From your knowledge** chips and **+N more** beneath the agent's Keyterms field. It filters automatic candidates against the current manual form, including unsaved changes; the API returns automatic candidates and saved manual terms separately. Do not infer the raw API array from the filtered chips.
+
+Write chosen manual terms through the existing agent `boosted_keywords` field, not `knowledge_keyterms`; attempts to write the read-only field are refused. Changed manual lists allow 20 terms, at most 50 characters per term, and a conservative 450-byte total allowance (trimmed, deduplicated UTF-8 terms plus four bytes each). Older unchanged lists can survive unrelated saves, so a saved count may exceed the current edit limit. Follow the returned validation message instead of truncating silently. Manual hints take priority over competing automatic hints; they do not guarantee recognition or pronunciation.
+
 ## Errors and limits
 
 | Status or condition | Meaning | Recovery |
@@ -168,3 +189,7 @@ Read capabilities and usage instead of inferring entitlement from old training c
 - [Edit a live topic](/api-reference/knowledge/patch-knowledge-bases-kb-topics-id)
 - [Cancel or retry a job](/api-reference/knowledge/post-knowledge-jobs-id-cancel)
 - [How knowledge reaches a call](/concepts/knowledge)
+
+## Sources, jobs and pieces
+
+A source is the submitted material. A job prepares or publishes it; poll the job until a terminal state and inspect its result. The public topic routes represent the reviewed knowledge pieces used for answers. Inspect the live topics after publication instead of treating an accepted source as live content. Keep source IDs, job IDs and topic IDs separate.

@@ -1,0 +1,17 @@
+---
+title: "Control API polling and request rate"
+description: "Use Nixflex rate-limit headers to pace reads and polling. Keep HTTP request quotas separate from call concurrency, balance and knowledge limits."
+canonical: "https://docs.nixflex.com/guides/developer/rate-limits"
+---
+Read `RateLimit-Limit` and `RateLimit-Remaining` from authenticated responses. Do not hard-code a universal requests-per-minute allowance. A throttled request returns 429 `rate_limit_exceeded` and `Retry-After` in seconds.
+
+For a safe read, wait at least that long, add jitter and stop at an application deadline. Cache stable catalog results, share polling work between clients and stop polling terminal jobs. Avoid multiple workers retrying together.
+
+| Limit | What it controls |
+| --- | --- |
+| API request allowance | HTTP requests for the authenticated key |
+| `max_concurrent` | Organisation concurrent calls; not calls started per second |
+| Balance and feature allowances | Whether the requested work can be admitted |
+| Knowledge limits | Resource counts, job capacity and training allowances |
+
+More HTTP capacity does not remove the other limits. A throttle is not general permission to repeat a write. Reconcile any uncertain call, message or credential update using its operation contract. See [rate limits](/api-reference/rate-limits), [errors](/guides/developer/errors) and [idempotency](/guides/developer/idempotency).

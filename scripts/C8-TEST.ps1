@@ -9288,6 +9288,50 @@ $script:Cases=@'
       "additionalProperties": true,
       "description": ""
     }
+  },
+  {
+    "number": 194,
+    "method": "GET",
+    "path": "/v1/integrations/google-calendar/number/:phoneNumber",
+    "query": "",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "connected": {
+          "type": "boolean"
+        },
+        "account_email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "calendar_id": {
+          "type": "string"
+        },
+        "connected_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "needs_reconnect": {
+          "type": "boolean"
+        },
+        "send_invites": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "connected",
+        "account_email",
+        "calendar_id",
+        "connected_at",
+        "needs_reconnect",
+        "send_invites"
+      ]
+    }
   }
 ]
 '@ | ConvertFrom-Json
@@ -9532,6 +9576,10 @@ foreach($name in @('row 1 POST /v1/keys',
  'row 180 POST /v1/sms/campaigns/:id/cancel',
  'row 181 POST /v1/sms/campaigns/:id/consent',
  'row 182 POST /v1/sms/campaigns/:id/launch',
- 'row 183 POST /v1/sms/campaigns/:id/resume')){Pending-C8 $name 'successful write or calculation excluded; GET-only runner'}
+ 'row 183 POST /v1/sms/campaigns/:id/resume',
+ 'row 193 POST /v1/integrations/google-calendar/number/:phoneNumber/connect',
+ 'row 195 DELETE /v1/integrations/google-calendar/number/:phoneNumber',
+ 'row 196 PATCH /v1/integrations/google-calendar/number/:phoneNumber',
+ 'row 197 POST /v1/phone-numbers/:phoneNumber/credentials')){Pending-C8 $name 'successful write or calculation excluded; GET-only runner'}
 Write-Output ('TOTAL | PASS='+$script:Pass+' FAIL='+$script:Fail+' PENDING='+$script:Pending)
 if($script:Fail -gt 0){exit 1}

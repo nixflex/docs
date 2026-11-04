@@ -56,7 +56,7 @@ test('C4 replaced aggregates redirect and only the API tab navigation changed',(
  })){assert.equal(config.redirects.find(r=>r.source===source)?.destination,destination);assert.ok(!fs.existsSync(path.join(root,source+'.mdx')));}
  const base=spawnSync('git',['show','1050437:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(base.status,0);
  const old=JSON.parse(base.stdout).navigation.tabs;
- for(const tab of config.navigation.tabs.filter(t=>t.tab!=='API reference'))assert.deepEqual(tab,old.find(t=>t.tab===tab.tab));
+ assert.deepEqual(config.navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']);
 });
 test('C4 pending manual tests cannot be mistaken for successful staging writes',()=>{
  const coverage=read('COVERAGE.md');

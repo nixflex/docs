@@ -83,10 +83,10 @@ Production HTTP examples. Replace the placeholder identifiers with resources own
 
 ```bash cURL (Bash)
 curl --request PUT \
-+  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101' \
-+  --header "Authorization: Bearer $NXF_API_KEY" \
-+  --header 'Content-Type: application/json' \
-+  --data '{"name":"Example customer","reference_id":"example-001"}'
+  --url 'https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101' \
+  --header "Authorization: Bearer $NXF_API_KEY" \
+  --header 'Content-Type: application/json' \
+  --data '{"name":"Example customer","reference_id":"example-001"}'
 ```
 
 ```javascript Node (HTTP)
@@ -106,7 +106,7 @@ from urllib.request import Request, urlopen
 
 request = Request('https://api.nixflex.com/v1/phone-numbers/%2B12025550123/callers/%2B12025550101', method='PUT',
     headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY'], 'Content-Type': 'application/json'},
-    data=json.dumps({"name":"Example customer","reference_id":"example-001"}).encode("utf-8"))
+    data="{\"name\":\"Example customer\",\"reference_id\":\"example-001\"}".encode("utf-8"))
 with urlopen(request, timeout=30) as response:
     result = json.load(response)
 # Handle the private result without logging it.

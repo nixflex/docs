@@ -14247,7 +14247,7 @@
             }
           },
           "409": {
-            "description": "auto_topup_unsupported: The current account funding configuration is not supported for this send. Resolve the account configuration before sending. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window.",
+            "description": "auto_topup_unsupported: The current account funding configuration is not supported for this send. Resolve the account configuration before sending. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window. do_not_contact: This recipient is on your do-not-contact list. The message was not sent. Respect the opt-out; do not retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -14328,6 +14328,17 @@
                           "charged": false,
                           "safe_to_retry": false
                         }
+                      }
+                    }
+                  },
+                  "do_not_contact": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "do_not_contact",
+                        "message": "This recipient is on your do-not-contact list. The message was not sent.",
+                        "doc_url": "https://docs.nixflex.com/errors/do_not_contact",
+                        "details": {}
                       }
                     }
                   }
@@ -68500,6 +68511,2079 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/google-calendar/number/{phoneNumber}/connect": {
+      "post": {
+        "operationId": "connectNumberGoogleCalendar",
+        "summary": "Connect Google Calendar",
+        "description": "Organisation API key or verified dashboard session. Owner/Admin can write; Member can read. Other organisations cannot access this number.",
+        "tags": [
+          "Google Calendar"
+        ],
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "path",
+            "required": true,
+            "description": "Owned E.164 number. URL-encode the leading +.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\+[1-9][0-9]{1,14}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "return_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "description": "HTTPS return URL, or an operator-approved app scheme. No credentials, fragment, whitespace or OAuth-secret query parameters."
+                  }
+                },
+                "required": [
+                  "return_url"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "expires_at"
+                  ]
+                },
+                "example": {
+                  "url": "https://accounts.google.com/o/oauth2/v2/auth?state=example",
+                  "expires_at": "2030-11-04T10:10:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_return_url. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied, account_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "number_not_found. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "already_connected, booking_provider_conflict, agent_not_assigned, expired_link. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "calendar_unavailable, not_configured, guard_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/integrations/google-calendar/number/{phoneNumber}": {
+      "get": {
+        "operationId": "getNumberGoogleCalendar",
+        "summary": "Get Google Calendar status",
+        "description": "Organisation API key or verified dashboard session. Owner/Admin can write; Member can read. Other organisations cannot access this number.",
+        "tags": [
+          "Google Calendar"
+        ],
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "path",
+            "required": true,
+            "description": "Owned E.164 number. URL-encode the leading +.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\+[1-9][0-9]{1,14}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "connected": {
+                      "type": "boolean"
+                    },
+                    "account_email": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "calendar_id": {
+                      "type": "string"
+                    },
+                    "connected_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    },
+                    "needs_reconnect": {
+                      "type": "boolean"
+                    },
+                    "send_invites": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "connected",
+                    "account_email",
+                    "calendar_id",
+                    "connected_at",
+                    "needs_reconnect",
+                    "send_invites"
+                  ]
+                },
+                "example": {
+                  "connected": false,
+                  "account_email": null,
+                  "calendar_id": "primary",
+                  "connected_at": null,
+                  "needs_reconnect": false,
+                  "send_invites": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied, account_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "number_not_found. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "calendar_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "disconnectNumberGoogleCalendar",
+        "summary": "Disconnect Google Calendar",
+        "description": "Organisation API key or verified dashboard session. Owner/Admin can write; Member can read. Other organisations cannot access this number.",
+        "tags": [
+          "Google Calendar"
+        ],
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "path",
+            "required": true,
+            "description": "Owned E.164 number. URL-encode the leading +.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\+[1-9][0-9]{1,14}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "const": true
+                    },
+                    "connected": {
+                      "type": "boolean",
+                      "const": false
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "connected"
+                  ]
+                },
+                "example": {
+                  "ok": true,
+                  "connected": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied, account_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "number_not_found. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "expired_link. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "calendar_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateNumberGoogleCalendarSettings",
+        "summary": "Update Google Calendar settings",
+        "description": "Organisation API key or verified dashboard session. Owner/Admin can write; Member can read. Other organisations cannot access this number.",
+        "tags": [
+          "Google Calendar"
+        ],
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "path",
+            "required": true,
+            "description": "Owned E.164 number. URL-encode the leading +.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\+[1-9][0-9]{1,14}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timezone": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "IANA timezone. Explicit per-number timezone wins; older settings can inherit the agent timezone."
+                  },
+                  "hours": {
+                    "type": "object",
+                    "properties": {
+                      "monday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "tuesday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "wednesday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "thursday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "friday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "saturday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      },
+                      "sunday": {
+                        "anyOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          }
+                        ],
+                        "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                      }
+                    },
+                    "required": [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Replace the entire seven-day map. Omit to retain saved hours."
+                  },
+                  "slot_minutes": {
+                    "type": "integer",
+                    "enum": [
+                      15,
+                      30,
+                      45,
+                      60
+                    ],
+                    "description": "Older connections default to 30 minutes."
+                  },
+                  "calendar_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "pattern": "^[^\\s\\x00-\\x1f\\x7f]+$",
+                    "description": "Editable calendar ID; primary by default."
+                  },
+                  "send_invites": {
+                    "type": "boolean",
+                    "description": "Defaults to true when not previously stored. Omission on PATCH preserves the setting. Google controls delivery."
+                  }
+                },
+                "minProperties": 1,
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "timezone": {
+                      "type": "string",
+                      "maxLength": 100,
+                      "description": "IANA timezone. Explicit per-number timezone wins; older settings can inherit the agent timezone."
+                    },
+                    "hours": {
+                      "type": "object",
+                      "properties": {
+                        "monday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "tuesday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "wednesday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "thursday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "friday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "saturday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        },
+                        "sunday": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "array",
+                              "minItems": 2,
+                              "maxItems": 2,
+                              "items": {
+                                "type": "string",
+                                "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                              }
+                            }
+                          ],
+                          "description": "Null when closed; otherwise [opening, closing], with closing strictly after opening on the same day."
+                        }
+                      },
+                      "required": [
+                        "monday",
+                        "tuesday",
+                        "wednesday",
+                        "thursday",
+                        "friday",
+                        "saturday",
+                        "sunday"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Replace the entire seven-day map. Omit to retain saved hours."
+                    },
+                    "slot_minutes": {
+                      "type": "integer",
+                      "enum": [
+                        15,
+                        30,
+                        45,
+                        60
+                      ],
+                      "description": "Older connections default to 30 minutes."
+                    },
+                    "calendar_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024,
+                      "pattern": "^[^\\s\\x00-\\x1f\\x7f]+$",
+                      "description": "Editable calendar ID; primary by default."
+                    },
+                    "send_invites": {
+                      "type": "boolean",
+                      "description": "Defaults to true when not previously stored. Omission on PATCH preserves the setting. Google controls delivery."
+                    }
+                  },
+                  "required": [
+                    "timezone",
+                    "hours",
+                    "slot_minutes",
+                    "calendar_id",
+                    "send_invites"
+                  ]
+                },
+                "example": {
+                  "timezone": "Europe/London",
+                  "hours": {
+                    "monday": [
+                      "09:00",
+                      "17:00"
+                    ],
+                    "tuesday": [
+                      "09:00",
+                      "17:00"
+                    ],
+                    "wednesday": [
+                      "09:00",
+                      "17:00"
+                    ],
+                    "thursday": [
+                      "09:00",
+                      "17:00"
+                    ],
+                    "friday": [
+                      "09:00",
+                      "17:00"
+                    ],
+                    "saturday": null,
+                    "sunday": null
+                  },
+                  "slot_minutes": 30,
+                  "calendar_id": "primary",
+                  "send_invites": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_settings, invalid_timezone, invalid_hours, invalid_slot_minutes, invalid_calendar_id, invalid_send_invites. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied, account_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "number_not_found. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "not_connected, expired_link. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "calendar_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/phone-numbers/{phoneNumber}/credentials": {
+      "post": {
+        "operationId": "updatePhoneNumberCredentials",
+        "summary": "Update phone number credentials",
+        "description": "Organisation API key or verified dashboard session. Owner/Admin can write; Member can read. Other organisations cannot access this number.",
+        "tags": [
+          "Phone numbers"
+        ],
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "path",
+            "required": true,
+            "description": "Owned E.164 number. URL-encode the leading +.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\+[1-9][0-9]{1,14}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "twilio_sid": {
+                        "type": "string",
+                        "pattern": "^AC[a-fA-F0-9]{32}$",
+                        "writeOnly": true
+                      },
+                      "twilio_token": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^(?=[^\\r\\n\\u0000]*\\S)[^\\r\\n\\u0000]+$",
+                        "writeOnly": true,
+                        "description": "Private submitted credential. Outer whitespace is trimmed; blank values and CR/LF/NUL are refused."
+                      }
+                    },
+                    "required": [
+                      "twilio_sid",
+                      "twilio_token"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "telnyx_api_key": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^(?=[^\\r\\n\\u0000]*\\S)[^\\r\\n\\u0000]+$",
+                        "writeOnly": true,
+                        "description": "Private submitted credential. Outer whitespace is trimmed; blank values and CR/LF/NUL are refused."
+                      },
+                      "telnyx_connection_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "pattern": "^(?=[^\\r\\n\\u0000]*\\S)[^\\r\\n\\u0000]+$",
+                        "writeOnly": true,
+                        "description": "Your existing TeXML app connection ID."
+                      }
+                    },
+                    "required": [
+                      "telnyx_api_key",
+                      "telnyx_connection_id"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success. Cache-Control: no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "phone_number": {
+                      "type": "string",
+                      "pattern": "^\\+[1-9][0-9]{1,14}$"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "twilio",
+                        "telnyx"
+                      ]
+                    },
+                    "updated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "phone_number",
+                    "provider",
+                    "updated"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "phone_number": "+12025550123",
+                  "provider": "twilio",
+                  "updated": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_request, invalid_credentials. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied, account_unavailable. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "number_not_found, number_not_in_account. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "carrier_mismatch, number_operation_pending, number_release_pending. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "carrier_unavailable, credential_update_unavailable, carrier_outcome_unknown, credential_save_pending. Standard error envelope; branch on error.code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }

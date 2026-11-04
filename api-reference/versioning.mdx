@@ -42,3 +42,13 @@ Feature availability follows the engine deployed in your environment. Confirm re
 ## Follow a change
 
 Check the endpoint, [error catalog](/api-reference/errors), and client documentation together. Keep the engine, reference, bundled schema, and client versions aligned when adopting a change.
+
+## Calendar and credential updates
+
+The reference now includes four per-number Google Calendar operations: [connect](/api-reference/integration-settings/google-calendar), [status](/api-reference/integration-settings/google-calendar-status), [settings](/api-reference/integration-settings/google-calendar-settings) and [disconnect](/api-reference/integration-settings/google-calendar-disconnect). `send_invites` is a boolean and defaults to true when no value was stored; omitting it on PATCH preserves the existing setting.
+
+[Update phone-number credentials](/api-reference/phone-numbers/credentials) changes an existing carrier connection in place and preserves number settings. Handle `carrier_outcome_unknown` and `credential_save_pending` separately; do not recover by deleting and re-importing.
+
+**Compatibility change:** single-SMS suppression now returns HTTP 409 `do_not_contact`, type `conflict`, instead of 400 `invalid_request`. Stop on an opt-out. Campaigns continue to hold affected recipients individually.
+
+[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. Contact approvals ask the name first, then spell the email, with a separate yes for each. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.

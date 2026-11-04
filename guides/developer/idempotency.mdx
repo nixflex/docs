@@ -1,0 +1,20 @@
+---
+title: "Prevent duplicate API work"
+description: "Use Nixflex knowledge idempotency keys and resource revisions correctly. Reconcile other writes instead of assuming every endpoint supports replay."
+canonical: "https://docs.nixflex.com/guides/developer/idempotency"
+---
+Record the intended operation in your application before sending it. Store its request, returned ID and observed result privately. After a timeout, use that record to decide what to read or repeat.
+
+## Knowledge operations
+
+Knowledge writes that require `Idempotency-Key` document it in their request fields. Use 8–128 letters, digits, dots, underscores, colons or hyphens; `prompt:` is reserved. Keep the same key and identical request when retrying the same intended operation. Use a new key for a new action. A revision conflict needs a fresh read and a deliberate new decision, not a loop that overwrites newer work.
+
+Sources, preparation jobs, reviewed drafts and publication jobs are different steps. HTTP 202 means accepted work; poll the job and inspect its final state. An accepted source does not prove live knowledge has changed.
+
+## Other operations
+
+Do not add a generic idempotency header and assume it protects calls, SMS or number updates. Disable automatic mutation retries unless the endpoint explicitly documents safe replay. A lost response can conceal success.
+
+For credential updates, only `credential_save_pending` instructs you to retry identical details to finish the local save. `carrier_outcome_unknown` requires investigation. For Google Calendar consent, read status after an uncertain result before starting a fresh flow.
+
+See [idempotency rules](/api-reference/idempotency), [knowledge workflow](/guides/developer/knowledge) and [error handling](/guides/developer/errors).

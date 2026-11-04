@@ -12355,7 +12355,7 @@
             }
           },
           "409": {
-            "description": "auto_topup_unsupported: The current account funding configuration is not supported for this send. Resolve the account configuration before sending. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window.",
+            "description": "auto_topup_unsupported: The current account funding configuration is not supported for this send. Resolve the account configuration before sending. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window. do_not_contact: This recipient is on your do-not-contact list. The message was not sent. Respect the opt-out; do not retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12437,6 +12437,17 @@
                           "charged": false,
                           "safe_to_retry": false
                         }
+                      }
+                    }
+                  },
+                  "do_not_contact": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "do_not_contact",
+                        "message": "This recipient is on your do-not-contact list. The message was not sent.",
+                        "doc_url": "https://docs.nixflex.com/errors/do_not_contact",
+                        "details": {}
                       }
                     }
                   }

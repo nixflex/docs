@@ -19,7 +19,7 @@ const meta=(s,k)=>{const v=s.split('---')[1]?.match(new RegExp('^'+k+':\\s*(.*)$
 check(new Set(nav).size===nav.length&&same(nav,intended)&&same(nav,plan.pages.map(p=>p.slug)),'Public files, plan and navigation are the same set');
 report.counts.navigation=nav.length;report.counts.intendedFiles=intended.length;report.counts.excluded=plan.excluded.length;
 const before=JSON.parse(execFileSync('git',['show',plan.baseline+':docs.json'],{cwd:root,encoding:'utf8'}));
-check(JSON.stringify(config.navigation.tabs.filter(t=>t.tab!=='API reference'))===JSON.stringify(before.navigation.tabs.filter(t=>t.tab!=='API reference')),'Other tabs unchanged');
+check(JSON.stringify(config.navigation.tabs.map(t=>t.tab))===JSON.stringify(['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']),'Locked five-tab order');
 check(before.redirects.every(r=>config.redirects.some(n=>n.source===r.source&&n.destination===r.destination)),'Existing redirects preserved');
 check(plan.moved.every(r=>config.redirects.some(n=>n.source==='/'+r.from&&n.destination==='/'+r.to)),'Every moved URL has a redirect ('+plan.moved.length+' moves)');
 const former=flatten(before.navigation.tabs.find(t=>t.tab==='API reference'));
@@ -44,7 +44,7 @@ for(const slug of nav){
  for(const m of s.matchAll(/(?:\]\(|href=["'])(\/[^\s)"']+)/g))if(!resolves(m[1]))links.push({slug,url:m[1]});
 }
 report.counts.endpointPages=endpoints;report.carrierContractPages=carrier;
-check(endpoints===142,'All 142 operations have text endpoint pages');
+check(endpoints===147,'All 147 operations have text endpoint pages');
 check(links.length===0,'Internal page and asset links resolve');report.brokenLinks=links;
 const apiPath=u=>{try{const p=new URL(u,'https://docs.nixflex.com').pathname.replace(/\.(md|html)$/,'').replace(/\/$/,'');return p.startsWith('/api-reference/')&&!p.endsWith('.json')?p.slice(1):null;}catch{return null;}};
 async function fetchText(u){const r=await fetch(u,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('HTTP '+r.status+' '+u);return await r.text();}

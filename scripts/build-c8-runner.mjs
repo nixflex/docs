@@ -10,7 +10,7 @@ for(const c of cases){
  const p=Object.keys(spec.paths).find(p=>shape(p)===shape(c.path));
  c.schema=spec.paths[p].get.responses['200'].content['application/json'].schema;
 }
-if(cases.length!==54)throw Error('Expected 54 safe GET shapes');
+if(cases.length!==55)throw Error('Expected 55 safe GET shapes, including Google Calendar status');
 const writes=JSON.parse(read('spec-source/public-operations.json')).filter(c=>c.public&&c.method!=='GET');
 const names=writes.map(c=>"'row "+c.number+' '+c.method+' '+c.path+"'").join(',\n ');
 const template=read('scripts/c8-runner-template.ps1');

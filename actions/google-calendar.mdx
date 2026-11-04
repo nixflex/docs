@@ -1,26 +1,32 @@
 ---
-title: "Google Calendar booking: understand the connected workflow"
-description: "Understand how Nixflex uses a connected Google Calendar for appointment actions, including working hours, agent time zone, confirmation and unavailable slots."
+title: "Build Google Calendar booking into your app"
+description: "Connect a Nixflex number to Google Calendar, handle consent results, configure booking hours and invitations, and reconcile signed booking events."
+canonical: "https://docs.nixflex.com/actions/google-calendar"
 ---
+Use the public API to connect an owned number to Google Calendar. Owner and Admin personal sessions can change the connection; Members can read status. An organisation server key is an organisation actor. Keep it on the server.
 
-A connected Google Calendar lets an eligible agent check appointment availability and request booking changes. Connect it through the signed-in [business setup guide](/guides/business/google-calendar); the public integration-settings API does not provide a substitute OAuth connection route.
+## Connect and return to your app
 
-## How the calendar is used
+Assign an agent to the number, then [create a consent link](/api-reference/integration-settings/google-calendar) with your HTTPS `return_url`. Open the returned URL in the user's browser. The link lasts ten minutes and can be used once. A custom app scheme needs operator approval first.
 
-The connection stores authorisation for the selected business calendar. The booking path generates candidate appointments from working hours, subtracts existing busy times and uses the agent's time zone. Built-in defaults are 30-minute appointments, 09:00–17:00, Monday–Friday unless the saved configuration overrides them. Confirm the actual configuration before describing those hours to a customer.
+On return, read `status=connected` and `phone_number`, or `status=error` with `access_denied`, `expired_link`, `already_connected` or `google_error`. Reserved result parameters are replaced while ordinary query parameters remain. OAuth credentials never return to your app. Expired state without a trusted destination displays a local error.
 
-The agent can check availability, book, find an existing appointment, reschedule or cancel through the supported calendar tools. Lookup can require the attendee's email and exact date/time when several matches exist. A self-reported email is not verified identity, so define appropriate business checks for sensitive changes.
+## Show the current state
 
-## Confirmation and real outcomes
+[Read status](/api-reference/integration-settings/google-calendar-status) when the connection screen opens or regains focus. `connected: false` means not set up. `connected: true, needs_reconnect: true` means new consent is needed. A 503 means the check failed; it is not proof of disconnection. Reconnect preserves business settings.
 
-`require_booking_confirmation` can require a read-back before a mutation. The effective number/agent setting applies. A time can still become unavailable after an earlier lookup; only a successful write confirms the appointment.
+## Configure availability and invitations
 
-Ambiguous or nonexistent local times must be clarified. The engine checks the call is still live before a new write, but a lost network response does not prove an external calendar change was rolled back. Reconcile the calendar instead of blindly repeating it.
+[PATCH settings](/api-reference/integration-settings/google-calendar-settings) for timezone, all seven days of working hours, slot length and calendar ID. Only one booking provider can be active for a number. A Cal.com conflict must be resolved deliberately before connecting Google Calendar.
 
-## Texts and disconnection
+`send_invites` defaults to true, including existing connections without a stored value. When on, Google is asked to email the caller an invitation, update or cancellation. Google controls delivery; the engine does not add the owner as an attendee or send a separate owner email. When off, no Google notification is requested. Omit the field to keep its saved value.
 
-An in-call confirmation text needs the separate in-call SMS gate and an eligible sender. A calendar update can succeed while the text fails. Disconnecting authorisation prevents future use; it does not cancel appointments already created or erase copies held by the calendar.
+## Confirm the person, then book
 
-- [Connect Google Calendar in the dashboard](/guides/business/google-calendar)
-- [Booking confirmation controls](/actions/booking-confirmation)
-- [Cal.com API workflow](/actions/calcom)
+Ask the name, read it back and wait for a clear yes. Then ask the email, spell it letter by letter and wait for a separate yes. Saved emails are spelled too. A correction repeats only that field. Looking up, moving or cancelling an existing appointment needs email approval without a new name question.
+
+These contact approvals are separate from the optional final action/time approval controlled by `require_booking_confirmation`. See [booking confirmation](/actions/booking-confirmation). Say “Google will email you an invite” when requested; do not claim it reached an inbox. Claim a text was sent only after actual matching carrier acceptance.
+
+## Reconcile the result
+
+Read the calendar result and signed [booking webhook object](/api-reference/webhooks#booking-object). A saved setting or consent link is not booking proof. Duplicate lookup confirmations do not create another public booking event. If access must end, [disconnect this number](/api-reference/integration-settings/google-calendar-disconnect); already dispatched provider work cannot be recalled.

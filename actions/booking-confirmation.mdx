@@ -1,8 +1,8 @@
 ---
 title: "Booking confirmation: require a clear customer approval"
 description: "Require Nixflex to read back a booking and collect confirmation before writing it, understand number overrides and test uncertain dates and changed answers."
+canonical: "https://docs.nixflex.com/actions/booking-confirmation"
 ---
-
 Add an explicit confirmation step before a supported calendar mutation. Approval is one condition of booking; the calendar must still accept the action.
 
 Using the dashboard? See [the business guide](/guides/business/call-actions).
@@ -61,6 +61,14 @@ nixflex agents update agent_example --set require_booking_confirmation=true --js
 </CodeGroup>
 
 The agent default is false. A number can store true, false or null; null inherits the agent. Apply a number override with the number PATCH endpoint when it needs a different policy.
+
+## Contact approval always comes first
+
+For a new booking, ask the name, read it back and get a clear yes. Then ask the email, spell it letter by letter and get a separate yes. Saved emails are also spelled. A correction repeats only that field. Appointment lookup, move and cancel require email approval without asking for a new name.
+
+This flow applies to calls and SMS for both calendars, independently of `require_booking_confirmation`. That setting controls the optional final approval of the action and time on calls. Email domain checks do not prove a mailbox exists; a suggested spelling correction requires the person's approval.
+
+When Google invitations are on, say “Google will email you an invite” (or update/cancellation). Google controls delivery. Cal.com handles its own mail. Do not claim inbox delivery or owner notification without evidence. In-call SMS must be enabled and a matching carrier acceptance received before saying “I've texted you the details.”
 
 ## 3. Write a narrow instruction
 
