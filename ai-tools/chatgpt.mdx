@@ -1,0 +1,71 @@
+---
+title: "Use ChatGPT with Nixflex: connection options and limits"
+description: "Use Nixflex docs in ChatGPT, compare hosted MCP and an admin-managed tunnel, and try five prompts with clear setup and account-action limits."
+canonical: "https://docs.nixflex.com/ai-tools/chatgpt"
+---
+
+ChatGPT can help plan Nixflex work from documentation. Account actions need a configured MCP connection. The supplied **Nixflex MCP 0.4.0 candidate has 89 tools and runs locally over stdio**. It has no hosted endpoint or tested ChatGPT connector. An admin-managed tunnel is a separate integration option to validate.
+
+<Note>
+ChatGPT web does not read your local Codex configuration. Do not enter the Nixflex API base URL as an MCP server URL or invent an `/mcp` endpoint. The kit's supported local clients are [Claude](/ai-tools/claude), [Cursor](/ai-tools/cursor) and [Codex](/ai-tools/codex).
+</Note>
+
+## Use documentation without connecting an account
+
+Give ChatGPT [the documentation index](https://docs.nixflex.com/llms.txt), then the relevant `.md` page, such as [business knowledge](https://docs.nixflex.com/guides/business/knowledge.md). If your chat cannot fetch pages, paste the non-secret text you want it to use. Do not include keys, private recordings or unnecessary customer details.
+
+Ask it to explain steps and draft content. It cannot read your real calls, create an agent, check your balance or confirm a booking merely by reading these docs.
+
+## Advanced: an admin-managed tunnel
+
+The current [Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) supports forwarding a **stdio** server to ChatGPT. This is an additional operator-managed connection, not a Nixflex-tested candidate feature.
+
+1. Have your administrator confirm tunnel permissions and association with the intended ChatGPT workspace. Follow the official guide to create or reuse a tunnel and install `tunnel-client`.
+2. [Install the Nixflex candidate](/ai-tools/overview#install-the-supplied-local-package). Configure the tunnel's stdio command to run Node with that package's absolute `index.js` path. Provide the Nixflex key, API URL and environment credential source privately to the server process. The tunnel also needs its own runtime credential; keep both secrets out of chats and config values.
+3. Use the documented `tunnel-client doctor` check, then keep `tunnel-client run` active. Check readiness before discovery.
+4. In ChatGPT Plugins, add a custom MCP server and select **Tunnel**. Choose the authorised tunnel and complete its authentication settings. Restrict the plugin to authorised people: the Nixflex key gives organisation authority, not each user's dashboard role.
+5. Inspect the discovered tools and try `get_usage` only. Treat compatibility and write behaviour as unverified until tested. A tunnel connection does not add missing booking or knowledge-write tools.
+
+## If Nixflex supplies a hosted MCP connection
+
+ChatGPT web supports remote MCP through streaming HTTP or SSE, subject to workspace policy. A local Codex config does not connect a web chat. The current [ChatGPT custom MCP guide](https://developers.openai.com/api/docs/guides/custom-mcp-server) describes the connection flow.
+
+When a supported Nixflex remote option is supplied:
+
+1. Get its exact server URL, authentication instructions and supported tool list from Nixflex. The current local kit does not provide that hosted URL.
+2. In ChatGPT **Plugins**, use the add control and choose **Add custom MCP server**, if your workspace permits it.
+3. Enter the supplied server details and complete its supported sign-in. Never paste your Nixflex API key into the chat or place it in the URL. Do not make private account tools publicly accessible without authentication.
+4. Install or enable the resulting plugin and inspect the tools actually available. Do not assume they match the local kit's 89 until checked.
+5. Start with `get_usage` only, if that tool is exposed. Approve the read and check its result before allowing changes.
+
+<Note>Screenshot placeholder: **ai-chatgpt-docs** — ChatGPT documentation task, documentation-only answer with source links and no claim of a connected Nixflex account. Use staging test data; hide all secrets.</Note>
+
+## Five prompts to try
+
+These work as planning prompts without a connection. Agent creation, call reads and usage become account actions only when a configured connection exposes the named tools. Each prompt says what to do when no connection is available.
+
+### 1. Plan or create an agent
+
+> Help me create a Nixflex agent named Willow Reception. Read the setup docs and draft its instructions. If connected tools include list_agents and create_agent, check the existing names and wait for my approval before creating it. Otherwise give me the dashboard steps and clearly say no agent was created.
+
+### 2. Add knowledge with human review
+
+> Help me add opening hours to Willow Reception's knowledge. Ask me for the business facts and draft a topic I can review. The current Nixflex MCP cannot publish knowledge. Show the dashboard add, review and approval steps, and never claim the draft is live.
+
+### 3. Check calls only when connected
+
+> If an approved Nixflex connection exposes list_calls, summarise the latest five completed calls for the agent I choose, using confirmed outcomes and hiding personal details. If not connected, show me how to find them in Call History. Do not invent call data or contact anyone.
+
+### 4. Prepare a calendar booking
+
+> Help me set up booking through Google Calendar for my Nixflex number. Explain the number's connection, opening hours, invite switch and separate name and spelled-email approvals. Give me a manual test script. The local MCP has no direct booking tool; do not say an appointment was made or send a call or text.
+
+### 5. Read usage or show where to find it
+
+> If an approved Nixflex connection exposes get_usage, read and explain the actual returned usage, balance and period. Otherwise direct me to Billing and say you cannot see my balance. Do not guess charges, request my key or change any billing setting.
+
+## What an AI answer does not prove
+
+A written plan is not a saved agent, a confirmed calendar event or a delivered message. Check the tool result and dashboard when an action is available. An unknown result needs reconciliation before retrying. For details, read [Nixflex capabilities and key handling](/ai-tools/overview).
+
+This page is also available [as Markdown](https://docs.nixflex.com/ai-tools/chatgpt.md) after publication.

@@ -1,92 +1,44 @@
 ---
-title: "Pricing"
-description: "Simple per-minute pricing with no surprises"
-icon: "dollar-sign"
+title: "Nixflex pricing: usage, credit and recording storage"
+description: "Understand standard Nixflex rates, separate telephone charges, shared credit and recording storage without assuming delivery or deletion is guaranteed."
+canonical: "https://docs.nixflex.com/reference/pricing"
 ---
 
-Nixflex charges a flat **\$0.08 per minute** of voice as the standard rate. No setup fees, no monthly minimums, no per-feature charges.
+Nixflex uses a shared credit balance. Check **Billing** for your account's applicable rates, balance and payment status. Standard rates are shown below; custom account pricing and eligible bring-your-own discounts can change what you pay.
 
-## Voice
+## Standard usage rates
 
-| | Per minute |
-|---|---|
-| **Voice (all calls, inbound + outbound)** | **\$0.08** |
-| Inbound or outbound call with an attached [Live Monitor](/concepts/live-monitor) listener | \$0.09 |
-| Web calls (voice in the browser) | \$0.09 |
+| Usage | Standard rate |
+| --- | --- |
+| Inbound or outbound phone calls | \$0.08 per minute |
+| Phone calls with a Live Monitor listener actually attached | \$0.09 per minute |
+| Website voice calls | \$0.09 per minute |
+| Website chat | \$0.01 per message |
 
-Voice is billed by duration, rounded to the nearest hundredth of a minute. For example, a 1m 23s call is about 1.38 minutes, so at \$0.08/min it costs roughly `1.38 x $0.08 = $0.11`.
+Voice duration is rounded to the nearest hundredth of a minute. A call lasting 1 minute 23 seconds is about 1.38 minutes, or roughly \$0.11 at the standard \$0.08 rate. Enabling Live Monitor alone does not add its listening premium; a listener must attach to the call.
 
-<Note>
-  \$0.08/min is the standard rate. High-volume accounts can be set to a custom rate - contact [sales@nixflex.com](mailto:sales@nixflex.com).
-</Note>
+There are no setup fees or monthly minimums. The standard voice rate includes speech recognition, reasoning, voice generation, post-call analysis and supported recording and webhook processing. Features still need their own setup and eligibility checks.
 
-## What is included in every minute
+## Your separate telephone charges
 
-- Real-time speech recognition
-- AI reasoning
-- Natural-sounding voice synthesis
-- Call recording (stored on Nixflex; the copy on your carrier is deleted automatically - see below)
-- Post-call analysis (summary, sentiment, custom extraction)
-- Webhook delivery with automatic retries
-- Dashboard access and logs
+Your telephone account bills you directly for number rental, telephone minutes and SMS transport. Nixflex does not mark up those charges or add a separate per-SMS fee. Your carrier's regional rates, message length and encoding can affect its bill. Your own model, voice or storage connections can also have separate charges.
 
-Everything above is included in the standard per-minute price. [Live Monitor](/concepts/live-monitor) adds \$0.01/min only to inbound or outbound calls where a listener actually attaches. Enabling the number switch alone is free.
+## Recording storage and copies
 
-## Call recordings
+When recording is enabled and the carrier produces the audio, Nixflex verifies and imports it into managed storage or your configured customer bucket. Only after storage and linking are confirmed does the pipeline **request deletion of the carrier copy**. A deletion request is not proof that every external copy is gone. Do not assume Nixflex holds the only copy or that further carrier storage charges are impossible.
 
-When call recording is on, the engine saves the recording to Nixflex storage and then **deletes the copy on your carrier automatically**. This is deliberate: it avoids ongoing carrier storage charges and means your call audio is not retained there. Twilio charges for recording storage; Telnyx keeps recordings for up to a year. Either way, Nixflex holds the only copy after upload.
+For managed recordings, call lists and webhooks provide recording status and an authenticated recording endpoint. The `recording_url` field is not a public MP3 download link. An authorised recording request can return a short-lived signed link when audio is available. Customer-bucket recordings use your own storage access; the managed endpoint does not return a download URL for them.
 
-You get your recording as a `recording_url` in the post-call webhook (and on the call record). To keep a recording long-term, **download it and store it in your own backend** - Nixflex hosts the file but does not keep it forever (see [Data retention](/concepts/data-retention)).
-## What you pay your carrier directly
+Retention limits apply. If you need a longer-lived copy, download it through an authorised flow and keep it in your own storage. Copies you retain, customer buckets and external carrier records have their own cleanup responsibilities. See [recording access](/guides/business/call-history) and [data retention](/concepts/data-retention).
 
-Because you bring your own carrier, these costs go straight to your Twilio or Telnyx account - Nixflex never sees or marks them up:
+## Credit and payments
 
-| Cost | Where it is billed |
-|---|---|
-| Phone numbers | Your carrier account |
-| Carrier voice minutes | Your carrier account |
-| SMS messages | Your carrier account |
+Top up from the dashboard; the minimum top-up is \$5. Eligible work uses the shared balance. Owners and Admins can manage Billing; Members cannot see Nixflex money amounts.
 
-## SMS
+Optional auto-top-up attempts a payment when the balance reaches your chosen threshold, subject to your saved settings and monthly cap. A declined payment or another failure can leave the balance low. It does not guarantee uninterrupted service. Check payment results instead of submitting another payment while the outcome is unknown.
 
-Nixflex does not charge a separate per-SMS fee. SMS carrier costs are paid to your own carrier account at their standard rates for your region.
+A usage total, a payment receipt and a completed invoice are different records. Use the same period and time zone when comparing them. See [billing guidance](/guides/business/billing), [pricing basics](/guides/pricing-basics) or [usage through the API](/guides/developer/billing).
 
-## Web agent
+## Questions about pricing
 
-The web agent adds chat and browser calls to your website. Pricing:
-
-|                                          | Price                          |
-| ---------------------------------------- | ------------------------------ |
-| **Web chat**                             | **\$0.01 per message**          |
-| **Web calls (voice in the browser)**     | **\$0.09/min**                  |
-
-Web calls bill at \$0.09/min - the voice rate plus \$0.01/min for the web-call infrastructure. Live Monitor's listening premium requires a listener actually attached to the call; opening the page or enabling the switch is not enough. A brief successful attachment counts for that call, inbound or outbound. Existing bring-your-own discounts still apply. Web chat messages deduct from the same credit balance as calls - free credit is used first.
-
-## How billing works
-
-<Steps>
-  <Step title="Top up credit">
-    Add credit to your account from the dashboard. The minimum top-up is \$5.
-  </Step>
-  <Step title="Calls deduct from your credit">
-    Each call's cost is deducted from your balance when the call ends.
-  </Step>
-  <Step title="Auto-top-up (optional)">
-    Save a card and set an amount plus a threshold. When your balance falls below that threshold, Nixflex tops it up automatically so you never run out mid-call. You can also set a monthly cap on auto-top-ups.
-  </Step>
-</Steps>
-
-## Usage tracking
-
-Check your current usage and balance anytime:
-
-```bash
-curl https://api.nixflex.com/v1/usage \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-```
-
-## Volume pricing
-
-High-volume customers can be set to a custom per-minute rate. Contact [sales@nixflex.com](mailto:sales@nixflex.com) for a quote.
-
-For billing questions, email [support@nixflex.com](mailto:support@nixflex.com).
+For high-volume pricing, contact [sales@nixflex.com](mailto:sales@nixflex.com). For a payment or charge question, contact [support@nixflex.com](mailto:support@nixflex.com). Do not send card details or API keys.

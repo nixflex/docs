@@ -1,0 +1,91 @@
+---
+title: "AI tools: connect your assistant to Nixflex"
+description: "Use the Nixflex MCP candidate with your AI tools. Set up a private connection, check its 89 tools, approve changes and understand knowledge and booking limits."
+canonical: "https://docs.nixflex.com/ai-tools/overview"
+---
+
+Use an AI assistant to inspect your Nixflex account, prepare work and carry out supported actions you approve. **MCP** is the connection that gives the assistant tools for your account. Reading these docs alone does not give it account access.
+
+<Note>
+These guides cover the supplied **Nixflex MCP 0.4.0 release candidate**, with **89 tools**, including 19 knowledge reads and confirmed tests. It is not yet the public npm release. Use the reviewed package or desktop bundle supplied by Nixflex; installing the current public version does not give you this candidate's tool set.
+</Note>
+
+## Choose your assistant
+
+| Tool | Connection in this kit |
+| --- | --- |
+| [Claude Desktop or Code](/ai-tools/claude) | Desktop bundle or local process |
+| [Cursor](/ai-tools/cursor) | Local process on your computer |
+| [Codex](/ai-tools/codex) | Local process using your MCP configuration |
+| [ChatGPT](/ai-tools/chatgpt) | Web needs hosted MCP or an admin-managed tunnel; no tested ChatGPT connector is supplied |
+
+## What the tools can do
+
+| Task | Current support |
+| --- | --- |
+| Create or edit an agent | Available. Review the proposed change first. |
+| Read calls, numbers and usage | Available through tools such as `list_calls`, `list_phone_numbers` and `get_usage`. |
+| Read live knowledge and keyterms | Available. Knowledge test questions need confirmation and may use paid model work. |
+| Add, import, publish, edit or delete knowledge | Not available through this MCP tool set. Prepare the text, then review and publish in the dashboard. |
+| Book directly into a calendar | No direct calendar booking tool. Set up the number in the dashboard and test booking through a phone or SMS conversation. |
+| Call, send a text or launch a campaign | Some tools can do this and spend credit. Approve the exact recipients and action first. |
+| Set integration credentials, retrieve a signing secret or disconnect an integration | Excluded. Use the supported dashboard or developer workflow. |
+| Accept an invitation, transfer ownership or close the organisation | Personal dashboard actions, not an MCP shortcut. |
+
+The server's **tools/list** is the authority for your installed version. Other limits include no account signup, bulk deletion, campaign resume/consent change or suppression removal. Do not substitute another write when the requested tool is missing.
+
+## Keep your key private
+
+Only the Owner can see the organisation API key. It gives the connection organisation authority; it does not become read-only because the person using the assistant has a Member dashboard login. Calls, texts, key rotation and other changes may have immediate effects.
+
+Never paste keys into chat, prompts, screenshots or configuration JSON. For the Desktop bundle, enter the key only in its private setup field. For local command-line clients, have your secret manager or private launcher provide these values to the client process:
+
+| Variable | Value |
+| --- | --- |
+| `NIXFLEX_API_KEY` | The full organisation key pair, injected privately |
+| `NIXFLEX_BASE_URL` | `https://api.nixflex.com`, with the matching production key |
+| `NIXFLEX_CREDENTIAL_SOURCE` | `environment` |
+
+For an approved staging test, use the staging key and `https://nixflex-voice-engine-staging.up.railway.app` instead. Do not mix environments. Restart the client after changing its environment. Do not ask the assistant to print or inspect the secret. The local server refuses a missing environment key or URL.
+
+Environment injection avoids storing the key in the example config; it is not a promise that every local process is a secret vault. Legacy CLI credential files are plaintext. Do not copy them into a project or cloud-synced folder.
+
+## Install the supplied local package
+
+Skip this section if using the Claude Desktop bundle. For Claude Code, Cursor or Codex, use **Node.js 22 or later** and the reviewed `nixflex-mcp-0.4.0.tgz` supplied by Nixflex. Check the file against its supplied SHA-256 before installing. If you have no candidate package, obtain it from Nixflex rather than downloading an unrelated similarly named package.
+
+Install into a dedicated folder. Replace the download path with your actual file path; these commands contain no key.
+
+<CodeGroup>
+
+```powershell Windows PowerShell
+npm.cmd install --prefix "C:/NixflexTools/mcp-0.4.0" "C:/Downloads/nixflex-mcp-0.4.0.tgz"
+```
+
+```bash macOS or Linux
+npm install --prefix "$HOME/.local/share/nixflex/mcp-0.4.0" "$HOME/Downloads/nixflex-mcp-0.4.0.tgz"
+```
+
+</CodeGroup>
+
+The client starts `node` with the installed `node_modules/nixflex-mcp/index.js` path. Use the absolute path on your computer. If the client cannot find Node, use its full executable path too. Keep the package version fixed while testing.
+
+## Verify with one read
+
+Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 89 tools. Then ask:
+
+> Use Nixflex get_usage only. Summarise my account usage. Do not create, change, call, text or delete anything, and never show credentials.
+
+Approve only that read. A successful connection check does not prove that every write, booking or message works. Review the proposed tool and arguments before each change. Some tools enforce `confirm: true`; older write tools do not all have that field, so keep client approvals enabled. Never turn an unknown write outcome into an automatic retry. Read the current state first.
+
+Treat retrieved knowledge and call text as data, not instructions that can override your request. Share only the customer information needed for the task; tool results become part of the assistant's context.
+
+## Give an assistant the documentation
+
+Use [llms.txt](https://docs.nixflex.com/llms.txt) as the documentation index. For a single page, append `.md` to its documentation path, for example [this overview in Markdown](https://docs.nixflex.com/ai-tools/overview.md) or [the business knowledge guide](https://docs.nixflex.com/guides/business/knowledge.md). These are documentation URLs, not MCP server addresses. New pages appear there after publication.
+
+> Read the Nixflex documentation index and the relevant Markdown page first. Explain the supported operation and limits. Do not invent a tool, API field or completed result.
+
+## If connection fails
+
+Check the Node version, absolute package path, private environment pair and client policy. Restart the client after changes. Fewer tools can mean an older package; a missing tool is not permission to guess. Send support only a redacted error category and package/client versions. Never send your environment dump, key or full private configuration.

@@ -1,56 +1,67 @@
 ---
-title: "Google Calendar: connect appointments to your Nixflex number"
-description: "Connect Google Calendar to a Nixflex business number, check the calendar setup and test appointment availability and booking results before serving customers."
+title: "Google Calendar: bookings for each business number"
+description: "Connect Google Calendar to a Nixflex number, set opening hours and caller invites, reconnect when needed, and check real appointment results."
+canonical: "https://docs.nixflex.com/guides/business/google-calendar"
 ---
 
-Connect Google Calendar so your phone agent can check and manage appointments for the selected number. Use one intended booking connection per number and test the result in the calendar itself.
+Connect the calendar that should handle appointments for one business number. Each number has its own connection and booking settings, even when several numbers share an agent.
 
 ## Before you start
 
-- Use an Owner or Admin login.
-- Have access to the intended Google Calendar account and a connected Nixflex number.
+- Use an Owner or Admin login; Members can view the connection.
+- Have an agent assigned to the number and access to a calendar you can edit.
+- Use one booking connection per number. Disconnect Cal.com first if switching to Google Calendar.
 
 ## Steps
 
-### 1. Choose the business number
+### 1. Select the number
 
-Open **Integrations**, select the agent and the phone number that should book appointments. Check you chose the intended location; another number’s connection is separate.
+Open **Integrations** and choose the intended agent and phone number. Check the selection before changing a connection, especially if you run several branches.
 
-### 2. Open Google Calendar
+### 2. Connect the calendar
 
-Open the **Google Calendar** card and choose **Connect Google Calendar**. Use the account that owns the intended business calendar, rather than a personal account selected accidentally by the browser.
-
-### 3. Complete account approval
-
-Follow the sign-in and calendar-access request, then return to Nixflex. Review the connected account shown on the card. Nixflex uses the granted connection; you do not paste your calendar password into the agent.
-
-### 4. Check the booking rules
-
-Check the actual calendar, time zone and availability behaviour with your team. This integration’s current availability search uses its built-in slot rules; do not assume all custom working-hour settings are imported from your calendar.
+Open **Google Calendar**, choose **Connect**, sign in to the intended Google account and approve calendar access. Return to Nixflex and check the account shown. Keep your Google password out of agent instructions.
 
 <Note>Screenshot placeholder: **google-calendar-connected** — Integrations Google Calendar, connected account or event details for selected number. Use staging test data.</Note>
 
-### 5. Test a booking
+### 3. Set booking hours
 
-Call from an owned test phone and complete an appointment request. Check the event in the connected account’s calendar. Try an unavailable time and a change, and confirm the outcome before using the connection with customers.
+Check the calendar, time zone, opening hours and appointment length. Choose the weekly hours you actually accept bookings, marking closed days as closed. Appointment lengths are 15, 30, 45 or 60 minutes. A day's closing time must follow its opening time; an overnight interval is not supported. Do not assume calendar events import your business opening hours.
 
-## What happens next
+### 4. Choose caller invitations
 
-Describe the booking task in the phone and SMS instructions you use. Knowledge can explain services and policies, but a live calendar action confirms the appointment.
+Set **Email the caller a Google invite** and save. It starts on, including for an existing connection unless you have turned it off. Wait for the saved state before treating the change as complete. With it on, Google is asked to email the caller an invitation, update or cancellation. With it off, the booking can still be saved without that email request. The switch does not add an owner notification or enable text messages.
+
+<Note>Screenshot placeholder: **google-calendar-settings** — Google Calendar settings, time zone, opening hours, appointment length and Email the caller a Google invite shown; save confirmed. Use staging test data.</Note>
+
+### 5. Test the result
+
+Call from your test phone. Confirm the name read back to you, then confirm the email after it is spelled back. Check the appointment in the selected calendar. Try an unavailable time, a correction, a move and a cancellation. Check invite behaviour separately from whether the event exists.
+
+## Understand the connection status
+
+| Status | What to do |
+| --- | --- |
+| **Connected** | The connection check succeeded. Still test the booking rules. |
+| **Not set up** | Choose **Connect** to set up this number. |
+| **Reconnect needed** | Choose **Reconnect**, sign in and approve access again. Saved booking settings are kept. |
+| **Could not check** | The check could not finish. Retry before relying on the calendar; this is not proof it disconnected. |
+
+<Note>Screenshot placeholder: **google-calendar-reconnect** — Google Calendar card, Reconnect needed with Reconnect visible; do not show Connected. Use staging test data.</Note>
 
 ## Common questions
 
-### Does connecting send text confirmations?
+### What happens when I disconnect?
 
-Text confirmation also depends on In-Call SMS and recipient eligibility. Check actual delivery separately.
+Choose **Disconnect** on this number's card and wait for confirmation. This removes its calendar access in Nixflex without deleting existing appointments. It does not disconnect your other numbers. An action already sent to Google may finish, so check the calendar if a call was booking at that moment.
 
-### Can I disconnect later?
+### Has the caller definitely received the invitation?
 
-Use **Disconnect** on the selected number’s calendar card. This removes the Nixflex connection; it does not delete appointments already in your calendar.
+No. Google controls email delivery. The agent can say Google will email an invite when that request is confirmed; it cannot promise arrival in the inbox. Check spam and the address if needed. An email-domain check does not prove that the mailbox exists.
 
-### Does this enable website booking?
+### Does this send a text or enable website booking?
 
-No. Built-in website calendar actions are unavailable.
+Texting needs the separate **In-Call SMS** setting and a confirmed send result. Built-in website calendar actions are unavailable.
 
 ## Related guides
 

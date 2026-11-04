@@ -1,0 +1,73 @@
+---
+title: "Connect Claude Desktop or Claude Code to Nixflex"
+description: "Set up the Nixflex MCP candidate in Claude Desktop or Code, verify a safe read and try five prompts for agents, knowledge, calls, calendars and usage."
+canonical: "https://docs.nixflex.com/ai-tools/claude"
+---
+
+Connect Claude to the supplied Nixflex MCP 0.4.0 candidate to use its 89 tools. Choose the Desktop bundle or a local Claude Code connection. Both use your organisation's authority; keep the key out of every chat.
+
+## Claude Desktop
+
+1. Obtain the reviewed **0.4.0** desktop bundle for your intended environment from Nixflex. Check its hash and displayed environment. It is a supplied candidate, not a claim of directory approval.
+2. In Claude settings, open **Desktop app**, manage **Extensions**, then use the advanced option to install the `.mcpb` file. Workspace policy may need to allow custom extensions.
+3. Enter the matching full Nixflex key only in the bundle's **Nixflex API key** field. Do not enter it in a conversation or JSON file. The bundle fixes its API destination; a staging bundle must use a staging key.
+4. Finish setup and restart Claude. The bundle uses Claude's Node runtime; if it is below 22, update Claude.
+5. Check the connection and tool list, then use the read-only verification prompt below.
+
+See the current [Claude Desktop installation guide](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) if its settings layout differs. Removing the extension does not revoke the Nixflex API key.
+
+<Note>Screenshot placeholder: **ai-claude-desktop** — Claude Desktop extensions, Nixflex candidate version and intended environment visible; private key field concealed. Use staging test data; hide all secrets.</Note>
+
+## Claude Code
+
+First [install the supplied package and prepare the private environment](/ai-tools/overview#install-the-supplied-local-package). Start Claude Code from that environment. Register the local server with no secret on the command line:
+
+<CodeGroup>
+
+```powershell Windows PowerShell
+claude mcp add --transport stdio --scope user nixflex -- node "C:/NixflexTools/mcp-0.4.0/node_modules/nixflex-mcp/index.js"
+```
+
+```bash macOS or Linux
+claude mcp add --transport stdio --scope user nixflex -- node "$HOME/.local/share/nixflex/mcp-0.4.0/node_modules/nixflex-mcp/index.js"
+```
+
+</CodeGroup>
+
+Use your actual install path. Reopen Claude Code and inspect `/mcp`. Keep tool approvals enabled. The [Claude Code MCP guide](https://code.claude.com/docs/en/mcp) describes local server setup and configuration scope.
+
+<Note>Screenshot placeholder: **ai-claude-code** — Claude Code MCP status, Nixflex connected with the expected candidate tools; no environment values shown. Use staging test data; hide all secrets.</Note>
+
+## Verify with one read
+
+> Use Nixflex get_usage only. Summarise usage without making changes, sending messages or starting calls. Never print credentials.
+
+A working connection should expose **89 tools**. If it does not, check the installed version before using the prompts. Never automatically retry a write whose result is unknown.
+
+## Five prompts to try
+
+### 1. Create an agent
+
+> List my Nixflex agents first. Draft a new agent named Willow Reception for service questions. Show its instructions and proposed settings, then wait for my approval before using create_agent. Do not attach numbers, place calls or change an existing agent.
+
+### 2. Add knowledge with a review step
+
+> Help me add opening-hours knowledge for Willow Reception. Read its current knowledge with the available Nixflex tools, ask me for the missing hours, and draft the text for review. This MCP cannot publish knowledge: show me how to add and approve it in the dashboard. Do not claim it is live.
+
+### 3. Check calls
+
+> Use Nixflex list_calls to find the latest five completed calls for Willow Reception. Summarise only confirmed outcomes and flag missing information. Do not call anyone, send messages or delete records. Keep personal details out of the summary.
+
+### 4. Prepare calendar booking
+
+> Help Willow Reception book through Google Calendar on my chosen number. List my numbers and ask me to choose one. This MCP cannot connect or book directly: walk me through the dashboard calendar, hours and invite switch, then give me a test-call script with separate name and spelled-email approvals. Do not place the call or claim an appointment exists.
+
+### 5. Read usage
+
+> Use Nixflex get_usage to explain my current usage and balance. Label the period actually returned and say when a figure is missing. Do not estimate an invoice, add credit, change billing or reveal any key.
+
+## Limits and documentation
+
+Claude cannot publish knowledge, accept personal ownership offers or book directly with this tool set. Calls and messages need explicit approval and can spend credit. See [all capabilities and limits](/ai-tools/overview#what-the-tools-can-do).
+
+For documentation-only work, give Claude [llms.txt](https://docs.nixflex.com/llms.txt) or [this page as Markdown](https://docs.nixflex.com/ai-tools/claude.md). Documentation access does not connect your account.
