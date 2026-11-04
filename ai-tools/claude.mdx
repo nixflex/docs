@@ -4,17 +4,17 @@ description: "Set up the Nixflex MCP candidate in Claude Desktop or Code, verify
 canonical: "https://docs.nixflex.com/ai-tools/claude"
 ---
 
-Connect Claude to the supplied Nixflex MCP 0.4.0 candidate to use its 89 tools. Choose the Desktop bundle or a local Claude Code connection. Both use your organisation's authority; keep the key out of every chat.
+Connect Claude to the supplied Nixflex MCP 0.5.0 candidate to use its 94 tools. Choose the Desktop bundle or a local Claude Code connection. Both use your organisation's authority; keep the key out of every chat.
 
 ## Claude Desktop
 
-1. Obtain the reviewed **0.4.0** desktop bundle for your intended environment from Nixflex. Check its hash and displayed environment. It is a supplied candidate, not a claim of directory approval.
+1. Obtain the reviewed **0.5.0** desktop bundle for your intended environment from Nixflex. Check its hash and displayed environment. It is a supplied candidate, not a claim of directory approval.
 2. In Claude settings, open **Desktop app**, manage **Extensions**, then use the advanced option to install the `.mcpb` file. Workspace policy may need to allow custom extensions.
 3. Enter the matching full Nixflex key only in the bundle's **Nixflex API key** field. Do not enter it in a conversation or JSON file. The bundle fixes its API destination; a staging bundle must use a staging key.
 4. Finish setup and restart Claude. The bundle uses Claude's Node runtime; if it is below 22, update Claude.
 5. Check the connection and tool list, then use the read-only verification prompt below.
 
-See the current [Claude Desktop installation guide](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) if its settings layout differs. Removing the extension does not revoke the Nixflex API key.
+See the current [Claude Desktop installation guide](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) if its settings layout differs. Removing the extension does not revoke the Nixflex API key. Its only private setup field is the Nixflex API key; it does not add carrier-secret fields. Number-credential updates need the selected pair privately supplied to the server process by its host. If that is unavailable, use the dashboard, CLI or SDK.
 
 <Note>Screenshot placeholder: **ai-claude-desktop** — Claude Desktop extensions, Nixflex candidate version and intended environment visible; private key field concealed. Use staging test data; hide all secrets.</Note>
 
@@ -25,11 +25,11 @@ First [install the supplied package and prepare the private environment](/ai-too
 <CodeGroup>
 
 ```powershell Windows PowerShell
-claude mcp add --transport stdio --scope user nixflex -- node "C:/NixflexTools/mcp-0.4.0/node_modules/nixflex-mcp/index.js"
+claude mcp add --transport stdio --scope user nixflex -- node "C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
 ```
 
 ```bash macOS or Linux
-claude mcp add --transport stdio --scope user nixflex -- node "$HOME/.local/share/nixflex/mcp-0.4.0/node_modules/nixflex-mcp/index.js"
+claude mcp add --transport stdio --scope user nixflex -- node "$HOME/.local/share/nixflex/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
 ```
 
 </CodeGroup>
@@ -42,7 +42,7 @@ Use your actual install path. Reopen Claude Code and inspect `/mcp`. Keep tool a
 
 > Use Nixflex get_usage only. Summarise usage without making changes, sending messages or starting calls. Never print credentials.
 
-A working connection should expose **89 tools**. If it does not, check the installed version before using the prompts. Never automatically retry a write whose result is unknown.
+A working connection should expose **94 tools**. If it does not, check the installed version before using the prompts. The four new writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; without it, no request is sent. Never automatically retry a write whose result is unknown. See [the K6 controls and private credential limits](/ai-tools/overview#google-calendar-and-number-credentials).
 
 ## Five prompts to try
 
@@ -60,7 +60,7 @@ A working connection should expose **89 tools**. If it does not, check the insta
 
 ### 4. Prepare calendar booking
 
-> Help Willow Reception book through Google Calendar on my chosen number. List my numbers and ask me to choose one. This MCP cannot connect or book directly: walk me through the dashboard calendar, hours and invite switch, then give me a test-call script with separate name and spelled-email approvals. Do not place the call or claim an appointment exists.
+> Help Willow Reception prepare Google Calendar booking. List my numbers and let me choose. With my approval, check get_google_calendar. If consent is needed, show the number and return URL for approval before connect_google_calendar with confirm: true. Give me the ten-minute link to open myself, then check status again. Show hours and invite-setting changes for approval before update_google_calendar_settings with confirm: true. Give me a test-call script with separate name and spelled-email approvals. There is no direct booking tool; do not place a call or claim an appointment or invitation delivery.
 
 ### 5. Read usage
 
@@ -68,6 +68,6 @@ A working connection should expose **89 tools**. If it does not, check the insta
 
 ## Limits and documentation
 
-Claude cannot publish knowledge, accept personal ownership offers or book directly with this tool set. Calls and messages need explicit approval and can spend credit. See [all capabilities and limits](/ai-tools/overview#what-the-tools-can-do).
+Claude can prepare human calendar consent, check status, update settings and disconnect the selected number. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not delivery proof. Number credentials come only from the server's private environment, never tool input. Claude cannot publish knowledge, accept personal ownership offers or book directly with this tool set. Calls and messages need explicit approval and can spend credit. See [all capabilities and limits](/ai-tools/overview#what-the-tools-can-do).
 
 For documentation-only work, give Claude [llms.txt](https://docs.nixflex.com/llms.txt) or [this page as Markdown](https://docs.nixflex.com/ai-tools/claude.md). Documentation access does not connect your account.

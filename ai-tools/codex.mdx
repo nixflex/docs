@@ -4,7 +4,7 @@ description: "Configure the Nixflex MCP candidate in Codex without saving a key 
 canonical: "https://docs.nixflex.com/ai-tools/codex"
 ---
 
-Use Codex with the supplied Nixflex MCP 0.4.0 candidate's **89 tools**. The kit runs as a local process and uses your organisation API key. The key does not inherit a Member's dashboard restrictions.
+Use Codex with the supplied Nixflex MCP 0.5.0 candidate's **94 tools**. The kit runs as a local process and uses your organisation API key. The key does not inherit a Member's dashboard restrictions.
 
 ## Connect
 
@@ -17,7 +17,7 @@ Use Codex with the supplied Nixflex MCP 0.4.0 candidate's **89 tools**. The kit 
 ```toml
 [mcp_servers.nixflex]
 command = "node"
-args = ["C:/NixflexTools/mcp-0.4.0/node_modules/nixflex-mcp/index.js"]
+args = ["C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"]
 startup_timeout_sec = 30
 env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
 
@@ -27,13 +27,31 @@ NIXFLEX_CREDENTIAL_SOURCE = "environment"
 
 The `env_vars` names forward values from the launching environment; they are not the values themselves. Use a full Node executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
 
+### Optional private number-credential updates
+
+For `update_phone_number_credentials`, privately provide the pair for the number's current carrier to the environment that launches Codex. Replace the existing `env_vars` line inside `[mcp_servers.nixflex]`, before `[mcp_servers.nixflex.env]`, with **one** of these choices. These are variable names only; never write their values in TOML or ask Codex to read them.
+
+<CodeGroup>
+
+```toml Current provider is twilio
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TWILIO_SID", "NIXFLEX_TWILIO_TOKEN"]
+```
+
+```toml Current provider is telnyx
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NIXFLEX_TELNYX_CONNECTION_ID"]
+```
+
+</CodeGroup>
+
+Restart from that prepared environment. The tool accepts only `phone_number`, `provider` and `confirm`, then reads the selected pair privately after confirmation. Missing configuration sends nothing. Keep the original two-name list if you do not need credential updates. See [the credential and uncertain-outcome limits](/ai-tools/overview#google-calendar-and-number-credentials).
+
 <Note>Screenshot placeholder: **ai-codex-connected** — Codex MCP status, Nixflex connected with the expected candidate tools; environment contents hidden. Use staging test data; hide all secrets.</Note>
 
 ## Verify with a read
 
 > Use Nixflex get_usage only. Explain the usage returned without changing anything or printing credentials. Do not use shell commands to inspect my secret environment.
 
-Expect **89 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. Reconcile an uncertain write before trying it again.
+Expect **94 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four new writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
 
 ## Five prompts to try
 
@@ -51,7 +69,7 @@ Expect **89 tools** for the candidate. Keep approvals enabled, including when a 
 
 ### 4. Prepare booking via a calendar
 
-> List my Nixflex numbers and let me choose one for booking. Explain the dashboard Google Calendar connection, hours and caller invite setting. Give me a manual test-call script with separate approval of the name and spelled email. MCP cannot book directly; do not call the booking API or claim an appointment has been saved.
+> List my Nixflex numbers and let me choose one for booking. With my approval, check get_google_calendar. If new consent is needed, show the number and return URL for approval before connect_google_calendar with confirm: true; I will open the ten-minute link. Check status after consent. Show settings changes before asking approval for update_google_calendar_settings with confirm: true. Give me a manual test-call script with separate approval of the name and spelled email. MCP cannot book directly; do not call the booking API or claim an appointment or invitation delivery.
 
 ### 5. Read usage
 
@@ -59,6 +77,6 @@ Expect **89 tools** for the candidate. Keep approvals enabled, including when a 
 
 ## Limits and documentation
 
-Use the dashboard for knowledge publication, calendar connection and personal ownership actions. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
+Use the dashboard for knowledge publication and personal ownership actions. K6 supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
 
 Give Codex [llms.txt](https://docs.nixflex.com/llms.txt) and [this page as Markdown](https://docs.nixflex.com/ai-tools/codex.md). Ask it to read the relevant page and inspect the available tool schema before proposing an action. Documentation is context, not account permission.

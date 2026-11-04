@@ -4,7 +4,7 @@ description: "Connect Cursor to the Nixflex MCP candidate using private environm
 canonical: "https://docs.nixflex.com/ai-tools/cursor"
 ---
 
-Give Cursor access to the supplied Nixflex MCP 0.4.0 candidate's **89 tools**. This is a local connection: Cursor starts the server on your computer, and the server uses the organisation key to reach the selected Nixflex environment.
+Give Cursor access to the supplied Nixflex MCP 0.5.0 candidate's **94 tools**. This is a local connection: Cursor starts the server on your computer, and the server uses the organisation key to reach the selected Nixflex environment.
 
 ## Connect
 
@@ -21,7 +21,7 @@ Give Cursor access to the supplied Nixflex MCP 0.4.0 candidate's **89 tools**. T
       "type": "stdio",
       "command": "node",
       "args": [
-        "C:/NixflexTools/mcp-0.4.0/node_modules/nixflex-mcp/index.js"
+        "C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
       ],
       "env": {
         "NIXFLEX_API_KEY": "${env:NIXFLEX_API_KEY}",
@@ -41,7 +41,7 @@ Cursor expands the environment references when starting the server. If Node is n
 
 > Use Nixflex get_usage only. Summarise usage without changing the account, making a call or sending a message. Do not show credentials.
 
-Check for **89 tools** in this candidate. Keep approval of tool calls enabled. Not every older write tool has its own confirmation field. If a write times out, inspect current state instead of repeating it automatically.
+Check for **94 tools** in this candidate. Keep approval of tool calls enabled. Not every older write tool has its own confirmation field. If a write times out, inspect current state instead of repeating it automatically. The four new writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request.
 
 ## Five prompts to try
 
@@ -67,6 +67,8 @@ Check for **89 tools** in this candidate. Keep approval of tool calls enabled. N
 
 ## What stays outside MCP
 
-Knowledge publishing, calendar connection and direct booking are not provided by these tools. A request to create a call is a real outbound action and can spend credit. Review [capabilities and permissions](/ai-tools/overview) before enabling writes.
+K6 can create a ten-minute Google consent link for a human to open, check the connection, update settings and disconnect a number. The status read can refresh or check an existing connection internally. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not proof of delivery. Knowledge publishing and direct booking remain unavailable.
+
+The number-credential tool takes only number, provider and confirmation; it reads the selected carrier pair from the server's private environment. If enabling it, add only that pair's variable references to the existing `env` object, using the same `${env:NAME}` form as above. Never insert their values or ask Cursor to inspect them. Follow [the exact private variable names and K6 limits](/ai-tools/overview#google-calendar-and-number-credentials). A request to create a call is a real outbound action and can spend credit. Review [capabilities and permissions](/ai-tools/overview) before enabling writes.
 
 Give Cursor [llms.txt](https://docs.nixflex.com/llms.txt) to find documentation, or [this Markdown page](https://docs.nixflex.com/ai-tools/cursor.md) for setup context. Reading docs is separate from accessing your account.
