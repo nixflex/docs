@@ -38,18 +38,13 @@ Billing and retained financial evidence are unaffected. Call usage remains part 
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `call_id` | string | Optional saved value. |
-| `deleted` | boolean | Optional saved value. |
-| `recording_deleted` | boolean | False when the call had no recording; the record is still deleted. |
+| `call_id` | string | Always returned. |
+| `deleted` | boolean | Always returned. |
+| `recording_deleted` | boolean | Whether legacy cleanup counted at least one requested recording or transfer-audio path. False for the successful narrow empty-recording path; not proof that a recording existed or every copy was erased. |
 
-Legacy  shape if cleanup is permitted and completes:
+The example shows successful narrow empty-recording cleanup: `deleted` is true and `recording_deleted` is false.
 
-
-
-`recording_deleted` reflects the legacy cleanup path's count, not proof that a
-recording existed or every copy was erased. That path also requests removal of a
-possible transfer-whisper object, even when no such object exists. Never use this
-boolean as an erasure certificate. A refused request must not be shown as deleted.
+`recording_deleted` reflects whether the legacy cleanup path counted a requested recording or transfer-audio path. That path can request removal of a possible transfer-audio object even when none exists. The flag is not proof that a recording existed or every copy was erased. A refused or unknown request must not be shown as deleted.
 
 ## Example request
 
@@ -102,7 +97,7 @@ Illustrative response with placeholder identifiers.
 {
   "call_id": "call_example",
   "deleted": true,
-  "recording_deleted": true
+  "recording_deleted": false
 }
 ```
 
@@ -117,19 +112,22 @@ Branch on `error.code`, not the wording of `error.message`. The envelope include
 | 400 | Invalid request - missing or malformed parameters. |
 | 401 | Authentication failed - bad or missing API key. |
 | 404 | Not found on your account. |
+| 409 | Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request. |
 | 429 | Rate limit exceeded. Honour the Retry-After header. |
-| 500 | Server error. |
+| 503 | Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state. |
 
 | Status | Code | Meaning |
 |---|---|---|
 | 404 | `not_found` | No call with that ID on your account. Also returned for a call you have already deleted. |
-| 409 | `call_in_progress`, `campaign_in_progress` | Work still running; wait for it to end or resolve the campaign. |
+| 409 | `call_in_progress` | The call is still in progress; wait for it to end. |
 | 409 | `deletion_unsettled` | Outcome/charge is not confirmed; do not claim deletion. |
 | 409 | `recording_cleanup_pending`, `cleanup_pending_confirmation` | Storage/transfer-audio cleanup needs confirmation; contact support. |
 | 409 | `deletion_cleanup_failed` | Cleanup did not finish; contact support before retrying. |
 | 503 | `deletion_unavailable` | Safety could not be checked; deletion is not confirmed. |
 
 Only calls made with your own API key can be deleted; another account's call ID returns the same `404`.
+
+Safety refusals include `details.deleted=false`, `details.account_locked=false`, the `reason` code, nullable `review_due`, and `details.safe_to_retry=false`. A review timestamp is not a promise that cleanup will finish by that time. Keep the pending state and reconcile through support before another deliberate action.
 
 ## Retry and idempotency
 

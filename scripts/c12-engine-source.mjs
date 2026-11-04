@@ -10,7 +10,7 @@ export function pinnedEngine(engine, ref = '89e4d47f430685eacba21e4906ece34e9c71
   const git = args => execFileSync('git', args, {cwd: engine, encoding: 'utf8'});
   const commit = git(['rev-parse', ref + '^{commit}']).trim();
   const allowed = new Set(['shared/features/callBookings.js', 'shared/data/bookingPayload.js',
-    'api/campaignDelete.js', 'api/errorHelper.js', 'shared/features/webhook.js']);
+    'api/campaignDelete.js', 'api/errorHelper.js', 'shared/features/webhook.js', 'shared/deletion/deleteGuard.js']);
   const source = new Map(), modules = new Map();
   function read(file) {
     assert.ok(allowed.has(file), 'Unreviewed engine file: ' + file);

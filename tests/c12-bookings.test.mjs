@@ -51,3 +51,20 @@ test('C12 SMS deletion preserves its success receipt and distinguishes settlemen
  assert.equal(errors.running.value.error.code,'campaign_in_progress');
  assert.equal(responses['503'].content['application/json'].example.error.code,'deletion_unavailable');
 });
+
+test('C12 single-call deletion describes guarded refusals and the empty-recording success receipt',()=>{
+ const responses=spec.paths['/calls/{id}'].delete.responses;
+ const success=responses['200'].content['application/json'];
+ assert.deepEqual(success.schema.required,['call_id','deleted','recording_deleted']);
+ assert.equal(success.examples.empty_recording.value.recording_deleted,false);
+ assert.equal(success.examples.empty_recording.value.deleted,true);
+ assert.match(success.schema.properties.recording_deleted.description,/not proof/);
+ const conflicts=responses['409'].content['application/json'];
+ assert.deepEqual(Object.keys(conflicts.examples).sort(),['call_in_progress','cleanup_pending_confirmation','deletion_cleanup_failed','deletion_unsettled','recording_cleanup_pending']);
+ for(const item of Object.values(conflicts.examples)){
+  assert.equal(item.value.error.details.deleted,false);
+  assert.equal(item.value.error.details.safe_to_retry,false);
+ }
+ assert.equal(responses['503'].content['application/json'].examples.deletion_unavailable.value.error.code,'deletion_unavailable');
+ assert.ok(!responses['500']);
+});

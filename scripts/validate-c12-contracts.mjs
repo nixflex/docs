@@ -22,8 +22,8 @@ const spec=JSON.parse(fs.readFileSync(path.join(root,'api-reference/public.opena
 const media=spec.webhooks['call.bookings'].post.requestBody.content['application/json'];
 const validateBooking=ajv.compile(media.schema);
 const results={status:'working',sourceCommit:source.commit,sourceMode:'committed Git blobs in isolated VM; active worktree ignored',
- engineFiles:{},webhookExamples:0,schemaCases:0,engineCases:0,receiverCases:0,campaignCases:0,networkRequests:0};
-for(const file of ['shared/features/callBookings.js','shared/data/bookingPayload.js','api/campaignDelete.js','api/errorHelper.js']){
+ engineFiles:{},webhookExamples:0,schemaCases:0,engineCases:0,receiverCases:0,campaignCases:0,callDeletionCases:0,networkRequests:0};
+for(const file of ['shared/features/callBookings.js','shared/data/bookingPayload.js','api/campaignDelete.js','api/errorHelper.js','shared/deletion/deleteGuard.js']){
  results.engineFiles[file]=crypto.createHash('sha256').update(source.read(file)).digest('hex');
 }
 const clone=x=>structuredClone(x);
@@ -111,6 +111,49 @@ for(const [dbResult,status,code] of [
 const conflict=ajv.compile(deleteResponses['409'].content['application/json'].schema);
 const settlement=clone(deleteResponses['409'].content['application/json'].examples.settlement.value);
 for(const details of [{deleted:true},{}]){const value=clone(settlement);value.error.details=details;assert.equal(conflict(value),false);results.campaignCases++;}
+
+// Only the response guard and a fake read RPC run here; no call is deleted.
+const guard=source.load('shared/deletion/deleteGuard.js');
+const callResponses=spec.paths['/calls/{id}'].delete.responses;
+const verifyCall=Object.fromEntries(['200','409','503'].map(status=>[status,ajv.compile(callResponses[status].content['application/json'].schema)]));
+function guardedReply(cause,status,code){
+ let actualStatus,body;
+ guard.reply({status(value){actualStatus=value;return this;},json(value){body=value;return value;}},cause);
+ assert.equal(actualStatus,status);assert.equal(body.error.code,code);
+ assert.ok(verifyCall[status](body),JSON.stringify(verifyCall[status].errors));
+ assert.equal(body.error.details.deleted,false);assert.equal(body.error.details.safe_to_retry,false);
+ results.callDeletionCases++;return body;
+}
+for(const status of ['409','503'])for(const [code,example] of Object.entries(callResponses[status].content['application/json'].examples)){
+ assert.equal(example.value.error.message,guard.messages[code]);
+ for(const due of [null,'2030-11-04T10:00:00.000Z']){
+  const body=guardedReply(guard.failure(code,due),Number(status),code);
+  assert.equal(body.error.details.review_due,due);
+ }
+}
+guardedReply(Error('synthetic unexpected cleanup failure'),409,'deletion_cleanup_failed');
+for(const reply of [{error:{message:'synthetic unavailable'}},{data:null},{data:{ok:'yes'}},{data:{ok:false,reason:'unknown_reason'}}]){
+ const db={rpc(name,parameters){assert.equal(name,'data_delete_guard');assert.equal(parameters.p_scope,'call');
+  assert.equal(parameters.p_owner,'owner_fixture');assert.equal(parameters.p_id,'call_fixture');
+  return {abortSignal(){return Promise.resolve(reply);}};}};
+ await assert.rejects(()=>guard.requireSafe(db,'owner_fixture','call','call_fixture'),cause=>{
+  guardedReply(cause,503,'deletion_unavailable');return true;
+ });
+}
+const refusal=clone(callResponses['409'].content['application/json'].examples.recording_cleanup_pending.value);
+for(const changes of [{deleted:true},{account_locked:true},{safe_to_retry:true},{review_due:'not-a-date'}]){
+ const value=clone(refusal);Object.assign(value.error.details,changes);assert.equal(verifyCall['409'](value),false);results.callDeletionCases++;
+}
+for(const name of ['deleted','reason','review_due','safe_to_retry','account_locked']){
+ const value=clone(refusal);delete value.error.details[name];assert.equal(verifyCall['409'](value),false);results.callDeletionCases++;
+}
+for(const example of Object.values(callResponses['200'].content['application/json'].examples)){
+ assert.ok(verifyCall['200'](example.value));results.callDeletionCases++;
+}
+for(const changes of [{deleted:false},{recording_deleted:null}]){
+ const value={...callResponses['200'].content['application/json'].examples.empty_recording.value,...changes};
+ assert.equal(verifyCall['200'](value),false);results.callDeletionCases++;
+}
 results.status='PASS';fs.mkdirSync(out,{recursive:true});
 fs.writeFileSync(path.join(out,'C12-CONTRACTS.json'),JSON.stringify(results,null,2)+'\n');
 console.log(JSON.stringify(results));

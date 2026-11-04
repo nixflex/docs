@@ -62,6 +62,25 @@ const errorSchema=codes=>({type:'object',required:['error'],properties:{error:{t
  message:{type:'string'},doc_url:{type:'string',format:'uri'},details:{type:'object',additionalProperties:true}}}}});
 const error=(code,message,details={})=>({error:{type:code==='deletion_unavailable'?'server_error':'conflict',code,message,
  doc_url:'https://docs.nixflex.com/errors/'+code,details}});
+export const callDeletionMessages={
+ call_in_progress:'This call is still in progress. Try again after it ends.',
+ deletion_unsettled:'Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending.',
+ recording_cleanup_pending:'Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending.',
+ cleanup_pending_confirmation:'Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it.',
+ deletion_cleanup_failed:'Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again.',
+ deletion_unavailable:'Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending.',
+};
+function callDeletionResponse(codes,description){
+ const schema=errorSchema(codes);
+ schema.properties.error.properties.details={type:'object',additionalProperties:true,
+  required:['deleted','account_locked','reason','review_due','safe_to_retry'],properties:{
+   deleted:{const:false},account_locked:{const:false},reason:{type:'string',enum:codes},
+   review_due:{type:['string','null'],format:'date-time'},safe_to_retry:{const:false},
+  }};
+ return {description,content:{'application/json':{schema,examples:Object.fromEntries(codes.map(code=>[code,{value:error(code,callDeletionMessages[code],{
+  deleted:false,account_locked:false,reason:code,review_due:null,safe_to_retry:false,
+ })}]))}}};
+}
 export function applyC12Contracts(spec){
  spec.webhooks={...(spec.webhooks||{}),'call.bookings':structuredClone(bookingWebhook)};
  const remove=spec.paths['/sms/campaigns/{id}'].delete;
@@ -78,5 +97,17 @@ export function applyC12Contracts(spec){
  remove.responses['503']={description:'deletion_unavailable: deletion could not be checked; no deletion confirmed.',
   content:{'application/json':{schema:errorSchema(['deletion_unavailable']),example:error('deletion_unavailable',unavailable)}}};
  spec.paths['/knowledge-bases/{kb}/drafts/{id}'].get.description='Read a draft without persisting repairs. Legacy normalization is projected with stable draft-scoped piece IDs; an explicit save or accept persists it. Keep the returned edit revision before editing.';
- spec.paths['/calls/{id}'].delete.description='Request guarded cleanup of one owned ended, settled call. A narrow skipped-recording case can complete only with fresh proof of no stored object, no carrier copy, closed upload fence and completed post-call/settlement work. Missing or unknown evidence remains refused. Bulk/account deletion is unchanged; a missing URL is not erasure proof.';
+ const deleteCall=spec.paths['/calls/{id}'].delete;
+ deleteCall.description='Request guarded cleanup of one owned ended, settled call. A narrow skipped-recording case can complete only with fresh proof of no stored object, no carrier copy, closed upload fence and completed post-call/settlement work. Missing or unknown evidence remains refused. Bulk/account deletion is unchanged; a missing URL is not erasure proof.';
+ delete deleteCall.responses['500'];
+ deleteCall.responses['409']=callDeletionResponse(Object.keys(callDeletionMessages).filter(code=>code!=='deletion_unavailable'),
+  'Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request.');
+ deleteCall.responses['503']=callDeletionResponse(['deletion_unavailable'],
+  'Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state.');
+ const success=deleteCall.responses['200'].content['application/json'];
+ success.schema.required=['call_id','deleted','recording_deleted'];
+ success.schema.properties.deleted.const=true;
+ success.schema.properties.recording_deleted.description='Whether legacy cleanup counted at least one requested recording or transfer-audio path. False for the successful narrow empty-recording path; not proof that a recording existed or every copy was erased.';
+ delete success.example;
+ success.examples={empty_recording:{summary:'Narrow empty-recording cleanup completed.',value:{call_id:'call_example',deleted:true,recording_deleted:false}}};
 }

@@ -11505,11 +11505,27 @@
                       "type": "string"
                     },
                     "deleted": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "const": true
                     },
                     "recording_deleted": {
                       "type": "boolean",
-                      "description": "False when the call had no recording; the record is still deleted."
+                      "description": "Whether legacy cleanup counted at least one requested recording or transfer-audio path. False for the successful narrow empty-recording path; not proof that a recording existed or every copy was erased."
+                    }
+                  },
+                  "required": [
+                    "call_id",
+                    "deleted",
+                    "recording_deleted"
+                  ]
+                },
+                "examples": {
+                  "empty_recording": {
+                    "summary": "Narrow empty-recording cleanup completed.",
+                    "value": {
+                      "call_id": "call_example",
+                      "deleted": true,
+                      "recording_deleted": false
                     }
                   }
                 }
@@ -11645,6 +11661,179 @@
               }
             }
           },
+          "409": {
+            "description": "Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "call_in_progress",
+                            "deletion_unsettled",
+                            "recording_cleanup_pending",
+                            "cleanup_pending_confirmation",
+                            "deletion_cleanup_failed"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "required": [
+                            "deleted",
+                            "account_locked",
+                            "reason",
+                            "review_due",
+                            "safe_to_retry"
+                          ],
+                          "properties": {
+                            "deleted": {
+                              "const": false
+                            },
+                            "account_locked": {
+                              "const": false
+                            },
+                            "reason": {
+                              "type": "string",
+                              "enum": [
+                                "call_in_progress",
+                                "deletion_unsettled",
+                                "recording_cleanup_pending",
+                                "cleanup_pending_confirmation",
+                                "deletion_cleanup_failed"
+                              ]
+                            },
+                            "review_due": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "safe_to_retry": {
+                              "const": false
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "call_in_progress": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "call_in_progress",
+                        "message": "This call is still in progress. Try again after it ends.",
+                        "doc_url": "https://docs.nixflex.com/errors/call_in_progress",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "call_in_progress",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "deletion_unsettled": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "deletion_unsettled",
+                        "message": "Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending.",
+                        "doc_url": "https://docs.nixflex.com/errors/deletion_unsettled",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "deletion_unsettled",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "recording_cleanup_pending": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "recording_cleanup_pending",
+                        "message": "Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending.",
+                        "doc_url": "https://docs.nixflex.com/errors/recording_cleanup_pending",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "recording_cleanup_pending",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "cleanup_pending_confirmation": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "cleanup_pending_confirmation",
+                        "message": "Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it.",
+                        "doc_url": "https://docs.nixflex.com/errors/cleanup_pending_confirmation",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "cleanup_pending_confirmation",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "deletion_cleanup_failed": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "deletion_cleanup_failed",
+                        "message": "Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again.",
+                        "doc_url": "https://docs.nixflex.com/errors/deletion_cleanup_failed",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "deletion_cleanup_failed",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "description": "Rate limit exceeded. Honour the Retry-After header.",
             "content": {
@@ -11688,45 +11877,99 @@
               }
             }
           },
-          "500": {
-            "description": "Server error.",
+          "503": {
+            "description": "Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
                       "properties": {
                         "type": {
                           "type": "string"
                         },
                         "code": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "deletion_unavailable"
+                          ]
                         },
                         "message": {
                           "type": "string"
                         },
                         "doc_url": {
-                          "type": "string"
+                          "type": "string",
+                          "format": "uri"
                         },
                         "details": {
                           "type": "object",
-                          "additionalProperties": true
+                          "additionalProperties": true,
+                          "required": [
+                            "deleted",
+                            "account_locked",
+                            "reason",
+                            "review_due",
+                            "safe_to_retry"
+                          ],
+                          "properties": {
+                            "deleted": {
+                              "const": false
+                            },
+                            "account_locked": {
+                              "const": false
+                            },
+                            "reason": {
+                              "type": "string",
+                              "enum": [
+                                "deletion_unavailable"
+                              ]
+                            },
+                            "review_due": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "format": "date-time"
+                            },
+                            "safe_to_retry": {
+                              "const": false
+                            }
+                          }
                         }
-                      },
-                      "required": [
-                        "type",
-                        "code",
-                        "message",
-                        "doc_url"
-                      ]
+                      }
                     }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  }
+                },
+                "examples": {
+                  "deletion_unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "deletion_unavailable",
+                        "message": "Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending.",
+                        "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
+                        "details": {
+                          "deleted": false,
+                          "account_locked": false,
+                          "reason": "deletion_unavailable",
+                          "review_due": null,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
