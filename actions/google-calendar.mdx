@@ -23,10 +23,12 @@ On return, read `status=connected` and `phone_number`, or `status=error` with `a
 
 ## Confirm the person, then book
 
-Ask the name, read it back and wait for a clear yes. Then ask the email, spell it letter by letter and wait for a separate yes. Saved emails are spelled too. A correction repeats only that field. Looking up, moving or cancelling an existing appointment needs email approval without a new name question.
+Ask the name, read it back and wait for a clear yes. Then ask the email, spell its local part and wait for a separate yes for the full address. Say an exact familiar domain as words, for example `s-a-m at gmail dot com`; spell an unusual domain too. Saved addresses follow the same rule. A correction clears that field’s old approval; a yes to one clarified letter is not approval of the whole address. Looking up, moving or cancelling an existing appointment needs email approval without a new name question.
 
 These contact approvals are separate from the optional final action/time approval controlled by `require_booking_confirmation`. See [booking confirmation](/actions/booking-confirmation). Say “Google will email you an invite” when requested; do not claim it reached an inbox. Claim a text was sent only after actual matching carrier acceptance.
 
 ## Reconcile the result
 
 Read the calendar result and signed [booking webhook object](/api-reference/webhooks#booking-object). A saved setting or consent link is not booking proof. Duplicate lookup confirmations do not create another public booking event. If access must end, [disconnect this number](/api-reference/integration-settings/google-calendar-disconnect); already dispatched provider work cannot be recalled.
+
+After a call, use [`call.bookings`](/api-reference/call-bookings) for the ordered confirmed actions and final result for each booking. Creating and then cancelling produces zero active bookings. SMS continues to use `sms.booking` per reply, with no delayed thread aggregate.

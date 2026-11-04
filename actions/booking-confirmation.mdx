@@ -9,7 +9,7 @@ Using the dashboard? See [the business guide](/guides/business/call-actions).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.11.0 or Python 0.4.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
 
 ## 1. Read the current settings
 
@@ -64,7 +64,7 @@ The agent default is false. A number can store true, false or null; null inherit
 
 ## Contact approval always comes first
 
-For a new booking, ask the name, read it back and get a clear yes. Then ask the email, spell it letter by letter and get a separate yes. Saved emails are also spelled. A correction repeats only that field. Appointment lookup, move and cancel require email approval without asking for a new name.
+For a new booking, ask the name, read it back and get a clear yes. Then ask the email, spell its local part, and get a separate yes for the full address. Say an exact familiar domain as words, for example `s-a-m at gmail dot com`; spell an unusual domain too. Apply the same rule to saved addresses. A correction repeats only that field. Clarifying one uncertain letter clears the old email approval; a yes to that letter does not approve the complete address. Once the address is approved, ordinary later mentions use words and booking success messages can omit it. Appointment lookup, move and cancel require email approval without asking for a new name.
 
 This flow applies to calls and SMS for both calendars, independently of `require_booking_confirmation`. That setting controls the optional final approval of the action and time on calls. Email domain checks do not prove a mailbox exists; a suggested spelling correction requires the person's approval.
 

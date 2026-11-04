@@ -40,7 +40,7 @@ Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server
 
 Do not send a request body.
 
-This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations.
+This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations. Automatic selection excludes web addresses, API paths and URL-like terms. Spoken names such as AC/DC and St. James remain eligible. Older hints refresh in the background without an edit or reimport. Manual lists and their existing limits are unchanged.
 
 ## Response fields
 
@@ -57,7 +57,7 @@ This dedicated read returns automatic candidates. Agent list/detail reads also e
 
 ## Example request
 
-These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -99,7 +99,7 @@ nixflex knowledge keyterms "$env:NXF_AGENT_ID" --json --base-url "https://nixfle
 
 </RequestExample>
 
-MCP has 89 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+MCP has 94 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
 
 ## Example response
 

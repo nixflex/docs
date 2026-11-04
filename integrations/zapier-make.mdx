@@ -9,7 +9,7 @@ Using the dashboard? See [the business guide](/guides/business/integrations).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
 
 ## 1. Read the saved connection
 
@@ -48,6 +48,8 @@ Choose the documented Zapier or Make number integration PUT route and save the a
 ## 3. Define what success means
 
 Treat automation triggers as event delivery, not an exactly-once transaction. Deduplicate work before sending texts, creating appointments or charging a customer. A repeated event must not repeat an irreversible downstream action.
+
+For booking outcomes, route [`call.bookings`](/api-reference/call-bookings) separately from `call.completed`. Verify the signature and deduplicate `(account, event, call_id)` within the receiver. Count active rows in `final`; the action timeline can include both creating and cancelling one appointment. Do not run the same booking-created action once from each event family.
 
 ## 4. Test a complete workflow
 

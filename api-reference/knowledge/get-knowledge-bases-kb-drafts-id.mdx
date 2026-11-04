@@ -41,7 +41,7 @@ Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server
 
 Do not send a request body.
 
-Legacy draft reads can normalize and save the draft, and rebuild empty generated pieces from retained input. Re-read data.edit_revision before editing or accepting. Treat this GET as an intentional action because it can persist repairs.
+This GET projects legacy normalization and repairs without saving them. Piece IDs are stable within the draft. Explicit save or accept persists the same repair through the write path. Keep the returned data.edit_revision before editing or accepting. Older deployments may differ; check the rollout for your environment.
 
 ## Response fields
 
@@ -112,7 +112,7 @@ Legacy draft reads can normalize and save the draft, and rebuild empty generated
 
 ## Example request
 
-These examples target Node/CLI 0.10.0 and Python 0.3.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
 
 <RequestExample>
 
@@ -145,7 +145,7 @@ nixflex knowledge getDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" -
 
 </RequestExample>
 
-MCP does not offer this operation because the legacy draft read can save repairs. Use the documented SDK or HTTP operation only as an intentional action.
+MCP does not offer this operation in the reviewed 0.5.0 candidate. The server read is now non-persisting, but an engine deployment does not register a new MCP tool. Use the documented SDK or HTTP read; check installed tool schemas before use.
 
 ## Example response
 
@@ -193,7 +193,7 @@ Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and op
 
 ## Retry and idempotency
 
-This legacy-compatible read can repair a saved draft. Do not use it in a no-write smoke test. Read the resulting edit revision before any intended edit or acceptance.
+Use bounded retries for temporary read failures. This deployed GET does not persist repairs. Read the current edit revision before any deliberate save or acceptance; writes still need their own revision and idempotency checks.
 
 ## Related endpoints
 

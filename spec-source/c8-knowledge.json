@@ -3277,7 +3277,7 @@
       "status": 200,
       "exampleBody": null,
       "auth": "Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.",
-      "notes": "Legacy draft reads can normalize and save the draft, and rebuild empty generated pieces from retained input. Re-read data.edit_revision before editing or accepting. C8’s no-write smoke test leaves this read pending manual test.",
+      "notes": "This GET projects legacy normalization and repairs without saving them. Piece IDs are stable within the draft. Explicit save or accept persists the same repair through the write path. Keep the returned data.edit_revision before editing or accepting. Older deployments may differ; check the rollout for your environment.",
       "errors": [
         [
           400,
@@ -3349,7 +3349,7 @@
       "idempotency": false,
       "upload": false,
       "query": "",
-      "retry": "This legacy-compatible read can repair a saved draft. Do not use it in a no-write smoke test. Read the resulting edit revision before any intended edit or acceptance.",
+      "retry": "Use bounded retries for temporary read failures. This deployed GET does not persist repairs. Read the current edit revision before any deliberate save or acceptance; writes still need their own revision and idempotency checks.",
       "kitExamples": {
         "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
         "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
@@ -3358,7 +3358,7 @@
         "pt": "Python",
         "ct": "CLI (PowerShell)",
         "payload": null,
-        "mcpException": "MCP does not offer this operation because the legacy draft read can save repairs. Use the documented SDK or HTTP operation only as an intentional action."
+        "mcpException": "MCP does not offer this operation in the reviewed 0.5.0 candidate. The server read is now non-persisting, but an engine deployment does not register a new MCP tool. Use the documented SDK or HTTP read; check installed tool schemas before use."
       },
       "kitMethod": {
         "node": "getDraft",
@@ -16053,7 +16053,7 @@
       "status": 200,
       "exampleBody": null,
       "auth": "Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.",
-      "notes": "This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations.",
+      "notes": "This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations. Automatic selection excludes web addresses, API paths and URL-like terms. Spoken names such as AC/DC and St. James remain eligible. Older hints refresh in the background without an edit or reimport. Manual lists and their existing limits are unchanged.",
       "errors": [
         [
           400,

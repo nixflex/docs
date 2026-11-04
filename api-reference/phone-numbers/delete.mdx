@@ -1,7 +1,7 @@
 ---
 title: "Remove a phone number"
 sidebarTitle: "Remove a phone number"
-description: "Remove a phone number with the Nixflex API. Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the."
+description: "Disconnect an owned number from Nixflex and clear routing managed by its import. This does not release the number from your carrier account."
 openapi: "/api-reference/public.openapi.json DELETE /phone-numbers/{phoneNumber}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/phone-numbers/delete"
@@ -39,7 +39,7 @@ Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s serv
 
 Do not send a request body.
 
-No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage.
+No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage. After an unclear removal write, the engine can make one exact-resource read. Only explicit proof that all routing and application/trunk overrides are empty can finish that same removal. A missing resource (404), changed identity, missing routing fields, remaining routing or read failure is not proof. No second carrier write is sent by this recovery check.
 
 ## Response fields
 
@@ -53,7 +53,7 @@ No request body is required. Use the exact owned business number and URL-encode 
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the tested Node/CLI 0.10.0 and Python 0.3.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the supplied Node/CLI 0.11.0 and Python 0.4.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
@@ -128,7 +128,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 
 ## Retry and idempotency
 
-Never automatically retry DELETE. Read the number after an uncertain result and preserve safe operation_id details. A confirmed missing number may be consistent with a completed removal; it does not prove every external routing action or data deletion occurred.
+Never automatically repeat removal. Initial unconfirmed cleanup returns 503 number_cleanup_uncertain; an exact retry while still unclear returns 409 with the same code. A conflicting operation returns 409 number_operation_pending. Confirmed carrier change with database completion unknown returns 503 number_save_pending; an exact deliberate retry resumes completion without another carrier write. Keep unknown operations held and reconcile through support; do not delete and reimport to recover.
 
 ## Related endpoints
 

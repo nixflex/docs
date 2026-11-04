@@ -1,6 +1,6 @@
 ---
 title: "Delete a call"
-description: "Explore delete call with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely."
+description: "Delete an owned Nixflex call with guarded recording cleanup. Handle blocked or uncertain results without treating them as confirmed deletion."
 openapi: "/api-reference/public.openapi.json DELETE /calls/{id}"
 playground: "simple"
 sidebarTitle: "Delete a call"
@@ -20,23 +20,17 @@ Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organis
 
 Do not send a request body.
 
-Requests guarded cleanup of one owned call. This is **not** a promise of immediate
-erasure of every copy. The current public deletion guard can refuse nonempty
-cleanup until original storage/transfer-audio safety is confirmed. A separate
-safe-delete design is pending; this documentation does not bypass that fence.
+Requests guarded cleanup of one owned call. It is not a promise of immediate erasure of every copy.
+
+An ended, settled call with a skipped managed recording can now complete a narrow empty-recording path. It requires proof of no stored object or carrier copy, a closed upload fence, complete saved call context, finished post-call work and settlement, no active writers/read leases or unknown copies, and a fresh owned-resource absence check. Any missing or unknown proof keeps the strict 409 refusal. A stored object row in any state does not qualify. Bulk and account deletion are unchanged.
+
+A recording marked unavailable (tracking_unavailable), an empty URL or zero recorded seconds is not proof of erasure. The call may have completed normally while deletion remains pending. The narrow path makes no carrier or storage DELETE request.
 
 ### Not reversible
 
-<Warning>
-  Completed removal cannot be undone through this API. Do not promise immediate
-  completion, automatic retry or deletion from customer-owned storage and external
-  copies. Lost replies mean outcome unknown: check before retrying.
-</Warning>
+<Warning>Completed removal cannot be undone through this API. Do not promise immediate completion, automatic retry or removal from customer-owned storage and external copies. Lost replies leave the outcome unknown: check before retrying.</Warning>
 
-### What this does NOT do
-
-- Billing is unaffected. The call's usage remains on your invoice - a delivered call is still a billed call, and billing records are retained for tax purposes.
-- Webhook delivery logs for the call are not removed.
+Billing and retained financial evidence are unaffected. Call usage remains part of the account's financial records. This operation does not promise to remove webhook delivery logs.
 
 ## Response fields
 

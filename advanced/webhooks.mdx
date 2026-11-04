@@ -11,7 +11,7 @@ Using the dashboard? See [the business guide](/guides/business/integrations).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
 
 ## 1. Read the configured destination
 
@@ -55,7 +55,9 @@ Before JSON parsing, verify `X-Nixflex-Signature` as HMAC-SHA256 over the timest
 
 ## 4. Store and acknowledge
 
-After verification, atomically store/deduplicate the event and queue durable processing before returning a prompt 2xx. For call events, deduplicate by event type, call ID and your configured destination identity. Call ID alone would incorrectly merge started and completed events. Retries can contain fresher fields: update your stored projection deliberately while preventing a duplicate business action. There is no universal event-ID field. Protect downstream actions with their own duplicate prevention.
+After verification, atomically store/deduplicate the event and queue durable processing before returning a prompt 2xx. For call events, use `(account, event, call_id)` within each receiver, taking account identity from trusted configuration. Call ID alone would incorrectly merge started, completed and booking events. A separate check and insert can race: use a unique constraint and transaction. Quarantine a null identifier needed for deduplication. Legacy started/completed retries can contain fresher fields, so update projections deliberately without repeating business actions.
+
+SMS booking events have no `call_id` or universal event ID. Store the verified delivery under a separate SMS path; a trusted-account plus raw-body digest can suppress exact queue redeliveries, but it is not a universal booking-action ID. Protect business actions separately using the confirmed booking operation and your own records. Do not deduplicate only by booking UID: later moves and cancellations can affect the same booking.
 
 ## 5. Reconcile delayed results
 
@@ -65,11 +67,12 @@ Read current call or message state when necessary. A completed call event is not
 
 | Surface | Body and behaviour | Receiver rule |
 | --- | --- | --- |
+| Pre-call `call.inbound` | `{event,from,to,call_id}`; number URL takes precedence over agent URL | Verify the raw body. The five-second hook is fail-open; a verification refusal does not force the engine to reject the incoming call. |
 | `call.started` | Flat call payload, normally queued about two seconds after connection; reads current call data when delivered | Do not assume later fields are always null or that this arrives before completion. |
 | `call.completed` | Same flat fields; current call data is rebuilt for each queued delivery | Keep null, pending and unknown states distinct; this is not final billing or permanent-storage proof. |
+| [`call.bookings`](/api-reference/call-bookings) | Confirmed ordered `timeline` and per-UID `final` after call end; emitted only for successful calendar mutations | Count `final` rows whose status is `active`. Verify the required signature and deduplicate the logical event; do not infer bookings from a transcript. |
 | `sms.booking` | `event`, `from`, `to`, `agent_id`, `conversation:[{role,text}]`, `booking`, `at` | No `call_id` is promised. Reconcile booking identity and action; deduplicate locally without logging message bodies. |
 | Number primary/secondary and automation destinations | The same applicable call payload family | Keep destination configuration explicit; do not invent a new automation envelope. |
-| Pre-call `call.inbound` | `{event,from,to,call_id}`; number URL takes precedence over agent URL | Verify the raw body. The five-second hook is fail-open; a verification refusal does not force the engine to reject the incoming call. |
 | Custom function | Non-GET sends `{name,args,variables}`; GET uses query arguments | Verify the signed body. GET signs an empty body, not its query. Use a signed non-GET for consequential arguments. |
 | Dashboard `webhook.test` | `{event,test,message,timestamp}`; unsigned reachability sample | Never perform business actions. It cannot prove real signed-event delivery. |
 
@@ -128,20 +131,20 @@ export function parseVerifiedEvent(rawBody, signatureHeader, signingSecret) {
     throw new Error('Unverified webhook'); // respond 401; no business action
   }
   const event = JSON.parse(rawBody.toString('utf8'));
-  if (!event || !['call.started', 'call.completed', 'sms.booking'].includes(event.event)) {
+  if (!event || !['call.started', 'call.completed', 'call.bookings', 'sms.booking'].includes(event.event)) {
     throw new Error('Unsupported business event');
   }
   return event; // validate fields, store/deduplicate durably, then acknowledge
 }
 ```
 
-Secret lookup failure in the sender can produce an unsigned delivery. Reject or quarantine it without business side effects; never bypass verification. The dashboard reachability test can therefore receive a refusal from this strict receiver, which is expected. If you provide a separate reachability-only handler, keep it isolated from business processing.
+Legacy sender paths can produce an unsigned delivery if signing material is unavailable. `call.bookings` requires signing material and retries instead of sending unsigned. Reject or quarantine any unverified delivery without business side effects. The dashboard's unsigned reachability test can receive a refusal from this strict receiver; keep any separate reachability handler isolated from business processing.
 
 Before rollout, use an approved staging call to receive a genuinely signed event, verify it with the privately provisioned secret, process a duplicate without repeating work, and request private playback. This is a manual acceptance check, not something the dashboard's unsigned test proves.
 
 ## Delivery timing and retries
 
-The queued path defaults to five attempts. Completed calls normally start with a 60-second queue delay; SMS booking events use five seconds, and started calls request about two seconds. Retry backoff is 5, 5, 5 and 60 minutes. These are queue settings, not delivery deadlines; retention, recovery, account closure and missing data can stop or delay work.
+The queued path defaults to five attempts. Completed calls and `call.bookings` normally start with a 60-second queue delay; SMS booking events use five seconds, and started calls request about two seconds. Retry backoff is 5, 5, 5 and 60 minutes. These are queue settings, not delivery deadlines; retention, recovery, account closure and missing data can stop or delay work.
 
 Queued 2xx and 3xx responses count as delivered. Avoid redirects: they are not followed as successful forwarding. Network failures, 408, 429 and 5xx are retryable; other 4xx are treated as permanent. The transport helper can also retry a transport failure once. Return a prompt 2xx only after validated work is durably saved, and reconcile missed events through the call API.
 
@@ -159,6 +162,7 @@ The signature timestamp describes delivery, not call start. Compare it with the 
 
 ## Next steps
 
+- [Post-call booking payload and active-count examples](/api-reference/call-bookings)
 - [Webhook settings](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber)
 - [Call results](/guides/developer/call-history)
 - [Custom functions](/advanced/custom-functions)

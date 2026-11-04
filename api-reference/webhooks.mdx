@@ -10,13 +10,14 @@ Receive events at your HTTPS endpoint using the [first webhook](/api-reference/i
 
 | Event or callback | Body and handling |
 | --- | --- |
+| Pre-call `call.inbound` | `event`, `from`, `to` and `call_id`. An explicit `action: reject` blocks the call; invalid or missing replies let it continue. This is a synchronous decision hook, not a post-call result. |
 | `call.started` | Flat call object, scheduled after connection. Late delivery can contain later call fields. |
 | `call.completed` | Flat call object with identifiers, direction, times, transcript, summary, bookings and recording metadata. No nested `call` wrapper. |
+| [`call.bookings`](/api-reference/call-bookings) | Post-call confirmed mutation `timeline` and one `final` result per booking UID. Count active final rows, not actions. Queued after completed, but arrival order is not guaranteed. |
 | `sms.booking` | `event`, `from`, `to`, `agent_id`, `conversation`, `booking` and `at`. A `call_id` is not promised. |
-| Pre-call `call.inbound` | `event`, `from`, `to` and `call_id`. An explicit `action: reject` blocks the call; invalid or missing replies let it continue. |
 | Dashboard `webhook.test` | Reachability sample. This path is unsigned and does not prove a real signed event works. |
 
-Call payloads include `call_id`, `agent_id`, `direction`, `from`, `to`, `status`, `ended_reason`, `started_at`, `ended_at`, `duration_seconds`, `transcript`, `summary`, `sentiment`, `successful`, `extracted`, `bookings`, `recording_url`, `recording_duration_seconds`, `voicemail_detected`, `campaign_id` and `avg_latency_ms`. Missing values can be null; `bookings` is an array. Accept additive fields.
+The `call.started` and `call.completed` payloads include `call_id`, `agent_id`, `direction`, `from`, `to`, `status`, `ended_reason`, `started_at`, `ended_at`, `duration_seconds`, `transcript`, `summary`, `sentiment`, `successful`, `extracted`, `bookings`, `recording_url`, `recording_duration_seconds`, `voicemail_detected`, `campaign_id` and `avg_latency_ms`. Missing values can be null; `bookings` is an array. Accept additive fields. The new `call.bookings` event has its own payload described on its reference page.
 
 With private recording access, `recording_url` is null and `recording_status` and `recording_endpoint` are added. Save the call ID and [request recording access](/api-reference/calls/get-calls-id-recording) when playback is needed. Do not treat a webhook as a permanent recording URL or final billing receipt.
 
@@ -26,21 +27,27 @@ The header format is `X-Nixflex-Signature: t=UNIX_SECONDS,v1=HEX_HMAC`. Calculat
 
 Use the organisation signing secret, which is separate from the API key secret when organisation accounts are enabled. Key rotation does not rotate that signing secret. Provision it privately through the [Owner-only signing-secret workflow](/api-reference/organisation/get-organisation-signing-secret). Older account mode can use the key secret.
 
-Check the timestamp against a short tolerance, then compare equal-length digests in constant time. Reject or quarantine missing and invalid signatures for business events. A secret lookup failure can produce an unsigned delivery; do not silently bypass verification.
+Check the timestamp against a short tolerance, then compare equal-length digests in constant time. Reject or quarantine missing and invalid signatures for business events. Legacy paths can produce an unsigned delivery if signing material is missing; do not bypass verification. `call.bookings` requires a signature and retries instead of sending unsigned.
+
+Use the [Node and Python verification examples](/advanced/webhooks#3-verify-exact-request-bytes) in the Developer guide to build your receiver.
 
 Custom-function GET signatures cover an empty body, not the query arguments. Prefer a signed non-GET request for consequential arguments. See [custom functions](/api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber) and [pre-call settings](/api-reference/integration-settings/get-integrations-precall-number-phoneNumber) for their distinct contracts.
 
 ## Delivery and duplicates
 
-Persist a validated event before returning a successful 2xx response. Delivery can be duplicated, delayed or missed. For call events, deduplicate using event type, call ID and destination; call ID alone would discard `call.completed` after `call.started`.
+Persist a validated queued event before returning a successful 2xx response. Delivery can be duplicated, delayed or missed. For `call.started`, `call.completed` and `call.bookings`, deduplicate within each receiver by `(account, event, call_id)`, with account identity from trusted configuration. Call ID alone would discard completed or booking results after a started event. Use an atomic insert or unique constraint; quarantine a missing required identifier instead of guessing it. The synchronous pre-call hook instead needs its decision reply within the hook's deadline.
 
-Queued delivery has up to five attempts. Network failures, 408, 429 and 5xx can be retried; other 4xx are permanent failures. The queue treats 3xx as delivered, so return 2xx directly instead of redirecting. Default retry delays are five minutes, five minutes, five minutes, then sixty minutes. Retention and account state can stop delivery; this is not a guaranteed schedule.
+`sms.booking` has no call ID or universal event ID. It carries `from`, `to`, `agent_id`, `conversation`, `booking` and `at`. Deduplicate exact verified deliveries separately, and protect each downstream booking action against repetition. A booking UID alone is insufficient because the same booking can be moved or cancelled later.
+
+Queued delivery has up to five queue attempts. A transport failure can also be retried within an attempt. Network failures, 408, 429 and 5xx can be retried; other 4xx are permanent failures. The queue treats 3xx as delivered, so return 2xx directly instead of redirecting. Post-call events normally start after 60 seconds; retry delays are five minutes, five minutes, five minutes, then sixty minutes. Retention and account state can stop delivery; this is not a guaranteed schedule.
 
 Reconcile missed call events using [call reads](/api-reference/calls/get). Store caller data only where your application needs it and keep webhook bodies out of ordinary logs.
 
 ## Booking object
 
 Both `call.completed.bookings[]` and the `booking` property of `sms.booking` use the same public object. All keys shown below are present.
+
+The new [call.bookings event](/api-reference/call-bookings) uses that object plus receipt time in its timeline, and a separate final-result array. Existing completed and SMS shapes are unchanged. There is no new delayed aggregate event for SMS threads.
 
 ```json
 {"action":"created","booking_uid":"event_example","start":"2030-11-04T10:00:00.000Z","end":"2030-11-04T10:30:00.000Z","attendee_name":"Test Person","attendee_email":"test@example.test","service":"appointment","timezone":"Europe/London"}

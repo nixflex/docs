@@ -13,7 +13,7 @@ Using the dashboard? See [teach your agent about your business](/guides/business
 - Knowledge enabled for the account. API-managed and mixed-origin agents can be hidden from dashboard knowledge screens while remaining accessible to the owning API key.
 - A durable operation record in your application. Knowledge writes require an `Idempotency-Key`: 8–128 letters, digits, dots, underscores, colons or hyphens. The `prompt:` prefix is reserved. Use one key per intended operation and retain it across an uncertain response.
 
-The examples use the production API address. Choose the intended environment and its matching credential before running anything. Node/CLI 0.10.0 and Python 0.3.0 knowledge methods are release candidates; use cURL until the corresponding kit release is available. No example here is a promise that an unpublished package is installed.
+The examples use the production API address. Choose the intended environment and its matching credential before running anything. Node/CLI 0.11.0 and Python 0.4.0 knowledge methods are release candidates; use cURL until the corresponding kit release is available. No example here is a promise that an unpublished package is installed.
 
 ## 1. Read capabilities and create the agent base
 
@@ -109,7 +109,7 @@ Poll [GET job](/api-reference/knowledge/get-knowledge-jobs-id) using the returne
 | `failed` | Read the job’s safe `error`. HTTP 200 for a failed job is still a failed operation. |
 | `cancelled`, `deleted` | Stop polling and reconcile current state. |
 
-Read [the draft](/api-reference/knowledge/get-knowledge-bases-kb-drafts-id). Older drafts can be normalised on read, so retain the returned `data.edit_revision`, not an earlier cached value. Show each topic’s `facts`, title and review reasons. Edit with `expected_revision`, `expected_draft_revision`, `topic_id` and `topic`; save before accepting.
+Read [the draft](/api-reference/knowledge/get-knowledge-bases-kb-drafts-id). Legacy normalization is projected without being saved, using stable draft-scoped piece IDs. An explicit save or accept persists the repair. Retain the returned `data.edit_revision`, not an earlier cached value. Show each topic’s `facts`, title and review reasons. Edit with `expected_revision`, `expected_draft_revision`, `topic_id` and `topic`; save before accepting.
 
 ## 4. Accept selected topics and wait for publication
 
@@ -148,7 +148,9 @@ With knowledge enabled, agent list/detail reads include the read-only `knowledge
 }
 ```
 
-This is an illustrative response; use the returned limits. Automatic candidates are ordered by importance and do not consume the manual allowance. Owner, Admin and Member logins can read owned-agent terms. The reviewed, unpublished MCP 0.4.0 candidate exposes this read as `get_agent_knowledge_keyterms` with `target` set to the agent ID.
+This is an illustrative response; use the returned limits. Automatic candidates are ordered by importance and do not consume the manual allowance. Owner, Admin and Member logins can read owned-agent terms. The reviewed, unpublished MCP 0.5.0 candidate exposes this read as `get_agent_knowledge_keyterms` with `target` set to the agent ID.
+
+Automatic hints exclude web addresses, API paths and URL-like terms while retaining spoken names such as AC/DC and St. James. Existing hints refresh in the background; do not reimport just to refresh them. Manual keyword lists and limits are unchanged.
 
 The dashboard shows **From your knowledge** chips and **+N more** beneath the agent's Keyterms field. It filters automatic candidates against the current manual form, including unsaved changes; the API returns automatic candidates and saved manual terms separately. Do not infer the raw API array from the filtered chips.
 

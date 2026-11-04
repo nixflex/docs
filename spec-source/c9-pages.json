@@ -1,6 +1,6 @@
 {
   "baseline": "cd083a7ae3290e16d459af7484ce59116b59060a",
-  "engine": "deb63749acc74fe5d1d840dbf3589b2c40b5627e",
+  "engine": "89e4d47f430685eacba21e4906ece34e9c718714",
   "canonicalOrigin": "https://docs.nixflex.com",
   "groups": [
     {
@@ -12,9 +12,15 @@
         "api-reference/pagination",
         "api-reference/rate-limits",
         "api-reference/idempotency",
-        "api-reference/webhooks",
         "api-reference/retries",
         "api-reference/versioning"
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "pages": [
+        "api-reference/webhooks",
+        "api-reference/call-bookings"
       ]
     },
     {
@@ -339,7 +345,7 @@
     },
     {
       "slug": "api-reference/webhooks",
-      "group": "API basics",
+      "group": "Webhooks",
       "title": "Webhooks and signature verification",
       "description": "Receive Nixflex call and booking events. Verify raw-body signatures, handle duplicate delivery and fetch private recording links when playback is needed.",
       "h1": "Webhooks and signature verification",
@@ -381,7 +387,7 @@
       "slug": "api-reference/agents/list",
       "group": "Agents",
       "title": "List agents",
-      "description": "Explore list agents with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "List Nixflex agents owned by the account. Read their settings and use each agent ID for detail, update or disable requests.",
       "h1": "List agents",
       "searchPhrase": "list agents Nixflex API"
     },
@@ -389,7 +395,7 @@
       "slug": "api-reference/agents/get",
       "group": "Agents",
       "title": "Get an agent",
-      "description": "Explore get agent with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Read one Nixflex agent and its saved settings. Check whether it is active before assigning numbers or starting calls.",
       "h1": "Get an agent",
       "searchPhrase": "get an agent Nixflex API"
     },
@@ -397,7 +403,7 @@
       "slug": "api-reference/agents/update",
       "group": "Agents",
       "title": "Update an agent",
-      "description": "Update an agent with the Nixflex API. Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted.",
+      "description": "Update selected settings on an owned Nixflex agent. The PUT request is partial: omitted fields keep their saved values.",
       "h1": "Update an agent",
       "searchPhrase": "update an agent Nixflex API",
       "number": 64
@@ -406,7 +412,7 @@
       "slug": "api-reference/agents/delete",
       "group": "Agents",
       "title": "Delete an agent",
-      "description": "Explore disable agent with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Disable an owned Nixflex agent. Understand the inactive state, retained record and checks before assigning numbers or starting calls.",
       "h1": "Delete an agent",
       "searchPhrase": "delete an agent Nixflex API"
     },
@@ -414,7 +420,7 @@
       "slug": "api-reference/phone-numbers/list",
       "group": "Phone numbers",
       "title": "List phone numbers",
-      "description": "Explore list phone numbers with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "List phone numbers owned by the Nixflex account. Read assigned agents and saved number settings before routing or configuration changes.",
       "h1": "List phone numbers",
       "searchPhrase": "list phone numbers Nixflex API"
     },
@@ -422,7 +428,7 @@
       "slug": "api-reference/phone-numbers/get",
       "group": "Phone numbers",
       "title": "Get a phone number",
-      "description": "Explore get phone number with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Read one owned Nixflex phone number, its assigned agent and saved settings. Use the encoded international number in the request path.",
       "h1": "Get a phone number",
       "searchPhrase": "get a phone number Nixflex API"
     },
@@ -430,7 +436,7 @@
       "slug": "api-reference/phone-numbers/import",
       "group": "Phone numbers",
       "title": "Import a phone number",
-      "description": "Import a phone number with the Nixflex API. Connect a number you already own to an active agent on the same account. Import can replace existing number.",
+      "description": "Import a phone number you own into Nixflex and assign it to an active agent. Review existing routing before changing the number configuration.",
       "h1": "Import a phone number",
       "searchPhrase": "import a phone number Nixflex API",
       "number": 165
@@ -439,7 +445,7 @@
       "slug": "api-reference/phone-numbers/update",
       "group": "Phone numbers",
       "title": "Update a phone number",
-      "description": "Update a phone number with the Nixflex API. Change per-number settings, or move the number to another active agent on the same account. A move and a.",
+      "description": "Update an owned Nixflex number's settings or move it to another active agent on the account. Review routing and uncertain outcomes before retrying.",
       "h1": "Update a phone number",
       "searchPhrase": "update a phone number Nixflex API",
       "number": 168
@@ -448,7 +454,7 @@
       "slug": "api-reference/phone-numbers/usage",
       "group": "Phone numbers",
       "title": "Get number usage",
-      "description": "Explore phone number usage with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Read usage for an owned Nixflex phone number. Check the response fields and account scope before using the totals in your application.",
       "h1": "Get number usage",
       "searchPhrase": "get number usage Nixflex API"
     },
@@ -456,7 +462,7 @@
       "slug": "api-reference/phone-numbers/delete",
       "group": "Phone numbers",
       "title": "Remove a phone number",
-      "description": "Remove a phone number with the Nixflex API. Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the.",
+      "description": "Disconnect an owned number from Nixflex and clear routing managed by its import. This does not release the number from your carrier account.",
       "h1": "Remove a phone number",
       "searchPhrase": "remove a phone number Nixflex API",
       "number": 166
@@ -492,7 +498,7 @@
       "slug": "api-reference/calls/get-calls-id-recording",
       "group": "Calls",
       "title": "Get a call recording",
-      "description": "Get a call recording with the Nixflex API. Read recording status and obtain a fresh signed download link when the managed recording is available. This.",
+      "description": "Read Nixflex call recording status and obtain a fresh signed download link when available. Handle unavailable, pending and deleted recordings.",
       "h1": "Get a call recording",
       "searchPhrase": "get a call recording Nixflex API",
       "number": 89
@@ -501,7 +507,7 @@
       "slug": "api-reference/calls/create-outbound",
       "group": "Calls",
       "title": "Create an outbound call",
-      "description": "Create an outbound call with the Nixflex API. Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the.",
+      "description": "Start one Nixflex outbound call from an owned number assigned to an active agent. Handle policy refusals and uncertain results before another attempt.",
       "h1": "Create an outbound call",
       "searchPhrase": "create an outbound call Nixflex API",
       "number": 96
@@ -518,7 +524,7 @@
       "slug": "api-reference/calls/delete",
       "group": "Calls",
       "title": "Delete a call",
-      "description": "Explore delete call with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Delete an owned Nixflex call with guarded recording cleanup. Handle blocked or uncertain results without treating them as confirmed deletion.",
       "h1": "Delete a call",
       "searchPhrase": "delete a call Nixflex API"
     },
@@ -526,7 +532,7 @@
       "slug": "api-reference/calls/delete-all",
       "group": "Calls",
       "title": "Delete all calls",
-      "description": "Explore delete all call data with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Request guarded deletion of Nixflex call data for the account. Review scope, cleanup requirements and uncertain outcomes before another request.",
       "h1": "Delete all calls",
       "searchPhrase": "delete all calls Nixflex API"
     },
@@ -543,7 +549,7 @@
       "slug": "api-reference/calls/batch-create",
       "group": "Campaigns",
       "title": "Create a voice campaign",
-      "description": "Create a voice campaign with the Nixflex API. Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule.",
+      "description": "Create a Nixflex voice campaign and its recipients. Default now mode requests launch immediately; use schedule mode to prepare a later launch.",
       "h1": "Create a voice campaign",
       "searchPhrase": "create a voice campaign Nixflex API",
       "number": 90
@@ -552,7 +558,7 @@
       "slug": "api-reference/calls/batch-launch",
       "group": "Campaigns",
       "title": "Launch a voice campaign",
-      "description": "Launch a voice campaign with the Nixflex API. Request the first launch of an owned voice campaign. Ownership, readiness and launch state are checked before.",
+      "description": "Request the first launch of an owned Nixflex voice campaign. Check readiness, consent and launch state before dispatching calls.",
       "h1": "Launch a voice campaign",
       "searchPhrase": "launch a voice campaign Nixflex API",
       "number": 93
@@ -570,7 +576,7 @@
       "slug": "api-reference/voice-campaigns/post-calls-batch-id-resume",
       "group": "Campaigns",
       "title": "Resume voice campaign",
-      "description": "Resume voice campaign with the Nixflex API. Resume one bounded page of verified unattempted recipients in the current running voice campaign. This can.",
+      "description": "Resume a bounded page of verified, unattempted recipients in a running Nixflex voice campaign. Review consent and current campaign state first.",
       "h1": "Resume voice campaign",
       "searchPhrase": "resume voice campaign Nixflex API",
       "number": 94
@@ -579,7 +585,7 @@
       "slug": "api-reference/voice-campaigns/post-calls-batch-id-consent",
       "group": "Campaigns",
       "title": "Record voice consent",
-      "description": "Record voice consent with the Nixflex API. Record a consent or consent-withdrawal decision for the current voice campaign policy revision. The owner.",
+      "description": "Record consent or withdrawal for the current Nixflex voice campaign policy revision. Review the audience and policy before confirming.",
       "h1": "Record voice consent",
       "searchPhrase": "record voice consent Nixflex API",
       "number": 92
@@ -588,7 +594,7 @@
       "slug": "api-reference/sms/send",
       "group": "SMS",
       "title": "Send an SMS",
-      "description": "Send an SMS with the Nixflex API. Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means.",
+      "description": "Send one SMS through Nixflex using an explicit, owned sender assigned to the agent. Distinguish acceptance from delivery and handle uncertain results.",
       "h1": "Send an SMS",
       "searchPhrase": "send an sms Nixflex API",
       "number": 174
@@ -597,7 +603,7 @@
       "slug": "api-reference/sms/campaigns-list",
       "group": "SMS / SMS campaigns",
       "title": "List SMS campaigns",
-      "description": "List SMS campaigns with the Nixflex API. List this account’s SMS campaigns, newest first. Delivery totals cover all campaign recipients, not just the.",
+      "description": "List the account's Nixflex SMS campaigns, newest first. Delivery totals cover all campaign recipients, beyond the current recipient page.",
       "h1": "List SMS campaigns",
       "searchPhrase": "list sms campaigns Nixflex API",
       "number": 175
@@ -606,7 +612,7 @@
       "slug": "api-reference/sms/campaigns-create",
       "group": "SMS / SMS campaigns",
       "title": "Create an SMS campaign",
-      "description": "Create an SMS campaign with the Nixflex API. Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode.",
+      "description": "Create a Nixflex SMS campaign and its recipients. Default now mode requests launch immediately; use schedule mode to prepare a later launch.",
       "h1": "Create an SMS campaign",
       "searchPhrase": "create an sms campaign Nixflex API",
       "number": 176
@@ -624,7 +630,7 @@
       "slug": "api-reference/sms-campaigns/patch-sms-campaigns-id",
       "group": "SMS / SMS campaigns",
       "title": "Update SMS reply settings",
-      "description": "Update SMS reply settings with the Nixflex API. Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or.",
+      "description": "Update reply behaviour for an owned Nixflex SMS campaign. This request does not edit the campaign's recipients, schedule or outbound message.",
       "h1": "Update SMS reply settings",
       "searchPhrase": "update sms reply settings Nixflex API",
       "number": 179
@@ -633,7 +639,7 @@
       "slug": "api-reference/sms/campaigns-launch",
       "group": "SMS / SMS campaigns",
       "title": "Launch an SMS campaign",
-      "description": "Launch an SMS campaign with the Nixflex API. Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before.",
+      "description": "Request the first launch of an owned Nixflex SMS campaign. Check readiness, consent and launch state before dispatching messages.",
       "h1": "Launch an SMS campaign",
       "searchPhrase": "launch an sms campaign Nixflex API",
       "number": 182
@@ -651,7 +657,7 @@
       "slug": "api-reference/sms-campaigns/post-sms-campaigns-id-resume",
       "group": "SMS / SMS campaigns",
       "title": "Resume SMS campaign",
-      "description": "Resume SMS campaign with the Nixflex API. Resume one bounded page of verified unattempted recipients in the current running SMS campaign. This can dispatch.",
+      "description": "Resume a bounded page of verified, unattempted recipients in a running Nixflex SMS campaign. This can dispatch messages after policy checks.",
       "h1": "Resume SMS campaign",
       "searchPhrase": "resume sms campaign Nixflex API",
       "number": 183
@@ -660,7 +666,7 @@
       "slug": "api-reference/sms-campaigns/post-sms-campaigns-id-consent",
       "group": "SMS / SMS campaigns",
       "title": "Record SMS consent",
-      "description": "Record SMS consent with the Nixflex API. Record a consent or consent-withdrawal decision for the current SMS campaign policy revision. The owner confirms.",
+      "description": "Record consent or withdrawal for the current Nixflex SMS campaign policy revision. Review the audience and policy before confirming.",
       "h1": "Record SMS consent",
       "searchPhrase": "record sms consent Nixflex API",
       "number": 181
@@ -669,7 +675,7 @@
       "slug": "api-reference/sms/campaigns-delete",
       "group": "SMS / SMS campaigns",
       "title": "Delete an SMS campaign",
-      "description": "Delete an SMS campaign with the Nixflex API. Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other.",
+      "description": "Delete a settled Nixflex SMS campaign. Handle active-work conflicts, pending settlement and unknown results before removing it from your application.",
       "h1": "Delete an SMS campaign",
       "searchPhrase": "delete an sms campaign Nixflex API",
       "number": 177
@@ -1056,7 +1062,7 @@
       "slug": "api-reference/agent-inbox/get-agent-inbox-features",
       "group": "Inbox",
       "title": "Check inbox availability",
-      "description": "Check inbox availability with the Nixflex API. Read whether the agent inbox feature is enabled in this environment. This check remains available when inbox.",
+      "description": "Check whether the Nixflex agent inbox is enabled in this environment. The feature check remains available when other inbox operations are disabled.",
       "h1": "Check inbox availability",
       "searchPhrase": "check inbox availability Nixflex API",
       "number": 55
@@ -1065,7 +1071,7 @@
       "slug": "api-reference/agent-inbox/get-agent-inbox-numbers",
       "group": "Inbox",
       "title": "List inbox numbers",
-      "description": "List inbox numbers with the Nixflex API. List owned numbers available to the inbox and active agent labels. Pending number imports are excluded; both API.",
+      "description": "List owned numbers available to the Nixflex inbox and their active agent labels. Pending number imports are excluded from the list.",
       "h1": "List inbox numbers",
       "searchPhrase": "list inbox numbers Nixflex API",
       "number": 56
@@ -1083,7 +1089,7 @@
       "slug": "api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread",
       "group": "Inbox",
       "title": "Read an inbox thread",
-      "description": "Read an inbox thread with the Nixflex API. Read retained messages in one owned inbox conversation. The newest page is selected first and returned in.",
+      "description": "Read retained messages in one owned Nixflex inbox thread. The newest page is selected first, with its messages returned in chronological order.",
       "h1": "Read an inbox thread",
       "searchPhrase": "read an inbox thread Nixflex API",
       "number": 53
@@ -1092,7 +1098,7 @@
       "slug": "api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread",
       "group": "Inbox",
       "title": "Update an inbox thread",
-      "description": "Update an inbox thread with the Nixflex API. Change an owned conversation’s archive state or acknowledge messages through a known read version. This does.",
+      "description": "Update a Nixflex inbox thread's archive state or acknowledge messages through a known read version. Listing messages alone does not mark them read.",
       "h1": "Update an inbox thread",
       "searchPhrase": "update an inbox thread Nixflex API",
       "number": 54
@@ -1101,7 +1107,7 @@
       "slug": "api-reference/agent-inbox/get-agent-inbox-retention",
       "group": "Inbox",
       "title": "Read inbox retention",
-      "description": "Read inbox retention with the Nixflex API. Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned.",
+      "description": "Read the Nixflex account retention default and inbox cleanup availability. Include a number to resolve retention for its assigned agent.",
       "h1": "Read inbox retention",
       "searchPhrase": "read inbox retention Nixflex API",
       "number": 57
@@ -1110,7 +1116,7 @@
       "slug": "api-reference/caller-context/delete",
       "group": "Contacts",
       "title": "Delete caller context",
-      "description": "Delete caller context with the Nixflex API. Delete the complete caller-context record for one caller on one account-owned business number. This removes both.",
+      "description": "Delete the complete Nixflex caller-context record for one caller on an owned business number. Review the record's scope before removing it.",
       "h1": "Delete caller context",
       "searchPhrase": "delete caller context Nixflex API",
       "number": 169
@@ -1119,7 +1125,7 @@
       "slug": "api-reference/caller-context/get",
       "group": "Contacts",
       "title": "Get caller context",
-      "description": "Explore get caller context with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Read saved Nixflex caller context for one caller and owned business number. Handle a missing record without inventing previous caller details.",
       "h1": "Get caller context",
       "searchPhrase": "get caller context Nixflex API"
     },
@@ -1127,7 +1133,7 @@
       "slug": "api-reference/caller-context/set",
       "group": "Contacts",
       "title": "Set caller context",
-      "description": "Explore set caller context with Nixflex. Review settings, responses, and related guidance to connect your application and handle results safely.",
+      "description": "Set supplied Nixflex caller context for one caller on an owned business number. Review saved-field behaviour and the response before retrying.",
       "h1": "Set caller context",
       "searchPhrase": "set caller context Nixflex API"
     },
@@ -1135,7 +1141,7 @@
       "slug": "api-reference/caller-context/import",
       "group": "Contacts",
       "title": "Import caller context",
-      "description": "Import caller context with the Nixflex API. Import customer-supplied context for callers on one account-owned business number. Each row merges supplied.",
+      "description": "Import caller context for an owned Nixflex business number. Each row merges supplied customer context into the caller's existing record.",
       "h1": "Import caller context",
       "searchPhrase": "import caller context Nixflex API",
       "number": 172
@@ -1144,7 +1150,7 @@
       "slug": "api-reference/contact-controls/post-contact-hours-preview",
       "group": "Contacts",
       "title": "Preview contact hours",
-      "description": "Preview contact hours with the Nixflex API. Preview recipient-local contact windows without sending calls, SMS or campaign work. The result is advisory and.",
+      "description": "Preview recipient-local Nixflex contact windows without sending calls or SMS. Treat the result as advisory and recheck policy at dispatch.",
       "h1": "Preview contact hours",
       "searchPhrase": "preview contact hours Nixflex API",
       "number": 98
@@ -1153,7 +1159,7 @@
       "slug": "api-reference/contact-controls/get-contact-suppressions",
       "group": "Contacts",
       "title": "List contact suppressions",
-      "description": "List contact suppressions with the Nixflex API. List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all.",
+      "description": "List stored Nixflex do-not-contact entries in a channel bucket. Understand the all-channel bucket and how it differs from a combined list.",
       "h1": "List contact suppressions",
       "searchPhrase": "list contact suppressions Nixflex API",
       "number": 100
@@ -1162,7 +1168,7 @@
       "slug": "api-reference/contact-controls/post-contact-suppressions",
       "group": "Contacts",
       "title": "Add contact suppressions",
-      "description": "Add contact suppressions with the Nixflex API. Add account-owned do-not-contact entries for future contact checks. Existing entries are retained; a new.",
+      "description": "Add Nixflex do-not-contact entries for future contact checks. Existing entries are retained; review the number, channel and suppression reason.",
       "h1": "Add contact suppressions",
       "searchPhrase": "add contact suppressions Nixflex API",
       "number": 101
@@ -1171,7 +1177,7 @@
       "slug": "api-reference/contact-controls/delete-contact-suppressions",
       "group": "Contacts",
       "title": "Remove a contact suppression",
-      "description": "Remove a contact suppression with the Nixflex API. Remove one explicitly removable owner-created suppression. Recipient opt-outs and entries without.",
+      "description": "Remove one explicitly removable, owner-created Nixflex suppression. Recipient opt-outs and entries without removal permission remain protected.",
       "h1": "Remove a contact suppression",
       "searchPhrase": "remove a contact suppression Nixflex API",
       "number": 99
@@ -1198,7 +1204,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-calcom-number-phoneNumber",
       "group": "Integrations / Cal.com",
       "title": "Delete Cal.com settings",
-      "description": "Delete Cal.com settings with the Nixflex API. Remove the saved Cal.com configuration scoped to this account and number. This does not disconnect the phone.",
+      "description": "Remove saved Cal.com settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
       "h1": "Delete Cal.com settings",
       "searchPhrase": "delete cal.com settings Nixflex API",
       "number": 14
@@ -1216,7 +1222,7 @@
       "slug": "api-reference/integration-settings/put-integrations-slack-number-phoneNumber",
       "group": "Integrations / Slack",
       "title": "Set Slack settings",
-      "description": "Set Slack settings with the Nixflex API. Save Slack settings for an owned phone number. This replaces the saved configuration for this integration; omitted.",
+      "description": "Replace saved Slack settings for an owned Nixflex number. Supply the complete intended configuration and review omitted-field behaviour.",
       "h1": "Set Slack settings",
       "searchPhrase": "set slack settings Nixflex API",
       "number": 15
@@ -1225,7 +1231,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-slack-number-phoneNumber",
       "group": "Integrations / Slack",
       "title": "Delete Slack settings",
-      "description": "Delete Slack settings with the Nixflex API. Remove the saved Slack configuration scoped to this account and number. This does not disconnect the phone.",
+      "description": "Remove saved Slack settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
       "h1": "Delete Slack settings",
       "searchPhrase": "delete slack settings Nixflex API",
       "number": 17
@@ -1252,7 +1258,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-zapier-number-phoneNumber",
       "group": "Integrations / Zapier",
       "title": "Delete Zapier settings",
-      "description": "Delete Zapier settings with the Nixflex API. Remove the saved Zapier configuration scoped to this account and number. This does not disconnect the phone.",
+      "description": "Remove saved Zapier settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
       "h1": "Delete Zapier settings",
       "searchPhrase": "delete zapier settings Nixflex API",
       "number": 20
@@ -1270,7 +1276,7 @@
       "slug": "api-reference/integration-settings/put-integrations-make-number-phoneNumber",
       "group": "Integrations / Make",
       "title": "Set Make settings",
-      "description": "Set Make settings with the Nixflex API. Save Make settings for an owned phone number. This replaces the saved configuration for this integration; omitted.",
+      "description": "Replace saved Make settings for an owned Nixflex number. Supply the complete intended configuration and review omitted-field behaviour.",
       "h1": "Set Make settings",
       "searchPhrase": "set make settings Nixflex API",
       "number": 21
@@ -1288,7 +1294,7 @@
       "slug": "api-reference/integration-settings/get-integrations-gohighlevel-number-phoneNumber",
       "group": "Integrations / GoHighLevel",
       "title": "Get GoHighLevel settings",
-      "description": "Get GoHighLevel settings with the Nixflex API. Read the saved GoHighLevel settings for an owned phone number. Secret values are represented by configuration.",
+      "description": "Read saved GoHighLevel settings for an owned Nixflex number. Configuration flags indicate secret presence without returning secret values.",
       "h1": "Get GoHighLevel settings",
       "searchPhrase": "get gohighlevel settings Nixflex API",
       "number": 25
@@ -1297,7 +1303,7 @@
       "slug": "api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber",
       "group": "Integrations / GoHighLevel",
       "title": "Set GoHighLevel settings",
-      "description": "Set GoHighLevel settings with the Nixflex API. Save GoHighLevel settings for an owned phone number. This replaces the saved configuration for this.",
+      "description": "Replace saved GoHighLevel settings for an owned Nixflex number. Supply the complete intended configuration for this integration.",
       "h1": "Set GoHighLevel settings",
       "searchPhrase": "set gohighlevel settings Nixflex API",
       "number": 24
@@ -1306,7 +1312,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-gohighlevel-number-phoneNumber",
       "group": "Integrations / GoHighLevel",
       "title": "Delete GoHighLevel settings",
-      "description": "Delete GoHighLevel settings with the Nixflex API. Remove the saved GoHighLevel configuration scoped to this account and number. This does not disconnect the.",
+      "description": "Remove saved GoHighLevel settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
       "h1": "Delete GoHighLevel settings",
       "searchPhrase": "delete gohighlevel settings Nixflex API",
       "number": 26
@@ -1315,7 +1321,7 @@
       "slug": "api-reference/integration-settings/get-integrations-precall-number-phoneNumber",
       "group": "Integrations / Pre-call",
       "title": "Get pre-call gate for number",
-      "description": "Get pre-call gate for number with the Nixflex API. Read the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent.",
+      "description": "Read the pre-call gate for an owned Nixflex number. A saved number-specific gate overrides the default from its assigned agent.",
       "h1": "Get pre-call gate for number",
       "searchPhrase": "get pre-call gate for number Nixflex API",
       "number": 41
@@ -1324,7 +1330,7 @@
       "slug": "api-reference/integration-settings/get-integrations-precall-agent-agentId",
       "group": "Integrations / Pre-call",
       "title": "Get pre-call gate for agent",
-      "description": "Get pre-call gate for agent with the Nixflex API. Read the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent; a.",
+      "description": "Read an owned Nixflex agent's default pre-call gate. Number-specific settings can override this default for individual numbers.",
       "h1": "Get pre-call gate for agent",
       "searchPhrase": "get pre-call gate for agent Nixflex API",
       "number": 44
@@ -1342,7 +1348,7 @@
       "slug": "api-reference/integration-settings/put-integrations-precall-agent-agentId",
       "group": "Integrations / Pre-call",
       "title": "Set pre-call gate for agent",
-      "description": "Set pre-call gate for agent with the Nixflex API. Set the pre-call gate setting for an owned agent. This is the default for numbers on the agent; a.",
+      "description": "Set an owned Nixflex agent's default pre-call gate. Number-specific settings can override this default for individual numbers.",
       "h1": "Set pre-call gate for agent",
       "searchPhrase": "set pre-call gate for agent Nixflex API",
       "number": 43
@@ -1351,7 +1357,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-precall-number-phoneNumber",
       "group": "Integrations / Pre-call",
       "title": "Clear pre-call gate for number",
-      "description": "Clear pre-call gate for number with the Nixflex API. Clear the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent.",
+      "description": "Clear a saved number-specific Nixflex pre-call gate. Review the assigned agent's default when deciding the number's resulting gate behaviour.",
       "h1": "Clear pre-call gate for number",
       "searchPhrase": "clear pre-call gate for number Nixflex API",
       "number": 42
@@ -1369,7 +1375,7 @@
       "slug": "api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber",
       "group": "Integrations / Custom functions",
       "title": "List custom functions",
-      "description": "List custom functions with the Nixflex API. Read up to 15 saved custom functions for this account and number. No matching rows returns an empty list; the.",
+      "description": "List up to 15 saved custom functions for an owned Nixflex number. An empty list means no matching functions are saved for that account and number.",
       "h1": "List custom functions",
       "searchPhrase": "list custom functions Nixflex API",
       "number": 47
@@ -1378,7 +1384,7 @@
       "slug": "api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber",
       "group": "Integrations / Custom functions",
       "title": "Create a custom function",
-      "description": "Create a custom function with the Nixflex API. Create one function for an owned number. Each number can have at most 15 functions; names must be unique for.",
+      "description": "Create a custom function for an owned Nixflex number. Each number allows up to 15 functions with names unique within that number.",
       "h1": "Create a custom function",
       "searchPhrase": "create a custom function Nixflex API",
       "number": 46
@@ -1387,7 +1393,7 @@
       "slug": "api-reference/integration-settings/patch-integrations-custom-functions-number-phoneNumber-id",
       "group": "Integrations / Custom functions",
       "title": "Update a custom function",
-      "description": "Update a custom function with the Nixflex API. Change only supplied fields of one owned custom function. Omitted fields keep their saved values; this does.",
+      "description": "Update selected fields of a custom function for an owned Nixflex number. Omitted fields keep their saved values.",
       "h1": "Update a custom function",
       "searchPhrase": "update a custom function Nixflex API",
       "number": 49
@@ -1396,7 +1402,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-custom-functions-number-phoneNumber-id",
       "group": "Integrations / Custom functions",
       "title": "Delete a custom function",
-      "description": "Delete a custom function with the Nixflex API. Remove one custom function scoped to the account, number and function ID. A missing matching row also returns.",
+      "description": "Delete one custom function by its account, Nixflex number and function ID. Review the response and missing-function behaviour before retrying.",
       "h1": "Delete a custom function",
       "searchPhrase": "delete a custom function Nixflex API",
       "number": 48
@@ -1405,7 +1411,7 @@
       "slug": "api-reference/integration-settings/get-integrations-webhook-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Get first webhook",
-      "description": "Get first webhook with the Nixflex API. Read the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
+      "description": "Read the primary webhook setting for an owned Nixflex number. Primary and secondary slots are configured independently.",
       "h1": "Get first webhook",
       "searchPhrase": "get first webhook Nixflex API",
       "number": 28
@@ -1414,7 +1420,7 @@
       "slug": "api-reference/integration-settings/get-integrations-webhook2-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Get second webhook",
-      "description": "Get second webhook with the Nixflex API. Read the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
+      "description": "Read the secondary webhook setting for an owned Nixflex number. Secondary and primary slots are configured independently.",
       "h1": "Get second webhook",
       "searchPhrase": "get second webhook Nixflex API",
       "number": 31
@@ -1423,7 +1429,7 @@
       "slug": "api-reference/integration-settings/put-integrations-webhook-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Set first webhook",
-      "description": "Set first webhook with the Nixflex API. Set the first webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call.",
+      "description": "Set the primary webhook for an owned Nixflex number. Review event contracts, signature verification and duplicate delivery handling.",
       "h1": "Set first webhook",
       "searchPhrase": "set first webhook Nixflex API",
       "number": 27
@@ -1432,7 +1438,7 @@
       "slug": "api-reference/integration-settings/put-integrations-webhook2-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Set second webhook",
-      "description": "Set second webhook with the Nixflex API. Set the second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive.",
+      "description": "Set the secondary webhook for an owned Nixflex number. Review event contracts, signature verification and duplicate delivery handling.",
       "h1": "Set second webhook",
       "searchPhrase": "set second webhook Nixflex API",
       "number": 30
@@ -1441,7 +1447,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-webhook-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Clear first webhook",
-      "description": "Clear first webhook with the Nixflex API. Clear the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
+      "description": "Clear the primary webhook setting for an owned Nixflex number. This request targets the primary slot independently of the secondary slot.",
       "h1": "Clear first webhook",
       "searchPhrase": "clear first webhook Nixflex API",
       "number": 29
@@ -1450,7 +1456,7 @@
       "slug": "api-reference/integration-settings/delete-integrations-webhook2-number-phoneNumber",
       "group": "Integrations / Webhooks",
       "title": "Clear second webhook",
-      "description": "Clear second webhook with the Nixflex API. Clear the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations.",
+      "description": "Clear the secondary webhook setting for an owned Nixflex number. This request targets the secondary slot independently of the primary slot.",
       "h1": "Clear second webhook",
       "searchPhrase": "clear second webhook Nixflex API",
       "number": 39
@@ -1468,7 +1474,7 @@
       "slug": "api-reference/integration-settings/put-integrations-web-calls-number-phoneNumber",
       "group": "Integrations / Web calls",
       "title": "Set web calls",
-      "description": "Set web calls with the Nixflex API. Set the web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or.",
+      "description": "Set the website voice-call switch for an owned Nixflex number. Review its saved state without starting a web call.",
       "h1": "Set web calls",
       "searchPhrase": "set web calls Nixflex API",
       "number": 36
@@ -1494,7 +1500,7 @@
       "slug": "api-reference/organisation/get-organisation",
       "group": "Organisation",
       "title": "Get organisation context",
-      "description": "Get organisation context with the Nixflex API. Read the organisation selected by the authenticated credential. The result includes current permissions and.",
+      "description": "Read the Nixflex organisation selected by the authenticated credential, including its current permissions and account context.",
       "h1": "Get organisation context",
       "searchPhrase": "get organisation context Nixflex API",
       "number": 143
@@ -1503,7 +1509,7 @@
       "slug": "api-reference/organisation/get-organisation-members",
       "group": "Organisation",
       "title": "List organisation members",
-      "description": "List organisation members with the Nixflex API. Read active members, up to 100 pending or expired invitations, and current safety limits. The Owner and.",
+      "description": "List Nixflex organisation members, up to 100 pending or expired invitations, and current safety limits. Review role permissions before changes.",
       "h1": "List organisation members",
       "searchPhrase": "list organisation members Nixflex API",
       "number": 152
@@ -1512,7 +1518,7 @@
       "slug": "api-reference/organisation/get-organisation-activity",
       "group": "Organisation",
       "title": "List organisation activity",
-      "description": "List organisation activity with the Nixflex API. Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin.",
+      "description": "Read Nixflex organisation activity, newest first, with up to 50 events per JSON page. Check role permissions and paging rules.",
       "h1": "List organisation activity",
       "searchPhrase": "list organisation activity Nixflex API",
       "number": 145
@@ -1521,7 +1527,7 @@
       "slug": "api-reference/organisation/post-organisation-claim-invite",
       "group": "Organisation",
       "title": "Request an owner claim",
-      "description": "Request an owner claim with the Nixflex API. Start an email invitation to claim this existing, unclaimed API-only account. The verified recipient must.",
+      "description": "Invite a verified recipient to claim an existing, unclaimed Nixflex API-only account. Sending the invitation does not complete the claim.",
       "h1": "Request an owner claim",
       "searchPhrase": "request an owner claim Nixflex API",
       "number": 146
@@ -1530,7 +1536,7 @@
       "slug": "api-reference/organisation/post-organisation-invites",
       "group": "Organisation",
       "title": "Invite a teammate",
-      "description": "Invite a teammate with the Nixflex API. Send a 24-hour team invitation. The invited person accepts using their own verified login. Opening an email does not.",
+      "description": "Send a 24-hour Nixflex team invitation. The recipient must accept using their own verified login; opening the email does not add membership.",
       "h1": "Invite a teammate",
       "searchPhrase": "invite a teammate Nixflex API",
       "number": 148
@@ -1539,7 +1545,7 @@
       "slug": "api-reference/organisation/post-organisation-invites-id-resend",
       "group": "Organisation",
       "title": "Resend a team invitation",
-      "description": "Resend a team invitation with the Nixflex API. Invalidate the old invitation and send a replacement with a new ID and 24-hour link. Resending uses the daily.",
+      "description": "Replace a Nixflex team invitation with a new ID and 24-hour link. The previous link becomes invalid and sending limits still apply.",
       "h1": "Resend a team invitation",
       "searchPhrase": "resend a team invitation Nixflex API",
       "number": 150
@@ -1548,7 +1554,7 @@
       "slug": "api-reference/organisation/delete-organisation-invites-id",
       "group": "Organisation",
       "title": "Revoke a team invitation",
-      "description": "Revoke a team invitation with the Nixflex API. Revoke a pending or expired invitation before it is accepted. This invalidates its link; it does not remove.",
+      "description": "Revoke a pending or expired Nixflex invitation before acceptance. The link becomes invalid; this does not remove an existing team member.",
       "h1": "Revoke a team invitation",
       "searchPhrase": "revoke a team invitation Nixflex API",
       "number": 149
@@ -1557,7 +1563,7 @@
       "slug": "api-reference/organisation/patch-organisation-members-id",
       "group": "Organisation",
       "title": "Change an organisation role",
-      "description": "Change an organisation role with the Nixflex API. Change a non-Owner member to Admin or Member. Only Owner authority may change roles. This is not an.",
+      "description": "Change a non-Owner Nixflex member to Admin or Member using Owner authority. Review the resulting permissions before saving the role.",
       "h1": "Change an organisation role",
       "searchPhrase": "change an organisation role Nixflex API",
       "number": 154
@@ -1566,7 +1572,7 @@
       "slug": "api-reference/organisation/delete-organisation-members-id",
       "group": "Organisation",
       "title": "Remove an organisation member",
-      "description": "Remove an organisation member with the Nixflex API. Remove one non-Owner member from this organisation. Shared work and the shared API key remain. A.",
+      "description": "Remove one non-Owner member from a Nixflex organisation. Shared work and the shared API key remain; review any separate access that also needs removal.",
       "h1": "Remove an organisation member",
       "searchPhrase": "remove an organisation member Nixflex API",
       "number": 153
@@ -1575,7 +1581,7 @@
       "slug": "api-reference/organisation/patch-organisation-name",
       "group": "Organisation",
       "title": "Rename an organisation",
-      "description": "Rename an organisation with the Nixflex API. Set the business name shown for this organisation. Only the Owner personal session or the organisation API key.",
+      "description": "Rename a Nixflex organisation using its API key or the Owner's personal session. Set the business name shown for that organisation.",
       "h1": "Rename an organisation",
       "searchPhrase": "rename an organisation Nixflex API",
       "number": 155
@@ -1584,7 +1590,7 @@
       "slug": "api-reference/organisation/get-organisation-signing-secret",
       "group": "Organisation",
       "title": "Get the signing secret",
-      "description": "Get the signing secret with the Nixflex API. Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a.",
+      "description": "Privately retrieve the Nixflex organisation signing secret to verify event deliveries. Keep it server-side and out of logs, browsers and shared output.",
       "h1": "Get the signing secret",
       "searchPhrase": "get the signing secret Nixflex API",
       "number": 158
@@ -1593,7 +1599,7 @@
       "slug": "api-reference/account/create-key",
       "group": "Account and usage",
       "title": "Create an API account",
-      "description": "Create an API account with the Nixflex API. Create a separate API-only account and its credential. This does not add another key to an existing.",
+      "description": "Create a separate Nixflex API-only account and its credential. This does not add another key to an existing account.",
       "h1": "Create an API account",
       "searchPhrase": "create an api account Nixflex API",
       "number": 1
@@ -1602,7 +1608,7 @@
       "slug": "api-reference/account/rotate-key",
       "group": "Account and usage",
       "title": "Rotate the API key",
-      "description": "Rotate the API key with the Nixflex API. Replace the current account secret immediately. The key ID remains the same; the old secret stops working when.",
+      "description": "Rotate the Nixflex account's API secret immediately while keeping its key ID. Plan the change because the old secret stops working.",
       "h1": "Rotate the API key",
       "searchPhrase": "rotate the api key Nixflex API",
       "number": 2
@@ -1611,7 +1617,7 @@
       "slug": "api-reference/account/usage",
       "group": "Account and usage",
       "title": "Get account usage",
-      "description": "Get account usage with the Nixflex API. Read stored account usage and call-capacity information. Occupancy can include unresolved reservations, so it is not.",
+      "description": "Read Nixflex account usage and call-capacity information. Occupancy can include unresolved reservations as well as active calls.",
       "h1": "Get account usage",
       "searchPhrase": "get account usage Nixflex API",
       "number": 186
@@ -1620,7 +1626,7 @@
       "slug": "api-reference/account-and-keys/get-account-retention",
       "group": "Account and usage",
       "title": "Get account retention",
-      "description": "Get account retention with the Nixflex API. Read the account retention default for new agents. Existing agents keep their saved retention settings; use.",
+      "description": "Read the Nixflex account retention default for new agents. Existing agents retain their saved settings until explicitly updated.",
       "h1": "Get account retention",
       "searchPhrase": "get account retention Nixflex API",
       "number": 51
@@ -1629,7 +1635,7 @@
       "slug": "api-reference/account-and-keys/get-keys-activity",
       "group": "Account and usage",
       "title": "Get key activity",
-      "description": "Get key activity with the Nixflex API. Read a single snapshot of retained API request activity for the authenticated account. This is request activity.",
+      "description": "Read a snapshot of retained Nixflex API request activity for the account. Distinguish request logs from call history and billing usage.",
       "h1": "Get key activity",
       "searchPhrase": "get key activity Nixflex API",
       "number": 102
@@ -1638,7 +1644,7 @@
       "slug": "api-reference/voices/get-voices",
       "group": "Voices",
       "title": "List voices",
-      "description": "List voices with the Nixflex API. List the voices visible to this account. Compatibility is calculated for the optional agent context; catalog availability.",
+      "description": "List voices visible to the Nixflex account. Check compatibility for the optional agent context before choosing a voice.",
       "h1": "List voices",
       "searchPhrase": "list voices Nixflex API",
       "number": 187
@@ -1647,7 +1653,7 @@
       "slug": "api-reference/voices/get-voices-voice_key",
       "group": "Voices",
       "title": "Get a voice",
-      "description": "Get a voice with the Nixflex API. Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return.",
+      "description": "Read a voice visible to the Nixflex account and its compatibility with an optional agent language. A successful read does not guarantee compatibility.",
       "h1": "Get a voice",
       "searchPhrase": "get a voice Nixflex API",
       "number": 188
@@ -1696,6 +1702,14 @@
       "h1": "Update phone number credentials",
       "searchPhrase": "update phone number credentials Nixflex API",
       "number": 197
+    },
+    {
+      "slug": "api-reference/call-bookings",
+      "group": "Webhooks",
+      "title": "call.bookings: final booking results after a call",
+      "description": "Receive confirmed Nixflex booking actions and their final results after a call. Verify signatures, count active bookings and handle duplicate deliveries.",
+      "h1": "call.bookings: final booking results after a call",
+      "searchPhrase": "Nixflex call.bookings post-call webhook final booking results"
     }
   ],
   "moved": [],

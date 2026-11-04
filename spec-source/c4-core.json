@@ -3656,7 +3656,7 @@
       "method": "POST",
       "path": "/v1/phone-numbers",
       "group": "Phone numbers",
-      "notes": "The engine currently requires legacy connection credential fields as well as the public fields below. Their names remain undocumented; there is no neutral credential alias in this API revision. For a new setup, connect the number in the dashboard. Existing integrations can supply their securely prepared private import.json unchanged. The examples read that file and do not show, print or invent credential fields. The neutral fields alone are not a successful import request.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches.",
+      "notes": "The engine currently requires legacy connection credential fields as well as the public fields below. Their names remain undocumented; there is no neutral credential alias in this API revision. For a new setup, connect the number in the dashboard. Existing integrations can supply their securely prepared private import.json unchanged. The examples read that file and do not show, print or invent credential fields. The neutral fields alone are not a successful import request.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches. If custom_prompt is omitted, it is saved as null; import does not copy the agent instructions. A later prompt update is a separate request that must be checked independently.",
       "slug": "api-reference/phone-numbers/import",
       "specPath": "/phone-numbers",
       "params": [],
@@ -3869,7 +3869,7 @@
       "method": "DELETE",
       "path": "/v1/phone-numbers/:phoneNumber",
       "group": "Phone numbers",
-      "notes": "No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage.",
+      "notes": "No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage. After an unclear removal write, the engine can make one exact-resource read. Only explicit proof that all routing and application/trunk overrides are empty can finish that same removal. A missing resource (404), changed identity, missing routing fields, remaining routing or read failure is not proof. No second carrier write is sent by this recovery check.",
       "slug": "api-reference/phone-numbers/delete",
       "specPath": "/phone-numbers/{phoneNumber}",
       "params": [
@@ -3986,7 +3986,7 @@
           "deleted": true
         }
       },
-      "retry": "Never automatically retry DELETE. Read the number after an uncertain result and preserve safe operation_id details. A confirmed missing number may be consistent with a completed removal; it does not prove every external routing action or data deletion occurred.",
+      "retry": "Never automatically repeat removal. Initial unconfirmed cleanup returns 503 number_cleanup_uncertain; an exact retry while still unclear returns 409 with the same code. A conflicting operation returns 409 number_operation_pending. Confirmed carrier change with database completion unknown returns 503 number_save_pending; an exact deliberate retry resumes completion without another carrier write. Keep unknown operations held and reconcile through support; do not delete and reimport to recover.",
       "kitExamples": {
         "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);\n// Handle result privately; do not log secrets or call content.",
         "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex numbers delete \"$NXF_PHONE_NUMBER\" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json",

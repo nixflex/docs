@@ -9,7 +9,7 @@ Using the dashboard? See [the business guide](/guides/business/calcom).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
 
 ## 1. Read the saved connection
 
@@ -56,6 +56,8 @@ Use a disposable test appointment. Verify create, reschedule and cancel in the a
 ## 5. Handle follow-up separately
 
 Booking texts during calls depend on `incall_sms_enabled`, an eligible number and current sending checks. Calendar success does not prove SMS success. Disconnecting the integration stops new use; it does not remove existing appointments.
+
+After a call, use the signed [`call.bookings` event](/api-reference/call-bookings) to reconcile confirmed changes. Its `timeline` records actions and `final` gives the resulting bookings, including Cal.com UID replacements. Create then cancel means zero active results; count active final rows instead of actions.
 
 ## Example response
 

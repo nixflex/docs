@@ -6195,16 +6195,22 @@
       ],
       "errors": [
         [
-          400,
-          "invalid_request",
-          "The campaign is in a state that cannot be deleted.",
-          "Read its state; use cancellation when you intend to stop future work."
+          409,
+          "campaign_in_progress",
+          "This campaign is still running. Cancel it or wait for it to finish before deleting it.",
+          "Keep the row; cancel or wait for completion before a deliberate deletion."
         ],
         [
-          500,
-          "server_error",
-          "The result could not be confirmed.",
-          "Read the current state before repeating a write."
+          409,
+          "campaign_settlement_pending",
+          "This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes.",
+          "details.deleted is false. Keep the row and wait for settlement; never report deletion."
+        ],
+        [
+          503,
+          "deletion_unavailable",
+          "Deletion could not be checked. No deletion was confirmed.",
+          "Read current state and reconcile the uncertain outcome before another deliberate write."
         ]
       ],
       "related": [
@@ -6216,7 +6222,7 @@
       "title": "Delete an SMS campaign",
       "side": "Delete an SMS campaign",
       "description": "Delete an SMS campaign with the Nixflex API. Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other.",
-      "summary": "Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other active states are refused.",
+      "summary": "Delete an owned SMS campaign only after active work and final settlement are resolved.",
       "response": {
         "type": "object",
         "properties": {
@@ -6234,7 +6240,7 @@
       "exampleResponse": {
         "message": "Campaign deleted"
       },
-      "notes": "No body is used. A missing owned campaign also returns 200 with the same acknowledgement. Deletion does not cancel an active run, recall accepted messages, or prove erasure of every message copy. The CLI may read detail before deletion for its confirmation preview.",
+      "notes": "No body is used. A missing owned campaign returns 200 with the same acknowledgement. Running work returns 409 campaign_in_progress: cancel or wait first. Unsettled final results or charges return 409 campaign_settlement_pending with details.deleted=false. Keep the campaign row until confirmed success and show the safe server message. Zero sent is not proof that there is no active, unknown or unsettled work. Deletion does not recall accepted messages or prove erasure of all copies. The CLI may read detail for its confirmation preview.",
       "retry": "No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Repeating deletion of an already absent ID returns 200, but an earlier unknown request still needs state reconciliation.",
       "query": "",
       "kitExamples": {

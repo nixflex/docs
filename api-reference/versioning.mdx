@@ -23,6 +23,21 @@ Inspect warnings in successful responses; do not assume every supplied field was
 
 ## Changelog
 
+### 4 November 2026 — booking results and safer deletion
+
+These changes are confirmed in the reviewed staging engine. Publish and deploy them together for the intended environment; a documentation update alone does not change production behaviour.
+
+| Change | Integration action |
+| --- | --- |
+| New [`call.bookings` event](/api-reference/call-bookings) | Read the ordered confirmed-action `timeline` and the separate `final` result for each booking UID. Count active final results. Verify its required signature and deduplicate `(account, event, call_id)` within each receiver. |
+| SMS campaign deletion | Handle 409 `campaign_settlement_pending` with `details.deleted:false` and 409 `campaign_in_progress`. Keep the campaign until confirmed success. A 503 `deletion_unavailable` leaves the result unconfirmed. |
+| Single-call deletion | A narrowly verified ended, settled call with a skipped, proven-empty recording can complete cleanup. Missing recording links or uncertain evidence still do not prove deletion. Bulk and account deletion are unchanged. |
+| Knowledge draft reads | Legacy repairs are projected without saving. Explicit save or accept persists them. Keep the returned revision; MCP support still depends on registered client tools. |
+| Automatic keyterms | URL and API-path text is excluded from automatic speech hints. Older hints refresh in the background; manual terms and limits are unchanged. |
+| Booking contact approval | Spell the email local part; say an exact familiar domain as words. Name and email need separate approvals. A yes to one clarified letter does not approve the full address. |
+
+The existing `call.completed` and `sms.booking` shapes remain unchanged. There is no new SMS-thread aggregate event or new HTTP operation for `call.bookings`. The updated email design introduces no public API change.
+
 ### 1 November 2026 — API foundation and organisation behaviour
 
 New agents normally use **300 seconds maximum call duration**, **10 seconds silence hang-up**, and **dynamic greeting on**. These defaults apply when creation omits those settings; saved agents are not reset. The create response includes resolved values and may contain ignored-field warnings.

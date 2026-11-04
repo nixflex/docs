@@ -9,7 +9,7 @@ Using the dashboard? See [the business guide](/guides/business/call-history).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.11.0 or Python 0.4.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment.
 
 ## 1. Read history
 
@@ -53,6 +53,8 @@ Use the endpoint’s documented filters, bounds and pagination. Do not treat one
 
 Display call state, analysis, costs and recording availability separately. Missing summary or structured data is not a confirmed negative answer. A requested end or deletion can remain pending.
 
+For confirmed booking changes, receive the signed [`call.bookings` event](/api-reference/call-bookings). Its action timeline and final booking results answer different questions: create then cancel produces two actions and zero active results. Deduplicate by trusted account, event and call ID before updating your view; the event can arrive separately from `call.completed`.
+
 ## 4. Request a current recording link
 
 Use `GET /v1/calls/{id}/recording` when the user asks to play a recording. Read `status`, `url` and `expires_at`. Available links are short-lived; do not save them as permanent public URLs. Other statuses can have `url:null`.
@@ -60,6 +62,10 @@ Use `GET /v1/calls/{id}/recording` when the user asks to play a recording. Read 
 ## 5. Apply retention and deletion honestly
 
 Read the configured policy and actual current state. Cleanup waits for required finalisation and post-call decisions. Customer-owned storage has its own lifecycle. Deleting one call does not erase every caller record or external integration copy.
+
+Single-call deletion can now finish for a narrowly verified empty recording: the call has ended and settled, recording was skipped, no stored recording row or carrier copy exists, the upload fence is closed, and all post-call work and memory decisions have finished. The server must have fresh ownership and absence proof. A missing URL, an empty file list or a completed call alone is not enough. Unknown or missing evidence stays pending or refused. This does not change bulk or account deletion, and required financial records remain.
+
+Show `unavailable` with `reason:tracking_unavailable` as unavailable tracking, not proof that a recording was erased. Read the [single-call deletion contract](/api-reference/calls/delete) before offering a delete action.
 
 ## Example response
 
@@ -73,6 +79,7 @@ A recording access reply has `call_id`, `status`, `url` and `expires_at`. For ex
 | Recording pending | Offer a later bounded refresh. |
 | expired/not_recorded/customer_bucket | Explain the returned state; do not invent a link. |
 | pending_deletion | Respect revoked access and tracked cleanup. |
+| unavailable with tracking_unavailable | Keep recording state unknown; do not show a deletion success. |
 | Optional analysis absent | Keep it unknown rather than manufacturing a result. |
 
 ## Next steps

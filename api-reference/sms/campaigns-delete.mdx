@@ -1,7 +1,7 @@
 ---
 title: "Delete an SMS campaign"
 sidebarTitle: "Delete an SMS campaign"
-description: "Delete an SMS campaign with the Nixflex API. Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other."
+description: "Delete a settled Nixflex SMS campaign. Handle active-work conflicts, pending settlement and unknown results before removing it from your application."
 openapi: "/api-reference/public.openapi.json DELETE /sms/campaigns/{id}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-delete"
@@ -26,7 +26,7 @@ canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-delete"
   table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
 `}</style>
 
-Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other active states are refused.
+Delete an owned SMS campaign only after active work and final settlement are resolved.
 
 ## Authentication
 
@@ -40,7 +40,7 @@ Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s serv
 
 Do not send a request body.
 
-No body is used. A missing owned campaign also returns 200 with the same acknowledgement. Deletion does not cancel an active run, recall accepted messages, or prove erasure of every message copy. The CLI may read detail before deletion for its confirmation preview.
+No body is used. A missing owned campaign returns 200 with the same acknowledgement. Running work returns 409 campaign_in_progress: cancel or wait first. Unsettled final results or charges return 409 campaign_settlement_pending with details.deleted=false. Keep the campaign row until confirmed success and show the safe server message. Zero sent is not proof that there is no active, unknown or unsettled work. Deletion does not recall accepted messages or prove erasure of all copies. The CLI may read detail for its confirmation preview.
 
 ## Response fields
 
@@ -52,7 +52,7 @@ No body is used. A missing owned campaign also returns 200 with the same acknowl
 
 ## Example request
 
-These examples use the unpublished client candidates: Node/CLI 0.10.0, Python 0.3.0 and MCP 0.4.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
+These examples use the supplied client candidates: Node/CLI 0.11.0, Python 0.4.0 and MCP 0.5.0. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
 
 <RequestExample>
 
@@ -124,8 +124,9 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 
 | Status | Code | Meaning | What to do |
 | --- | --- | --- | --- |
-| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The campaign is in a state that cannot be deleted. | Read its state; use cancellation when you intend to stop future work. |
-| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 409 | [`campaign_in_progress`](/api-reference/errors#campaign_in_progress) | This campaign is still running. Cancel it or wait for it to finish before deleting it. | Keep the row; cancel or wait for completion before a deliberate deletion. |
+| 409 | [`campaign_settlement_pending`](/api-reference/errors#campaign_settlement_pending) | This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes. | details.deleted is false. Keep the row and wait for settlement; never report deletion. |
+| 503 | [`deletion_unavailable`](/api-reference/errors#deletion_unavailable) | Deletion could not be checked. No deletion was confirmed. | Read current state and reconcile the uncertain outcome before another deliberate write. |
 | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 

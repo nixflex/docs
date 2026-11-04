@@ -11492,7 +11492,7 @@
             "bearerAuth": []
           }
         ],
-        "description": "Guarded cleanup request for an owned call. Can refuse with 409/503 for in-progress/unsettled work or pending/failed cleanup. Not a promise of immediate all-copy erasure. Never blindly retry an uncertain response.",
+        "description": "Request guarded cleanup of one owned ended, settled call. A narrow skipped-recording case can complete only with fresh proof of no stored object, no carrier copy, closed upload fence and completed post-call/settlement work. Missing or unknown evidence remains refused. Bulk/account deletion is unchanged; a missing URL is not erasure proof.",
         "responses": {
           "200": {
             "description": "Success",
@@ -17332,7 +17332,7 @@
       "delete": {
         "operationId": "deleteSmsCampaign",
         "summary": "Delete an SMS campaign",
-        "description": "Delete an owned SMS campaign in draft, scheduled, done, failed or cancelled state. Running, launching and other active states are refused. No body is used. A missing owned campaign also returns 200 with the same acknowledgement. Deletion does not cancel an active run, recall accepted messages, or prove erasure of every message copy. The CLI may read detail before deletion for its confirmation preview.",
+        "description": "Delete an owned SMS campaign only after active work and settlement are resolved. Zero sent is not sufficient proof. Keep the row until confirmed success; a missing owned campaign returns the same success acknowledgement.",
         "tags": [
           "SMS campaigns"
         ],
@@ -17368,54 +17368,6 @@
                 },
                 "example": {
                   "message": "Campaign deleted"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "invalid_request: The campaign is in a state that cannot be deleted.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "description": "Machine-readable error code."
-                        },
-                        "message": {
-                          "type": "string",
-                          "description": "Explanation."
-                        },
-                        "doc_url": {
-                          "type": "string",
-                          "description": "Error reference link."
-                        },
-                        "details": {
-                          "type": "object",
-                          "properties": {},
-                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
-                          "additionalProperties": true
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "doc_url",
-                        "type"
-                      ],
-                      "description": "",
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ],
-                  "description": "",
-                  "additionalProperties": false
                 }
               }
             }
@@ -17468,6 +17420,107 @@
               }
             }
           },
+          "409": {
+            "description": "campaign_settlement_pending: final results/charges are unsettled; details.deleted=false. campaign_in_progress: cancel or wait for active work first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "conflict"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "campaign_settlement_pending",
+                            "campaign_in_progress"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "code": {
+                                "const": "campaign_settlement_pending"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "details": {
+                                "type": "object",
+                                "required": [
+                                  "deleted"
+                                ],
+                                "properties": {
+                                  "deleted": {
+                                    "const": false
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "examples": {
+                  "settlement": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "campaign_settlement_pending",
+                        "message": "This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes.",
+                        "doc_url": "https://docs.nixflex.com/errors/campaign_settlement_pending",
+                        "details": {
+                          "deleted": false
+                        }
+                      }
+                    }
+                  },
+                  "running": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "campaign_in_progress",
+                        "message": "This campaign is still running. Cancel it or wait for it to finish before deleting it.",
+                        "doc_url": "https://docs.nixflex.com/errors/campaign_in_progress",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "429": {
             "description": "rate_limit_exceeded: The account request limit was reached.",
             "content": {
@@ -17516,50 +17569,58 @@
               }
             }
           },
-          "500": {
-            "description": "server_error: The result could not be confirmed.",
+          "503": {
+            "description": "deletion_unavailable: deletion could not be checked; no deletion confirmed.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "description": "Machine-readable error code."
-                        },
-                        "message": {
-                          "type": "string",
-                          "description": "Explanation."
-                        },
-                        "doc_url": {
-                          "type": "string",
-                          "description": "Error reference link."
-                        },
-                        "details": {
-                          "type": "object",
-                          "properties": {},
-                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
-                          "additionalProperties": true
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "doc_url",
-                        "type"
-                      ],
-                      "description": "",
-                      "additionalProperties": false
-                    }
-                  },
                   "required": [
                     "error"
                   ],
-                  "description": "",
-                  "additionalProperties": false
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "deletion_unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": {
+                    "type": "server_error",
+                    "code": "deletion_unavailable",
+                    "message": "Deletion could not be checked. No deletion was confirmed.",
+                    "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
+                    "details": {}
+                  }
                 }
               }
             }
@@ -48490,7 +48551,7 @@
           "Knowledge"
         ],
         "summary": "Get knowledge draft",
-        "description": "Read proposed pieces, review flags, reminders and draft revision. Legacy draft reads can normalize and save the draft, and rebuild empty generated pieces from retained input. Re-read data.edit_revision before editing or accepting. C8’s no-write smoke test leaves this read pending manual test.",
+        "description": "Read a draft without persisting repairs. Legacy normalization is projected with stable draft-scoped piece IDs; an explicit save or accept persists it. Keep the returned edit revision before editing.",
         "parameters": [
           {
             "name": "kb",
@@ -70598,6 +70659,585 @@
         "type": "http",
         "scheme": "bearer",
         "description": "KEY_ID:KEY_SECRET from the owning account. Keep it server-side. A verified personal dashboard Bearer session may be used where the operation documents role-based access."
+      }
+    }
+  },
+  "webhooks": {
+    "call.bookings": {
+      "post": {
+        "summary": "Receive confirmed post-call booking results",
+        "description": "One logical event per ended call and configured destination when a calendar mutation succeeded. Verify the raw-body signature before parsing. Deduplicate (trusted account, event, call_id) per receiver; deliveries can repeat, be delayed or fail.",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Nixflex-Signature",
+            "required": true,
+            "description": "HMAC-SHA256 over timestamp.raw_body using the privately provisioned signing secret. Missing signing material retries; call.bookings is never sent unsigned.",
+            "schema": {
+              "type": "string",
+              "pattern": "^t=[0-9]+,v1=[a-f0-9]{64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "event",
+                  "call_id",
+                  "agent_id",
+                  "from",
+                  "to",
+                  "number",
+                  "ended_at",
+                  "timeline",
+                  "final"
+                ],
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "const": "call.bookings"
+                  },
+                  "call_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "agent_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "from": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "to": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "number": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "ended_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Engine call-end time in UTC; not webhook delivery time."
+                  },
+                  "timeline": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "Ordered confirmed calendar mutations during this call.",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "required": [
+                        "action",
+                        "booking_uid",
+                        "start",
+                        "end",
+                        "attendee_name",
+                        "attendee_email",
+                        "service",
+                        "timezone",
+                        "at"
+                      ],
+                      "properties": {
+                        "action": {
+                          "type": "string",
+                          "enum": [
+                            "created",
+                            "rescheduled",
+                            "cancelled"
+                          ]
+                        },
+                        "booking_uid": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "start": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "end": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "attendee_name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "attendee_email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "service": {
+                          "type": [
+                            "string",
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "timezone": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Engine receipt time of the successful mutation, in UTC."
+                        }
+                      }
+                    }
+                  },
+                  "final": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "One result per resulting booking UID. This is not a full calendar inventory.",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "required": [
+                        "status",
+                        "booking_uid",
+                        "start",
+                        "end",
+                        "attendee_name",
+                        "attendee_email",
+                        "service",
+                        "timezone"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "cancelled"
+                          ]
+                        },
+                        "booking_uid": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "start": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "end": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "attendee_name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "attendee_email": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "service": {
+                          "type": [
+                            "string",
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "timezone": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "create_move": {
+                  "summary": "Create then move: one active booking at the moved time.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      },
+                      {
+                        "action": "rescheduled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:02:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "create_cancel": {
+                  "summary": "Create then cancel: one cancelled result, zero active.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      },
+                      {
+                        "action": "cancelled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:02:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "cancelled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "create_move_cancel": {
+                  "summary": "Create, move, cancel: cancelled at the last known time.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      },
+                      {
+                        "action": "rescheduled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:02:00.000Z"
+                      },
+                      {
+                        "action": "cancelled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:03:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "cancelled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "move_existing": {
+                  "summary": "Move an existing booking: one active result at its new time.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "rescheduled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "two_bookings": {
+                  "summary": "Two independent booking UIDs: two active results.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      },
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_second",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:02:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      },
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_second",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "replacement_uid": {
+                  "summary": "A replacement UID is resolved in final; timeline retains original action IDs.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "created",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": "2030-11-04T10:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:01:00.000Z"
+                      },
+                      {
+                        "action": "rescheduled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London",
+                        "at": "2030-11-04T09:02:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_replacement",
+                        "start": "2030-11-04T11:00:00.000Z",
+                        "end": "2030-11-04T11:30:00.000Z",
+                        "attendee_name": "Sam Carter",
+                        "attendee_email": "sam@example.test",
+                        "service": "Consultation",
+                        "timezone": "Europe/London"
+                      }
+                    ]
+                  }
+                },
+                "unknown_fields": {
+                  "summary": "Preserve nullable unknown fields and numeric legacy service.",
+                  "value": {
+                    "event": "call.bookings",
+                    "call_id": "call_example",
+                    "agent_id": "agent_example",
+                    "from": "+12025550101",
+                    "to": "+12025550100",
+                    "number": "+12025550100",
+                    "ended_at": "2030-11-04T09:05:00.000Z",
+                    "timeline": [
+                      {
+                        "action": "rescheduled",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": null,
+                        "attendee_name": null,
+                        "attendee_email": null,
+                        "service": 42,
+                        "timezone": null,
+                        "at": "2030-11-04T09:01:00.000Z"
+                      }
+                    ],
+                    "final": [
+                      {
+                        "status": "active",
+                        "booking_uid": "booking_example",
+                        "start": "2030-11-04T10:00:00.000Z",
+                        "end": null,
+                        "attendee_name": null,
+                        "attendee_email": null,
+                        "service": 42,
+                        "timezone": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Receiver has durably stored the verified event, or already has this logical event. Return 2xx directly; do not redirect."
+          }
+        }
       }
     }
   }

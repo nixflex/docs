@@ -172,10 +172,12 @@ client.sms.send(agent_id=agent["agent_id"], from_number="+447446466847", to="+44
 
 campaign = client.sms.campaigns.create(agent_id=..., from_number="+447446466847", message="Hi {{name}}, ...", recipients=[{"phone": "+447700900123", "variables": {"name": "Sam"}}])
 client.sms.campaigns.launch(campaign["campaign_id"])
-client.sms.campaigns.list(status="completed")
+client.sms.campaigns.list(status="done")
 client.sms.campaigns.get(campaign["campaign_id"])
 client.sms.campaigns.delete(campaign["campaign_id"])
 ```
+
+These are separate operation examples. Launch only after reviewing recipients and consent; delete only after active work and settlement finish. Deletion returns 409 `campaign_in_progress` or `campaign_settlement_pending` while those checks are unresolved. The latter includes `details.deleted:false`. Keep the campaign visible until confirmed success; 503 `deletion_unavailable` is not deletion proof. See [SMS campaign deletion](/api-reference/sms/campaigns-delete).
 
 ## Webhooks
 

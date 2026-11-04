@@ -9,7 +9,7 @@ Using the dashboard? See [the business guide](/guides/business/sms-campaigns).
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
 
 ## 1. Inspect campaign state
 
@@ -65,6 +65,8 @@ Store `campaign_id` and read campaign state. Sent, delivered and failed counts a
 ## 5. Control unsent work
 
 Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. DELETE has separate eligibility checks and does not recall messages. PATCH can edit only the fields and states allowed by the API.
+
+Keep a campaign visible until deletion is confirmed. Active work returns 409 `campaign_in_progress`; unfinished final send results or charges return 409 `campaign_settlement_pending` with `details.deleted:false`. Wait for settlement and reconcile current state before another deliberate deletion. A 503 `deletion_unavailable` leaves deletion unconfirmed. See the [deletion contract](/api-reference/sms/campaigns-delete).
 
 ## Example response
 

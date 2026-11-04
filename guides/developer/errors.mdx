@@ -25,6 +25,8 @@ Single `POST /v1/sms` suppression now returns **409 `do_not_contact`**, with typ
 
 ## Preserve uncertainty
 
+SMS campaign deletion returns **409 `campaign_settlement_pending`** while final send results or charges are unsettled, with `error.details.deleted:false`. It previously surfaced as a generic server error. Keep the campaign row until deletion succeeds; zero sent does not prove settlement. An active campaign now returns **409 `campaign_in_progress`**, replacing the old 400 `invalid_request`. Cancel or wait for it to finish, then read its state before deleting. A 503 `deletion_unavailable` means no deletion was confirmed.
+
 An accepted call or SMS request is not delivery proof. Save returned identifiers and read the resulting record. For number credentials, `carrier_outcome_unknown` needs support investigation; `credential_save_pending` permits a deliberate retry with identical details to finish the local save. Never delete and re-import to recover.
 
 Show a safe message and retain the code and operation ID when present. Keep full bodies, caller details and credentials out of logs. See the [error catalog](/api-reference/errors) and [retry contract](/api-reference/retries).

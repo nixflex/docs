@@ -51,9 +51,9 @@ for(const row of plan.pages){
   text=text.replaceAll('This is a successful-write example, pending manual test. Run it only with an approved disposable fixture.','This example changes state. Review the target and payload before running it.');
   text=text.replaceAll('This successful write remains pending manual test.','Review the target and payload before this write.');
   text=text.replaceAll('Successful retrieval is pending manual test; do not use an assistant or smoke test to retrieve it.','Retrieve it privately through the Owner workflow.');
-  text=text.replaceAll('C8’s no-write smoke test leaves this read pending manual test.','Treat this GET as an intentional action because it can persist repairs.');
+  text=text.replaceAll('C8’s no-write smoke test leaves this read pending manual test.','Confirm that the deployment uses non-persisting draft reads before enabling automatic retries.');
   text=text.replace(/\bK[2345] examples/g,'These examples').replace(/\bK[2345] candidates/g,'client candidates');
- text=text.replace(/\bThe K4 MCP\b/g,'The MCP').replaceAll('/advanced/webhooks','/api-reference/webhooks');
+ text=text.replace(/\bThe K4 MCP\b/g,'The MCP');
  write(row.slug+'.mdx',text);
  const match=fm.match(/^openapi:\s*"[^"\n]*? (GET|POST|PUT|PATCH|DELETE) ([^"\n]+)"/m);
  if(match)spec.paths[match[2]][match[1].toLowerCase()].summary=row.title;

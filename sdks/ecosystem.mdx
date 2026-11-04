@@ -13,7 +13,7 @@ canonical: "https://docs.nixflex.com/sdks/ecosystem"
 | **OpenAPI spec** | OpenAPI 3.1 - import into Postman, or generate a client for any language | [public.openapi.json](https://docs.nixflex.com/api-reference/public.openapi.json) · [Other languages](/sdks/other-languages) |
 | **API reference** | Public operations, examples, and error guidance | [Reference](/api-reference/introduction) |
 | **Web call widget** | One script tag that adds a "call us" button to a website | [Web calls](/concepts/web-calls) |
-| **Webhooks** | Signed post-call events, five retries | [Webhooks](/advanced/webhooks) |
+| **Webhooks** | Signed post-call events, up to five queue attempts | [Webhooks](/advanced/webhooks) |
 
 These tools use the public API. Some dashboard workflows use separate internal or signed-in interfaces. Check operation coverage before choosing a client.
 
@@ -33,10 +33,16 @@ MCP adds `connect_google_calendar`, `get_google_calendar`,
 `update_phone_number_credentials`. Each new write requires `confirm: true`; carrier
 credentials come only from the privately configured server process. The previous 89
 tool contracts remain unchanged. There is still no direct booking or knowledge
-publication tool. The [AI setup guides](/ai-tools/overview) describe the earlier
-0.4.0 candidate; their version/count and calendar limits await the 0.5.0 update.
+publication tool. The [AI setup guides](/ai-tools/overview) cover the supplied
+0.5.0 candidate, its 94 registered tools and private credential setup limits.
 
 Single-SMS suppression uses HTTP 409 `do_not_contact`. Node and Python expose
 `NixflexDoNotContactError` and `NixflexConflictError`; preserve old 400 handling too.
 Do not retry an opt-out. Booking models cover call and SMS events, but do not replace
 raw-body signature verification or add a webhook receiver tool.
+
+The new [`call.bookings` event](/api-reference/call-bookings) is documented from the
+later engine change. The supplied K6 candidates do not establish typed support for
+its separate `timeline` and `final` payload. Use the documented JSON contract and
+verify signatures before processing; check a later client release before relying
+on new event-specific types or helpers.
