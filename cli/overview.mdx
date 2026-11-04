@@ -21,6 +21,14 @@ nixflex --version
 
 Requires Node.js 18 or newer. No other dependencies are installed.
 
+## Reviewed 0.11.0 candidate
+
+K6 adds Google Calendar status, connection, settings and disconnection, plus in-place
+number credential updates. It is supplied as a locally built candidate. Verify its
+archive hash before using `npm install -g ./nixflex-0.11.0.tgz`, then check
+`nixflex --version`. Generic registry commands do not establish this version's availability.
+See [the five new commands and private input rules](/cli/commands#google-calendar-and-number-credentials).
+
 ## Authenticate
 
 The CLI needs your full API key - both halves, `nxf_xxx:nxfs_xxx`. It looks in three places, in this order:
@@ -38,7 +46,7 @@ nixflex logout         # removes the stored key
 ```
 
 <Note>
-  Legacy `login` stores plaintext in `~/.nixflex/config.json`; this is not an encrypted vault. POSIX file mode is not a guarantee of Windows ACL protection. The file contains `api_key` and optional `base_url`; staging must retain its explicit URL. Never put keys in scripts, shell history, chat or client JSON. The [MCP foundation draft](/mcp/overview) binds key and URL together; secure key setup is planned for run 3, not built into today's login.
+  Legacy `login` stores plaintext in `~/.nixflex/config.json`; this is not an encrypted vault. POSIX file mode is not a guarantee of Windows ACL protection. The file contains `api_key` and optional `base_url`; staging must retain its explicit URL. Never put keys in scripts, shell history, chat or client JSON. The [MCP foundation draft](/ai-tools/overview) binds key and URL together; the candidate MCP clients use separate private key setup; legacy CLI login still writes this plaintext file.
 </Note>
 
 ## Output
@@ -54,7 +62,7 @@ nixflex agents list --json | jq '.[].agent_id'
 - **Destructive commands preview first.** `agents delete`, `calls delete`, `calls delete-all`, `numbers delete`, `callers delete`, `sms campaigns delete`, `webhooks delete`, `storage|llm|tts delete` and `keys rotate` all show what would happen and stop until you add `--confirm` (or `--yes`).
 - **Nothing is retried or batched silently.** `callers import` sends a file in chunks of 1,000 and reports progress; a bad row stops its chunk before anything in it is written.
 - **Prompts from files.** Anywhere a prompt or message is accepted, `@path/to/file.txt` reads it from disk.
-- **Any field, forever.** `--set field=value` and `--body @file.json` work on every create/update - new API fields need no new CLI.
+- **Use the command contract.** General creates and updates accept `--set` and `--body`; sensitive number credentials accept only private environment or stdin input.
 
 ## Exit codes
 
@@ -73,7 +81,7 @@ nixflex agents list --json | jq '.[].agent_id'
   <Card title="Commands" icon="list" href="/cli/commands">
     Every command with a real example.
   </Card>
-  <Card title="MCP" icon="diagram-project" href="/mcp/overview">
+  <Card title="MCP" icon="diagram-project" href="/ai-tools/overview">
     Claude Desktop, Claude Code, Codex and Cursor; see the unpublished foundation and release status.
   </Card>
 </CardGroup>

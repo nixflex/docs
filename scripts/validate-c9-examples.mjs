@@ -10,6 +10,7 @@ const args=process.argv.slice(2),arg=n=>args[args.indexOf(n)+1];
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),modules=arg('--modules'),out=arg('--out');
 assert.ok(modules&&out,'Provide --modules and --out');
 const require=createRequire(import.meta.url),Ajv=require(path.resolve(modules,'ajv/dist/2020.js')).default;
+const ts=require(path.resolve(modules,'typescript/lib/typescript.js'));
 const ajv=new Ajv({strict:false,validateFormats:false,allErrors:true});
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const spec=JSON.parse(read('api-reference/public.openapi.json')),plan=JSON.parse(read('spec-source/c10-site.json'));
@@ -41,13 +42,18 @@ cases(credentials.requestBody.content['application/json'].schema,[twilio,telnyx]
  [{...twilio,...telnyx},{twilio_sid:twilio.twilio_sid},{...twilio,twilio_token:' '},{...telnyx,telnyx_api_key:'line\nbreak'},{...twilio,agent_id:'agent_fixture'}]);
 const saved=credentials.responses['200'].content['application/json'].example;
 cases(credentials.responses['200'].content['application/json'].schema,[saved],[{...saved,twilio_token:'must-never-return'},{...saved,updated:false}]);
-const counts={javascript:0,python:0,bash:0,powershell:0,json:0};let bash='',py=[],js=[];
+const counts={javascript:0,typescript:0,python:0,bash:0,powershell:0,json:0,toml:0};let bash='',py=[],js=[],toml=[];
 for(const row of [...plan.pages,{slug:'snippets/guides/signature-verification'}]){
  const page=read(row.slug+'.mdx');
  let i=0;
- for(const [,lang,code] of page.matchAll(/```(javascript|python|bash|powershell|json)[^\n]*\n([\s\S]*?)```/g)){
+ for(const [,lang,code] of page.matchAll(/```(javascript|typescript|python|bash|powershell|json|toml)\b[^\n]*\n([\s\S]*?)```/g)){
   i++;counts[lang]++;if(lang==='json'){JSON.parse(code);continue;}
-  const file=path.join(dir,row.slug.replaceAll('/','_')+'-'+i+({javascript:'.mjs',python:'.py',bash:'.sh',powershell:'.ps1'}[lang]));fs.writeFileSync(file,code);
+  if(lang==='typescript'){
+   const parsed=ts.createSourceFile(row.slug+'.ts',code,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
+   assert.equal(parsed.parseDiagnostics.length,0,row.slug+' TypeScript syntax');continue;
+  }
+  const file=path.join(dir,row.slug.replaceAll('/','_')+'-'+i+({javascript:'.mjs',python:'.py',bash:'.sh',powershell:'.ps1',toml:'.toml'}[lang]));fs.writeFileSync(file,code);
+  if(lang==='toml')toml.push(file);
   if(lang==='javascript')js.push(file);if(lang==='python')py.push(file);if(lang==='bash')bash+='\n(\n'+code+'\n)\n';
  }
  const binding=page.match(/^openapi: "[^"\n]* (GET|POST|PUT|PATCH|DELETE) ([^"\n]+)"/m);
@@ -58,6 +64,8 @@ for(const row of [...plan.pages,{slug:'snippets/guides/signature-verification'}]
 // Parse without executing the examples. Python/Bash/PowerShell executables may be overridden.
 for(const file of js)execFileSync(process.execPath,['--check',file],{stdio:'pipe'});
 fs.writeFileSync(path.join(dir,'python-files.json'),JSON.stringify(py));
+fs.writeFileSync(path.join(dir,'toml-files.json'),JSON.stringify(toml));
+execFileSync(process.env.NXF_PYTHON||'python',['-X','utf8','-c','import tomllib,json,sys;[tomllib.load(open(p,"rb")) for p in json.load(open(sys.argv[1],encoding="utf-8"))]',path.join(dir,'toml-files.json')]);
 execFileSync(process.env.NXF_PYTHON||'python',['-X','utf8','-c','import ast,json,sys;[ast.parse(open(p,encoding="utf-8").read(),filename=p) for p in json.load(open(sys.argv[1],encoding="utf-8"))]',path.join(dir,'python-files.json')]);
 fs.writeFileSync(path.join(dir,'all.sh'),bash);execFileSync(process.env.NXF_BASH||'bash',['-n',path.join(dir,'all.sh')]);
 fs.writeFileSync(path.join(dir,'parse.ps1'),`$ErrorActionPreference='Stop'\nGet-ChildItem -LiteralPath '${dir.replaceAll("'","''")}' -Filter *.ps1 | ForEach-Object { $t=$null;$e=$null;[Management.Automation.Language.Parser]::ParseFile($_.FullName,[ref]$t,[ref]$e)|Out-Null;if($e.Count){throw ('Example syntax error: '+$_.Name)} }\n`);

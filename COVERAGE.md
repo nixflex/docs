@@ -1,6 +1,6 @@
-# API operation coverage — C10
+# API operation coverage — C11
 
-**Current C10:** 159 API pages: 147 endpoint templates and 12 shared reference pages. The five tabs contain 264 pages before D2 joins. All 63 repository tests pass. OpenAPI validates 1,083 schemas, 315 examples and 25 accepted/refused contract cases. The GET-only staging run has 1 PASS, 0 FAIL and 150 PENDING because NXF_STAGING_KEY is absent. Successful writes stay pending manual test individually below. D-owned metadata and generated-site gates are reported separately; this is not approval to publish.
+**Current C11:** D2 and D3 (cae52b1) joined. The five tabs contain 274 pages: Business 37, Developer 66, API 159, SDKs & CLI 7, AI tools 5. API coverage remains 147 endpoint templates and 12 shared pages. All 66 repository tests pass; OpenAPI validates 1,083 schemas, 315 examples and 25 accepted/refused cases. K6 supplied candidates (Node/CLI 0.11.0, Python 0.4.0, MCP 0.5.0 / 94 tools) are documented in SDKs & CLI. Six artifact hashes and five packaged operations per kit were checked. No live staging requests or writes were run in C11. The earlier C10 GET-only result (1 PASS, 0 FAIL, 150 PENDING without a staging key) is historical. Successful writes remain individually pending manual test below. Generated-site proof and D-owned content issues are listed in the C11 SEO-CHECK and AI-TOOLS-REVIEW; this is not publication approval.
 
 ## Historical C9 handover
 

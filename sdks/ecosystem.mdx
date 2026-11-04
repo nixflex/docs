@@ -9,7 +9,7 @@ canonical: "https://docs.nixflex.com/sdks/ecosystem"
 | **Node.js SDK** | Typed client for supported operations, zero dependencies, Node 18+ | [Docs](/sdks/node) · [npm](https://www.npmjs.com/package/nixflex) · [GitHub](https://github.com/nixflex/nixflex-node) |
 | **Python SDK** | Sync and async clients, Python 3.9+ | [Docs](/sdks/python) · [PyPI](https://pypi.org/project/nixflex/) |
 | **CLI** | `npx nixflex` - supported operations from a terminal, `--json` for scripts | [Docs](/cli/overview) · ships in the `nixflex` package |
-| **MCP server** | Your account as tools for Claude Desktop, Cursor, VS Code | [Docs](/mcp/overview) · [npm](https://www.npmjs.com/package/nixflex-mcp) |
+| **MCP server** | Your account as tools for Claude Desktop, Claude Code, Codex and Cursor | [Docs](/ai-tools/overview) · [npm](https://www.npmjs.com/package/nixflex-mcp) |
 | **OpenAPI spec** | OpenAPI 3.1 - import into Postman, or generate a client for any language | [public.openapi.json](https://docs.nixflex.com/api-reference/public.openapi.json) · [Other languages](/sdks/other-languages) |
 | **API reference** | Public operations, examples, and error guidance | [Reference](/api-reference/introduction) |
 | **Web call widget** | One script tag that adds a "call us" button to a website | [Web calls](/concepts/web-calls) |
@@ -17,8 +17,26 @@ canonical: "https://docs.nixflex.com/sdks/ecosystem"
 
 These tools use the public API. Some dashboard workflows use separate internal or signed-in interfaces. Check operation coverage before choosing a client.
 
-## Calendar and carrier credential operations
+## Reviewed kit versions
 
-The API now includes Google Calendar connect, status, settings and disconnect, plus in-place phone-number credential updates. Use the server HTTP examples in [Google Calendar](/api-reference/integration-settings/google-calendar) and [number credentials](/api-reference/phone-numbers/credentials) until your installed client release documents those methods. A successful API deployment does not publish a package or register a new MCP tool. Existing tool counts describe the reviewed kit version only.
+K6 supplies locally built candidates: **Node/CLI 0.11.0**, **Python 0.4.0** and
+**MCP 0.5.0 with 94 tools**. Its offline checks pass; registry publication and real
+staging writes remain separate. Install the supplied, hash-verified archives when
+testing these versions. A plain registry install does not prove candidate availability.
 
-Single-SMS suppression now uses HTTP 409 `do_not_contact` instead of 400 `invalid_request`. Preserve that code in error handling and do not retry a known opt-out.
+Node and Python now include four Google Calendar methods and an in-place number
+credential update. See the [Node examples](/sdks/node#reviewed-0-11-0-candidate),
+[Python examples](/sdks/python#reviewed-0-4-0-candidate) and [CLI commands](/cli/commands#google-calendar-and-number-credentials).
+
+MCP adds `connect_google_calendar`, `get_google_calendar`,
+`disconnect_google_calendar`, `update_google_calendar_settings` and
+`update_phone_number_credentials`. Each new write requires `confirm: true`; carrier
+credentials come only from the privately configured server process. The previous 89
+tool contracts remain unchanged. There is still no direct booking or knowledge
+publication tool. The [AI setup guides](/ai-tools/overview) describe the earlier
+0.4.0 candidate; their version/count and calendar limits await the 0.5.0 update.
+
+Single-SMS suppression uses HTTP 409 `do_not_contact`. Node and Python expose
+`NixflexDoNotContactError` and `NixflexConflictError`; preserve old 400 handling too.
+Do not retry an opt-out. Booking models cover call and SMS events, but do not replace
+raw-body signature verification or add a webhook receiver tool.

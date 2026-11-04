@@ -4,10 +4,10 @@ description: "The official Nixflex client for JavaScript and TypeScript"
 icon: "js"
 canonical: "https://docs.nixflex.com/sdks/node"
 ---
-The official SDK wraps every Nixflex endpoint in typed methods, with retries, pagination, and typed errors built in. It has no runtime dependencies and works on Node 18 or newer.
+The official SDK provides typed methods for supported Nixflex operations, bounded GET retries, pagination and typed errors. It has no runtime dependencies and works on Node 18 or newer.
 
 <Note>
-  The same package ships the [CLI](/cli/overview) (`npx nixflex`), and the [MCP server](/mcp/overview) lets an AI assistant use your account. Both call this SDK underneath.
+  The same package ships the [CLI](/cli/overview) (`npx nixflex`), and the [MCP server](/ai-tools/overview) lets an AI assistant use your account. Both call this SDK underneath.
 </Note>
 
 <CardGroup cols={2}>
@@ -29,6 +29,74 @@ do not include these additions yet.
 ```bash
 npm install nixflex
 ```
+
+## Reviewed 0.11.0 candidate
+
+The supplied K6 package adds four Google Calendar methods, in-place number credentials,
+SMS 409 error classes and booking webhook types. It is a locally built release candidate;
+the registry install above does not establish that you have it. Verify the supplied
+archive hash, then install that exact archive in your server project:
+
+```bash
+npm install ./nixflex-0.11.0.tgz
+```
+
+Use the matching private API key and base URL. These examples use a fictional number;
+replace it only with an owned test fixture. Each write is a separate deliberate action.
+
+```javascript
+import Nixflex from 'nixflex';
+const client = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: process.env.NIXFLEX_BASE_URL,
+});
+const number = '+12025550123';
+const status = await client.integrations.getGoogleCalendar(number);
+```
+
+| Method | Purpose |
+| --- | --- |
+| `integrations.connectGoogleCalendar(number, returnUrl)` | Return a ten-minute consent link for a human to open privately. |
+| `integrations.getGoogleCalendar(number)` | Read connection status, including `needs_reconnect` and `send_invites`. |
+| `integrations.updateGoogleCalendarSettings(number, settings)` | Change supplied settings only; `false` is preserved. |
+| `integrations.disconnectGoogleCalendar(number)` | Remove saved access; already dispatched work cannot be recalled. |
+| `phoneNumbers.updateCredentials(number, pair)` | Update this number's carrier details and routing while retaining its settings/history. |
+
+```javascript
+// Only after the user approves this exact settings change:
+await client.integrations.updateGoogleCalendarSettings('+12025550123', { send_invites: false });
+```
+
+Settings are `timezone`, `hours`, `slot_minutes`, `calendar_id` and `send_invites`.
+If supplied, `hours` replaces all seven days; use `null` for a closed day.
+Slots are 15, 30, 45 or 60 minutes. Google controls invitation delivery.
+`connected: true` with `needs_reconnect: true` needs fresh human consent.
+The status GET can refresh/check the existing connection internally.
+
+```javascript
+// Separate sensitive change; inject the pair privately and never log it.
+await client.phoneNumbers.updateCredentials('+12025550123', {
+  twilio_sid: process.env.NIXFLEX_TWILIO_SID,
+  twilio_token: process.env.NIXFLEX_TWILIO_TOKEN,
+});
+```
+
+For Telnyx, supply only `telnyx_api_key` and `telnyx_connection_id` from the private
+`NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID` environment variables.
+Do not mix pairs or pass `provider` in the SDK body. Missing/invalid pairs fail before HTTP.
+Writes never retry automatically. Stop on `carrier_outcome_unknown`; only a deliberate
+identical-input completion is allowed for `credential_save_pending`.
+See [number credentials](/api-reference/phone-numbers/credentials) before changing routing.
+
+`NixflexDoNotContactError` covers HTTP 409 `do_not_contact`; `NixflexConflictError`
+covers other 409 conflicts. Retain `NixflexInvalidRequestError` handling for old 400
+replies. A known opt-out means nothing was sent: stop without retrying or bypassing it.
+
+Exported types `Booking`, `CallCompletedBookingEvent` and `SmsBookingEvent` describe
+`call.completed.bookings[]` and `sms.booking.booking`. A booking has `action`,
+`booking_uid`, `start`, `end`, `attendee_name`, `attendee_email`, `service` and `timezone`.
+Preserve nullable values; `service` may also be a number. Types do not authenticate a
+webhook: [verify the original raw body first](/advanced/webhooks).
 
 ## Authenticate
 

@@ -14,6 +14,74 @@ are local only; PyPI publication is separate.
 pip install nixflex
 ```
 
+## Reviewed 0.4.0 candidate
+
+The supplied K6 wheel adds Google Calendar, number credentials, SMS 409 error classes
+and booking models to both sync and async clients. It is a locally built release
+candidate; the registry command above does not establish that you have it.
+Verify the supplied archive hash, then install that exact wheel:
+
+```bash
+python -m pip install ./nixflex-0.4.0-py3-none-any.whl
+```
+
+```python
+import os
+from nixflex import Nixflex, AsyncNixflex
+config = dict(api_key=os.environ['NIXFLEX_API_KEY'], base_url=os.environ['NIXFLEX_BASE_URL'])
+with Nixflex(**config) as client:
+    status = client.integrations.get_google_calendar('+12025550123')
+
+async def read_calendar_status():
+    async with AsyncNixflex(**config) as client:
+        return await client.integrations.get_google_calendar('+12025550123')
+```
+
+Replace the fictional number with an owned fixture. The status GET may refresh/check
+the existing connection internally. Each write below is a separate deliberate action.
+
+| Sync method | Purpose |
+| --- | --- |
+| `integrations.connect_google_calendar(number, return_url)` | Return a ten-minute consent link for a human; do not log or auto-open it. |
+| `integrations.get_google_calendar(number)` | Read all six status fields, including `needs_reconnect` and `send_invites`. |
+| `integrations.update_google_calendar_settings(number, **settings)` | Change supplied settings, preserving `False` and omitted values. |
+| `integrations.disconnect_google_calendar(number)` | Remove saved access without claiming remote revocation. |
+| `phone_numbers.update_credentials(number, **credentials)` | Update one carrier pair for the existing number; retains settings/history. |
+
+The async methods have the same arguments and are awaited. Settings are `timezone`,
+`hours`, `slot_minutes`, `calendar_id` and `send_invites`. Supplied hours replace all
+seven days, with `None` for closed days; slot values are 15, 30, 45 or 60.
+
+```python
+# Only after approval of this exact change:
+client.integrations.update_google_calendar_settings('+12025550123', send_invites=False)
+```
+
+```python
+# Separate sensitive routing change, with privately injected values:
+client.phone_numbers.update_credentials(
+    '+12025550123',
+    telnyx_api_key=os.environ['NIXFLEX_TELNYX_API_KEY'],
+    telnyx_connection_id=os.environ['NIXFLEX_TELNYX_CONNECTION_ID'],
+)
+```
+
+The alternate pair is `twilio_sid` and `twilio_token` from private
+`NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN`. Never mix pairs, log them, or add
+`provider` to the SDK body. Missing/invalid pairs send no request. Writes do not retry
+automatically. Stop on `carrier_outcome_unknown`; `credential_save_pending` permits
+only a manual completion with identical input. Read [the routing limits](/api-reference/phone-numbers/credentials).
+
+`NixflexDoNotContactError` represents HTTP 409 `do_not_contact`, and
+`NixflexConflictError` covers other 409 conflicts. Keep old 400
+`NixflexInvalidRequestError` handling. Stop on known suppression; do not resend.
+
+Exported `Booking`, `CallCompletedBookingEvent` and `SmsBookingEvent` TypedDict models
+cover `call.completed.bookings[]` and `sms.booking.booking`: `action`, `booking_uid`,
+`start`, `end`, `attendee_name`, `attendee_email`, `service`, `timezone`. Preserve
+nullable fields and numeric service values. These types do not validate or authenticate
+incoming requests. [Verify the original raw webhook body first](/advanced/webhooks).
+
 ## Authenticate
 
 ```python
@@ -184,5 +252,5 @@ not a claim about the package currently installed from PyPI.
 
 ## Related
 
-- [Node.js SDK](/sdks/node) · [Other languages](/sdks/other-languages) · [CLI](/cli/overview) · [MCP server](/mcp/overview)
+- [Node.js SDK](/sdks/node) · [Other languages](/sdks/other-languages) · [CLI](/cli/overview) · [MCP server](/ai-tools/overview)
 - [PyPI](https://pypi.org/project/nixflex/) · [GitHub](https://github.com/nixflex/nixflex-python)

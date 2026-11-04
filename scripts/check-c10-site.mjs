@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
+import {supplierLeak,unreviewedCarrierCopy,productionCanonical} from './c11-content-policy.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const args=process.argv.slice(2),arg=n=>args[args.indexOf(n)+1];
 const read=p=>fs.readFileSync(path.join(root,p),'utf8'),json=p=>JSON.parse(read(p));
@@ -38,8 +39,8 @@ for(const slug of nav){
  check(desc.length>0&&desc.length<=160&&!descriptions.has(desc.toLowerCase()),slug+' unique description <=160');descriptions.add(desc.toLowerCase());
  if(meta(s,'canonical')==='https://docs.nixflex.com/'+slug)check(true,slug+' production canonical');else if(plan.pages.find(p=>p.slug===slug).owner==='D')report.pending.push(slug+' canonical: requires Chat D page update');else check(false,slug+' production canonical');
  check(!/^(?:hidden|noindex):\s*true\b|^robots:.*noindex/m.test(s)&&config.seo?.indexing==='all',slug+' indexable');
- check(!/\b(?:openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq)\b/i.test(s),slug+' speech/model supplier scan');
- if(/twilio|telnyx/i.test(s)){carrier.push(slug);if(plan.pages.find(p=>p.slug===slug).owner==='D')report.pending.push(slug+' carrier wording: Chat D review required; carrier names are limited to setup needs');}
+ check(!supplierLeak(slug,s),slug+' speech/model supplier scan');
+ if(/twilio|telnyx/i.test(s)){carrier.push(slug);if(plan.pages.find(p=>p.slug===slug).owner==='D'&&unreviewedCarrierCopy(slug,s))report.pending.push(slug+' carrier wording: Chat D review required; carrier names are limited to setup needs');}
  if(/^openapi:/m.test(s)){endpoints++;check((s.match(/^## /gm)||[]).length===8,slug+' eight endpoint sections');}
  for(const m of s.matchAll(/(?:\]\(|href=["'])(\/[^\s)"']+)/g))if(!resolves(m[1]))links.push({slug,url:m[1]});
 }
@@ -72,7 +73,7 @@ if(args.includes('--site')){
   if(!/<h1\b/.test(visible)||visible.replace(/<[^>]+>/g,'').length<200)throw Error('Missing server-rendered page text');
   if(/^openapi:/m.test(read(slug+'.mdx'))&&!/Request fields|Request Fields/.test(visible))throw Error('Missing server-rendered endpoint sections');html++;
   const tags=raw.match(/<link\b[^>]*>/gi)||[];
-  if(!tags.some(tag=>/rel=["']canonical["']/.test(tag)&&tag.includes('https://docs.nixflex.com/'+slug))){if(plan.pages.find(p=>p.slug===slug).owner==='D')report.pending.push(slug+' generated canonical: requires Chat D page update');else throw Error('Missing production canonical in generated HTML');}else canonical++;
+  if(!tags.some(tag=>/rel=["']canonical["']/.test(tag)&&productionCanonical(slug,tag.match(/\bhref=["']([^"']+)["']/)?.[1]))){if(plan.pages.find(p=>p.slug===slug).owner==='D')report.pending.push(slug+' generated canonical: requires Chat D page update');else throw Error('Missing production canonical in generated HTML');}else canonical++;
  }catch(e){pageErrors.push({slug,error:e.message});}done++;if(done%25===0)console.error('Generated page checks: '+done+'/'+nav.length);}}));
  report.counts.readableMarkdown=md;report.counts.serverRenderedHtml=html;report.counts.generatedCanonicals=canonical;report.pageErrors=pageErrors;
  check(md===nav.length,'Every generated Markdown page is readable','generated');check(html===nav.length,'Every HTML page includes server-rendered text','generated');

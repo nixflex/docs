@@ -4,11 +4,47 @@ description: "Every nixflex command, with an example"
 icon: "list"
 canonical: "https://docs.nixflex.com/cli/commands"
 ---
-Every command accepts `--json` (machine-readable output), `--key` (use another API key for this command) and `--base-url` (staging). Destructive commands preview and stop unless you pass `--confirm` (alias `--yes`).
+Commands support `--json` output and `--base-url`. Use a privately configured `NIXFLEX_API_KEY`; the number credential command explicitly rejects `--key`. Destructive commands preview and stop unless you pass `--confirm` (alias `--yes`).
+
+## Google Calendar and number credentials
+
+These five commands ship in the supplied **Node/CLI 0.11.0 K6 candidate**, not as a
+claim of public registry availability. Confirm your installed version first.
+Each write previews with zero requests unless you pass `--confirm`; the commands
+below are separate actions, not a sequence to run against a real number.
+
+| Command (after `nixflex`) | Behaviour |
+| --- | --- |
+| `integrations connectGoogleCalendar <number> --return-url <https-url> --confirm` | Return a private ten-minute link for human consent; never auto-open. |
+| `integrations getGoogleCalendar <number> --json` | Read six status fields; the engine may refresh/check existing credentials internally. |
+| `integrations updateGoogleCalendarSettings <number> --body @calendar-settings.json --confirm` | Change supplied settings; hours replace all seven days. |
+| `integrations disconnectGoogleCalendar <number> --confirm` | Remove saved access; cannot recall dispatched work. |
+| `numbers updateCredentials <number> --provider twilio --confirm` | Read the private environment pair and update this number's routing/settings in place. |
+
+```powershell
+nixflex integrations getGoogleCalendar '+12025550123' --json
+# A separate approved change; the file contains settings only, never secrets:
+nixflex integrations updateGoogleCalendarSettings '+12025550123' --body '@calendar-settings.json' --confirm
+```
+
+For example, `calendar-settings.json` can contain `{"send_invites":false}`.
+Other fields are `timezone`, `hours`, `slot_minutes` (15/30/45/60) and `calendar_id`.
+Omitted fields remain saved. A closed day is `null`; invitations do not prove inbox delivery.
+
+For credentials, privately configure `NIXFLEX_TWILIO_SID` + `NIXFLEX_TWILIO_TOKEN`,
+or use `--provider telnyx` with `NIXFLEX_TELNYX_API_KEY` + `NIXFLEX_TELNYX_CONNECTION_ID`.
+Alternatively `--credentials-stdin` accepts the exact JSON pair from a trusted private
+process pipe. This command rejects `--key`, `--body`, `--set`, credential files and
+secret command-line flags. It returns only a safe receipt. No automatic write retry:
+stop on `carrier_outcome_unknown`; only manually complete `credential_save_pending`
+with identical input. [Review the routing consequences](/api-reference/phone-numbers/credentials).
+
+SMS JSON errors preserve 409 `conflict` / `do_not_contact`; stop without resending,
+while retaining old 400 handling. Booking model additions do not create a CLI listener.
 
 ## Setting any field
 
-Every command that creates or updates something accepts `--set field=value` - as many times as you like - and `--body @file.json` for nested objects. Values are parsed: `true`, `false`, `null`, numbers, and `@path` reads a file. Any field the API accepts works, including ones added after this CLI was released.
+General create/update commands accept `--set field=value` - as many times as you like - and `--body @file.json` for nested objects. Values are parsed: `true`, `false`, `null`, numbers, and `@path` reads a file. Any field the API accepts works, including ones added after this CLI was released.
 
 ```bash
 nixflex agents update agent_15d1a9ee16294087 --set silence_hangup_seconds=12 --set incall_sms_enabled=true
@@ -128,7 +164,7 @@ What the agent knows about a caller on one of your numbers. First number is your
 
 | Command | Notes |
 |---|---|
-| `mcp setup <claude\|cursor> [--mcp-local <package-directory>] [--confirm]` | Unpublished foundation: safe OS-specific config, no key copying, explicit destination binding and replacement confirmation. Local artifact mode works before publication. Claude Code/Codex installers are run 3; VS Code is retired. See [MCP](/mcp/overview). |
+| `mcp setup <claude\|cursor> [--mcp-local <package-directory>] [--confirm]` | K6 pins MCP 0.5.0 and refuses an unpublished registry target. Use the supplied local package before publication. Setup preserves explicit destination binding and does not copy keys into client JSON. Claude Code and Codex use manual configuration; this installer still accepts only Claude Desktop or Cursor. See [AI tools](/ai-tools/overview). |
 
 ## Errors and exit codes
 
