@@ -1,0 +1,58 @@
+---
+title: "Team Activity: review actions and download a CSV"
+description: "Filter Nixflex team actions by person and date, understand Done, Not allowed and Not confirmed results, and export matching Activity records as CSV."
+---
+
+Use **Team → Activity** to review work in the organisation. Owners and Admins can open it. Members cannot. The separate **Logs** page contains API logs, not this team record.
+
+## Steps
+
+### 1. Open Activity
+
+Open **Team**, then **Activity**. Each entry describes an action in plain words with the person and result where known. Older records can have generic labels when the original person or item is no longer available.
+
+### 2. Filter the list
+
+Choose a **Person** and optional **From** and **To** dates. Dates use **UTC**. If the day differs from your local time, adjust the range accordingly. The view refreshes when opened, when the window gets focus and after your own team action.
+
+### 3. Read the result
+
+| Result or wording | Meaning |
+| --- | --- |
+| **Done** | The recorded action completed. |
+| **Not allowed** | The action was refused. |
+| **Not confirmed** | Completion could not be established. Do not treat it as success. |
+| Asked to end a call | Ending was requested; confirmed call completion has not yet been recorded. |
+
+<Note>Screenshot placeholder: **team-activity-results** — Team → Activity, fictional completed action and an honest Not confirmed or asked-to-end result with UTC filters. Use staging test data.</Note>
+
+### 4. Read more or export
+
+**Load 50 more** adds another page. For a complete filtered record, choose the CSV download. It streams every matching event in the chosen range, up to **12 months**. There is no 500-row export cap. The **When** column uses a readable UTC date and time.
+
+<Note>Screenshot placeholder: **team-activity-csv** — Downloaded Activity CSV, fictional When, action and result columns; UTC date-time visible, no private identifiers. Use staging test data.</Note>
+
+### 5. Keep the file private
+
+Store the export with the people who need to review it. The export fixes its upper boundary when it starts, so new actions do not move later pages. Download again for newer events. Customers cannot edit or delete Activity entries.
+
+## Common questions
+
+### Why does listening show one entry?
+
+One displayed listening session includes its duration after playback starts. A takeover records actual human activation. Internal access checks are not extra customer actions.
+
+### When does adding knowledge appear?
+
+The named addition appears after publication succeeds. A draft, failed import or review-only job must not say knowledge was added.
+
+### Does Activity show secrets or conversation text?
+
+No. It describes actions without showing credentials, message contents or raw item identifiers. It is not a transcript or an email inbox-delivery report.
+
+## Related guides
+
+- [Team access](/guides/business/team)
+- [Call History](/guides/business/call-history)
+
+Prefer code? See [Organisation Activity through the API](/guides/developer/organisations).

@@ -1,0 +1,63 @@
+---
+title: "Connect Codex to Nixflex with MCP"
+description: "Configure the Nixflex MCP candidate in Codex without saving a key in TOML. Verify a read and try five prompts for agents, knowledge, calls, booking and usage."
+---
+
+Use Codex with the supplied Nixflex MCP 0.4.0 candidate's **89 tools**. The kit runs as a local process and uses your organisation API key. The key does not inherit a Member's dashboard restrictions.
+
+## Connect
+
+1. [Install the supplied package](/ai-tools/overview#install-the-supplied-local-package) with Node 22 or later.
+2. Provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` privately in the environment used to launch Codex. Never ask Codex to read the key or put its value in a chat, command argument or TOML file.
+3. Add this server to `~/.codex/config.toml`, preserving existing settings. Replace the Windows path with your actual installed path. For macOS or Linux, write the absolute path under your home directory in full.
+4. Restart Codex from the prepared environment. Use `codex mcp list` or `/mcp` to inspect the connection and tools.
+5. Run the read-only prompt below and approve only that action.
+
+```toml
+[mcp_servers.nixflex]
+command = "node"
+args = ["C:/NixflexTools/mcp-0.4.0/node_modules/nixflex-mcp/index.js"]
+startup_timeout_sec = 30
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
+
+[mcp_servers.nixflex.env]
+NIXFLEX_CREDENTIAL_SOURCE = "environment"
+```
+
+The `env_vars` names forward values from the launching environment; they are not the values themselves. Use a full Node executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
+
+<Note>Screenshot placeholder: **ai-codex-connected** — Codex MCP status, Nixflex connected with the expected candidate tools; environment contents hidden. Use staging test data; hide all secrets.</Note>
+
+## Verify with a read
+
+> Use Nixflex get_usage only. Explain the usage returned without changing anything or printing credentials. Do not use shell commands to inspect my secret environment.
+
+Expect **89 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. Reconcile an uncertain write before trying it again.
+
+## Five prompts to try
+
+### 1. Create an agent
+
+> Read my Nixflex agent list. Draft a Willow Reception agent for answering service questions, and show its exact instructions and settings before creating it. Wait for my approval before create_agent. Do not attach numbers, modify repository files or place a call.
+
+### 2. Prepare new knowledge
+
+> Read Willow Reception's current knowledge. Help me turn the business facts I provide into one clear topic, identify conflicts and show dashboard steps to add, review and publish it. This MCP has no knowledge write tool. Do not use shell or direct API calls to bypass that limit or say the topic is live.
+
+### 3. Check recent calls
+
+> Use Nixflex list_calls for Willow Reception's latest five completed calls. Summarise confirmed outcomes, missing results and follow-up needs. Keep personal details out of the answer. Do not change records, call people or send messages.
+
+### 4. Prepare booking via a calendar
+
+> List my Nixflex numbers and let me choose one for booking. Explain the dashboard Google Calendar connection, hours and caller invite setting. Give me a manual test-call script with separate approval of the name and spelled email. MCP cannot book directly; do not call the booking API or claim an appointment has been saved.
+
+### 5. Read usage
+
+> Use Nixflex get_usage to make a small usage and balance table with the actual returned period. Say when a value is unavailable. Do not change billing, rotate credentials, inspect local secret files or invent an invoice.
+
+## Limits and documentation
+
+Use the dashboard for knowledge publication, calendar connection and personal ownership actions. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
+
+Give Codex [llms.txt](https://docs.nixflex.com/llms.txt) and [this page as Markdown](https://docs.nixflex.com/ai-tools/codex.md). Ask it to read the relevant page and inspect the available tool schema before proposing an action. Documentation is context, not account permission.
