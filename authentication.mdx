@@ -1,109 +1,40 @@
 ---
-title: "Authentication"
-description: "API keys and how to authenticate requests"
-icon: "key"
+title: "API authentication: store and rotate your Nixflex key"
+description: "Authenticate Nixflex requests with the full account credential, keep it on the server, rotate it deliberately and verify signed events separately."
 ---
 
-All Nixflex API requests are authenticated with an **API key pair**: a `key_id` and a `key_secret`.
+Requests to the public API use the full account credential in the Authorization header:
 
-## API key format
-
-| Part | Prefix | Example |
-|---|---|---|
-| `key_id` | `nxf_` | `nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6` |
-| `key_secret` | `nxfs_` | `nxfs_x1y2z3...` (64 chars) |
-
-The `key_id` identifies your account. The `key_secret` is the password — you can reveal it again at any time from the **API Keys** page in the dashboard, so treat it like a database password.
-
-## Sending requests
-
-Every API request must include an `Authorization` header in this exact format:
-
-```
+```http
 Authorization: Bearer KEY_ID:KEY_SECRET
 ```
 
-Both parts joined by a colon. Example:
+The values above are placeholders. Copy the full credential through the Owner's **API key** dashboard screen. The current dashboard manages one shared account key; it does not create a separate restricted key for each teammate or application.
 
-```bash
-curl https://api.nixflex.com/v1/agents \
-  -H "Authorization: Bearer nxf_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6:nxfs_x1y2z3..."
-```
+## Keep the key server-side
 
-**Using the SDK**
+Store it in a secret manager or environment variable such as `NIXFLEX_API_KEY`. Call the API from your server. Do not embed it in a website widget, URL, mobile bundle, screenshot or repository. Avoid logging request headers or full error objects that include them.
 
-The official Node.js SDK takes the same credential string and sets the header for you:
+| Action | Who or what it changes |
+| --- | --- |
+| Invite a teammate | Adds personal login access under an organisation role |
+| Reveal the shared API key | Owner dashboard action |
+| Rotate the shared key | Replaces API authentication; old consumers need the new credential |
+| Remove a teammate | Revokes their membership, not copies of a shared key held elsewhere |
+| Use a signing credential | Verifies incoming events; not automatically the same secret as API access |
 
-```bash
-npm install nixflex
-```
-```javascript
-import Nixflex from 'nixflex';
+## Rotate deliberately
 
-const client = new Nixflex({ apiKey: process.env.NIXFLEX_API_KEY });  // "nxf_xxx:nxfs_xxx"
+Inventory applications using the key, prepare their secret configuration, rotate from the Owner's flow and update the consumers. Do not assume a grace period keeps the old credential valid. Recheck a read-only request after the change and investigate 401 responses without printing either key.
 
-const agents = await client.agents.list();
-```
-Keep the credential in an environment variable - never in client-side code. See the [quickstart](/quickstart#using-the-sdk) for a full example.
+## Signed requests are separate
 
-## Creating keys
+Organisation signing can use a separate signing secret. Retrieve it only through the authorised Owner flow and use it to verify incoming request bytes. Do not assume API-key rotation changes a separate signing secret. See [webhook verification](/advanced/webhooks).
 
-In the dashboard:
+## Handle refusals
 
-<Steps>
-  <Step title="Go to API Keys">
-    Open [app.nixflex.com](https://app.nixflex.com) → **API Keys**.
-  </Step>
-  <Step title="Create a new key">
-    Click **Create new key**, name it (e.g. "Production", "Staging").
-  </Step>
-  <Step title="Copy your key">
-    Copy the full key into your secrets manager. If you lose it, you can reveal it again from the API Keys page.
-  </Step>
-</Steps>
+Check that the full key and target environment match. An account can also be inactive or temporarily unavailable. Read the error code and message; repeated retries cannot fix an invalid credential or role decision.
 
-You can also create a key programmatically with `POST /v1/keys`. See [Create API key](/api-reference/account/create-key).
-
-## Security
-
-<Warning>
-  **Never expose `key_secret` in client-side code, mobile apps, or public repositories.** Anyone with the secret can make calls and rack up your bill. Treat it like a database password.
-</Warning>
-
-<Tip>
-  **Contacting support?** Send only your `key_id` (the `nxf_` part). It identifies your account but cannot authenticate anything, so it is safe to share. Never include the `key_secret` (`nxfs_`) in an email or support ticket.
-</Tip>
-
-Best practices:
-
-- Store keys in environment variables or a secrets manager (1Password, AWS Secrets Manager, etc.)
-- Use separate keys for development, staging, and production
-- Rotate keys after team members leave
-- Revoke compromised keys immediately from the dashboard
-
-## Failed authentication
-
-If your key is wrong, missing, or revoked, the API returns `401 Unauthorized`:
-
-```json
-{
-  "error": {
-    "type": "authentication_error",
-    "code": "invalid_api_key",
-    "message": "Invalid or missing API key"
-  }
-}
-```
-
-Check that:
-
-- The `Authorization` header is present
-- The format is `Bearer key_id:key_secret` (note the colon, not a space)
-- The key has not been revoked in the dashboard
-- You are sending it to `api.nixflex.com`, not the engine's internal hostname
-
-## Scoping
-
-Every key is scoped to a single account. All agents, phone numbers, calls, and campaigns created with a key belong to that account and are isolated from other accounts.
-
-You cannot use one account's key to access another account's resources, even by guessing IDs.
+- [Make a read-only request](/quickstart)
+- [Team roles](/concepts/organisations)
+- [API authentication reference](/api-reference/authentication)

@@ -1,50 +1,26 @@
 ---
-title: "Google Calendar Booking"
-description: "Let the agent check availability, book, reschedule, and cancel appointments live during a call"
-icon: "calendar"
+title: "Google Calendar booking: understand the connected workflow"
+description: "Understand how Nixflex uses a connected Google Calendar for appointment actions, including working hours, agent time zone, confirmation and unavailable slots."
 ---
-When Google Calendar is connected, the agent can manage appointments on your calendar in real time — checking free slots, booking, finding, rescheduling, and cancelling — all while the caller is on the phone. The agent only ever offers times that are actually free, and texts an SMS confirmation whenever a booking changes.
-## Setup
-Connect Google Calendar in the dashboard under **Integrations → Google Calendar → Configure**. Unlike most tools, there are no API keys to copy:
-1. Pick the agent and the phone number you want to set up.
-2. Click **Connect Google Calendar**.
-3. You are sent to Google to grant calendar access, then returned to the dashboard.
-We store only a secure token to manage events on your behalf — never your password. Once connected, the card shows **Connected as** your Google account, and the agent picks up the booking tools automatically. You can disconnect or reconnect any time from the same panel.
-## Disconnecting
 
-You can remove Google Calendar from a phone number at any time:
+A connected Google Calendar lets an eligible agent check appointment availability and request booking changes. Connect it through the signed-in [business setup guide](/guides/business/google-calendar); the public integration-settings API does not provide a substitute OAuth connection route.
 
-1. Open **Integrations → Google Calendar → Configure** for that number.
-2. Click **Disconnect**.
+## How the calendar is used
 
-Disconnecting immediately revokes Nixflex's access to your calendar — the stored token is deleted and the five booking tools are removed from the agent for that number. Nothing else about the agent or phone number changes, and you can reconnect any time.
+The connection stores authorisation for the selected business calendar. The booking path generates candidate appointments from working hours, subtracts existing busy times and uses the agent's time zone. Built-in defaults are 30-minute appointments, 09:00–17:00, Monday–Friday unless the saved configuration overrides them. Confirm the actual configuration before describing those hours to a customer.
 
-## What the agent can do
-Five booking tools are added to the agent automatically once Google Calendar is on. You do not write any prompt for them — the agent uses them when the caller asks.
-| Tool | What it does |
-| --- | --- |
-| Check availability | Finds free slots from the date the caller asks for onward |
-| Book appointment | Books a slot, using the details already known and confirming them with the caller |
-| Find booking | Looks up the caller's existing appointment(s) by email |
-| Reschedule | Moves an existing booking to a new time |
-| Cancel | Cancels an existing booking |
-## Business hours
-The agent offers slots during standard business hours — **Monday to Friday, 9:00am to 5:00pm, in 30-minute slots** — and books on your account's **primary** calendar. It reads your real events first and only offers times that are genuinely free. If a caller asks for a day you are closed (for example a Sunday), the agent says you are closed that day rather than offering times.
-## Example
-> *Caller:* "Can I book a check-up for Monday morning?"
->
-> *Agent:* "We have nine o'clock or half past nine on Monday. Which works best?"
->
-> *Caller:* "Nine o'clock."
->
-> *Agent:* "Shall I book this under Sam Carter, sam.carter at example dot com?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
-## Timezone
-When a caller says "nine o'clock", the agent books 9:00 in your business's local time, with daylight saving handled automatically. This is correct for a clinic or office that callers physically visit.
-## SMS confirmation
-The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
-## Per-number calendar
-Google Calendar is connected **per phone number** — each number connects its own Google account. Pick the number first, then connect. This lets you run different locations on one agent, each booking into its own calendar.
-## Tips
-- The agent confirms the caller's name and email before booking. Details already in [caller context](/concepts/caller-context) are said out loud for a yes; anything new is read back letter by letter. It never calls the tool until the caller has confirmed.
-- The connection uses Google's secure sign-in (OAuth) — only a token is stored, never your password.
-- Disconnect any time from the same **Configure** panel.
+The agent can check availability, book, find an existing appointment, reschedule or cancel through the supported calendar tools. Lookup can require the attendee's email and exact date/time when several matches exist. A self-reported email is not verified identity, so define appropriate business checks for sensitive changes.
+
+## Confirmation and real outcomes
+
+`require_booking_confirmation` can require a read-back before a mutation. The effective number/agent setting applies. A time can still become unavailable after an earlier lookup; only a successful write confirms the appointment.
+
+Ambiguous or nonexistent local times must be clarified. The engine checks the call is still live before a new write, but a lost network response does not prove an external calendar change was rolled back. Reconcile the calendar instead of blindly repeating it.
+
+## Texts and disconnection
+
+An in-call confirmation text needs the separate in-call SMS gate and an eligible sender. A calendar update can succeed while the text fails. Disconnecting authorisation prevents future use; it does not cancel appointments already created or erase copies held by the calendar.
+
+- [Connect Google Calendar in the dashboard](/guides/business/google-calendar)
+- [Booking confirmation controls](/actions/booking-confirmation)
+- [Cal.com API workflow](/actions/calcom)

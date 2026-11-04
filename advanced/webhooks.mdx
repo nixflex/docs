@@ -1,290 +1,164 @@
 ---
-title: "Webhooks"
-description: "Receive call data in your own systems"
-icon: "webhook"
+title: "Webhooks: verify Nixflex events and process them safely"
+description: "Receive Nixflex call and message events, verify raw-body signatures, deduplicate work and handle delayed processing without repeating business actions."
 ---
 
-Set a webhook URL on a phone number and Nixflex will POST a clean, flat JSON payload to your server about 60 seconds after every call on that number ends. Use this to sync transcripts to your database, trigger downstream workflows, or pipe events into Zapier / Make. Webhooks are configured **per phone number**, so each number can send to its own endpoint.
+import SignatureVerification from "/snippets/guides/signature-verification.mdx";
 
-## Setting a webhook
+Build an HTTPS event receiver that verifies the sender before accepting work and can safely receive the same event more than once.
 
-Set the webhook URL on one of your numbers:
+Using the dashboard? See [the business guide](/guides/business/integrations).
 
-```bash
-curl -X PUT https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://api.yourapp.com/nixflex/calls"}'
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
+
+## 1. Read the configured destination
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/webhook/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-`url` is required and must be `https://`. Every call on that number — inbound, outbound, or batch — will POST to it.
-
-**Read** the current URL (returned in full, since it is your own endpoint), or **DELETE** to remove it:
-
-```bash
-curl https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-# -> { "phone_number": "+447700900123", "webhook_url": "https://api.yourapp.com/nixflex/calls", "is_set": true }
-
-curl -X DELETE https://api.nixflex.com/v1/integrations/webhook/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("webhook", "+12025550123");
+// Keep private responses out of logs and AI conversations.
 ```
 
-## Second webhook URL (optional)
-
-Each number can have a second webhook URL in addition to the primary one. Both URLs receive the same payload, for both events (`call.started` and `call.completed`). Use it to send call data to a second endpoint — for example, your own system alongside a primary destination.
-
-The second URL is **API-only** (there is no dashboard field for it). It mirrors the primary webhook routes, using `webhook2` in the path:
-
-```bash
-# Set the second URL
-curl -X PUT https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://api.yourapp.com/nixflex/calls-2"}'
-
-# Read it
-curl https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
-# -> { "phone_number": "+447700900123", "webhook_url_2": "https://...", "is_set": true }
-
-# Remove it
-curl -X DELETE https://api.nixflex.com/v1/integrations/webhook2/number/+447700900123 -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('webhook', '+12025550123')
 ```
 
-`url` is required and must be `https://`. The primary webhook (set via `/webhook/number/`) is unaffected — the two URLs are independent. A number with both set delivers to both; with only one set, only that one fires.
+```powershell CLI (PowerShell)
+nixflex integrations get webhook '+12025550123' --json --base-url "https://api.nixflex.com"
+```
 
-## Payload structure
+</CodeGroup>
 
-The body is a **flat JSON object** — every field is at the top level (no nested `call` wrapper). Only a curated, whitelisted set of fields is sent; internal data (your system prompt, API key id, database ids) is never included.
+## 2. Configure an HTTPS receiver
+
+Save the intended number webhook through its PUT integration route. Read the supported payload fields and event type. Record only the data your application needs; do not put API credentials in the URL or event logs.
+
+## 3. Verify exact request bytes
+
+Before JSON parsing, verify `X-Nixflex-Signature` as HMAC-SHA256 over the timestamp, a dot, and the exact raw body. Reject missing, malformed, stale or invalid signatures. Use the helper below with an application-chosen five-minute tolerance and a synchronised server clock.
+
+<SignatureVerification />
+
+## 4. Store and acknowledge
+
+After verification, atomically store/deduplicate the event and queue durable processing before returning a prompt 2xx. For call events, deduplicate by event type, call ID and your configured destination identity. Call ID alone would incorrectly merge started and completed events. Retries can contain fresher fields: update your stored projection deliberately while preventing a duplicate business action. There is no universal event-ID field. Protect downstream actions with their own duplicate prevention.
+
+## 5. Reconcile delayed results
+
+Read current call or message state when necessary. A completed call event is not a guarantee analysis and recording are already available. Fetch recording access from its authenticated endpoint. Delivery retries and eventual failures mean events are not an exactly-once or guaranteed-delivery channel.
+
+## Event and callback contracts
+
+| Surface | Body and behaviour | Receiver rule |
+| --- | --- | --- |
+| `call.started` | Flat call payload, normally queued about two seconds after connection; reads current call data when delivered | Do not assume later fields are always null or that this arrives before completion. |
+| `call.completed` | Same flat fields; current call data is rebuilt for each queued delivery | Keep null, pending and unknown states distinct; this is not final billing or permanent-storage proof. |
+| `sms.booking` | `event`, `from`, `to`, `agent_id`, `conversation:[{role,text}]`, `booking`, `at` | No `call_id` is promised. Reconcile booking identity and action; deduplicate locally without logging message bodies. |
+| Number primary/secondary and automation destinations | The same applicable call payload family | Keep destination configuration explicit; do not invent a new automation envelope. |
+| Pre-call `call.inbound` | `{event,from,to,call_id}`; number URL takes precedence over agent URL | Verify the raw body. The five-second hook is fail-open; a verification refusal does not force the engine to reject the incoming call. |
+| Custom function | Non-GET sends `{name,args,variables}`; GET uses query arguments | Verify the signed body. GET signs an empty body, not its query. Use a signed non-GET for consequential arguments. |
+| Dashboard `webhook.test` | `{event,test,message,timestamp}`; unsigned reachability sample | Never perform business actions. It cannot prove real signed-event delivery. |
+
+`sms.booking` describes an actual booking action, not a general `sms.received` or `sms.delivered` contract. Call `bookings` is an array of recorded appointment actions, empty when none; reconcile booking identity plus action rather than parsing a transcript for appointment state.
+
+## Example signed call event
+
+The business payload is flat, without a nested `call` wrapper. This illustrative private-access payload uses fictional identifiers. The signature is computed at delivery over the exact transmitted bytes; it cannot be copied from this formatted example.
+
+```http
+Content-Type: application/json
+X-Nixflex-Signature: t=<delivery_unix_seconds>,v1=<64_hex_hmac>
+```
 
 ```json
 {
   "event": "call.completed",
-  "call_id": "CA1b5c0bfad4b56635b773938f16db2db7",
-  "agent_id": "agent_f2b06c0e0bd877e9",
+  "call_id": "call_example",
+  "agent_id": "agent_example",
   "direction": "inbound",
-  "from": "+447386172392",
-  "to": "+447446466847",
+  "from": "+12025550101",
+  "to": "+12025550100",
   "status": "completed",
-  "ended_reason": "silence_timeout",
-  "started_at": "2026-05-28T02:59:26.296Z",
-  "ended_at": "2026-05-28T03:00:36.410Z",
-  "duration_seconds": 70,
-  "transcript": "Agent: Hello! How can I help?\nCaller: Hi, my name is Amir...",
-  "summary": "Amir called inquiring about the business and requested a callback.",
-  "sentiment": "neutral",
-  "successful": true,
-  "extracted": {
-    "caller_name": "Amir",
-    "wants_callback": true
-  },
-  "bookings": [
-    {
-      "action": "created",
-      "booking_uid": "scf821a4pcuq3oglf8rfh0tc8k",
-      "start": "2026-05-29T09:00:00.000Z",
-      "attendee_name": "Amir",
-      "attendee_email": "amir@example.com",
-      "service": "appointment",
-      "timezone": "Europe/London"
-    }
-  ],
-  "recording_url": "https://storage.nixflex.com/recordings/CA1b5c....mp3",
-  "recording_duration_seconds": 64,
+  "ended_reason": "completed",
+  "started_at": "2026-11-02T12:00:00.000Z",
+  "ended_at": "2026-11-02T12:01:00.000Z",
+  "duration_seconds": 60,
+  "transcript": null,
+  "summary": null,
+  "sentiment": null,
+  "successful": null,
+  "extracted": null,
+  "bookings": [],
+  "recording_url": null,
+  "recording_status": "pending",
+  "recording_endpoint": "/v1/calls/call_example/recording",
+  "recording_duration_seconds": null,
   "voicemail_detected": false,
   "campaign_id": null,
-  "avg_latency_ms": 901
+  "avg_latency_ms": null
 }
 ```
 
-### Key fields
+`started_at` and `ended_at` are ISO timestamps. `duration_seconds` is rounded from the stored millisecond duration. Tolerate additional fields and missing optional data. In private-access mode, `recording_url` is null and recording metadata is added; it is not a delivered MP3 URL.
 
-| Field | Type | Notes |
-|---|---|---|
-| `event` | string | `call.started` (call connected) or `call.completed` (call finished). The dashboard Test button sends `webhook.test`. See [Event types](#event-types). |
-| `call_id` | string | The carrier's call ID - a Twilio Call SID, or a Telnyx call control ID. Use it as your idempotency key. |
-| `agent_id` | string | The agent that handled the call. |
-| `direction` | string | `inbound` or `outbound`. |
-| `from` / `to` | string | Caller's number / number dialled. |
-| `status` | string | Final call status, e.g. `completed`. |
-| `ended_reason` | string | Why the call ended - see the [full list of values](/actions/end-call#other-ways-calls-end). |
-| `started_at` / `ended_at` | string | ISO 8601 timestamps (UTC). |
-| `duration_seconds` | number | Full connection time in seconds (ring/connect to hang-up). Used for billing. |
-| `transcript` | string | Plain text, newline-separated. Each line prefixed `Agent:` or `Caller:`. The transcript records what was actually heard: if the caller interrupted an agent sentence after hearing at least 75% of it, the line appears clean; below that it does not appear at all - though you may still hear it in the recording. Silent control turns never appear. |
-| `summary`, `sentiment`, `successful` | — | From post-call analysis. See [Post-call analysis](/advanced/post-call-analysis). |
-| `extracted` | object / null | Your custom extraction fields. `null` if none configured. |
-| `bookings` | array | Appointments created, rescheduled, or cancelled during the call. Empty array if none. See [Appointment bookings](#appointment-bookings). |
-| `recording_url` | string | Link to the call's MP3 recording, hosted in Nixflex storage. Populated by the 60s delay (see below). The recording is kept in your Nixflex backend and delivered here - it is not retained on your telephony provider. |
-| `recording_duration_seconds` | number | Length of the recorded conversation in seconds. Use this to show end-users the real talk time. |
-| `voicemail_detected` | boolean | Outbound only — whether the call reached voicemail. |
-| `campaign_id` | string / null | Set if the call was part of a batch campaign. |
-| `avg_latency_ms` | number | Average agent response latency for the call, in milliseconds. |
+Save `call_id` and request [current recording access](/api-reference/calls/get-calls-id-recording) immediately before playback. Honour `expires_at`. Changing a projection to null does not revoke previously issued links or make an existing public storage bucket private; old access needs its own storage policy and expiry handling.
 
-<Warning>
-  The payload contains caller data — the caller's phone number (`from`), the full `transcript`, and any `extracted` fields can include personal information. Store and process it in line with your own privacy policy and applicable law.
-</Warning>
+## Use verification before event parsing
 
-<Note>
-  Call recordings are stored in your Nixflex backend and delivered via `recording_url`. They are not retained on your telephony provider's servers - Nixflex saves its own copy and removes the provider's copy after download. For long-term storage, save the file from `recording_url` into your own backend when you receive the webhook.
-</Note>
+Your framework must supply `rawBody` as the unchanged bytes received on the wire. Configure a suitable request-body limit before buffering; the example focuses on verification order.
 
-## Appointment bookings
-
-If the agent books, reschedules, or cancels an appointment during a call (via a connected calendar), each action is captured as a structured object in the `bookings` array. This is the reliable way to know an appointment changed â€” read it directly instead of parsing the transcript or summary.
-
-The array is **per call**: every booking action taken on that one call is listed, in order. A call with no booking activity sends `bookings: []`.
-
-```json
-"bookings": [
-  {
-    "action": "created",
-    "booking_uid": "scf821a4pcuq3oglf8rfh0tc8k",
-    "start": "2026-05-29T09:00:00.000Z",
-    "attendee_name": "Amir",
-    "attendee_email": "amir@example.com",
-    "service": "appointment",
-    "timezone": "Europe/London"
+```javascript Node receiver boundary
+// verifyNixflex is the helper above. Run this before JSON body middleware.
+export function parseVerifiedEvent(rawBody, signatureHeader, signingSecret) {
+  if (!verifyNixflex(rawBody, signatureHeader, signingSecret)) {
+    throw new Error('Unverified webhook'); // respond 401; no business action
   }
-]
-```
-
-| Field | Type | Notes |
-|---|---|---|
-| `action` | string | `created`, `rescheduled`, or `cancelled`. |
-| `booking_uid` | string | The calendar's own reference for the appointment. Stable across reschedule/cancel, so you can match actions to the same appointment. |
-| `start` | string | ISO 8601 start time of the appointment. Present for `created` and `rescheduled`; omitted for `cancelled`. |
-| `attendee_name` | string | The caller's name as booked. Present when captured (typically on `created`). |
-| `attendee_email` | string | The email the booking is under. |
-| `service` | string | The appointment type. |
-| `timezone` | string | IANA timezone the appointment is scheduled in. |
-
-<Tip>
-  Because each action carries the `booking_uid`, you can mirror these straight into your own appointments table: insert on `created`, update on `rescheduled`, mark cancelled on `cancelled`. Drive your own confirmations and reminders from there.
-</Tip>
-
-<Note>
-  Bookings are also stored on the call record, so if a webhook delivery is missed you can still fetch them later via the call's API record â€” they are never lost.
-</Note>
-## Event types
-
-The `event` field tells you which event the payload represents:
-
-- **`call.started`** — fires when a call connects, about 2 seconds after it begins. Use it for live tracking (a call just started on one of your numbers). Only the early fields are populated: `event`, `call_id`, `agent_id`, `direction`, `from`, `to`, `status`, and `started_at`. The post-call fields (`transcript`, `summary`, `sentiment`, `successful`, `extracted`, `recording_url`, `duration_seconds`, `ended_at`, `avg_latency_ms`) are `null`, and `bookings` is an empty array, because the call has not happened yet.
-- **`call.completed`** — fires about 60 seconds after a call ends, with the full payload (transcript, summary, recording, bookings, and analysis).
-- **`webhook.test`** — sent by the dashboard "Test" button so you can verify reachability. Not a real call.
-
-Both `call.started` and `call.completed` are delivered to the same webhook URL. Switch on the `event` field to tell them apart. `call.started` uses the same delivery, retry, and logging as `call.completed`.
-
-## Signing and verification
-
-Every webhook request includes a signature header so you can verify it came from Nixflex:
-
-```
-X-Nixflex-Signature: t=1779500000,v1=abc123...
-```
-
-The signature is HMAC-SHA256 of `<timestamp>.<raw_body>` using the **API key secret** (`key_secret`) tied to the call's API key as the signing secret.
-
-Your `key_secret` is the part of your API key **after the colon**. API keys are formatted `nxf_<id>:nxfs_<secret>`, so the signing secret is the `nxfs_...` half only (not the full key, and not the `nxf_` id).
-
-<Note>
-  If signature generation fails on our side, the webhook is still delivered **without** the `X-Nixflex-Signature` header (delivery is never blocked). Treat a missing signature header as unsigned and skip verification for that request rather than erroring.
-</Note>
-
-<Warning>
-  Always verify webhook signatures in production. Without verification, anyone who knows your URL could spam your endpoint with fake data.
-</Warning>
-
-### Verifying with the SDK
-
-If you use the [official Node.js SDK](https://www.npmjs.com/package/nixflex), verification is one call. It parses the header, checks the timestamp window, and compares the signature in constant time:
-
-```javascript
-import { verifyWebhookSignature } from 'nixflex';
-
-// rawBody must be the unparsed request body (string or Buffer).
-const ok = verifyWebhookSignature(
-  rawBody,
-  req.headers['x-nixflex-signature'],
-  process.env.NIXFLEX_API_KEY.split(':')[1]   // the nxfs_ half
-);
-
-if (!ok) return res.status(400).send('invalid signature');
-```
-
-It returns `false` for a tampered body, a wrong secret, a missing or malformed header, and a signature older than the tolerance window (5 minutes by default, configurable with `{ toleranceSeconds }`). It never throws, so it is safe to call directly in a route handler.
-
-### Verifying in Node.js
-
-```javascript
-const crypto = require('crypto');
-
-// The signing secret is the part of your API key AFTER the colon (the nxfs_ half).
-// If your key is nxf_abc:nxfs_xyz, pass "nxfs_xyz" as the secret.
-// e.g. const secret = process.env.NIXFLEX_API_KEY.split(':')[1];
-
-function verifyNixflexSignature(rawBody, signatureHeader, secret) {
-  const parts = Object.fromEntries(
-    signatureHeader.split(',').map(p => p.split('='))
-  );
-  const timestamp = parts.t;
-  const sig = parts.v1;
-
-  if (Math.abs(Date.now() / 1000 - parseInt(timestamp)) > 300) {
-    return false;
+  const event = JSON.parse(rawBody.toString('utf8'));
+  if (!event || !['call.started', 'call.completed', 'sms.booking'].includes(event.event)) {
+    throw new Error('Unsupported business event');
   }
-
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(`${timestamp}.${rawBody}`)
-    .digest('hex');
-
-  return crypto.timingSafeEqual(
-    Buffer.from(sig),
-    Buffer.from(expected)
-  );
+  return event; // validate fields, store/deduplicate durably, then acknowledge
 }
 ```
 
-<Warning>
-  `crypto.timingSafeEqual` throws if the two buffers differ in length, so a malformed header could crash an unguarded handler. Check the signature is a 64-character hex string (or compare lengths) before calling it - the SDK helper above does this for you.
-</Warning>
+Secret lookup failure in the sender can produce an unsigned delivery. Reject or quarantine it without business side effects; never bypass verification. The dashboard reachability test can therefore receive a refusal from this strict receiver, which is expected. If you provide a separate reachability-only handler, keep it isolated from business processing.
 
-<Note>
-  Always use the **raw request body bytes** when computing the HMAC. If your framework parses JSON before you see it (Express body-parser does this by default), you'll get a signature mismatch. Use `express.raw()` middleware on the webhook route.
-</Note>
+Before rollout, use an approved staging call to receive a genuinely signed event, verify it with the privately provisioned secret, process a duplicate without repeating work, and request private playback. This is a manual acceptance check, not something the dashboard's unsigned test proves.
 
-## Delivery and retries
+## Delivery timing and retries
 
-The webhook fires roughly **60 seconds after the call ends** — this gives Nixflex time to upload the recording, run post-call analysis, and include everything in one payload. The worker fetches fresh call data at fire time, so `recording_url` and analysis fields are always current.
+The queued path defaults to five attempts. Completed calls normally start with a 60-second queue delay; SMS booking events use five seconds, and started calls request about two seconds. Retry backoff is 5, 5, 5 and 60 minutes. These are queue settings, not delivery deadlines; retention, recovery, account closure and missing data can stop or delay work.
 
-<Steps>
-  <Step title="2xx or 3xx response">
-    Delivered. No retry.
-  </Step>
-  <Step title="4xx (except 408, 429)">
-    Treated as a permanent failure — your endpoint has a bug or rejected the request. **No retry.**
-  </Step>
-  <Step title="5xx, 408, 429, or timeout/network error">
-    Retried automatically. Backoff between attempts: **5 min, 5 min, 5 min, 60 min** (5 attempts total over ~76 min).
-  </Step>
-  <Step title="After 5 failed attempts">
-    Given up. Logged in your dashboard so you can investigate.
-  </Step>
-</Steps>
+Queued 2xx and 3xx responses count as delivered. Avoid redirects: they are not followed as successful forwarding. Network failures, 408, 429 and 5xx are retryable; other 4xx are treated as permanent. The transport helper can also retry a transport failure once. Return a prompt 2xx only after validated work is durably saved, and reconcile missed events through the call API.
 
-Request timeout is 10 seconds per attempt — keep your handler fast.
+The signature timestamp describes delivery, not call start. Compare it with the receiver's current clock; an old call can legitimately produce a newly signed late event.
 
-## Viewing delivery history
+## Errors and limits
 
-Go to **Logs → Webhooks** in your dashboard. Every delivery is logged with status, HTTP code, attempt count, last attempt time, the URL, and any error message. The last 5,000 successful and 5,000 failed deliveries are retained.
+| Condition | Handling |
+| --- | --- |
+| Missing/bad signature | Reject before processing; never accept unsigned fallback. |
+| Replay within allowed time | Deduplicate in durable storage. |
+| Receiver timeout or retryable HTTP result | Expect repeated delivery; keep work idempotent. |
+| Post-call data incomplete | Read current state with bounded retry. |
+| Processing failed after acknowledgement | Retry from your durable queue, not by creating another call. |
 
-## Idempotency
+## Next steps
 
-The same call may arrive twice if a retry succeeds after the original was actually delivered (rare but possible). Store the `call_id` from each payload and skip if you've already processed it.
-
-## Connecting to Zapier / Make
-
-Both platforms support generic webhook triggers. Point them at the URL Zapier/Make gives you, and every call becomes a trigger. Because the payload is flat, fields map cleanly — you'll see `Summary`, `Transcript`, `Sentiment`, `Duration Seconds`, etc. directly, with no `Call Call ...` prefixes. From there, send data to Google Sheets, HubSpot, Salesforce, GoHighLevel, Slack, Notion, Airtable, email, or anything else those platforms support.
-
-## Testing your webhook
-
-In the dashboard, go to **Integrations → Webhooks**, pick the number, and click **Test**. Nixflex sends a small `webhook.test` payload to that number's URL and shows the HTTP status and response time. This only checks that your endpoint is reachable — it does not send a full call payload.
+- [Webhook settings](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber)
+- [Call results](/guides/developer/call-history)
+- [Custom functions](/advanced/custom-functions)

@@ -1,54 +1,32 @@
 ---
-title: "Integrations overview"
-description: "Connect Nixflex agents to calendars, CRMs, messaging, and automation tools - per phone number."
-icon: "puzzle"
+title: "Business integrations: connect Nixflex tasks and outcomes"
+description: "Choose Nixflex calendar, notification, custom-function and pre-call integrations, understand their scope and verify outcomes across calls and business systems."
 ---
 
-Nixflex connects your voice and SMS agents to the tools your business already uses. Integrations are configured **per phone number**, so each number can connect its own accounts and credentials - one clinic's calendar, another shop's CRM, all under one agent.
+An integration connects a conversation or its result to another business system. Choose the connection for the task, then check both its saved scope and the real outcome.
 
-<Note>
-Integrations are set **per phone number**, not per agent. This means one shared agent (for example a dental receptionist) can serve many numbers, each booking into its own calendar or posting to its own CRM.
-</Note>
+| Task | Developer guide | Dashboard guide |
+| --- | --- | --- |
+| Book appointments | [Cal.com](/actions/calcom) · [Google Calendar](/actions/google-calendar) | [Cal.com setup](/guides/business/calcom) · [Google Calendar setup](/guides/business/google-calendar) |
+| Receive signed events | [Webhooks](/advanced/webhooks) | [Business integrations](/guides/business/integrations) |
+| Run an action in your service | [Custom functions](/advanced/custom-functions) | [Business integrations](/guides/business/integrations) |
+| Supply inbound context | [Pre-call hook](/advanced/precall-gate) | [Business integrations](/guides/business/integrations) |
+| Send team notifications | [Slack](/integrations/slack) | [Business integrations](/guides/business/integrations) |
+| Connect a business workspace | [GoHighLevel](/integrations/gohighlevel) | [Business integrations](/guides/business/integrations) |
+| Trigger an automation | [Zapier and Make](/integrations/zapier-make) | [Business integrations](/guides/business/integrations) |
 
-## How integrations work
+## Scope and permissions
 
-Every integration runs in one of two ways, and some support both:
+Many integrations belong to a phone number. Pre-call hooks also support an agent default with number precedence. Moving a number preserves number-owned connections, while the inherited agent behaviour and knowledge change. Read the specific integration's rule rather than assuming all settings copy together.
 
-<CardGroup cols={2}>
-  <Card title="During the call (live actions)" icon="bolt">
-    The AI calls the tool mid-conversation and waits for the result - for example checking calendar availability, then booking, while the caller is still on the line.
-  </Card>
-  <Card title="After the call (webhooks)" icon="paper-plane">
-    When the call ends, Nixflex sends the call summary, booking, or extracted data to the destination you choose - a CRM, a Slack channel, or your own webhook.
-  </Card>
-</CardGroup>
+Calendar and custom-function actions need actual permission and valid arguments. Website visitors have restricted built-in actions; enabling their custom functions requires every enabled function on that number to be safe for public visitors.
 
-## Available integrations
+## Configuration is not completion
 
-<CardGroup cols={2}>
-  <Card title="Cal.com" icon="calendar" href="/actions/calcom">
-    Check availability and book, reschedule, or cancel appointments live during a call.
-  </Card>
-  <Card title="Google Calendar" icon="calendar-days" href="/actions/google-calendar">
-    Book directly into a connected Google Calendar during the call.
-  </Card>
-  <Card title="Slack" icon="slack" href="/integrations/slack">
-    Post call summaries and alerts to a Slack channel after each call.
-  </Card>
-  <Card title="GoHighLevel" icon="users" href="/integrations/gohighlevel">
-    Send the caller's contact details and a call summary to your GoHighLevel account.
-  </Card>
-  <Card title="Zapier & Make" icon="bolt" href="/integrations/zapier-make">
-    Connect to thousands of apps through Zapier or Make using post-call webhooks.
-  </Card>
-  <Card title="Twilio" icon="phone" href="/integrations/twilio">
-    Bring your own Twilio account for phone numbers and carrier connectivity.
-  </Card>
-  <Card title="Telnyx" icon="phone" href="/integrations/telnyx">
-    Bring your own Telnyx account. Same model, one extra setup step in the Telnyx portal.
-  </Card>
-</CardGroup>
+A successful save means the configuration was accepted. It does not prove a future calendar write, notification or external automation succeeded. Test an ordinary result and a failure, preserve uncertain states and reconcile before repeating side effects.
 
-## Configuring via API
+Incoming event receivers should verify signatures and deduplicate durable work. External copies have their own retention. Disconnecting a connection or deleting a Nixflex call does not automatically erase a record already sent to another system.
 
-Every integration can be turned on, checked, or removed for a number through the API, so you can automate setup from your own application. See the [API reference](/api-reference/introduction) for the full per-number integration endpoints.
+- [Phone number settings](/guides/developer/phone-numbers)
+- [Call action boundaries](/actions/overview)
+- [Business integration setup](/guides/business/integrations)

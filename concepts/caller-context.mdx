@@ -1,126 +1,31 @@
 ---
-title: "Caller context"
-description: "Your agent already knows the caller - their name, email and reference - so nobody repeats themselves"
-icon: "id-card"
+title: "Caller memory: understand saved context and name greetings"
+description: "Understand Nixflex caller memory, separate name greetings, explicit context updates and website visitor information before using returning-caller facts."
 ---
 
-Caller context means a returning caller never has to spell their email again. Before the conversation starts, the agent is given what is on file for that person - name, email, phone, location, reference, preference - and uses it instead of asking. It confirms each detail out loud before acting on it.
+Caller context helps an agent recognise a returning telephone caller and continue a useful conversation. It can include a name, summary and saved information. It is context to check with the person, not proof of identity.
 
-It closes two gaps at once: speech recognition is at its worst on emails and reference numbers, and callers dislike repeating themselves.
+## Memory and greetings are separate
 
-<Note>
-  Caller context describes **the people your numbers talk to**, not your own numbers. Each record belongs to one caller on one of your numbers.
-</Note>
+`remember_callers:false` stops ordinary telephone context use and learning. It does not delete existing records or prevent deliberate caller-context API writes. `greet_by_name:false` disables the dedicated inbound name-greeting hint; it is not a global anonymisation control.
 
-## What does the agent already know about a caller?
+| Remember callers | Greet by name | Result |
+| --- | --- | --- |
+| On | On | Context and the saved-name greeting may be used |
+| Off | On | Ordinary memory is off; a saved name can still be used in the greeting |
+| On | Off | Memory remains available without the dedicated greeting hint |
+| Off | Off | Both ordinary memory and the dedicated hint are off |
 
-Up to eight details, and nothing else. Six you can set yourself; two only the engine writes. The agent is never told what happened on a previous call - no bookings, no outcomes, no summaries.
+## Where information comes from
 
-| Field | You can set it | The engine fills it |
-|---|---|---|
-| `name` | Yes | When the caller states a full name |
-| `email` | Yes | When the caller states one |
-| `phone` | Yes | When the caller gives a contact number other than the one they are calling from |
-| `location` | Yes | When the caller states one |
-| `reference_id` | Yes | When the caller gives an account, order or booking reference |
-| `preference` | Yes | When the caller states one explicitly |
-| `last_call` | No | What the caller wanted last time - never what happened |
-| `open_item` | No | Something still pending after a call |
+Saved caller records can be learned from permitted telephone work or managed through the caller-context API. A recent call record, caller memory and a campaign recipient's variables are different data. Do not assume every field is a durable memory or that clearing a transcript clears the caller record.
 
-`last_call` and `open_item` are engine-only. Sending them through the API returns `engine_only_field`.
+Website visitor cards and messages are separate from telephone memory. A visitor's name, email and phone number are self-reported. Browser recognition can end when storage changes and does not verify identity.
 
-`last_call` is stored and returned by the API and your webhook, but it is **not** shown to the agent during a call. Even phrased as intent it read to the agent like something already done - the one thing caller context must never imply.
+## Retention and correction
 
-## Does the agent remember callers between calls?
+Call retention controls call data. It is not a blanket promise to delete every caller, message, integration record or customer-owned recording after the same period. Use the documented caller-context update or deletion route for that record, and check the response before declaring it removed.
 
-Yes, automatically, with no setup. After every call the engine saves any details the caller stated about themselves, and the next call to that number starts with them. Nothing is remembered about what was discussed or decided - only who the person is.
-
-## Can I turn caller memory off?
-
-No. There is no setting today that stops the engine storing or using caller context. **Greet by name** on the agent only stops the *greeting* using the name; the details are still given to the agent for the rest of the call.
-
-What you can control:
-
-- **Delete a record** - `DELETE /v1/phone-numbers/{number}/callers/{caller}` erases everything stored for that caller, both what you set and what the engine learned.
-- **Keep your own source of truth** - answer the [pre-call gate](/advanced/precall-gate) with a `caller` object. Those details are used for that call and never stored.
-- **Retention** - everything is deleted with the rest of the call data after 90 days. See [Data retention](/concepts/data-retention).
-
-A switch to disable it is planned. Until then, assume any detail a caller states on a call is remembered for their next call to that number.
-
-## Why does the same person have two records?
-
-Because a record belongs to one of **your** numbers and one caller number. The same person calling two of your numbers has two separate records, and they never cross.
-
-This is deliberate. One agent can serve hundreds of separate businesses, each on its own number - so a customer known to one business must be a stranger to the next. If one business has two numbers, import its customers to each number separately.
-
-## What happens if the caller gives a different name?
-
-The new value wins for that call and is stored for the next one. There is one value per field and the last write wins, whether the write came from you or from the conversation.
-
-1. You set an email through the API. The agent uses it.
-2. On a call the caller confirms a different email. The engine stores the new one, and the next call uses it.
-3. You set it again through the API. Yours is the current value.
-
-An empty value never overwrites a stored one, so a wrong number or a silent call cannot erase what you already had. Only an explicit `null` through the API removes a field.
-
-## How does the agent use it during a call?
-
-The record is added to the agent's instructions as a `## CALLER CONTEXT` block, placed at the very end - nearest the conversation. Position matters: at the top of a long prompt it lost to closer instructions and the agent told a known caller it had no details on file.
-
-The block carries six rules:
-
-1. Use known details naturally. Do not ask the caller to repeat information already known.
-2. Use the stored name naturally. If the caller gives a different name, use the new name for this call.
-3. Before using exact details for an action, verify them with the caller.
-4. If the caller gives a different value, use the new value for this call.
-5. Previous requests, preferences and open items are context only. Determine what the caller needs NOW.
-6. Never assume an action happened from this context. Only confirm actions actually performed or verified by the appropriate tool.
-
-In practice, a booking sounds like this:
-
-> **Agent:** "Shall I book this under Sam Carter, sam.carter at example dot com?"
-> **Caller:** "Yes, that's right."
-
-The agent will not call a booking, reschedule or cancel tool until the caller has confirmed the details in that call. A detail already on file is said out loud, not spelled - it was confirmed when it was saved. A new value the caller gives is read back letter by letter before it is used.
-
-## Where does it apply?
-
-On inbound calls, outbound calls, the opening greeting and the SMS agent - all from the same record. On outbound calls the roles are simply reversed: your number is the business number, the number you dial is the caller.
-
-## Three ways to fill it
-
-<CardGroup cols={3}>
-  <Card title="The API" icon="code">
-    Set every field for one caller in a single request, or import up to 1,000 callers at a time.
-  </Card>
-  <Card title="The pre-call gate" icon="shield-check">
-    Answer with a `caller` object while the phone is still ringing. Nothing is stored - your system stays the source of truth.
-  </Card>
-  <Card title="The engine" icon="wand-magic-sparkles">
-    After every call, details the caller stated are saved automatically. No setup.
-  </Card>
-</CardGroup>
-
-Setting one caller through the API:
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/phone-numbers/+442087601234/callers/+447386172392 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Sam Carter",
-    "email": "sam.carter@example.com",
-    "reference_id": "ACC-40192",
-    "preference": "prefers morning appointments"
-  }'
-```
-
-The first number is yours, the second is the caller's. Send `null` for a field to remove it. For more than one caller at a time, use the [import endpoint](/api-reference/caller-context/import) - up to 1,000 per request.
-
-## Related
-
-- [Set caller context](/api-reference/caller-context/set) - the API reference
-- [Import callers](/api-reference/caller-context/import) - up to 1,000 at once
-- [Delete caller context](/api-reference/caller-context/delete) - erase one record
-- [Pre-call gate](/advanced/precall-gate) - supply details live, per call
-- [Data retention](/concepts/data-retention) - how long anything is kept
+- [Privacy settings](/guides/business/privacy)
+- [Read caller context](/api-reference/caller-context/get)
+- [Delete caller context](/api-reference/caller-context/delete)

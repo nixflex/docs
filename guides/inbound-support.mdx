@@ -1,87 +1,66 @@
 ---
-title: "Inbound support agent"
-description: "Answer common questions, text details to callers mid-call, and hand off to a human when needed."
-icon: "headset"
+title: "Support calls: answer questions and hand off to people"
+description: "Build a Nixflex support phone agent with reviewed business knowledge, useful text replies and a tested transfer path when a customer needs a person."
 ---
 
-This guide builds an inbound support agent that handles routine questions on its own, texts information to callers during the call, and transfers to a human when a request needs one.
-
-## What you'll build
-
-An inbound agent that:
-
-- Answers your most common support questions
-- Sends details (links, addresses, references) by text mid-call
-- Transfers to a human when the caller needs more help
+Answer common customer questions and give callers a clear route to a person. Start with a narrow support task and current business facts. Test the unknown-answer path as carefully as the answers you expect the agent to know.
 
 ## Before you start
 
-- An agent created and a phone number attached to it
-- A destination phone number for human transfers
-- The key facts your agent should know (hours, policies, common answers)
+- Use an Owner or Admin login and a connected test number.
+- Prepare support information and a real team destination for transfers.
 
 ## Steps
 
-<Steps>
-  <Step title="Give the agent your support knowledge">
-    Put the answers to your common questions directly in the agent prompt so it can resolve them without a human.
+### 1. Write the support role
 
-    ```text Goes under ## BUSINESS FACTS
-    You are the support line for Brightsmile Dental.
-    You can answer questions about opening hours, location, services, and pricing.
+Open the agent and describe the business, tone and support boundaries. Say which requests need a person and what the agent should do when it cannot help. Avoid promising refunds, changes or appointments without a connected action.
 
-    Opening hours: Monday to Friday, 9am to 5:30pm.
-    Location: 12 High Street, Manchester.
-    New patient checkups start from Â£45.
+### 2. Add reviewed facts
 
-    Be warm and brief. If you do not know something, offer to pass the caller to a team member.
-    ```
-  </Step>
+Keep common facts in the instructions and add detailed policies in **Knowledge base**. Review topics and enable inbound knowledge. Use the knowledge test for factual questions, including a question your source deliberately does not answer.
 
-  <Step title="Text details to the caller mid-call">
-    When a caller needs something written down â€” a link, an address, a reference â€” the agent can send it by text while staying on the call. Tell it when to do that in the prompt.
+<Note>Screenshot placeholder: **inbound-support-knowledge** — Knowledge base, support topics approved for the selected agent. Use staging test data.</Note>
 
-    ```text Goes under ## WHAT TO DO
-    If the caller asks for our address or a booking link, offer to text it to them,
-    then send it while you keep talking.
-    ```
+### 3. Configure the handoff
 
-    The text sends during the call without interrupting the conversation. See [Send SMS](/actions/send-sms) for the full behaviour.
-  </Step>
+Set the transfer destination and choose the desired transfer style. Use a team number that will actually be answered. Write a fallback such as taking a message if the transfer does not connect; do not promise guaranteed reconnection.
 
-  <Step title="Transfer to a human when needed">
-    When a request is beyond the agent, it can hand the call to a person. Tell the agent who to transfer to and when.
+### 4. Choose useful text replies
 
-    ```text Goes under ## WHAT TO DO
-    If the caller wants to speak to a person, or has a complaint,
-    transfer them to the practice manager.
-    ```
+If you want addresses or links sent during a call, enable **In-Call SMS** and describe when to offer the text. Use short, accurate wording. Sending a text depends on the number, recipient and contact checks.
 
-    Nixflex supports different handoff styles â€” a straight transfer, or a warm one where the agent briefs the person before connecting. See [Transfer](/actions/transfer) to choose and configure the mode that fits.
-  </Step>
+### 5. Test the three paths
 
-  <Step title="Test the whole flow">
-    Call your number and try all three paths:
+Call your test number and ask a known question, request a text and ask for a person. Check the answer, actual message and receiving phone. Try an unknown question and an unanswered transfer too, then correct the setup.
 
-    - Ask a common question â€” the agent should answer it directly.
-    - Ask for the address or a link â€” you should receive a text mid-call.
-    - Ask to speak to a person â€” the call should transfer.
-  </Step>
-</Steps>
+<Note>Screenshot placeholder: **inbound-support-history** — Call History, test support call with summary and transfer outcome. Use staging test data.</Note>
 
-These snippets slot into the seven-section prompt shape - see [Writing a good agent prompt](/best-practices/prompting-guide) for the full structure.
+## What happens next
 
-## What's next
+Review early calls for repeated gaps. Update the factual topic when a policy changes and the instructions when the handling rule changes. Knowledge supplies facts; it does not make a missing action available.
 
-- Turn on [Post-call analysis](/advanced/post-call-analysis) to see what callers ask most.
-- Add [Keypad input](/advanced/keypad-input) if you want callers to press options.
-- Review [Controlling the conversation](/concepts/conversation-control) to fine-tune how the agent behaves.
+## Common questions
 
-<CardGroup cols={2}>
-  <Card title="Transfer" icon="phone-arrow-right" href="/actions/transfer">
-    Handoff modes and how to configure them.
-  </Card>
-  <Card title="Send SMS" icon="comment-sms" href="/actions/send-sms">
-    Texting details to callers during a call.
-  </Card>
-</CardGroup>
+### Should all information go in the prompt?
+
+No. Keep rules and frequently used facts there; use knowledge for detailed information.
+
+### Can the agent promise a callback?
+
+Only describe a follow-up process your team actually operates. Review the captured request and assign it to someone.
+
+### Does a transfer always reach a person?
+
+No. Busy, unanswered or failed destinations need a tested fallback.
+
+### Can Members improve the instructions?
+
+Members can review shared work. Ask an Owner or Admin to save changes.
+
+## Related guides
+
+- [Teach your agent](/guides/business/knowledge)
+- [Configure call actions](/guides/business/call-actions)
+
+Prefer code? See [Inbound call behaviour](/concepts/inbound-calls).

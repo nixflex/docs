@@ -1,131 +1,93 @@
 ---
-title: "Your own storage"
-description: "Send call recordings to your own S3-compatible bucket - your data, your region"
-icon: "box-archive"
+title: "Recording storage: connect and verify your own bucket"
+description: "Connect Nixflex recordings to an S3-compatible bucket, verify access and handle storage fallback while managing your own object access and retention policies."
 ---
 
-By default, Nixflex stores call recordings in EU (Ireland) storage. With **your own storage**, recordings go straight to a bucket **you** own instead - any S3-compatible provider, in any region you choose - and Nixflex keeps no copy.
+Manage the account connection and verify how it behaves during real work. Configuration success and runtime success are separate.
 
-This is built for data residency. If your customers' rules require call audio to stay in a particular country - the Gulf, Switzerland, Australia, anywhere - point Nixflex at a bucket in that region and the audio never lives anywhere else.
+Using the dashboard? See [the business guide](/guides/byo-storage-r2).
 
-<Note>
-  The connection is **tested before it is saved**: Nixflex writes and deletes a tiny probe object in your bucket when you save the settings, so a saved configuration is a working configuration. Every recording upload is then **verified** - Nixflex reads the object back and checks its size before treating the recording as stored.
-</Note>
+## Support scope
 
-## How it works
+The account service and storage interfaces shown here are existing compatibility interfaces, outside the supported public API inventory. They describe an existing integration dependency, not a new public API commitment. Use the signed-in dashboard for new setup; confirm support before building a new dependency on these routes or older kit commands.
 
-<Steps>
-  <Step title="You connect a bucket">
-    In **Settings → Recording storage**, or via the API below. You provide the bucket name, an endpoint URL, and credentials that allow writing objects.
-  </Step>
-  <Step title="Recordings go to your bucket">
-    After each call, the audio is uploaded to `recordings/<call_id>` in your bucket - `.mp3` for a carrier recording, `.wav` when Nixflex or a web call recorded it (see [Call recording](/advanced/call-recording#who-records)). Nixflex stores only the object path, never the audio.
-  </Step>
-  <Step title="The call record points at your bucket">
-    `recording_url` becomes a path like `byo:your-bucket/recordings/<call_id>.mp3`. The dashboard shows where the file lives instead of a player - the audio is in your custody, so Nixflex has nothing to stream. Read the extension from `recording_url` rather than assuming one.
-  </Step>
-</Steps>
+## Prerequisites
 
-## If your bucket rejects an upload
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use authorised connection details and keep all secrets out of examples.
 
-A recording is never lost to a storage problem. If your bucket cannot take the file - deleted bucket, rotated credentials, an outage - the recording falls back to Nixflex's standard EU storage for that call, and the call's **Events** tab records a `STORAGE_FAILED` event with the reason, so you can fix the bucket and know exactly which calls were affected.
+## 1. Read the safe configuration
 
-## Supported providers
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
 
-Any storage that speaks the S3 API works. That includes:
+<CodeGroup>
 
-<CardGroup cols={2}>
-  <Card title="Amazon S3" icon="aws">
-    Leave the endpoint **empty** and set your bucket's region (for example `eu-west-2` or `me-south-1`). Create an IAM user with `PutObject` on the bucket and use its access key pair.
-  </Card>
-  <Card title="Cloudflare R2" icon="cloudflare">
-    Endpoint: `https://<account_id>.r2.cloudflarestorage.com`, region `auto`. In the R2 dashboard, create an API token with **Object Read & Write** scoped to your bucket - it gives you the access key pair and shows your endpoint.
-  </Card>
-  <Card title="Google Cloud Storage" icon="google">
-    Endpoint: `https://storage.googleapis.com`, region e.g. `europe-west2`. In **Settings > Interoperability**, create an HMAC key for a service account with write access - the HMAC key ID and secret are your key pair.
-  </Card>
-  <Card title="Backblaze B2" icon="hard-drive">
-    Endpoint: `https://s3.<region>.backblazeb2.com` (shown on your bucket page, e.g. `s3.eu-central-003.backblazeb2.com`). Create an application key scoped to the bucket - the keyID and applicationKey are your pair.
-  </Card>
-  <Card title="Wasabi" icon="database">
-    Endpoint: `https://s3.<region>.wasabisys.com` with the matching region (e.g. `eu-west-1`). Create an access key pair in the Wasabi console.
-  </Card>
-  <Card title="MinIO / self-hosted" icon="server">
-    Your own `https://` endpoint. Any S3-compatible self-hosted store works the same way - useful for fully on-premise or air-gapped requirements.
-  </Card>
-</CardGroup>
-
-**Quick reference**
-
-| Provider | Endpoint | Region | Credentials |
-|---|---|---|---|
-| Amazon S3 | *(leave empty)* | Bucket's AWS region | IAM access key + secret |
-| Cloudflare R2 | `https://<account_id>.r2.cloudflarestorage.com` | `auto` | R2 API token key pair |
-| Google Cloud Storage | `https://storage.googleapis.com` | Bucket's GCS region | HMAC key ID + secret |
-| Backblaze B2 | `https://s3.<region>.backblazeb2.com` | In the endpoint | Application keyID + key |
-| Wasabi | `https://s3.<region>.wasabisys.com` | Endpoint's region | Access key + secret |
-| MinIO / self-hosted | Your server's `https://` URL | Your choice | Your configured key pair |
-
-<Note>
-  Azure Blob Storage does not speak the S3 API natively - put an S3-compatible gateway (such as MinIO Gateway) in front of it, then connect the gateway here.
-</Note>
-
-## Setting it up via the API
-
-Storage is configured per API key - every call under the key uses it, across all your numbers and carriers.
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/account/storage \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "bucket": "my-recordings",
-    "endpoint": "https://accountid.r2.cloudflarestorage.com",
-    "region": "auto",
-    "access_key": "YOUR_ACCESS_KEY_ID",
-    "secret_key": "YOUR_SECRET_ACCESS_KEY"
-  }'
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/account/storage" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
-| Field | Required | Notes |
-|---|---|---|
-| `bucket` | Yes | The exact bucket name at your provider |
-| `access_key` | Yes | Access key ID with permission to write objects |
-| `secret_key` | Yes | Secret access key. **Write-only** - it is stored encrypted and never returned by the API |
-| `endpoint` | No | `https://` URL of your provider. Leave empty for Amazon S3 |
-| `region` | No | Your bucket's region. Defaults to `auto` |
-
-The request returns `verified: true` only after the probe write succeeds. Broken credentials are rejected, never saved.
-
-Read the current configuration (the secret is never included):
-
-```bash
-curl https://api.nixflex.com/v1/account/storage \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/account/storage', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(JSON.stringify(result));
+console.log(result);
 ```
 
-Switch it off and clear the configuration:
+```python Python
+import os, json
+from urllib.request import Request, urlopen
 
-```bash
-curl -X DELETE https://api.nixflex.com/v1/account/storage \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET"
+request = Request(
+    'https://api.nixflex.com/v1/account/storage',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    print(json.load(response))
 ```
 
-After disconnecting, recordings return to Nixflex's standard EU storage from the next call onwards. Files already in your bucket stay exactly where they are - they are yours.
+```powershell CLI (PowerShell)
+nixflex storage get --json --base-url https://api.nixflex.com
+```
 
-## What changes for you
+</CodeGroup>
 
-- **`recording_url`** on the call record and in the `call.completed` [webhook](/advanced/webhooks) carries the `byo:` path instead of a playable URL. If your code downloads recordings from that field, read the file from your own bucket instead.
-- **The dashboard** shows "Stored in your bucket" with the object path in place of the audio player.
-- **Deleting calls** ([GDPR deletion](/concepts/data-retention)) removes the call record from Nixflex. Files in your bucket are in your custody - Nixflex never deletes from your storage, so apply your own retention rules there.
-- **Retention limits do not apply** to your bucket. Nixflex's 90-day cleanup covers Nixflex storage; your files are yours for as long as you keep them.
+## 2. Prepare the bucket
 
-## Consent and compliance
+Choose an authorised S3-compatible bucket, HTTPS endpoint and region. Give the credential only the required object permissions, including the verification probe and its cleanup. This requires a reachable connection; an air-gapped bucket cannot receive remote uploads.
 
-Where the file lives does not change the recording rules - announcement and consent requirements still apply. See [Call recording](/advanced/call-recording#consent).
+## 3. Save and verify
 
-## Related
+PUT `/v1/account/storage` with `bucket`, `access_key`, `secret_key`, and the appropriate `endpoint` and `region`. The secret is write-only. The save probe checks access before committing settings; a successful probe is not proof every future upload will succeed.
 
-- [Call recording](/advanced/call-recording) - switching recording on and off
-- [Webhooks](/advanced/webhooks) - `recording_url` in `call.completed`
-- [Data retention](/concepts/data-retention) - what Nixflex keeps and for how long
+## 4. Handle fallback and playback
+
+The recording path verifies uploaded objects. If the customer bucket fails, fallback to standard Nixflex storage can be attempted and the call can record a storage failure event. Both paths can fail. Therefore this setting alone does not promise exclusive regional residency or that no recording can ever be lost.
+
+## 5. Manage your own lifecycle
+
+Customer-bucket recordings are shown as customer storage rather than a permanent public audio URL. Manage your own authorised access and object retention. DELETE `/v1/account/storage` changes future storage configuration; it does not delete existing bucket files.
+
+## Example response
+
+GET returns a safe saved-configuration projection without the full secret. Preserve its enabled and verification state; it is not a live service-health guarantee.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Verification fails | Correct the endpoint, permissions or credentials before saving. |
+| Runtime dependency fails | Read the call’s actual fallback or unavailable state. |
+| Secret changed externally | Update the saved connection and test again. |
+| Unknown save response | Read the current configuration before repeating it. |
+| Pricing or retention | Use current Billing and the policy for the actual path. |
+
+## Next steps
+
+- [Usage and capacity](/guides/developer/billing)
+- [Recording access](/advanced/call-recording)
+- [Privacy settings](/concepts/data-retention)

@@ -1,133 +1,31 @@
 ---
-title: "Voice selection and languages for Nixflex voice agents"
-description: "Explore voice selection and languages for nixflex voice agents with Nixflex. Review settings, responses, to connect your application and handle results safely."
-icon: "waveform"
-sidebarTitle: "Voices"
+title: "Agent voices: choose a voice and understand saved settings"
+description: "Choose a Nixflex voice from the current catalog and understand how saved voice settings affect conversations, without assuming every channel sounds alike."
 ---
 
+Every voice conversation uses an eligible voice selection. The agent supplies a default; number overrides have field-specific rules. Website voice shares audio settings, while website chat has no spoken voice.
 
-Every voice call uses an eligible voice selection. The agent supplies a default;
-number overrides are field-specific. Website voice shares audio settings, not the
-phone prompt or phone actions. Website chat has no spoken voice.
+## Catalog voices and legacy aliases
 
-Batch 3 draft: agent `voice_key` selects a catalog entry; `voice_id` is its legacy
-alias and can be null for catalog-only voices. A conflicting key/alias pair is
-rejected. The outbound catalog hand-off is now built, as for inbound/browser audio;
-actual availability still depends on the selected voice, language, BYO and fallback.
+The agent's `voice_key` selects a catalog entry. Its `voice_id` is a legacy alias and can be null for a catalog-only voice. A conflicting key and alias are refused. Use the current [voice catalog](/api-reference/voices/get-voices) and its supported languages rather than copying a fixed list of display names.
 
-## Two ways to set a voice
+On a legacy selection path, the number's voice alias can override the agent alias. In catalog mode, a non-null agent catalog key takes priority over that alias. A number alias is not automatically converted into a catalog override. Custom voice and fallback paths can also change what is actually heard.
 
-**Agent selection** — select a catalog voice or a supported legacy alias. For example:
+## Speaking rate
 
-```json
-{
-  "voice_id": "Olivia",
-  "language": "en"
-}
-```
+Use `speaking_rate` for speed. An explicit number value wins over the agent; null inherits. Setting a number to 1 explicitly requests normal speed, while null under a faster agent still inherits that faster value. The older `voice_speed` field is accepted for compatibility but does not control current speech output.
 
-**Per-number legacy alias** — set `voice_id` on the number for the legacy selection
-path. It is not a per-number catalog key and does not always beat an agent catalog selection:
+The ordinary rate range is 0.5–1.5 and runtime clamps apply. The audible effect depends on the selected route. Test a small adjustment with names, dates and a full conversation instead of assuming identical speed across every voice.
 
-```bash
-curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "voice_id": "Craig" }'
-```
+## Language and fallback
 
-A number alias overrides the agent alias when the legacy path uses `voice_id`.
-With catalog mode ON, the dispatcher prioritizes the agent's non-null `voice_key`
-over that alias. The number alias is not automatically converted into a catalog
-override. BYO and provider fallback can also change the actual rendered voice.
-Changes affect new calls; verify the active route before promising a distinct voice
-for each number. See [Update phone number](/api-reference/phone-numbers/update).
+A display name does not prove language coverage. Use the eligible catalog entry and intended agent language. Unsupported combinations or dependency failures can use a different supported path, so the same voice identity is not guaranteed in every fallback situation.
 
-Per-number voice is resolved from the dialled number for inbound, `from_number` for
-outbound, and the website's number for public browser voice. A saved catalog selection
-must be checked together with its alias; do not assume an arbitrary alias rewrites a
-catalog key or guarantees the same fallback voice on every provider.
+Changes apply to new work. A saved selection proves configuration, not that every future call will use it successfully. Listen to a real approved test call, including a permitted action and an interruption, before relying on the setting with customers.
 
-<Note>
-  Use a valid eligible voice selection and inspect the API response. Agent catalog
-  validation can reject a bad selection; a generic promise that unknown IDs always
-  fall back is unsafe. Do not infer supported languages from a voice's display name.
-</Note>
+- [Choose your agent settings](/business)
+- [Update agent configuration](/api-reference/agents/update)
+- [Manage number overrides](/guides/developer/phone-numbers)
+- [Language and recognition](/concepts/languages)
 
-## Voice examples
-
-These are example display names/styles, not a live availability or language contract.
-Use the current voice selector and eligible catalog entry for the intended language.
-
-| Voice | Gender | Style | Language |
-| --- | --- | --- | --- |
-| Olivia | Female | Friendly, confident British | English (UK) |
-| Ashley | Female | Warm, natural American | English (US) |
-| Edward | Male | Clear, emphatic American | English (US) |
-| Annika | Female | Warm, engaging | German |
-| Kilian | Male | Warm, natural | German |
-| Sofia | Female | Clear, engaging Latin American | Spanish |
-| Diego | Male | Soothing, gentle | Spanish |
-| Nour | Female | Polished, friendly | Arabic |
-| Omar | Male | Bright, confident | Arabic |
-
-## Multilingual voices
-
-Some catalog voices support several languages. A language unsupported by the selected
-voice may require another eligible voice; keeping the same identity is not guaranteed.
-Agent `language` and the actual STT/TTS route together determine usable coverage.
-See [Languages](/concepts/languages).
-
-## Speaking speed
-
-How fast the agent talks. `1.0` is normal, `0.5` is half speed, and `1.5` is half again as fast. A value outside that range is clamped to the nearest limit rather than rejected.
-
-Like the voice, speed can be set at two levels.
-
-**Agent default** — set it in the dashboard, or send `speaking_rate` when you create or update the agent. Every number on that agent speaks at this speed unless the number overrides it.
-
-```bash
-curl -X PUT https://api.nixflex.com/v1/agents/agent_125207e452f8714a \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "speaking_rate": 1.1 }'
-```
-
-<Note>
-  `speaking_rate` is the field that controls speed. The older `voice_speed` field on
-  the agent is still accepted and returned for backwards compatibility, but nothing
-  reads it - setting it has no effect. See [Create agent](/api-reference/agents/create).
-</Note>
-
-**Per-number override** — set `speaking_rate` on the number:
-
-```bash
-curl -X PATCH https://api.nixflex.com/v1/phone-numbers/+447446466847 \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{ "speaking_rate": 0.9 }'
-```
-
-A number with its own speed uses it. A number without one falls back to the agent. An agent without one speaks at normal speed.
-
-So if you set the agent to `1.5`, **every number on that agent speaks at 1.5** - including numbers you have never touched. Only a number with its own `speaking_rate` is exempt.
-
-<Warning>
-  `null` and `1` are not the same thing.
-
-  - `null` means **not set**. The number inherits the agent's speed, so a number set to `null` under a `1.5` agent still speaks at `1.5`.
-  - `1` means **explicitly normal**. It overrides the agent, so a number set to `1` under a `1.5` agent speaks at normal speed.
-
-  To bring one number back to normal while the rest of the agent stays fast, send `1` - not `null`.
-</Warning>
-
-Speed applies to inbound, outbound and website voice, not website text chat, and takes
-effect on new calls. See [settings by channel](/concepts/agent-channels).
-
-<Note>
-  Small steps go a long way on a phone line. `0.9` already sounds noticeably more measured and `1.1` noticeably brisker, so adjust a step at a time rather than jumping to the limits.
-</Note>
-
-## Preview before you go live
-
-Always listen to a voice before using it on real calls. A dental clinic wants a calm, professional voice; a sales line might want something more energetic.
+- [Settings by channel](/concepts/agent-channels)

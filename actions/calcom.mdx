@@ -1,56 +1,78 @@
 ---
-title: "Cal.com Booking"
-description: "Let the agent check availability, book, reschedule, and cancel appointments live during a call"
-icon: "calendar"
+title: "Cal.com booking: connect a number with the Nixflex API"
+description: "Connect a Nixflex number to Cal.com, use the agent time zone and confirmation controls, and check real calendar outcomes before promising a booking."
 ---
-When Cal.com is connected, the agent can manage appointments on your calendar in real time — checking free slots, booking, finding, rescheduling, and cancelling — all while the caller is on the phone. The agent only ever offers times that are actually free, and texts an SMS confirmation whenever a booking changes.
-## Setup
-Connect Cal.com in the dashboard under **Integrations → Cal.com → Configure**. You need three things from your Cal.com account (**Settings → Developer → API keys**):
-- **API key** — your `cal_live_...` key
-- **Username** — your Cal.com username (the part in your booking link)
-- **Event slug** — the event type to book, e.g. `30min`
-Set the calendar **timezone** (e.g. `Europe/London`) and toggle it on. That's it — the agent picks up the booking tools automatically.
-## What the agent can do
-Five booking tools are added to the agent automatically once Cal.com is on. You do not write any prompt for them — the agent uses them when the caller asks.
-| Tool | What it does |
-| --- | --- |
-| Check availability | Finds free slots over a 10-day window from the date the caller asks for |
-| Book appointment | Books a slot, using the details already known and confirming them with the caller |
-| Find booking | Looks up the caller's existing appointment(s) by email |
-| Reschedule | Moves an existing booking to a new time |
-| Cancel | Cancels an existing booking |
-## Example
-> *Caller:* "Can I book a check-up for Monday morning?"
->
-> *Agent:* "We have nine o'clock or half past nine on Monday. Which works best?"
->
-> *Caller:* "Nine o'clock."
->
-> *Agent:* "Shall I book this under Sam Carter, sam.carter at example dot com?" ... "You're booked for Monday at nine o'clock. [SEND_SMS: Your appointment is confirmed for Monday 9:00am. See you then.]"
-## Timezone
-Appointments are booked in the **calendar's timezone** — the one you set during setup — not the caller's. When a caller says "nine o'clock", the agent books 9:00 in your business's local time. This is correct for a clinic or office callers physically visit, and works for any region with daylight saving handled automatically.
-<Note>
-  Set the correct timezone for each calendar. UK businesses use `Europe/London`. Set the matching timezone for other regions.
-</Note>
-## SMS confirmation
-The caller automatically receives an SMS whenever an appointment is **booked, rescheduled, or cancelled**, sent from the same number the call came in on. No extra setup needed.
-## Receiving booking data
 
-When the agent books, reschedules, or cancels an appointment during a call, the action is delivered in your call.completed webhook as a `bookings` array - the reliable way to capture appointments in your own system (insert on created, update on rescheduled, mark cancelled on cancelled). Each entry includes the action, booking_uid, start time, attendee name and email, service, and timezone. See [Webhooks - Appointment bookings](/advanced/webhooks#appointment-bookings).
+Configure a number’s calendar connection and test the booking, lookup, reschedule and cancellation outcomes.
 
-## Per-number calendar
-Cal.com is configured per phone number, so each number books into its own calendar. Run as many numbers as you like on one agent - each has its own independent calendar, and numbers without Cal.com set up simply do not offer booking.
-```bash
-PUT https://api.nixflex.com/v1/integrations/calcom/number/{phone}
-{
-  "api_key": "cal_live_xxx",
-  "username": "your-username",
-  "event_slug": "30min",
-  "default_timezone": "Europe/London"
-}
+Using the dashboard? See [the business guide](/guides/business/calcom).
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
+
+## 1. Read the saved connection
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
-Use `GET` to read a number's calendar (the API key is never returned — it shows `api_key_set: true`) and `DELETE` to remove it.
-## Tips
-- The agent confirms the caller's name and email before booking. Details already in [caller context](/concepts/caller-context) are said out loud for a yes; anything new is read back letter by letter. It never calls the tool until the caller has confirmed.
-- If the name or email is wrong after booking, the agent cancels and rebooks with the corrected details.
-- Your Cal.com API key is stored securely and is never read back through the API.
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("calcom", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('calcom', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get calcom '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Save the connection
+
+Use the documented PUT integration route with the calendar credentials and event configuration. Treat secrets as write-only. Set the agent’s intended IANA time zone; the current booking path applies that agent zone over a legacy integration default.
+
+## 3. Describe permitted booking
+
+State the service, required customer information and how to handle multiple existing appointments. Enable `require_booking_confirmation` where a read-back is required. Current availability still needs checking at the actual booking step.
+
+## 4. Test the calendar result
+
+Use a disposable test appointment. Verify create, reschedule and cancel in the actual calendar, including ambiguous dates and a slot that becomes unavailable. A pending or failed action must not become spoken confirmation.
+
+## 5. Handle follow-up separately
+
+Booking texts during calls depend on `incall_sms_enabled`, an eligible number and current sending checks. Calendar success does not prove SMS success. Disconnecting the integration stops new use; it does not remove existing appointments.
+
+## Example response
+
+The settings GET returns a safe configuration view without the full secret. Booking tools return structured outcomes such as created, rescheduled, cancelled, needs_info or an error; use the actual result rather than a fixed success sentence.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid connection | Correct and test credentials; do not save guessed values. |
+| Ambiguous/nonexistent local time | Ask for a valid time in the intended zone. |
+| Slot taken | Offer another current slot. |
+| Call ended before write | Do not start a new mutation. |
+| Confirmation text unavailable | Keep the successful appointment separate from the text failure. |
+
+## Next steps
+
+- [Read connection](/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber)
+- [Save connection](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber)
+- [Confirmation rules](/actions/booking-confirmation)

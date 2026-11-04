@@ -1,185 +1,26 @@
 ---
-title: "Outbound calls"
-description: "When the agent calls someone - reminders, follow-ups, campaigns - and how the prompt works differently"
-icon: "phone-arrow-up-right"
+title: "Outbound calls: understand purpose, admission and results"
+description: "Understand Nixflex outbound call purposes, source numbers, recipient contact checks and campaign results before sending or retrying an external call request."
 ---
 
-An outbound call is one where **Nixflex calls a number for you**: appointment reminders, no-show follow-ups, lead qualification, renewal nudges, surveys - anything where the agent reaches out first.
+An outbound call is a request to contact a recipient. It needs an owned active agent, an eligible sending number, available account capacity and a purpose for that conversation. A purpose tells the agent why it is calling; it does not replace permission to contact the person.
 
-<Warning>
-  **Your agent's instructions are for inbound calls only. They are not used on outbound calls.**
+## Single calls and campaigns
 
-  Every outbound call runs on its own prompt - the one you send with the call, or the one saved on the campaign. The agent's inbound instructions and the number's business profile are not loaded. Write the outbound prompt as if the agent knows nothing: who it is calling on behalf of, why it is calling, what to say, when to stop.
-</Warning>
+`POST /v1/calls` creates a single call. `agent_id`, `to_number` and `prompt` identify the assistant, recipient and purpose. An optional `from_number` chooses an eligible number; it is not a substitute for attaching one to the agent. Dynamic variables use `dynamic_vars`.
 
-## Think of each campaign as its own outbound agent
+Campaigns prepare a set of recipients. Creation requests immediate launch by default; scheduled work can run automatically when due. Separate launch controls do not make creation a draft-only operation. Voice recipient rows use `phone` and a nested `variables` object. Campaign schedules and consent are distinct from creation. Previewing a contact window sends nothing and cannot authorise dispatch.
 
-You do not write a fresh prompt for every call. You write one per **scenario**, save it as a campaign, and reuse it.
+## Admission is checked at dispatch
 
-<CardGroup cols={3}>
-  <Card title="Appointment reminder" icon="calendar-check">
-    "Confirm tomorrow's appointment. If they cannot make it, offer to rebook."
-  </Card>
-  <Card title="No-show follow-up" icon="calendar-xmark">
-    "They missed today's appointment. Be kind, offer the next available slot."
-  </Card>
-  <Card title="Promotion" icon="tag">
-    "Tell existing customers about this month's offer. No hard sell."
-  </Card>
-  <Card title="Renewal nudge" icon="rotate">
-    "Their plan ends this month. Ask if they want to continue."
-  </Card>
-  <Card title="Review request" icon="star">
-    "Thank them for their visit and ask for a quick review."
-  </Card>
-  <Card title="Lead follow-up" icon="user-plus">
-    "They filled in the form. Find out what they need and book a call."
-  </Card>
-</CardGroup>
+Current contact restrictions, recipient-local hours, time-zone confidence, balance, active-state checks and capacity can refuse or hold work. Campaigns can hold affected rows while a single request returns a refusal. Read the reason rather than silently widening hours.
 
-Each one is a campaign in the dashboard: a name, an agent, a from-number, the prompt, and the recipient list. Write the prompt properly once - the same seven-section shape as any agent, see [Writing a good agent prompt](/best-practices/prompting-guide) - and it is saved.
+## A timeout is not proof of failure
 
-<Steps>
-  <Step title="Create the campaign once">
-    Dashboard -> Outbound calls -> New campaign. Name it after the scenario, choose the agent and from-number, write the prompt, add recipients, launch.
-  </Step>
-  <Step title="Reuse it next time">
-    Open the campaign and choose reuse. The prompt, agent and from-number come back. Replace the recipients, change a date or a detail if needed, launch again.
-  </Step>
-  <Step title="Build a small library">
-    Five or six campaigns cover most businesses. After that, running a campaign is a two-minute job - pick the scenario, paste the numbers, go.
-  </Step>
-</Steps>
+Acceptance, ringing, connection and completion are different states. If a response is lost, reconcile the existing request or call before sending another one. A client wait timeout does not hang up the call. Retry only with the endpoint's documented duplicate-prevention rules.
 
-Through the API, the same idea: keep your scenario prompts in your own system and send the right one with each call or batch.
+Knowledge for outbound calls and campaigns uses the same agent-level channel switch. Inbound pre-call context is not an outbound-purpose mechanism.
 
-## Trigger one call
-
-```bash
-curl -X POST https://api.nixflex.com/v1/calls/outbound \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "to_number": "+447386172392",
-    "prompt": "You are calling on behalf of Acme Dental. Remind the person about their appointment tomorrow at 2pm and ask them to confirm they can still attend.",
-    "from_number": "+447700900123"
-  }'
-```
-
-| Field | Required | What it does |
-|---|---|---|
-| `agent_id` | Yes | Which agent makes the call - it supplies the voice, language and base behaviour |
-| `to_number` | Yes | Who to call, in E.164 format |
-| `prompt` | Yes | The whole brief for this call. At least 10 characters; a shorter prompt makes the agent apologise and end the call |
-| `from_number` | No | Which of the agent's numbers to call from. Sets the caller ID and the per-number voice. Omit it and the agent's first outbound-enabled number is used |
-| `dynamic_vars` | No | Your own values, written into the prompt as `{{name}}`. See [Variables](/concepts/variables) |
-| `post_call_sms_enabled`, `post_call_sms_template` | No | Send a text after this call, overriding the agent's setting for this call only |
-| `campaign_id` | No | Attach this call to a batch campaign |
-
-The response returns a `call_id` straight away. The call itself happens in the background: your carrier dials, the agent waits for pickup, then the conversation runs.
-
-## What instructions does the agent follow on an outbound call?
-
-Exactly three things, in this order:
-
-1. **Base behaviour** - how to speak on the phone, interruptions, silence, endings. Built in.
-2. **Your prompt** - sent with the call or saved on the campaign, as a `CALL PURPOSE` block.
-3. **What is on file about the person** - see below.
-
-Not included: the agent's inbound instructions, and the number's business profile. If the agent needs the business name, opening hours or a policy, put it in the outbound prompt.
-
-## What happens on the receiving end
-
-<Steps>
-  <Step title="Your carrier dials">
-    From the number you chose, as an ordinary phone call.
-  </Step>
-  <Step title="Voicemail is detected">
-    The agent listens to the first thing it hears. An answering machine ends the call - it does not talk to a recording. Switch on **Leave a Voicemail Message** and it speaks your message first. Your carrier's own detection can run as well (`amd_enabled`): it hangs up earlier and cannot leave a message, at a small charge per answered call. See [Voicemail detection](/advanced/voicemail-detection).
-  </Step>
-  <Step title="A person answers">
-    The agent waits a moment, introduces itself and states why it is calling.
-  </Step>
-  <Step title="The conversation">
-    From here it behaves like any call: the person's speech becomes text, the agent decides what to say, a natural voice speaks it. Interruptions and silence are handled. The agent can transfer, text, take keypad input or book, if your prompt tells it when.
-  </Step>
-</Steps>
-
-## The agent already knows the person it is calling
-
-Before the call connects, Nixflex looks up what is on file for that number on **this** business number and puts it into the agent's instructions. No CSV wiring, no placeholders.
-
-| Detail | Where it comes from |
-|---|---|
-| Name, email, phone, location, reference, preference | You, through the API, an import or the dashboard - or learned when the person stated it on an earlier call |
-| Open item | Anything still outstanding for that person after a previous call |
-
-**Without it** (other platforms): you upload a CSV with a dozen columns and wire each into the prompt. Miss one and the prompt breaks.
-
-**With it** (Nixflex): you upload numbers and one prompt. The agent already has Sarah's name, email and reference, and confirms them with her before doing anything.
-
-<Warning>
-  **Past outcomes are never injected - by design.** The agent is told what is on file about the person, never what happened on a previous call. Feeding a past booking into a call once made an agent confirm an appointment it had not made. The agent confirms details with the person and checks the calendar itself.
-</Warning>
-
-Details are scoped to the business number that is calling, so one customer's records never surface on another customer's number. You can also send details live for one call from your own system with the [pre-call gate](/advanced/precall-gate). See [Caller context](/concepts/caller-context).
-
-## Can the agent get through a phone menu?
-
-Yes, on outbound calls. If the number it calls answers with "press 1 for sales", the agent can navigate it. Your prompt teaches it when to use `[IVR]`, `[PRESS: 2]` and `[IVR_END]`, and the agent's **Phone menu wait** setting says how long to hold for a real person before giving up. While it waits, silence timers pause so hold music never ends the call. See [IVR navigation](/best-practices/ivr-navigation).
-
-## Batch campaigns
-
-To call many numbers, create a campaign. One request queues every call.
-
-```bash
-curl -X POST https://api.nixflex.com/v1/calls/batch \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "agent_125207e452f8714a",
-    "name": "Tuesday reminders",
-    "prompt": "You are calling on behalf of Acme Dental to confirm tomorrow's appointment for {{first_name}} at {{appointment_time}}.",
-    "recipients": [
-      { "phone_number": "+447111000001", "first_name": "Sarah", "appointment_time": "2pm" },
-      { "phone_number": "+447111000002", "first_name": "Tom",   "appointment_time": "3:30pm" }
-    ],
-    "schedule_type": "now"
-  }'
-```
-
-- Every extra column on a recipient becomes a variable for that call - `{{first_name}}`, `{{appointment_time}}` - and is also handed to the agent as context even if the prompt never mentions it.
-- `schedule_type` is `now` or `schedule`; with `schedule`, give the date and time to start.
-- Calls run inside your account's concurrency limit - the number of calls allowed at once per API key, shared with inbound, 10 by default - so a campaign of 500 does not flood your carrier.
-- In the dashboard, campaigns use numbers added in the dashboard; numbers imported through the API are run through the API.
-
-See [Batch create](/api-reference/calls/batch-create) and [Launch](/api-reference/calls/batch-launch) for the full schema.
-
-## What happens if nobody answers?
-
-The call ends without a conversation and the outcome is recorded on the call record and sent to your [webhook](/advanced/webhooks) as `ended_reason` - for example `voicemail_detected` when a machine answered, or `callee_hangup` when the person hung up. No answer and busy are recorded too. In a campaign, each recipient's outcome is tracked separately, so you can see who was reached.
-
-## Voicemail behaviour
-
-- **Message configured**: the agent speaks exactly that message, then hangs up.
-- **Nothing configured**: the agent hangs up without speaking.
-- The call is recorded with `voicemail_detected` and billed per second like any other connected call.
-- Where the message lives depends on how the number was imported: on the **agent** for dashboard-added numbers, on the **number** for API-imported ones. See [Voicemail detection](/advanced/voicemail-detection).
-
-## Useful for
-
-Appointment reminders the day before Â· No-show follow-ups Â· Lead qualification after a form submission Â· Renewal nudges Â· Satisfaction and review requests Â· Re-engaging cold contacts Â· Debt collection, with proper compliance on your side.
-
-<Warning>
-  Outbound calling has rules - TCPA in the US, Ofcom in the UK, consent requirements elsewhere. Make sure you have the right to call every number you upload. Nixflex provides the infrastructure; compliance is yours.
-</Warning>
-
-## Related
-
-- [Create outbound call](/api-reference/calls/create-outbound) - every field
-- [Batch create](/api-reference/calls/batch-create) - campaigns through the API
-- [Variables](/concepts/variables) - `dynamic_vars` and recipient columns
-- [Voicemail detection](/advanced/voicemail-detection) - both layers, and the message
-- [IVR navigation](/best-practices/ivr-navigation) - getting through phone menus
-- [Inbound calls](/concepts/inbound-calls) - the other direction
+- [Create a voice campaign](/guides/business/voice-campaigns)
+- [Build outbound calls](/guides/lead-qualification)
+- [Client safety and retries](/api-reference/calls/client-safety)

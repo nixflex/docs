@@ -1,69 +1,67 @@
 ---
-title: "SMS booking agent"
-description: "Take bookings and answer questions entirely over text message."
-icon: "comment-sms"
+title: "SMS booking: help customers arrange appointments by text"
+description: "Connect a calendar and set up Nixflex SMS instructions so customers can ask about appointments, confirm their details and receive a checked booking result."
 ---
 
-This guide builds an agent that handles bookings and questions over SMS. Callers text your number, and the agent replies, checks your calendar, and books appointments — all in a text conversation, no call required.
-
-## What you'll build
-
-An SMS agent that:
-
-- Replies to incoming texts on your number
-- Answers questions and books appointments over text
-- Uses the same calendar connection as your voice agent
-
-<Note>
-The SMS agent shares the booking tools connected to the number. If your number can book over a call, it can book over text — no separate setup.
-</Note>
+Let customers ask about appointments by text and use a connected calendar to complete the booking. SMS instructions are separate from your phone-call prompt. Keep the conversation short, and check the calendar before treating an appointment as confirmed.
 
 ## Before you start
 
-- A phone number with SMS enabled, attached to an agent
-- A calendar connected to that number (see the [Appointment-booking receptionist](/guides/booking-receptionist) guide)
+- Use an Owner or Admin login and a number that supports SMS.
+- Connect Cal.com or Google Calendar to that number.
+- Have an owned test phone and a test appointment slot.
 
 ## Steps
 
-<Steps>
-  <Step title="Write the SMS agent's instructions">
-    The SMS agent uses its own text prompt, so you can shape how it writes — shorter and more direct than speech. Tell it what it can do.
+### 1. Check the calendar connection
 
-    ```text SMS prompt (excerpt)
-    You handle text messages for Brightsmile Dental.
-    You can answer questions and book appointments.
+Open **Integrations**, select the business number and confirm the intended calendar is connected. Check which appointment type and time zone it uses. A calendar attached to a different number is not automatically shared.
 
-    Keep replies short and clear — this is a text conversation.
-    When someone wants an appointment, offer open times and confirm once booked.
-    ```
-  </Step>
+### 2. Write SMS instructions
 
-  <Step title="Let it book over text">
-    Because booking tools are connected to the number, the SMS agent can check availability and book appointments the same way the voice agent does — the caller just does it by text instead of by voice.
-  </Step>
+Open **SMS agent**, select the number and choose **Set up agent** or **Edit agent**. Explain the booking task, required customer details and what to do when the calendar cannot confirm a result.
 
-  <Step title="Test the conversation">
-    Text your number and ask for an appointment. The agent should:
+### 3. Add service information
 
-    - Reply in text
-    - Offer times that are open on your calendar
-    - Confirm the booking once you choose a slot
+Add the main appointment facts to the SMS instructions. For detailed service information, use the attached agent’s knowledge and enable its SMS switch. Knowledge supplies facts; the connected calendar performs the appointment action.
 
-    Check your calendar — the appointment should be there, just as it would be from a call.
-  </Step>
-</Steps>
+<Note>Screenshot placeholder: **sms-booking-instructions** — SMS agent setup, booking instructions and separate number selection. Use staging test data.</Note>
 
-## What's next
+### 4. Enable automatic replies
 
-- Read the [SMS agent](/sms/sms-agent) page for the full behaviour and settings.
-- See [SMS campaigns](/sms/sms-campaigns) to send texts to many people at once.
-- Add [Post-call analysis](/advanced/post-call-analysis) to capture what people ask.
+Save the instructions and turn on auto-reply. Keep replies concise and ask one useful question at a time. State the business time zone where an appointment time could be ambiguous.
 
-<CardGroup cols={2}>
-  <Card title="SMS agent" icon="comment-sms" href="/sms/sms-agent">
-    Everything the text agent can do.
-  </Card>
-  <Card title="Appointment-booking receptionist" icon="calendar-check" href="/guides/booking-receptionist">
-    Connect the calendar this guide relies on.
-  </Card>
-</CardGroup>
+### 5. Test the booking result
+
+Text from your test phone, ask for a slot and provide test details. Check the new calendar event, then test a change or cancellation. Review the SMS thread for unclear wording or a claim that does not match the calendar.
+
+<Note>Screenshot placeholder: **sms-booking-conversation** — SMS conversation, test appointment request and confirmed result. Use staging test data.</Note>
+
+## What happens next
+
+Customers can continue the conversation in the same SMS channel. Review errors and incomplete requests so a person can follow up. Do not assume a reply marked sent was delivered to the handset.
+
+## Common questions
+
+### Does the phone prompt control these replies?
+
+No. Use the number’s SMS instructions.
+
+### Can the website agent use the same booking tools?
+
+Built-in website booking is unavailable. Website custom functions are a separate, explicitly enabled feature.
+
+### Does a campaign teach the SMS agent its offer?
+
+No. Add the offer or reminder information before launching a campaign that expects replies.
+
+### Is a booking summary enough proof?
+
+No. Confirm the actual calendar event or returned booking result.
+
+## Related guides
+
+- [Set up SMS replies](/guides/business/sms-agent)
+- [Booking receptionist](/guides/booking-receptionist)
+
+Prefer code? See [SMS booking and settings API](/sms/sms-agent).

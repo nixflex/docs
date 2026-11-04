@@ -1,0 +1,82 @@
+---
+title: "Call history: read results and recording access with code"
+description: "Read Nixflex call history, distinguish completion from post-call processing and fetch recording access while respecting ownership and retention states."
+---
+
+Build a call-results view that can update as post-call processing completes. A completed call can still lack a recording or analysis result.
+
+Using the dashboard? See [the business guide](/guides/business/call-history).
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment.
+
+## 1. Read history
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/calls/history?period=month&outcome=failed&limit=25" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.history({period:"month",outcome:"failed",limit:25});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.history(period="month",outcome="failed",limit=25)
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls history --period month --outcome failed --limit 25 --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 2. Page using server values
+
+Use the endpoint’s documented filters, bounds and pagination. Do not treat one response as the whole account history. Keep call identifiers opaque and preserve unknown timestamps or outcomes.
+
+## 3. Show separate processing states
+
+Display call state, analysis, costs and recording availability separately. Missing summary or structured data is not a confirmed negative answer. A requested end or deletion can remain pending.
+
+## 4. Request a current recording link
+
+Use `GET /v1/calls/{id}/recording` when the user asks to play a recording. Read `status`, `url` and `expires_at`. Available links are short-lived; do not save them as permanent public URLs. Other statuses can have `url:null`.
+
+## 5. Apply retention and deletion honestly
+
+Read the configured policy and actual current state. Cleanup waits for required finalisation and post-call decisions. Customer-owned storage has its own lifecycle. Deleting one call does not erase every caller record or external integration copy.
+
+## Example response
+
+A recording access reply has `call_id`, `status`, `url` and `expires_at`. For example, `{"call_id":"call_example","status":"pending","url":null,"expires_at":null}` means no usable recording link is available yet.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| 404 or inaccessible call | Check ownership; do not reuse cached access. |
+| Recording pending | Offer a later bounded refresh. |
+| expired/not_recorded/customer_bucket | Explain the returned state; do not invent a link. |
+| pending_deletion | Respect revoked access and tracked cleanup. |
+| Optional analysis absent | Keep it unknown rather than manufacturing a result. |
+
+## Next steps
+
+- [Recording access](/api-reference/calls/get-calls-id-recording)
+- [Signed events](/advanced/webhooks)
+- [Retention](/concepts/data-retention)

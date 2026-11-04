@@ -1,104 +1,84 @@
 ---
-title: "Outbound lead qualification"
-description: "Call a list of leads, ask qualifying questions, and capture structured answers your team can act on."
-icon: "phone-arrow-up-right"
+title: "Outbound lead calls: build a safe Nixflex API workflow"
+description: "Build an outbound Nixflex call for an approved recipient, supply a purpose and dynamic variables, then track it without repeating uncertain requests."
 ---
 
-This guide builds an outbound agent that calls your leads, asks a few qualifying questions, and returns the answers as structured data — ready to push into your CRM or review in the dashboard.
+Call an approved recipient to ask a small set of qualification questions and record the outcome. The example places real work when configured with real identifiers.
 
-## What you'll build
+Using the dashboard? See [the business guide](/guides/business/voice-campaigns).
 
-An outbound agent that:
+## Prerequisites
 
-- Calls each lead with their details already personalized into the conversation
-- Asks your qualifying questions naturally
-- Captures the answers as structured fields after every call
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.10.0 or Python 0.3.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the intended owned sender and approved recipient.
 
-## Before you start
+## 1. Prepare a clear purpose
 
-- An agent created and a number attached
-- Your API key
-- A list of leads with the details you want to personalize (name, company, anything relevant)
+Describe the business, reason for calling, two or three questions and a polite finish. Include `prompt` on the call request. Supply `dynamic_vars` for known values and validate required placeholders before sending.
 
-## Steps
+## 2. Create the call
 
-<Steps>
-  <Step title="Personalize each call with variables">
-    Pass a lead's details as variables when you start the call. The agent can use them in its prompt so every call feels tailored.
+<CodeGroup>
 
-    ```bash
-    curl -X POST https://api.nixflex.com/v1/calls \
-      -H "Authorization: Bearer YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "agent_id": "agent_xxx",
-        "to": "+15551234567",
-        "dynamic_variables": {
-          "lead_name": "Jordan",
-          "company": "Acme Ltd"
-        }
-      }'
-    ```
+```bash cURL
+curl --request POST \
+  --url "https://api.nixflex.com/v1/calls/outbound" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
+```
 
-    In the agent prompt, reference them with double curly braces:
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
+// Handle result privately; do not log secrets or call content.
+```
 
-    ```text Agent prompt (excerpt)
-    You are calling {{lead_name}} from {{company}} on behalf of Nixflex.
-    Introduce yourself warmly, confirm you are speaking to the right person,
-    and ask if now is a good moment before you continue.
-    ```
-  </Step>
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.create(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
+# AsyncNixflex supports the same calls with await (and async with).
+```
 
-  <Step title="Ask your qualifying questions in the prompt">
-    Tell the agent what to find out. Keep it conversational — the agent works the questions into a natural call.
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
+```
 
-    ```text Agent prompt (excerpt)
-    Your goal is to find out three things:
-    - Whether they are the decision maker
-    - Their rough budget
-    - Whether they want a follow-up call
+</CodeGroup>
 
-    Ask naturally, one question at a time. Do not read them as a list.
-    Thank them and end the call politely once you have what you need.
-    ```
+## 3. Save the returned identity
 
-    <Note>
-    Set the agent's `response_length` to `short` so replies stay crisp on a sales call. See [Agents](/concepts/agents) for the behaviour settings.
-    </Note>
-  </Step>
+Persist `call_id` with your operation record. Acceptance is not a connected call. If the network response is lost, reconcile before repeating; do not enable automatic transport retries for call creation.
 
-  <Step title="Capture the answers as structured data">
-    Define an analysis schema so every call returns the qualifying answers as clean fields — not just a transcript. The engine fills these in after the call ends.
+## 4. Read the outcome
 
-    ```json
-    {
-      "analysis_schema": {
-        "decision_maker": { "type": "boolean", "description": "Is the person the decision maker?" },
-        "budget": { "type": "string", "description": "The budget range they mentioned" },
-        "wants_followup": { "type": "boolean", "description": "Do they want a follow-up call?" }
-      }
-    }
-    ```
+Read the call or consume its signed event. Use observed answers and analysis as reviewable data. A summary can be delayed or unavailable and is not a guarantee every requested question was answered.
 
-    After each call, read the results from the call record — the structured fields sit alongside the summary and sentiment.
-  </Step>
+## 5. Plan follow-up deliberately
 
-  <Step title="Scale to your whole list">
-    Repeat the call request for each lead, passing that lead's variables each time. Every call personalizes itself and returns the same structured fields, so your results line up into one clean table.
-  </Step>
-</Steps>
+Respect contact restrictions and the person’s wishes. If you send a follow-up text, use an explicit eligible sender and approved wording. A failed wait in your client does not hang up the call or prove it was never placed.
 
-## What's next
+## Example response
 
-- Read [Outbound calls](/concepts/outbound-calls) for the full call API and options.
-- See [Variables](/concepts/variables) for everything you can personalize.
-- Use [Post-call analysis](/advanced/post-call-analysis) to shape exactly which fields you capture.
+The create response identifies the accepted call and current state. Read the [create schema](/api-reference/calls/create-outbound) and retain any safe outcome or retry fields returned on failure.
 
-<CardGroup cols={2}>
-  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
-    Starting calls and passing lead details through the API.
-  </Card>
-  <Card title="Post-call analysis" icon="chart-line" href="/advanced/post-call-analysis">
-    Turning each call into structured, reviewable data.
-  </Card>
-</CardGroup>
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Contact refusal | Respect suppression, location and local-hours reasons. |
+| Capacity or balance refusal | Resolve the account condition before new work. |
+| Unknown transport outcome | Reconcile existing work; do not blindly resend. |
+| Client wait expired | Keep tracking the original call. |
+| Missing analysis | Preserve unknown fields and review the conversation. |
+
+## Next steps
+
+- [Client safety](/api-reference/calls/client-safety)
+- [Call results](/guides/developer/call-history)
+- [Voice campaigns](/guides/developer/campaigns)

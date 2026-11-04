@@ -1,32 +1,38 @@
 ---
-title: "Guides"
-description: "Real-world, copy-paste recipes for building voice and SMS agents with Nixflex."
-icon: "map"
+title: "Developer guides: build reliable Nixflex business workflows"
+description: "Build Nixflex workflows for knowledge, calls, messages, teams and integrations with request examples, current limits and handling of uncertain results."
 ---
 
-Explore practical, end-to-end recipes that combine Nixflex features into complete agents. Each guide walks you from an empty agent to a working call, with a copy-paste prompt and a test at the end.
+Choose a workflow, then use its API reference for the exact fields. The examples keep account credentials on the server and distinguish an accepted request from a completed business action.
 
-<CardGroup cols={2}>
-  <Card title="Appointment-booking receptionist" icon="calendar-check" href="/guides/booking-receptionist">
-    Answer calls, check a live calendar, and book real appointments while the caller is on the line.
-  </Card>
-  <Card title="Outbound lead qualification" icon="phone-arrow-up-right" href="/guides/lead-qualification">
-    Call a list of leads, ask qualifying questions, and record the answers for your team.
-  </Card>
-  <Card title="Inbound support agent" icon="headset" href="/guides/inbound-support">
-    Handle common questions, text details mid-call, and transfer to a human when needed.
-  </Card>
-  <Card title="Voice widget on your website" icon="globe" href="/guides/voice-widget">
-    Let visitors talk to your agent straight from the browser — no phone number required.
-  </Card>
-  <Card title="Live call monitoring for teams" icon="waveform-lines" href="/guides/live-monitoring">
-    Watch calls as they happen and listen in live from your dashboard.
-  </Card>
-  <Card title="SMS booking agent" icon="comment-sms" href="/guides/sms-booking">
-    Take bookings and answer questions entirely over text message.
-  </Card>
-</CardGroup>
+| Workflow | Guide |
+| --- | --- |
+| First authenticated read | [Quickstart](/quickstart) |
+| Reviewed business knowledge | [Sources, jobs, drafts and publication](/guides/developer/knowledge) |
+| Single outbound call | [Lead qualification](/guides/lead-qualification) |
+| Voice and SMS campaigns | [Voice](/guides/developer/campaigns) · [SMS](/sms/sms-campaigns) |
+| Contact timing and restrictions | [Contact controls](/guides/developer/contact-controls) |
+| Numbers and teams | [Numbers](/guides/developer/phone-numbers) · [Organisations](/guides/developer/organisations) |
+| Website settings and inbox | [Web agent](/web-assistant/overview) · [Inbox](/guides/developer/agent-inbox) |
+| Call results and signed events | [History](/guides/developer/call-history) · [Webhooks](/advanced/webhooks) |
+| Usage and capacity | [Usage](/guides/developer/billing) |
+| Business connections | [Integrations](/integrations/overview) |
 
-<Note>
-Every guide uses only features that are live today. Pick the one closest to what you are building — the steps transfer easily to your own use case.
-</Note>
+## Before sending work
+
+Use an owned agent and number, verify recipient permission, and check the route's retry rules. An unknown network result does not prove a call or message was never sent. Store returned identifiers and reconcile before repeating a mutation.
+
+Node/CLI 0.10.0 and Python 0.3.0 examples describe current candidate capabilities. Check [kit release status](/sdks/ecosystem) before installing or relying on a new command. Use cURL when a corresponding package release is unavailable.
+
+Prefer the dashboard? Start with [business setup](/business) and its five-step task guides.
+
+## Understand the behaviour behind each workflow
+
+| Topic | Read more |
+| --- | --- |
+| Agents and number ownership | [Agents](/concepts/agents) · [Phone numbers](/concepts/phone-numbers) |
+| Outbound purposes and personalisation | [Outbound calls](/concepts/outbound-calls) · [Variables](/concepts/variables) |
+| Live call access | [Monitoring](/concepts/live-monitor) · [Live Listen](/concepts/live-listen) |
+| Information after a call | [Analysis](/advanced/post-call-analysis) · [Post-call texts](/sms/post-call-sms) |
+| Telephone input and answering systems | [Keypad input](/advanced/keypad-input) · [Voicemail](/advanced/voicemail-detection) |
+| Reaching a department | [Phone-menu instructions](/best-practices/ivr-navigation) |

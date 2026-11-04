@@ -1,108 +1,64 @@
 ---
-title: "For businesses"
-description: "Set up an AI agent to answer your calls - no code required"
-icon: "building"
+title: "AI phone agent setup: get your business ready to answer"
+description: "Set up your business AI phone agent in the Nixflex dashboard, connect a number, add knowledge and test its answers before inviting customers to call."
 ---
 
-Nixflex works the same whether you write code or not. Developers use our API; everyone else uses the dashboard. This guide is the no-code path: create an account, connect your phone number, and your AI agent starts answering calls.
+Set up an AI phone agent to answer business calls and help customers find the right next step. Start with one clear job, such as answering service questions or taking appointment requests, then test it before adding more responsibilities.
 
-## What you'll need
-- A free [Nixflex account](https://dashboard.nixflex.com/login)
-- A phone number in your own [Twilio](https://www.twilio.com/) account - the number your customers call
-- About five minutes
+## Before you start
 
-<Note>
-Nixflex uses a **bring your own carrier** model. Your number lives in your own carrier account, so you stay in full control and the carrier bills your call charges directly. Nixflex never takes over or resells your number.
+- Sign in to the Nixflex dashboard as Owner or Admin.
+- Have an active business phone number and current business facts ready.
+- Choose a test phone and a team member who can review the results.
 
-We support **Twilio** and **Telnyx**. This guide uses Twilio because it is the quicker of the two to set up by hand. If you already use Telnyx, everything works the same once the number is connected - see the [Telnyx guide](/integrations/telnyx) for its one extra setup step.
-</Note>
+## Steps
 
-## Step 1 - Create your account
-Open [dashboard.nixflex.com](https://dashboard.nixflex.com/login) and sign up. New accounts include **$10 of free credit**, so you can test everything before paying anything.
+### 1. Create an agent
 
-## Step 2 - Create your agent
-An **agent** is your AI receptionist - the voice that answers the phone. You give it a personality and instructions in plain English, and it follows them on every call.
+Open **Agents** and choose **Create agent**. Give it a name your team will recognise. Choose a voice and language suitable for the customers you serve; listen to the preview before saving.
 
-<Steps>
-  <Step title="Open the Agents page">
-    In the dashboard, go to **Agents** and create a new agent.
-  </Step>
-  <Step title="Write what it should say and do">
-    Describe your business and how the agent should behave, for example:
+<Note>Screenshot placeholder: **business-agent** — Agents, Create agent with name and voice selected. Use staging test data.</Note>
 
-    > You are the receptionist for Bella's Hair Studio. Greet callers warmly, answer questions about opening hours (Tue to Sat, 9am to 6pm), and take bookings by collecting the caller's name and preferred day. If you don't know something, offer to take a message.
+### 2. Write its instructions
 
-    Set a **welcome message** too - the first thing callers hear, e.g. "Hello, Bella's Hair Studio, how can I help?"
-  </Step>
-  <Step title="Pick a voice and language (optional)">
-    Every agent uses the **Ashley** voice, and by default understands and replies in whichever language you write its instructions in - English, French, Spanish, German, Arabic and 25 more. If the caller speaks a different language, the agent offers to switch rather than switching on its own. To keep an agent to one language always, pick that language instead. Change either at any time.
-  </Step>
-</Steps>
+Explain who the agent represents, how it should speak and what to do when it cannot help. Include your most-used facts. Asking the agent to book does not connect a calendar: complete that setup separately before promising bookings.
 
-<Tip>
-Keep instructions short and clear: what to do, the facts about your business to use, and what to do when unsure. You can edit the prompt any time - changes apply to the next call.
-</Tip>
+### 3. Add business knowledge
 
-## Step 3 - Connect your phone number
-This is the important part. You connect a number you already own, and Nixflex wires it up automatically.
+Open **Knowledge base**, choose the agent and add your text, files or website pages. Review the proposed topics before approving them. All numbers attached to this agent share its knowledge, so use separate agents for different branch answers.
 
-<Warning>
-**Buy and set up the number in your carrier account first.** Nixflex can only connect a number that already exists and is switched on for voice calls. If your carrier account is new, check the number is active and that calls to the countries you expect are allowed - carriers block some destinations by default until you enable them.
+### 4. Connect your number
 
-Carrier websites also change. Twilio and Telnyx both redesign their consoles and update their rules from time to time, so a screen or a field name may not look exactly like it does here. If something has moved, follow your carrier's own current help pages - what Nixflex needs from you stays the same.
-</Warning>
+Open **Phone Numbers**, choose **Import number**, complete the connection fields and select your agent. Check the number is active and its inbound switch is on. Import changes call routing, so plan when the existing answering service should stop.
 
-<Steps>
-  <Step title="Get your Twilio details">
-    Sign in to the [Twilio Console](https://console.twilio.com). On the main dashboard you'll find your **Account SID** and **Auth Token** - copy both. You'll also need the **phone number** in full international format, e.g. +447446466847.
-  </Step>
-  <Step title="Import the number in Nixflex">
-    In the dashboard, go to **Phone Numbers** and import a number. Leave the provider set to **Twilio**, paste your **Account SID**, **Auth Token**, and the **phone number**, then choose the **agent** that should answer it.
-  </Step>
-  <Step title="Done - Nixflex configures the rest">
-    Nixflex points your number at the engine automatically. You don't need to change any settings inside Twilio.
-  </Step>
-</Steps>
+<Note>Screenshot placeholder: **business-number** — Phone Numbers, connected test number with attached agent and inbound switch. Use staging test data.</Note>
 
-<Note>
-**Using Telnyx instead?** Switch the provider toggle to **Telnyx** on the same screen. Telnyx needs one extra thing set up in its portal first - a TeXML Application that tells Telnyx where to send your calls. It is a one-off job, and the [Telnyx guide](/integrations/telnyx) walks through it. After that, importing is the same.
-</Note>
+### 5. Make a test call
 
-<Note>
-Each number is answered by **one agent**. To switch a number to a different agent later, remove it and import it again with the new agent selected.
-</Note>
+Call the number from your test phone. Ask a normal question, an unknown question and a request for a person. Open **Call History** afterwards and check what happened. Correct instructions or knowledge before widening use.
 
-## Step 4 - Receive your first call
-Call your number from any phone. Your agent picks up, plays your welcome message, listens, answers naturally, handles interruptions, and hangs up when the conversation is done.
+## What happens next
 
-That's it - you now have a working AI agent answering your calls.
+Your agent answers eligible incoming calls using its instructions, number settings and enabled knowledge. Keep checking early calls so you can fill factual gaps and improve unclear directions.
 
-## Everything else works for you too
-The rest of these docs use developer examples (API requests), but **every feature is the same for you** - you just turn it on in the dashboard instead of calling an API. Don't skip a section because it shows code; the capability is yours either way.
+## Common questions
 
-A few you'll likely want:
+### Can I change the agent later?
 
-<CardGroup cols={2}>
-  <Card title="Voicemail detection" icon="voicemail" href="/advanced/voicemail-detection">
-    The agent spots an answering machine and ends the call, or leaves your message first if you switch that on.
-  </Card>
-  <Card title="Call transfers" icon="right-left" href="/actions/transfer">
-    Hand a caller to a real person when they need one.
-  </Card>
-  <Card title="SMS" icon="message" href="/sms/send-sms">
-    Send a text during or after a call - confirmations, links, summaries.
-  </Card>
-  <Card title="Post-call summaries" icon="file-lines" href="/advanced/post-call-analysis">
-    Every call comes with a written summary, caller sentiment, and key details pulled out automatically.
-  </Card>
-  <Card title="Languages" icon="language" href="/concepts/languages">
-    Thirty languages. Write your instructions in the language you want, and the agent offers to switch if a caller speaks another.
-  </Card>
-  <Card title="Outbound calls" icon="phone-arrow-up-right" href="/concepts/outbound-calls">
-    Have your agent call customers - reminders, follow-ups, confirmations.
-  </Card>
-</CardGroup>
+Yes. Edit it and save. Most settings affect new calls; knowledge edits have their own publication checks.
 
-<Info>
-The only real difference between the business and developer paths is *how* you set things up: developers send API requests, you use the dashboard. The AI, voices, languages, and every feature are exactly the same underneath.
-</Info>
+### Can I move the number?
+
+Yes. Use **Move number** on Phone Numbers. Wait if the number is busy; you do not need to remove and import it again.
+
+### Does everyone on my team edit it?
+
+Owners and Admins can edit shared work. Members can review it and use permitted live-call controls.
+
+## Related guides
+
+- [Teach your agent](/guides/business/knowledge)
+- [Connect a phone number](/guides/business/phone-numbers)
+- [Invite your team](/guides/business/team)
+
+Prefer code? See [First call with the API](/quickstart).
