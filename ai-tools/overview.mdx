@@ -1,13 +1,13 @@
 ---
 title: "AI tools: connect your assistant to Nixflex"
-description: "Use the Nixflex MCP candidate with your AI tools. Set up a private connection, check its 89 tools, approve changes and understand knowledge and booking limits."
+description: "Use the Nixflex MCP candidate with your AI tools. Set up a private connection, check its 94 tools, approve changes and understand knowledge and booking limits."
 canonical: "https://docs.nixflex.com/ai-tools/overview"
 ---
 
 Use an AI assistant to inspect your Nixflex account, prepare work and carry out supported actions you approve. **MCP** is the connection that gives the assistant tools for your account. Reading these docs alone does not give it account access.
 
 <Note>
-These guides cover the supplied **Nixflex MCP 0.4.0 release candidate**, with **89 tools**, including 19 knowledge reads and confirmed tests. It is not yet the public npm release. Use the reviewed package or desktop bundle supplied by Nixflex; installing the current public version does not give you this candidate's tool set.
+These guides cover the supplied **Nixflex MCP 0.5.0 release candidate**, with **94 tools**. K6 adds four Google Calendar tools and one private number-credential tool to the earlier 89; the 19 knowledge tools still cover reads and confirmed tests. Use the reviewed package or Desktop bundle supplied by Nixflex. These instructions do not establish registry publication or successful live-client testing.
 </Note>
 
 ## Choose your assistant
@@ -27,12 +27,41 @@ These guides cover the supplied **Nixflex MCP 0.4.0 release candidate**, with **
 | Read calls, numbers and usage | Available through tools such as `list_calls`, `list_phone_numbers` and `get_usage`. |
 | Read live knowledge and keyterms | Available. Knowledge test questions need confirmation and may use paid model work. |
 | Add, import, publish, edit or delete knowledge | Not available through this MCP tool set. Prepare the text, then review and publish in the dashboard. |
-| Book directly into a calendar | No direct calendar booking tool. Set up the number in the dashboard and test booking through a phone or SMS conversation. |
+| Connect, check, configure or disconnect Google Calendar | Available per number through the four K6 calendar tools. A human completes Google consent. |
+| Book directly into a calendar | No direct calendar booking tool. Configure the number with MCP or the dashboard, then test through a phone or SMS conversation. |
 | Call, send a text or launch a campaign | Some tools can do this and spend credit. Approve the exact recipients and action first. |
-| Set integration credentials, retrieve a signing secret or disconnect an integration | Excluded. Use the supported dashboard or developer workflow. |
+| Update a number's carrier credentials | Available through `update_phone_number_credentials`, using a privately configured pair for its current carrier. |
+| Set other integration credentials, retrieve a signing secret or disconnect other integrations | Excluded. Google Calendar disconnection and number carrier credentials are the K6 exceptions. |
 | Accept an invitation, transfer ownership or close the organisation | Personal dashboard actions, not an MCP shortcut. |
 
 The server's **tools/list** is the authority for your installed version. Other limits include no account signup, bulk deletion, campaign resume/consent change or suppression removal. Do not substitute another write when the requested tool is missing.
+
+## Google Calendar and number credentials
+
+| K6 tool | What it does |
+| --- | --- |
+| `connect_google_calendar` | Creates a ten-minute consent link for the chosen number and approved `return_url`. The human opens it and signs in to Google. |
+| `get_google_calendar` | Checks saved status, including `needs_reconnect` and `send_invites`. The engine can refresh or check an existing connection internally. |
+| `update_google_calendar_settings` | Changes supplied timezone, hours, slot length, calendar or invitation setting. Omitted settings stay as saved. |
+| `disconnect_google_calendar` | Removes this number's saved Google access and stops future use. It cannot recall work already dispatched or guarantee remote revocation. |
+| `update_phone_number_credentials` | Updates the existing number using its current carrier's private credentials, keeping its settings and history. It does not switch carriers. |
+
+**The four new writes require `confirm: true` after approval of the exact number and change.** Missing or false confirmation sends no request; the credential tool does not read the private pair until confirmation. The status tool is the one new read. Older writes do not all have a confirmation field, so keep client approvals enabled.
+
+After the human completes consent, check status again. `connected: true` with `needs_reconnect: true` still requires new consent. Keep the short-lived consent URL private; the assistant must not open it automatically. Use a return URL accepted by the server, with no secrets in it.
+
+When replacing `hours`, supply all seven days; a null day is closed. `slot_minutes` accepts 15, 30, 45 or 60. `send_invites: false` stays false; the setting controls Google's invitation request, **not proof of inbox delivery**. There is still no direct booking tool.
+
+The number-credential tool accepts **only `phone_number`, `provider` and `confirm`**. The provider selects one existing carrier pair from the MCP server's private process environment:
+
+| Provider value | Private variable names |
+| --- | --- |
+| `twilio` | `NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN` |
+| `telnyx` | `NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID` |
+
+Have the person managing the local client inject only the selected pair. Never put its values in chat, tool arguments or config files, and never ask the assistant to inspect them. Missing private configuration returns `credentials_not_configured` without sending a request. The Desktop bundle exposes only the Nixflex API-key field; it has no carrier-secret setup fields. If its host cannot privately supply the selected pair, use the supported dashboard, CLI or SDK workflow.
+
+The server still checks ownership, account state and pending number operations. Updating credentials can change carrier routing and may require fresh number verification. Never automatically retry an unknown write. `carrier_outcome_unknown` needs support before retrying; `credential_save_pending` permits only a manual completion with exactly the same private details.
 
 ## Keep your key private
 
@@ -52,18 +81,18 @@ Environment injection avoids storing the key in the example config; it is not a 
 
 ## Install the supplied local package
 
-Skip this section if using the Claude Desktop bundle. For Claude Code, Cursor or Codex, use **Node.js 22 or later** and the reviewed `nixflex-mcp-0.4.0.tgz` supplied by Nixflex. Check the file against its supplied SHA-256 before installing. If you have no candidate package, obtain it from Nixflex rather than downloading an unrelated similarly named package.
+Skip this section if using the Claude Desktop bundle. For Claude Code, Cursor or Codex, use **Node.js 22 or later** and the reviewed `nixflex-mcp-0.5.0.tgz` supplied by Nixflex. Check the file against its supplied SHA-256 before installing. If you have no candidate package, obtain it from Nixflex rather than downloading an unrelated similarly named package.
 
 Install into a dedicated folder. Replace the download path with your actual file path; these commands contain no key.
 
 <CodeGroup>
 
 ```powershell Windows PowerShell
-npm.cmd install --prefix "C:/NixflexTools/mcp-0.4.0" "C:/Downloads/nixflex-mcp-0.4.0.tgz"
+npm.cmd install --prefix "C:/NixflexTools/mcp-0.5.0" "C:/Downloads/nixflex-mcp-0.5.0.tgz"
 ```
 
 ```bash macOS or Linux
-npm install --prefix "$HOME/.local/share/nixflex/mcp-0.4.0" "$HOME/Downloads/nixflex-mcp-0.4.0.tgz"
+npm install --prefix "$HOME/.local/share/nixflex/mcp-0.5.0" "$HOME/Downloads/nixflex-mcp-0.5.0.tgz"
 ```
 
 </CodeGroup>
@@ -72,7 +101,7 @@ The client starts `node` with the installed `node_modules/nixflex-mcp/index.js` 
 
 ## Verify with one read
 
-Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 89 tools. Then ask:
+Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 94 tools. Then ask:
 
 > Use Nixflex get_usage only. Summarise my account usage. Do not create, change, call, text or delete anything, and never show credentials.
 
