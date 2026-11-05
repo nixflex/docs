@@ -1,31 +1,33 @@
 ---
 title: "Update an agent"
-sidebarTitle: "Update an agent"
+sidebarTitle: "Update agent"
 description: "Update selected settings on an owned Nixflex agent. The PUT request is partial: omitted fields keep their saved values."
 openapi: "/api-reference/public.openapi.json PUT /agents/{id}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/agents/update"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted fields keep their saved values. Creation defaults are not reapplied.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PUT</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Omitted fields keep their stored values; send only the intended change.
+- Read the agent after an uncertain response before repeating the update.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agents) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -285,7 +287,6 @@ Never automatically retry PUT. Read the agent after a timeout and compare the fi
 
 ## Related endpoints
 
-- [Get an agent](/api-reference/agents/get)
 - [Create an agent](/api-reference/agents/create)
-- [Agent object and settings](/api-reference/agents/contract)
-- [Get account retention](/api-reference/account-and-keys/get-account-retention)
+- [List agents](/api-reference/agents/list)
+- [Errors and recovery](/api-reference/errors#error-envelope)

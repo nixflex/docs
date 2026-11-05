@@ -1,10 +1,33 @@
 ---
-title: "API pagination and filters"
-sidebarTitle: "API pagination and filters"
+title: "Page through API results"
+sidebarTitle: "Pagination"
 description: "Page through Nixflex agents, calls, numbers and knowledge. Use each endpoint’s limit, offset or cursor without losing filters or assuming one list shape."
 canonical: "https://docs.nixflex.com/api-reference/pagination"
 ---
+Read every result by following the pagination shape and filters documented for that endpoint.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Pagination</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the paging shape documented for the specific endpoint.
+- Keep filters fixed between pages; do not treat one response as a complete account export.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/pagination) · [Glossary](/guides/glossary)
+
+</div>
+
 Lists do not all use the same paging contract. Follow the endpoint's response shape and preserve its filters between requests.
+
 
 ## Phone numbers: cursor paging
 
@@ -55,3 +78,9 @@ GET /v1/phone-numbers?limit=0
 ```
 
 This returns HTTP 400 with `error.code = invalid_number_query`. Correct the limit before another request. See the [error catalog](/api-reference/errors#invalid_number_query) and [retry guidance](/api-reference/retries).
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

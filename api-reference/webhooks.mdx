@@ -1,10 +1,33 @@
 ---
-title: "Webhooks and signature verification"
+title: "Receive and verify webhook events"
 description: "Receive Nixflex call and booking events. Verify raw-body signatures, handle duplicate delivery and fetch private recording links when playback is needed."
-sidebarTitle: "Webhooks and signature verification"
+sidebarTitle: "Webhook events"
 canonical: "https://docs.nixflex.com/api-reference/webhooks"
 ---
+Verify signed Nixflex events before storing their results or running a business action.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Webhook events</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Verify the exact body bytes before parsing or taking action.
+- Delivery can be delayed, duplicated or missed; keep a reconciliation path.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/advanced/webhooks) · [Glossary](/guides/glossary)
+
+</div>
+
 Receive events at your HTTPS endpoint using the [first webhook](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber) and optional [second webhook](/api-reference/integration-settings/put-integrations-webhook2-number-phoneNumber) settings. Each slot is independent.
+
 
 ## Events and payloads
 
@@ -63,3 +86,9 @@ The new [call.bookings event](/api-reference/call-bookings) uses that object plu
 | `timezone` | String or null |
 
 Google creation and move include actual end time; cancellation includes the looked-up interval and person. Older or upstream omissions remain null. An already-existing booking lookup is not a new public mutation event, so it must not trigger a second booking-created automation. The payload does not prove email or SMS delivery.
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

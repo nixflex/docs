@@ -455,3 +455,21 @@ Google Calendar remains a coming slot. No new Calendar route is claimed. Generat
 | Booking B52 | pending manual test | Real consent, separate name/email approvals, create/move/cancel, signed booking payload, Google invite on/off and actual inbox delivery. |
 
 Existing account creation, key rotation, number import/removal/routing and other successful-write checks remain individually pending manual test in the prior tables. Never rotate the staging key, create real accounts, or import/remove/re-route +447861926140 or +447457401554. No credentials were read, copied or printed.
+
+## C13 additions — engine f6ff94d, 5 November 2026
+
+The current public contract has **149 operations** and **162 API pages**. Earlier counts and the old Google Calendar coming-slot statement above are historical batch records; Google Calendar now has the four documented C10 operations. C13 makes no live API request. Pinned-engine functions, fake dependencies and schema-shaped examples provide offline proof only.
+
+| Row / case | Status | Remaining controlled check |
+| --- | --- | --- |
+| 198 | pending manual test | GET `/v1/calls/{id}/bookings` using approved retained fixtures for ready, none, processing, deleted and unavailable; confirm no-store and account ownership. |
+| 199 | pending manual test | GET `/v1/calls/outbound/requests/{request_id}` using approved fixtures for pending, accepted, rejected and unknown; verify invalid/missing/foreign UUIDs share 404. |
+| 96 / first UUID acceptance | pending manual test | One approved outbound intent with a durably saved UUID returns 201 and the known call ID. |
+| 96 / accepted replay | pending manual test | Reuse the identical accepted UUID and payload; verify 200 replayed:true, the same call ID and no second dispatch. |
+| 96 / changed payload | pending manual test | Reuse the UUID with changed input; verify 409 request_id_conflict and no second dispatch. |
+| 96 / pending or unknown | pending manual test | Controlled journal fixtures return 409 outbound_request_pending or outbound_request_unknown without redispatch. |
+| 96 / lost acknowledgement | pending manual test | Controlled failure injection preserves 201 call_id with request_status:unconfirmed and safe_to_retry:false, or a documented 503 unknown response. Do not inject failures into shared live staging. |
+| 96 / existing client launch | pending manual test | Confirm installed client-version behaviour separately; reviewed legacy Node/Python/CLI examples omit request_id. |
+| B56 / signed result reconciliation | pending manual test | Compare a genuinely signed call.bookings event with the retained GET result for an approved call. Verify create/move/cancel and duplicate processing without repeating business actions. |
+
+All earlier successful-write checks remain pending manual test. C13 does not rotate a key, create an account, contact a recipient, modify a number, reconnect a calendar or retrieve a signing secret. The historical C8 runner is unchanged and does not cover rows 198/199; use the C13 supplemental offline proof and this explicit live-test list rather than presenting C8 as complete B56 coverage.

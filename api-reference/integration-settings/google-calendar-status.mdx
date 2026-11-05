@@ -8,6 +8,27 @@ canonical: "https://docs.nixflex.com/api-reference/integration-settings/google-c
 ---
 Read the Google Calendar connection for an owned Nixflex number, including reconnect state and whether caller invitations are enabled.
 
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- connected:false is different from a failed status read.
+- needs_reconnect asks for fresh consent; reconnect keeps business settings.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/google-calendar) · [Developer guide](/actions/google-calendar) · [Glossary](/guides/glossary)
+
+</div>
+
 ## Authentication
 
 Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
@@ -101,13 +122,14 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 401 | unauthorized. Standard error envelope; branch on error.code. |
-| 403 | permission_denied, account_unavailable. Standard error envelope; branch on error.code. |
-| 404 | number_not_found. Standard error envelope; branch on error.code. |
-| 429 | rate_limit_exceeded. Standard error envelope; branch on error.code. |
-| 503 | calendar_unavailable. Standard error envelope; branch on error.code. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 401 · `unauthorized` | The credential is missing or invalid. | Check the full account credential and API host privately; stop the retry loop. |
+| 403 · `permission_denied` | This actor cannot perform the operation. | Resolve the account or role restriction through an authorised person. |
+| 403 · `account_unavailable` | The account is unavailable for this operation. | Resolve the account or role restriction through an authorised person. |
+| 404 · `number_not_found` | The number is absent or inaccessible to this account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 · `rate_limit_exceeded` | The request limit was reached. | Wait at least Retry-After and use a bounded read retry. |
+| 503 · `calendar_unavailable` | The calendar operation or status check could not be completed. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
 Treat 503 as an unknown check result. Do not overwrite the last known connection state.
 
@@ -117,6 +139,6 @@ Use bounded retries only for temporary read failures. Keep the same filters whil
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [Connect Google Calendar](/api-reference/integration-settings/google-calendar)
+- [Disconnect Google Calendar](/api-reference/integration-settings/google-calendar-disconnect)
+- [Errors and recovery](/api-reference/errors#error-envelope)

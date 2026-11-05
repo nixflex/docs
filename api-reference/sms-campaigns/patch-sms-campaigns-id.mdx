@@ -6,27 +6,28 @@ openapi: "/api-reference/public.openapi.json PATCH /sms/campaigns/{id}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/sms-campaigns/patch-sms-campaigns-id"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
-`}</style>
-
 Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or message template, and it is not a cancellation control.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PATCH</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- These settings control replies associated with the campaign.
+- A saved reply setting does not launch or resend campaign messages.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [Developer guide](/sms/sms-campaigns) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -217,5 +218,6 @@ No idempotency key is documented. A timeout or 5xx can follow a committed change
 
 ## Related endpoints
 
-- [Get an SMS campaign](/api-reference/sms/campaigns-get)
-- [Cancel SMS campaign](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel)
+- [List SMS campaigns](/api-reference/sms/campaigns-list)
+- [Create an SMS campaign](/api-reference/sms/campaigns-create)
+- [Errors and recovery](/api-reference/errors#error-envelope)

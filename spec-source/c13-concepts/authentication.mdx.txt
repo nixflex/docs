@@ -1,0 +1,50 @@
+---
+title: "API authentication and permissions"
+sidebarTitle: "API authentication and permissions"
+description: "Authenticate Nixflex API requests with a server-side key. Understand account ownership, personal sessions and Owner, Admin and Member permissions."
+canonical: "https://docs.nixflex.com/api-reference/authentication"
+---
+## Send your API key
+
+Most public operations require this header:
+
+```http
+Authorization: Bearer KEY_ID:KEY_SECRET
+Content-Type: application/json
+```
+
+The credential is the key ID, a colon, and the key secret. A verified personal dashboard Bearer session is a separate credential and is accepted only where an operation explicitly documents it. Keep the entire credential server-side; never put it in a widget, query string, or support screenshot.
+
+## Accounts and permissions
+
+| Situation | Behaviour | What to do |
+| --- | --- | --- |
+| Missing or invalid API key | HTTP 401, `unauthorized` | Check the complete credential and environment. |
+| Key belongs to another account | It cannot access your resources | Use the owning account's key and resource IDs. |
+| Organisation policy refuses an operation | HTTP 403, usually `permission_denied` | Check authority and the operation's permissions. |
+| Organisation API key | Acts for the organisation with Owner authority | Restrict it to trusted server processes. |
+| Invitation or ownership acceptance | Requires the person's verified dashboard sign-in | Complete the human workflow there. An API key cannot accept ownership. |
+
+Where organisation controls are enabled, Owner, Admin, and Member roles govern human dashboard actions. An organisation API key has Owner authority; it is not an individual Member or Admin session. Personal sessions use their current organisation role. Resources remain with the organisation when ownership changes.
+
+## Create an account once
+
+[POST /keys](/api-reference/account/create-key) is unauthenticated signup: it creates a **new API account** and returns its credential once. It does not add another key to an existing organisation. Signup is limited to three attempts per address per hour and can return `429 key_creation_rate_limited`.
+
+If you already belong to an organisation, recover its access or ask its owner. Do not create a replacement account to solve a login problem.
+
+## Rotate a credential
+
+[Rotate the API key](/api-reference/account/rotate-key) with the current credential. The key ID stays the same; the old secret stops working immediately. Save the new secret securely and update applications. There is no promised overlap period.
+
+A lost rotation response is an uncertain write. Do not repeat rotation automatically. Check which saved credential works with a read; if the new secret was not saved, use account recovery.
+
+The organisation signing secret is separate. API-key rotation does not rotate it. Retrieve signing material only through its authorised operation and keep it out of ordinary request logs.
+
+## Minimal read example
+
+```bash
+curl 'https://api.nixflex.com/v1/agents?limit=1' -H "Authorization: Bearer $NXF_API_KEY"
+```
+
+A valid empty list is successful. Authentication failure uses the [standard error shape](/api-reference/errors#response-shape). For throttling, read `Retry-After` and follow the [retry rules](/api-reference/retries).

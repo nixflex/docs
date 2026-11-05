@@ -244,5 +244,78 @@
       "twilio_token": "REPLACE_PRIVATELY"
     },
     "c10": true
+  },
+  {
+    "slug": "api-reference/calls/get-bookings",
+    "method": "GET",
+    "path": "/calls/{id}/bookings",
+    "summary": "Read the retained booking result for one account-owned call. Only ready returns confirmed mutations and their final results.",
+    "notes": "This read does not contact a calendar or place a call. Invalid, missing and foreign call IDs share one 404. A retained result describes this call, not the current calendar. It uses the same public projection as [call.bookings](/api-reference/call-bookings), without a delivery signature. The response uses Cache-Control: no-store.",
+    "responseNotes": "`ready` has a non-null result. `none` is confirmed completed evidence with no successful mutations. `processing` means unfinished tracked call/post-call work. `deleted` includes removed, immediately scheduled, expired or purging content. `unavailable` covers old/partial evidence and terminal unsuccessful calls. Every other state returns result:null. Do not infer an empty result from a transcript or recover erased content from logs.",
+    "errorNotes": "A 503 call_bookings_unavailable is a failed read, not none. Keep the last known uncertainty and use bounded read retries. A 404 does not reveal another account’s calls.",
+    "exampleResponse": {
+      "call_id": "call_example",
+      "state": "ready",
+      "result": {
+        "event": "call.bookings",
+        "call_id": "call_example",
+        "agent_id": "agent_example",
+        "from": "+12025550101",
+        "to": "+12025550100",
+        "number": "+12025550100",
+        "ended_at": "2030-11-04T09:05:00.000Z",
+        "timeline": [
+          {
+            "action": "created",
+            "booking_uid": "booking_example",
+            "start": "2030-11-04T10:00:00.000Z",
+            "end": "2030-11-04T10:30:00.000Z",
+            "attendee_name": "Sam Carter",
+            "attendee_email": "sam@example.test",
+            "service": "Consultation",
+            "timezone": "Europe/London",
+            "at": "2030-11-04T09:01:00.000Z"
+          },
+          {
+            "action": "rescheduled",
+            "booking_uid": "booking_example",
+            "start": "2030-11-04T11:00:00.000Z",
+            "end": "2030-11-04T11:30:00.000Z",
+            "attendee_name": "Sam Carter",
+            "attendee_email": "sam@example.test",
+            "service": "Consultation",
+            "timezone": "Europe/London",
+            "at": "2030-11-04T09:02:00.000Z"
+          }
+        ],
+        "final": [
+          {
+            "status": "active",
+            "booking_uid": "booking_example",
+            "start": "2030-11-04T11:00:00.000Z",
+            "end": "2030-11-04T11:30:00.000Z",
+            "attendee_name": "Sam Carter",
+            "attendee_email": "sam@example.test",
+            "service": "Consultation",
+            "timezone": "Europe/London"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slug": "api-reference/calls/get-outbound-request",
+    "method": "GET",
+    "path": "/calls/outbound/requests/{request_id}",
+    "summary": "Check the durable state of the UUID saved for an outbound call intent. This read never dispatches a call, reserves capacity or charges.",
+    "notes": "Use the same UUID that was saved before the launch request. This is an account-scoped lookup. Invalid, absent and foreign UUIDs share one 404. The response uses Cache-Control: no-store.",
+    "responseNotes": "`pending` means the intent is still being checked. `accepted` includes a known call ID; it does not mean the conversation completed. `rejected` means a recorded refusal. `unknown` means the outcome cannot be confirmed. call_id and reason may be null. Pending records display unknown after 15 minutes and are never recycled into another dispatch.",
+    "errorNotes": "Keep the UUID after a 503 or lost response. Retry this status read with bounded backoff. Neither an unavailable read nor a 404 authorises an automatic new call or a replacement UUID.",
+    "exampleResponse": {
+      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+      "state": "accepted",
+      "call_id": "call_example",
+      "reason": null
+    }
   }
 ]

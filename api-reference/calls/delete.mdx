@@ -3,10 +3,33 @@ title: "Delete a call"
 description: "Delete an owned Nixflex call with guarded recording cleanup. Handle blocked or uncertain results without treating them as confirmed deletion."
 openapi: "/api-reference/public.openapi.json DELETE /calls/{id}"
 playground: "simple"
-sidebarTitle: "Delete a call"
+sidebarTitle: "Delete call"
 canonical: "https://docs.nixflex.com/api-reference/calls/delete"
 ---
-Guarded cleanup request for an owned call. Can refuse with 409/503 for in-progress/unsettled work or pending/failed cleanup. Not a promise of immediate all-copy erasure. Never blindly retry an uncertain response.
+Request guarded cleanup for one owned call.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Only the server can confirm that required cleanup and evidence checks have finished.
+- A missing recording link or an empty file list does not prove deletion completed.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+In-progress or unsettled work and pending or failed cleanup can return 409/503. This is not a promise of immediate all-copy erasure. Reconcile an uncertain response before another deliberate action.
 
 ## Authentication
 
@@ -107,14 +130,14 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | Invalid request - missing or malformed parameters. |
-| 401 | Authentication failed - bad or missing API key. |
-| 404 | Not found on your account. |
-| 409 | Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request. |
-| 429 | Rate limit exceeded. Honour the Retry-After header. |
-| 503 | Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
+| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 409 | Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request. | Read current state and resolve the named conflict before another deliberate action. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
+| 503 | Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
 
 | Status | Code | Meaning |
 |---|---|---|
@@ -135,6 +158,6 @@ Disable automatic write retries. A lost response leaves the result uncertain; re
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

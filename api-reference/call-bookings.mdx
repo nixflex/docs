@@ -1,9 +1,31 @@
 ---
-title: "call.bookings: final booking results after a call"
+title: "Receive booking results: call.bookings"
 description: "Receive confirmed Nixflex booking actions and their final results after a call. Verify signatures, count active bookings and handle duplicate deliveries."
 canonical: "https://docs.nixflex.com/api-reference/call-bookings"
-sidebarTitle: "call.bookings: final booking results after a call"
+sidebarTitle: "Booking results event"
 ---
+Receive confirmed calendar mutations and their final booking results after a call ends.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Booking results event</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- timeline lists confirmed actions; final shows the result per booking UID.
+- Count active final rows. Creating then cancelling leaves zero active bookings.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/booking-receptionist) · [Developer guide](/advanced/webhooks) · [Glossary](/guides/glossary)
+
+</div>
+
 `call.bookings` is a post-call webhook event for confirmed Google Calendar or
 Cal.com booking changes. It is sent only after an ended call has at least one
 successful create, reschedule or cancellation. A lookup, available slot,
@@ -13,6 +35,7 @@ this event.
 Use `timeline` to understand the actions and `final` for the resulting bookings.
 For example, creating an appointment and then cancelling it produces two actions
 and **zero active bookings**. Counting actions would give the wrong result.
+
 
 ## Where the event is sent
 
@@ -214,3 +237,14 @@ are not reported as confirmed bookings.
 - [Build a signed event receiver](/advanced/webhooks)
 - [Booking approval and notification wording](/actions/booking-confirmation)
 - [Read a call](/api-reference/calls/get)
+
+## Read a retained booking result
+
+Use [GET call booking results](/api-reference/calls/get-bookings) when reconciling a missed event. The read distinguishes ready, none, processing, deleted and unavailable. Only ready includes this public event projection as result; it is data without a delivery signature. An absent event or a completed call alone does not prove there were no bookings.
+
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

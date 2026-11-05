@@ -1,31 +1,33 @@
 ---
 title: "Get a call"
-sidebarTitle: "Get a call"
-description: "Get a call with the Nixflex API. Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata."
+sidebarTitle: "Get call"
+description: "Read one account-owned call. Call completion is separate from recording, analysis and booking finalisation."
 openapi: "/api-reference/public.openapi.json GET /calls/{id}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/calls/get"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata stubs. Omitting view keeps the legacy row response.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the returned call ID to reconcile this call.
+- Call completion is separate from recording, analysis and booking finalisation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -198,6 +200,6 @@ This is a read-only request. Retry transient connection or server failures with 
 
 ## Related endpoints
 
-- [Get call history](/api-reference/calls/get-calls-history)
-- [Get a call recording](/api-reference/calls/get-calls-id-recording)
 - [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

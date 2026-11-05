@@ -8,6 +8,27 @@ canonical: "https://docs.nixflex.com/api-reference/integration-settings/google-c
 ---
 Connect Google Calendar to an owned Nixflex number. Create a consent link, handle return codes and keep OAuth credentials private.
 
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Open the returned consent link in the user's browser; it expires after ten minutes.
+- Consent connects one owned number. It is not proof that any appointment was booked.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/google-calendar) · [Developer guide](/actions/google-calendar) · [Glossary](/guides/glossary)
+
+</div>
+
 ## Authentication
 
 Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
@@ -112,15 +133,21 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | invalid_return_url. Standard error envelope; branch on error.code. |
-| 401 | unauthorized. Standard error envelope; branch on error.code. |
-| 403 | permission_denied, account_unavailable. Standard error envelope; branch on error.code. |
-| 404 | number_not_found. Standard error envelope; branch on error.code. |
-| 409 | already_connected, booking_provider_conflict, agent_not_assigned, expired_link. Standard error envelope; branch on error.code. |
-| 429 | rate_limit_exceeded. Standard error envelope; branch on error.code. |
-| 503 | calendar_unavailable, not_configured, guard_unavailable. Standard error envelope; branch on error.code. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 · `invalid_return_url` | The return destination is not allowed. | Use HTTPS or an approved app scheme; remove forbidden URL parts. |
+| 401 · `unauthorized` | The credential is missing or invalid. | Check the full account credential and API host privately; stop the retry loop. |
+| 403 · `permission_denied` | This actor cannot perform the operation. | Resolve the account or role restriction through an authorised person. |
+| 403 · `account_unavailable` | The account is unavailable for this operation. | Resolve the account or role restriction through an authorised person. |
+| 404 · `number_not_found` | The number is absent or inaccessible to this account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 409 · `already_connected` | This number already has a calendar connection. | Read the connection status; do not create another consent flow for an already connected number. |
+| 409 · `booking_provider_conflict` | Another booking provider is active. | Choose one provider and disconnect the unwanted connection deliberately. |
+| 409 · `agent_not_assigned` | The number has no eligible agent. | Assign an eligible owned agent to this number before connecting the calendar. |
+| 409 · `expired_link` | The consent or connection state is no longer current. | Start a fresh consent flow after checking the current connection. |
+| 429 · `rate_limit_exceeded` | The request limit was reached. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
+| 503 · `calendar_unavailable` | The calendar operation or status check could not be completed. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
+| 503 · `not_configured` | The required service configuration is unavailable. | Ask the operator to complete the required service configuration. |
+| 503 · `guard_unavailable` | The access check could not be completed. | Wait for the access check to recover; do not bypass it. |
 
 A Member dashboard session cannot connect. Read status after a lost response before creating another consent link.
 
@@ -130,6 +157,6 @@ Disable automatic write retries. A lost response leaves the result uncertain; re
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [Get Google Calendar status](/api-reference/integration-settings/google-calendar-status)
+- [Disconnect Google Calendar](/api-reference/integration-settings/google-calendar-disconnect)
+- [Errors and recovery](/api-reference/errors#error-envelope)

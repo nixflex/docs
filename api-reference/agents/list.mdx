@@ -6,7 +6,30 @@ playground: "simple"
 sidebarTitle: "List agents"
 canonical: "https://docs.nixflex.com/api-reference/agents/list"
 ---
-Owned agents; active by default. Optional status/search. Stable created_at DESC, agent_id DESC ordering. Bare array. Strict bounds: invalid queries return 400 invalid_agent_list.
+List owned agents, with active agents selected by default.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the returned agent IDs for later reads and changes.
+- An empty list only describes this account and the requested page.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agents) · [Glossary](/guides/glossary)
+
+</div>
+
+Use the optional status and search filters. Results are a bare array, ordered by created_at DESC then agent_id DESC. Invalid paging or filter queries return 400 invalid_agent_list.
 
 ## Authentication
 
@@ -200,14 +223,14 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | Invalid agent list query. |
-| 401 | Invalid or missing API key |
-| 404 | Not found on your account. |
-| 429 | Rate limit exceeded. Honour the Retry-After header. |
-| 500 | Server error. |
-| 503 | Agent storage or catalog unavailable; check before retrying a write. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid agent list query. | Correct the named field or query using the request table before trying again. |
+| 401 | Invalid or missing API key | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
+| 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
+| 503 | Agent storage or catalog unavailable; check before retrying a write. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
 
 
@@ -217,6 +240,6 @@ Use bounded retries only for temporary read failures. Keep the same filters whil
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [Create an agent](/api-reference/agents/create)
+- [Get an agent](/api-reference/agents/get)
+- [Errors and recovery](/api-reference/errors#error-envelope)

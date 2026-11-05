@@ -6,7 +6,30 @@ playground: "simple"
 sidebarTitle: "Delete all calls"
 canonical: "https://docs.nixflex.com/api-reference/calls/delete-all"
 ---
-Guarded call cleanup request; does not delete SMS or close the account. Can refuse with 409/503 while work or cleanup confirmation is pending. Legacy recording counters are not all-copy erasure proof. Never blindly retry an uncertain response.
+Request guarded cleanup of the account’s calls without deleting SMS or closing the account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This affects the account's call history; confirm the scope before sending.
+- A single-call cleanup rule does not automatically apply to bulk deletion.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+Work or cleanup confirmation can remain pending and return 409/503. Legacy recording counters are not all-copy erasure proof. Reconcile an uncertain response before another deliberate action.
 
 ## Authentication
 
@@ -129,13 +152,13 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | Invalid request - missing or malformed parameters. |
-| 401 | Authentication failed - bad or missing API key. |
-| 404 | Not found on your account. |
-| 429 | Rate limit exceeded. Honour the Retry-After header. |
-| 500 | Server error. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
+| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
+| 500 | Server error. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
 
 
 
@@ -145,6 +168,6 @@ Disable automatic write retries. A lost response leaves the result uncertain; re
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

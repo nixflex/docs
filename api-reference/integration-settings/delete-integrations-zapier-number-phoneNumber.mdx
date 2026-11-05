@@ -6,27 +6,28 @@ openapi: "/api-reference/public.openapi.json DELETE /integrations/zapier/number/
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/integration-settings/delete-integrations-zapier-number-phoneNumber"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
-`}</style>
-
 Remove the saved Zapier configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Clear only the intended target setting; already dispatched work cannot be recalled.
+- An automation destination must handle retries without repeating business actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/integrations/zapier-make) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -122,7 +123,6 @@ The delete is scoped to this account and number and also succeeds when no config
 
 ## Related endpoints
 
-- [Set Zapier settings](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber)
 - [Get Zapier settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber)
-- [Authentication and permissions](/api-reference/authentication)
-- [zapier make](/integrations/zapier-make)
+- [Set Zapier settings](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber)
+- [Errors and recovery](/api-reference/errors#error-envelope)

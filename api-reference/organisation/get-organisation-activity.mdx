@@ -1,32 +1,33 @@
 ---
 title: "List organisation activity"
-sidebarTitle: "List organisation activity"
+sidebarTitle: "List activity"
 description: "Read Nixflex organisation activity, newest first, with up to 50 events per JSON page. Check role permissions and paging rules."
 openapi: "/api-reference/public.openapi.json GET /organisation/activity"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/organisation/get-organisation-activity"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
-`}</style>
-
 Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin personal sessions can read activity.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use activity as an audit trail within its retention limits.
+- An activity row is not a complete provider delivery or billing record.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -149,4 +150,4 @@ This is a read-only request. Retry transient connection or server failures with 
 
 - [Get organisation context](/api-reference/organisation/get-organisation)
 - [List organisation members](/api-reference/organisation/get-organisation-members)
-- [Authentication and permissions](/api-reference/authentication)
+- [Errors and recovery](/api-reference/errors#error-envelope)

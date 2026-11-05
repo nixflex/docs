@@ -1,31 +1,33 @@
 ---
 title: "Create an outbound call"
-sidebarTitle: "Create an outbound call"
-description: "Start one Nixflex outbound call from an owned number assigned to an active agent. Handle policy refusals and uncertain results before another attempt."
+sidebarTitle: "Create outbound call"
+description: "Start an outbound call with an optional saved UUID. Reconcile replayed, pending and unknown requests without automatically placing another call."
 openapi: "/api-reference/public.openapi.json POST /calls/outbound"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/calls/create-outbound"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200 / 201</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save one UUID request_id before a deliberate call intent if you need launch reconciliation.
+- A 201 means initiated. A same-ID 200 replay returns the existing call; pending or unknown must never trigger a new UUID automatically.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/lead-qualification) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -45,10 +47,13 @@ Send a JSON object.
 | `campaign_id` | string or null | No | `null` | Optional campaign association. Omitted or empty becomes null. |
 | `recipient_timezone` | string | No | Omitted | Optional recipient IANA time zone. Used for recipient-local contact checks, not the business clock. |
 | `recipient_country` | string | No | Omitted | Optional two-letter recipient country code. |
+| `request_id` | string | No | Omitted | Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts. Format: uuid. Pattern: `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`. |
 
 Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.
 
 Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
+
+Optional `request_id` is a UUID saved before one deliberate call intent. Required prompt and the existing behavior without a request ID remain unchanged. A same-ID accepted replay returns HTTP 200 with the same call_id and replayed:true; it does not return to/from. Pending/unknown repeats return 409 and never dispatch again. A 201 with request_status:unconfirmed still preserves the known call ID and safe_to_retry:false. Read the saved UUID through [outbound request status](/api-reference/calls/get-outbound-request).
 
 ## Response fields
 
@@ -64,22 +69,30 @@ Use dynamic_vars for single-call substitutions; campaign recipient variables are
 | `deletion_work_id` | string | Optional dispatch/deletion safety receipt ID. |
 | `persistence` | string | Optional unconfirmed state if accepted work could not be fully saved. |
 | `safe_to_retry` | boolean | When supplied, false: do not repeat an accepted or uncertain call. |
+| `request_id` | string | Present when the call intent supplied a request UUID. Format: uuid. Pattern: `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`. |
+| `request_status` | string | The accepted call is known but the final request-journal acknowledgement is unconfirmed. Do not redial. |
+
+HTTP 200 is the accepted replay shape: `call_id`, `request_id`, `status:"initiated"` and `replayed:true`. Unlike the first 201 response, it does not require `to` or `from`.
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the supplied Node/CLI 0.11.0 and Python 0.4.0 candidates; these versions are unpublished. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running a successful example contacts the recipient; use only an approved test destination.
+These examples use staging and can place a real call. Set NXF_STAGING_KEY, the owned agent and number, and an approved recipient before running. The cURL example also needs a durably saved NXF_REQUEST_ID. Keep the host and credential in the same environment.
+
+The cURL tab demonstrates the new request UUID. Node/CLI 0.11.0 and Python 0.4.0 are reviewed unpublished candidates; their existing examples below omit request_id and retain the older launch behaviour. Use the cURL request when UUID reconciliation is needed until support is verified in the installed client. No example retries a write.
 
 <RequestExample>
 
-```bash cURL
+```bash cURL · saved UUID
+# Save NXF_REQUEST_ID durably before this first deliberate launch.
+# Set NXF_TO_NUMBER to an approved recipient; this can place a real call.
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/outbound" \
+  --url 'https://nixflex-voice-engine-staging.up.railway.app/v1/calls/outbound' \
   --header "Authorization: Bearer $NXF_STAGING_KEY" \
-  --header "Content-Type: application/json" \
-  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
+  --header 'Content-Type: application/json' \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\",\"request_id\":\"$NXF_REQUEST_ID\"}"
 ```
 
-```javascript Node
+```javascript Node · without UUID
 import Nixflex from 'nixflex';
 const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
 const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
@@ -87,7 +100,7 @@ const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from
 // Handle result privately; do not log secrets or call content.
 ```
 
-```python Python
+```python Python · without UUID
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
@@ -97,24 +110,57 @@ with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as 
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
-```bash CLI
+```bash CLI · without UUID
 NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
 ```
 
 </RequestExample>
 
+A minimal UUID request body is shown below. The UUID is illustrative; never reuse a documentation UUID for live work.
+
+```json Request shape
+{
+  "agent_id": "agent_example",
+  "to_number": "+12025550101",
+  "prompt": "Confirm the requested appointment",
+  "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082"
+}
+```
+
 ## Example response
 
-Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+Illustrative accepted replay and first-launch responses. Save both identifiers privately.
 
 <ResponseExample>
 
-```json Response
+```json 200 · accepted replay
+{
+  "call_id": "call_example",
+  "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+  "status": "initiated",
+  "replayed": true
+}
+```
+
+```json 201 · first acceptance
 {
   "call_id": "call_example",
   "status": "initiated",
   "to": "+12025550101",
-  "from": "+12025550100"
+  "from": "+12025550100",
+  "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082"
+}
+```
+
+```json 201 · journal acknowledgement lost
+{
+  "call_id": "call_example",
+  "status": "initiated",
+  "to": "+12025550101",
+  "from": "+12025550100",
+  "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+  "request_status": "unconfirmed",
+  "safe_to_retry": false
 }
 ```
 
@@ -156,6 +202,12 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 409 | [`public_holiday`](/api-reference/errors#public_holiday) | The recipient-local date is a restricted holiday. | Use the next permitted contact window. |
 | 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt. | Wait and recheck; resend only after confirming this attempt was not sent. |
 | 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | Dispatch safety could not be confirmed. | Reconcile any existing receipt before deciding on a new request. |
+| 400 | [`invalid_request_id`](/api-reference/errors#invalid_request_id) | The supplied request_id is not a supported UUID. | Create and save one valid UUID for the deliberate call intent before its first submission. |
+| 409 | [`request_id_conflict`](/api-reference/errors#request_id_conflict) | This account already used the UUID with different call details. | Reconcile the existing request. Do not change its payload or automatically allocate a replacement ID. |
+| 409 | [`outbound_request_pending`](/api-reference/errors#outbound_request_pending) | The same call request is still pending. | Read the same request ID and call history. Wait; do not submit a new call. |
+| 409 | [`outbound_request_unknown`](/api-reference/errors#outbound_request_unknown) | The saved request has an uncertain outcome. | Retain its UUID and check call history. Never automatically redial with a new ID. |
+| 503 | [`outbound_request_unknown`](/api-reference/errors#outbound_request_unknown) | The call result or its final journal update could not be confirmed. | Treat the outcome as unknown and preserve request_id. Check its status before another deliberate intent. |
+| 503 | [`outbound_request_unavailable`](/api-reference/errors#outbound_request_unavailable) | The request journal could not be checked. | For a launch, retain unknown and safe_to_retry:false: an earlier attempt may have dialled. Retry the status read, not a new launch. |
 | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
@@ -163,12 +215,22 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 
 ## Retry and idempotency
 
-Never automatically retry POST, including after 429, a timeout or 5xx. A failed response can be uncertain after dispatch. Save call_id, work_id and safe error details when returned; inspect call history and known IDs before any deliberate new call. An initiated response with persistence: unconfirmed must not be replayed.
+Save one UUID before the first request for an intended call. Persist it with the request payload so a process restart cannot accidentally create a new intent. Supply it as the JSON field `request_id`, not an Idempotency-Key header.
+
+| Result | What it proves | Next action |
+| --- | --- | --- |
+| 201 initiated | A call was accepted; completion is still unknown. | Save call_id and request_id; read the call. |
+| 200 replayed:true | This UUID already has an accepted call. | Use the same call_id; no second dispatch occurred. |
+| 409 outbound_request_pending / outbound_request_unknown | The existing intent cannot be launched again. | Keep the UUID and read request status. |
+| 409 request_id_conflict | The same UUID was used with changed input. | Reconcile the original payload; do not automatically replace the UUID. |
+| 503 with details.safe_to_retry:false | The journal or launch outcome is uncertain. | Keep the UUID and use bounded status reads. |
+
+A 201 can also include `request_status:"unconfirmed"` and `safe_to_retry:false`: the call ID is known even though the final journal acknowledgement was lost. Never redial it. A new UUID is a new explicit call intent. Requests without request_id retain their existing behaviour and have no launch replay protection.
+
+Read [outbound request status](/api-reference/calls/get-outbound-request). A 404 or an empty history page does not prove that an uncertain call was never placed.
 
 ## Related endpoints
 
-- [Get a call](/api-reference/calls/get)
-- [Get call history](/api-reference/calls/get-calls-history)
-- [Get a phone number](/api-reference/phone-numbers/get)
-- [Retry and idempotency](/api-reference/retries)
-- [Call client safety](/api-reference/calls/client-safety)
+- [Read the saved outbound request](/api-reference/calls/get-outbound-request)
+- [Read the accepted call](/api-reference/calls/get)
+- [Client outcomes and retry rules](/api-reference/calls/client-safety)

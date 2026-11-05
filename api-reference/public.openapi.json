@@ -9179,7 +9179,7 @@
         "tags": [
           "Agents"
         ],
-        "summary": "Delete an agent",
+        "summary": "Disable an agent",
         "operationId": "deleteAgent",
         "security": [
           {
@@ -11993,7 +11993,7 @@
           "Calls"
         ],
         "summary": "Create an outbound call",
-        "description": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome. Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
+        "description": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome. Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent. Optional request_id enables one durable account-scoped call intent. Required prompt and existing behavior without request_id remain unchanged. Save the UUID before sending; same input and ID can replay a recorded acceptance, but pending/unknown never dispatch again. A new UUID is a new explicit call intent, not a retry strategy.",
         "operationId": "createOutboundCall",
         "security": [
           {
@@ -12002,8 +12002,63 @@
         ],
         "parameters": [],
         "responses": {
+          "200": {
+            "description": "The same accepted request was replayed. No second dispatch; the response omits original to/from fields.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": [
+                    "call_id",
+                    "request_id",
+                    "status",
+                    "replayed"
+                  ],
+                  "properties": {
+                    "call_id": {
+                      "type": "string"
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                      "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
+                    },
+                    "status": {
+                      "type": "string",
+                      "const": "initiated"
+                    },
+                    "replayed": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  }
+                },
+                "examples": {
+                  "replayed": {
+                    "value": {
+                      "call_id": "call_example",
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "status": "initiated",
+                      "replayed": true
+                    }
+                  }
+                }
+              }
+            }
+          },
           "201": {
-            "description": "Created",
+            "description": "Call initiated, not completed. With request_id, save both IDs. request_status:unconfirmed still preserves the known accepted call and safe_to_retry:false.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12046,6 +12101,17 @@
                       "type": "boolean",
                       "description": "When supplied, false: do not repeat an accepted or uncertain call.",
                       "const": false
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                      "description": "Present when this launch supplied request_id. Keep it for reconciliation."
+                    },
+                    "request_status": {
+                      "type": "string",
+                      "const": "unconfirmed",
+                      "description": "The call ID is known but its final journal acknowledgement was not confirmed. Never redial automatically."
                     }
                   },
                   "required": [
@@ -12057,17 +12123,41 @@
                   "description": "",
                   "additionalProperties": false
                 },
-                "example": {
-                  "call_id": "call_example",
-                  "status": "initiated",
-                  "to": "+12025550101",
-                  "from": "+12025550100"
+                "examples": {
+                  "legacy": {
+                    "value": {
+                      "call_id": "call_example",
+                      "status": "initiated",
+                      "to": "+12025550101",
+                      "from": "+12025550100"
+                    }
+                  },
+                  "journalled": {
+                    "value": {
+                      "call_id": "call_example",
+                      "status": "initiated",
+                      "to": "+12025550101",
+                      "from": "+12025550100",
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082"
+                    }
+                  },
+                  "unconfirmed": {
+                    "value": {
+                      "call_id": "call_example",
+                      "status": "initiated",
+                      "to": "+12025550101",
+                      "from": "+12025550100",
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "request_status": "unconfirmed",
+                      "safe_to_retry": false
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "missing_field: agent_id, to_number or a nonblank prompt is missing. Supply the required fields before attempting a call. invalid_phone_format: The recipient is not valid E.164. Correct the recipient number. agent_missing_phone_number: No eligible outbound number is assigned to the agent. Connect and enable an owned outbound number. from_number_not_found: The requested origin is not an eligible number of this agent. Use an owned, assigned and settled origin.",
+            "description": "missing_field: agent_id, to_number or a nonblank prompt is missing. Supply the required fields before attempting a call. invalid_phone_format: The recipient is not valid E.164. Correct the recipient number. agent_missing_phone_number: No eligible outbound number is assigned to the agent. Connect and enable an owned outbound number. from_number_not_found: The requested origin is not an eligible number of this agent. Use an owned, assigned and settled origin. invalid_request_id: The supplied request_id is not a supported UUID. Create and save one valid UUID for the deliberate call intent before its first submission.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12115,6 +12205,19 @@
                   ],
                   "description": "",
                   "additionalProperties": false
+                },
+                "examples": {
+                  "invalid_request_id": {
+                    "value": {
+                      "error": {
+                        "type": "invalid_request",
+                        "code": "invalid_request_id",
+                        "message": "The supplied request_id is not a supported UUID.",
+                        "doc_url": "https://docs.nixflex.com/errors/invalid_request_id",
+                        "details": {}
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -12279,7 +12382,7 @@
             }
           },
           "409": {
-            "description": "agent_inactive: The agent is disabled. Choose or enable the intended agent before sending. number_pending: The number is being imported or removed. Wait for the number operation to settle. number_disabled: Outbound work is disabled for the number. Check the intended outbound setting; do not reroute automatically. number_context_changed: The number assignment changed while the call waited. Read the current assignment before a new request. number_provider_invalid: The number connection is not valid. Repair the existing connection through the dashboard. do_not_contact: The recipient is suppressed. Respect the suppression; do not fabricate consent. missing_voice_details: A call-purpose placeholder has no value. Supply the named dynamic_vars values. unsupported_voice_placeholder: A placeholder name uses unsupported spaces or punctuation. Use {{name}} with a supported identifier. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window.",
+            "description": "agent_inactive: The agent is disabled. Choose or enable the intended agent before sending. number_pending: The number is being imported or removed. Wait for the number operation to settle. number_disabled: Outbound work is disabled for the number. Check the intended outbound setting; do not reroute automatically. number_context_changed: The number assignment changed while the call waited. Read the current assignment before a new request. number_provider_invalid: The number connection is not valid. Repair the existing connection through the dashboard. do_not_contact: The recipient is suppressed. Respect the suppression; do not fabricate consent. missing_voice_details: A call-purpose placeholder has no value. Supply the named dynamic_vars values. unsupported_voice_placeholder: A placeholder name uses unsupported spaces or punctuation. Use {{name}} with a supported identifier. needs_timezone: The recipient location does not establish a usable time zone. Supply the recipient time zone after checking it. invalid_recipient_timezone: The recipient time zone is invalid. Use a valid IANA time zone. invalid_recipient_country: The recipient country is invalid. Use a valid two-letter country code. outside_hours: The recipient is outside permitted contact hours. Wait for an allowed window; do not bypass the policy. not_due_local: The recipient is not due for contact in the current local window. Follow the returned contact-hours guidance. country_policy_review: The recipient country requires policy review. Resolve that review before contacting the recipient. holiday_data_unavailable: Holiday checks could not confirm an allowed window. Wait for a confirmed policy result. public_holiday: The recipient-local date is a restricted holiday. Use the next permitted contact window. request_id_conflict: This account already used the UUID with different call details. Reconcile the existing request. Do not change its payload or automatically allocate a replacement ID. outbound_request_pending: The same call request is still pending. Read the same request ID and call history. Wait; do not submit a new call. outbound_request_unknown: The saved request has an uncertain outcome. Retain its UUID and check call history. Never automatically redial with a new ID.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12326,7 +12429,67 @@
                     "error"
                   ],
                   "description": "",
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "error": {
+                            "properties": {
+                              "code": {
+                                "enum": [
+                                  "outbound_request_pending",
+                                  "outbound_request_unknown"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "code"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "error"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "error": {
+                            "required": [
+                              "details"
+                            ],
+                            "properties": {
+                              "details": {
+                                "type": "object",
+                                "required": [
+                                  "request_id",
+                                  "state",
+                                  "safe_to_retry"
+                                ],
+                                "properties": {
+                                  "request_id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                                    "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
+                                  },
+                                  "state": {
+                                    "enum": [
+                                      "pending",
+                                      "unknown"
+                                    ]
+                                  },
+                                  "safe_to_retry": {
+                                    "const": false
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 },
                 "examples": {
                   "needs_timezone": {
@@ -12358,6 +12521,47 @@
                           "outcome": "not_sent",
                           "sent": false,
                           "charged": false,
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "request_id_conflict": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "request_id_conflict",
+                        "message": "This account already used the UUID with different call details.",
+                        "doc_url": "https://docs.nixflex.com/errors/request_id_conflict",
+                        "details": {}
+                      }
+                    }
+                  },
+                  "outbound_request_pending": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "outbound_request_pending",
+                        "message": "The same call request is still pending.",
+                        "doc_url": "https://docs.nixflex.com/errors/outbound_request_pending",
+                        "details": {
+                          "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                          "state": "pending",
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "outbound_request_unknown": {
+                    "value": {
+                      "error": {
+                        "type": "conflict",
+                        "code": "outbound_request_unknown",
+                        "message": "The saved request has an uncertain outcome.",
+                        "doc_url": "https://docs.nixflex.com/errors/outbound_request_unknown",
+                        "details": {
+                          "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                          "state": "unknown",
                           "safe_to_retry": false
                         }
                       }
@@ -12474,7 +12678,7 @@
             }
           },
           "503": {
-            "description": "agent_lookup_unavailable: The agent lookup failed. Retry only after checking that no call was accepted. number_lookup_unavailable: Number ownership or availability could not be confirmed. Check current state before another send. contact_policy_unavailable: Contact policy could not be checked. Wait for recovery; do not automatically retry a send. dispatch_safety_unavailable: Dispatch safety could not be confirmed. Reconcile any existing receipt before deciding on a new request.",
+            "description": "agent_lookup_unavailable: The agent lookup failed. Retry only after checking that no call was accepted. number_lookup_unavailable: Number ownership or availability could not be confirmed. Check current state before another send. contact_policy_unavailable: Contact policy could not be checked. Wait for recovery; do not automatically retry a send. dispatch_safety_unavailable: Dispatch safety could not be confirmed. Reconcile any existing receipt before deciding on a new request. outbound_request_unknown: The call result or its final journal update could not be confirmed. Treat the outcome as unknown and preserve request_id. Check its status before another deliberate intent. outbound_request_unavailable: The request journal could not be checked. For a launch, retain unknown and safe_to_retry:false: an earlier attempt may have dialled. Retry the status read, not a new launch.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12521,7 +12725,66 @@
                     "error"
                   ],
                   "description": "",
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "error": {
+                            "properties": {
+                              "code": {
+                                "enum": [
+                                  "outbound_request_unknown",
+                                  "outbound_request_unavailable"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "code"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "error"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "error": {
+                            "required": [
+                              "details"
+                            ],
+                            "properties": {
+                              "details": {
+                                "type": "object",
+                                "required": [
+                                  "request_id",
+                                  "state",
+                                  "safe_to_retry"
+                                ],
+                                "properties": {
+                                  "request_id": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                                    "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
+                                  },
+                                  "state": {
+                                    "enum": [
+                                      "unknown"
+                                    ]
+                                  },
+                                  "safe_to_retry": {
+                                    "const": false
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 },
                 "examples": {
                   "contact_policy_unavailable": {
@@ -12537,6 +12800,36 @@
                           "sent": false,
                           "charged": false,
                           "safe_to_retry": true
+                        }
+                      }
+                    }
+                  },
+                  "outbound_request_unknown": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "outbound_request_unknown",
+                        "message": "The call result or its final journal update could not be confirmed.",
+                        "doc_url": "https://docs.nixflex.com/errors/outbound_request_unknown",
+                        "details": {
+                          "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                          "state": "unknown",
+                          "safe_to_retry": false
+                        }
+                      }
+                    }
+                  },
+                  "outbound_request_unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "outbound_request_unavailable",
+                        "message": "The request journal could not be checked.",
+                        "doc_url": "https://docs.nixflex.com/errors/outbound_request_unavailable",
+                        "details": {
+                          "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                          "state": "unknown",
+                          "safe_to_retry": false
                         }
                       }
                     }
@@ -12647,6 +12940,12 @@
                   "recipient_country": {
                     "type": "string",
                     "description": "Optional two-letter recipient country code."
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                    "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
                   }
                 },
                 "required": [
@@ -12657,10 +12956,22 @@
                 "description": "",
                 "additionalProperties": false
               },
-              "example": {
-                "agent_id": "agent_example",
-                "to_number": "+12025550101",
-                "prompt": "Confirm the appointment time requested by the recipient."
+              "examples": {
+                "legacy": {
+                  "value": {
+                    "agent_id": "agent_example",
+                    "to_number": "+12025550101",
+                    "prompt": "Confirm the appointment time requested by the recipient."
+                  }
+                },
+                "journalled": {
+                  "value": {
+                    "agent_id": "agent_example",
+                    "to_number": "+12025550101",
+                    "prompt": "Confirm the appointment time requested by the recipient.",
+                    "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082"
+                  }
+                }
               }
             }
           }
@@ -70888,6 +71199,1221 @@
                   "required": [
                     "error"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/{id}/bookings": {
+      "get": {
+        "tags": [
+          "Calls"
+        ],
+        "summary": "Read call booking results",
+        "operationId": "getCallBookings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Read the authoritative retained booking result for one owned call. ready returns the signed-event public projection as data, not a delivery signature. none requires confirmed completed evidence with no successful mutations. processing means unfinished tracked work. deleted covers deleted, immediately scheduled, expired or purging content. unavailable covers old, partial, unstamped or unconfirmed evidence, including terminal unsuccessful calls. Do not infer bookings from a transcript or recover erased data from logs. This is the result of this call, not current calendar inventory.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "Owned call identifier. Invalid, missing and foreign identifiers share the same 404.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking state. Only ready returns a non-null result.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "call_id",
+                        "state",
+                        "result"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "state": {
+                          "type": "string",
+                          "const": "ready"
+                        },
+                        "result": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "required": [
+                            "event",
+                            "call_id",
+                            "agent_id",
+                            "from",
+                            "to",
+                            "number",
+                            "ended_at",
+                            "timeline",
+                            "final"
+                          ],
+                          "properties": {
+                            "event": {
+                              "type": "string",
+                              "const": "call.bookings"
+                            },
+                            "call_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "agent_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "from": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "to": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "number": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "ended_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "Engine call-end time in UTC; not webhook delivery time."
+                            },
+                            "timeline": {
+                              "type": "array",
+                              "minItems": 1,
+                              "description": "Ordered confirmed calendar mutations during this call.",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [
+                                  "action",
+                                  "booking_uid",
+                                  "start",
+                                  "end",
+                                  "attendee_name",
+                                  "attendee_email",
+                                  "service",
+                                  "timezone",
+                                  "at"
+                                ],
+                                "properties": {
+                                  "action": {
+                                    "type": "string",
+                                    "enum": [
+                                      "created",
+                                      "rescheduled",
+                                      "cancelled"
+                                    ]
+                                  },
+                                  "booking_uid": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "start": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "date-time"
+                                  },
+                                  "end": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "date-time"
+                                  },
+                                  "attendee_name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "attendee_email": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "service": {
+                                    "type": [
+                                      "string",
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "timezone": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "description": "Engine receipt time of the successful mutation, in UTC."
+                                  }
+                                }
+                              }
+                            },
+                            "final": {
+                              "type": "array",
+                              "minItems": 1,
+                              "description": "One result per resulting booking UID. This is not a full calendar inventory.",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [
+                                  "status",
+                                  "booking_uid",
+                                  "start",
+                                  "end",
+                                  "attendee_name",
+                                  "attendee_email",
+                                  "service",
+                                  "timezone"
+                                ],
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "active",
+                                      "cancelled"
+                                    ]
+                                  },
+                                  "booking_uid": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "start": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "date-time"
+                                  },
+                                  "end": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ],
+                                    "format": "date-time"
+                                  },
+                                  "attendee_name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "attendee_email": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "service": {
+                                    "type": [
+                                      "string",
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
+                                  "timezone": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "call_id",
+                        "state",
+                        "result"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "state": {
+                          "type": "string",
+                          "const": "none"
+                        },
+                        "result": {
+                          "type": "null",
+                          "description": "No authoritative booking result is returned in this state."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "call_id",
+                        "state",
+                        "result"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "state": {
+                          "type": "string",
+                          "const": "processing"
+                        },
+                        "result": {
+                          "type": "null",
+                          "description": "No authoritative booking result is returned in this state."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "call_id",
+                        "state",
+                        "result"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "state": {
+                          "type": "string",
+                          "const": "deleted"
+                        },
+                        "result": {
+                          "type": "null",
+                          "description": "No authoritative booking result is returned in this state."
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "call_id",
+                        "state",
+                        "result"
+                      ],
+                      "additionalProperties": true,
+                      "properties": {
+                        "call_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "state": {
+                          "type": "string",
+                          "const": "unavailable"
+                        },
+                        "result": {
+                          "type": "null",
+                          "description": "No authoritative booking result is returned in this state."
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "ready": {
+                    "summary": "Confirmed mutations and their final results.",
+                    "value": {
+                      "call_id": "call_example",
+                      "state": "ready",
+                      "result": {
+                        "event": "call.bookings",
+                        "call_id": "call_example",
+                        "agent_id": "agent_example",
+                        "from": "+12025550101",
+                        "to": "+12025550100",
+                        "number": "+12025550100",
+                        "ended_at": "2030-11-04T09:05:00.000Z",
+                        "timeline": [
+                          {
+                            "action": "created",
+                            "booking_uid": "booking_example",
+                            "start": "2030-11-04T10:00:00.000Z",
+                            "end": "2030-11-04T10:30:00.000Z",
+                            "attendee_name": "Sam Carter",
+                            "attendee_email": "sam@example.test",
+                            "service": "Consultation",
+                            "timezone": "Europe/London",
+                            "at": "2030-11-04T09:01:00.000Z"
+                          },
+                          {
+                            "action": "rescheduled",
+                            "booking_uid": "booking_example",
+                            "start": "2030-11-04T11:00:00.000Z",
+                            "end": "2030-11-04T11:30:00.000Z",
+                            "attendee_name": "Sam Carter",
+                            "attendee_email": "sam@example.test",
+                            "service": "Consultation",
+                            "timezone": "Europe/London",
+                            "at": "2030-11-04T09:02:00.000Z"
+                          }
+                        ],
+                        "final": [
+                          {
+                            "status": "active",
+                            "booking_uid": "booking_example",
+                            "start": "2030-11-04T11:00:00.000Z",
+                            "end": "2030-11-04T11:30:00.000Z",
+                            "attendee_name": "Sam Carter",
+                            "attendee_email": "sam@example.test",
+                            "service": "Consultation",
+                            "timezone": "Europe/London"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "none": {
+                    "summary": "Completed booking evidence confirms no successful mutation.",
+                    "value": {
+                      "call_id": "call_example",
+                      "state": "none",
+                      "result": null
+                    }
+                  },
+                  "processing": {
+                    "summary": "Tracked call or post-call work is still running.",
+                    "value": {
+                      "call_id": "call_example",
+                      "state": "processing",
+                      "result": null
+                    }
+                  },
+                  "deleted": {
+                    "summary": "Retained booking content is no longer available.",
+                    "value": {
+                      "call_id": "call_example",
+                      "state": "deleted",
+                      "result": null
+                    }
+                  },
+                  "unavailable": {
+                    "summary": "The retained evidence cannot establish a result.",
+                    "value": {
+                      "call_id": "call_example",
+                      "state": "unavailable",
+                      "result": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized: The credential is missing or invalid. Check the account credential and environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Error class."
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Stable machine-readable code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Readable refusal or failure reason."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error documentation URL.",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Additional field, operation or outcome details.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied: The account or personal session cannot access this operation. Resolve access through an authorised person.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "You do not have access to this section.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: Call identifier is invalid, missing or foreign. Check the owned ID.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "error": {
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Call not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded: The account request limit was reached. Wait for Retry-After. Reconcile uncertain writes before resending.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Error class."
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Stable machine-readable code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Readable refusal or failure reason."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error documentation URL.",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Additional field, operation or outcome details.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "call_bookings_unavailable: The read failed. Retry the read with bounded backoff; never show none.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "call_bookings_unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "call_bookings_unavailable",
+                        "message": "The booking result could not be checked. Try again shortly.",
+                        "doc_url": "https://docs.nixflex.com/errors/call_bookings_unavailable",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/outbound/requests/{request_id}": {
+      "get": {
+        "tags": [
+          "Calls"
+        ],
+        "summary": "Read an outbound call request",
+        "operationId": "getOutboundCallRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Read the durable state of one account-scoped outbound request UUID. This does not dispatch, reserve capacity or charge. Pending records display unknown after 15 minutes and are never recycled. A 404 is shared by invalid, absent and foreign IDs; it is not evidence that an uncertain call is safe to redial. Preserve the request ID across lost responses and process restarts.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "description": "The UUID saved for the original call intent.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+              "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current request state; call_id and reason can be null.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "request_id",
+                    "state",
+                    "call_id",
+                    "reason"
+                  ],
+                  "additionalProperties": true,
+                  "properties": {
+                    "request_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+                      "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
+                    },
+                    "state": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "accepted",
+                        "rejected",
+                        "unknown"
+                      ]
+                    },
+                    "call_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Known call identifier, or null. Unknown does not prove that no call was placed."
+                    },
+                    "reason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Bounded machine-readable refusal/failure reason when retained; otherwise null."
+                    }
+                  }
+                },
+                "examples": {
+                  "pending": {
+                    "value": {
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "state": "pending",
+                      "call_id": null,
+                      "reason": null
+                    }
+                  },
+                  "accepted": {
+                    "value": {
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "state": "accepted",
+                      "call_id": "call_example",
+                      "reason": null
+                    }
+                  },
+                  "rejected": {
+                    "value": {
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "state": "rejected",
+                      "call_id": null,
+                      "reason": "outside_hours"
+                    }
+                  },
+                  "unknown": {
+                    "value": {
+                      "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+                      "state": "unknown",
+                      "call_id": null,
+                      "reason": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized: The credential is missing or invalid. Check the account credential and environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Error class."
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Stable machine-readable code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Readable refusal or failure reason."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error documentation URL.",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Additional field, operation or outcome details.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied: The account or personal session cannot access this operation. Resolve access through an authorised person.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "You do not have access to this section.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: UUID is invalid, missing or foreign. Reconcile the original intent; do not automatically redial.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "error": {
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Request not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded: The account request limit was reached. Wait for Retry-After. Reconcile uncertain writes before resending.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "Error class."
+                        },
+                        "code": {
+                          "type": "string",
+                          "description": "Stable machine-readable code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Readable refusal or failure reason."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error documentation URL.",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Additional field, operation or outcome details.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "outbound_request_unavailable: The status read failed. Keep the previous uncertainty and retry the read.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not cache private request or booking state.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "outbound_request_unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "outbound_request_unavailable",
+                        "message": "The call request could not be checked. Try again shortly.",
+                        "doc_url": "https://docs.nixflex.com/errors/outbound_request_unavailable",
+                        "details": {}
+                      }
+                    }
+                  }
                 }
               }
             }

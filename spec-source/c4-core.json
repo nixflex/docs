@@ -3155,7 +3155,7 @@
       "method": "POST",
       "path": "/v1/calls/outbound",
       "group": "Calls",
-      "notes": "Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
+      "notes": "Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.\n\nOptional `request_id` is a UUID saved before one deliberate call intent. Required prompt and the existing behavior without a request ID remain unchanged. A same-ID accepted replay returns HTTP 200 with the same call_id and replayed:true; it does not return to/from. Pending/unknown repeats return 409 and never dispatch again. A 201 with request_status:unconfirmed still preserves the known call ID and safe_to_retry:false. Read the saved UUID through [outbound request status](/api-reference/calls/get-outbound-request).",
       "slug": "api-reference/calls/create-outbound",
       "specPath": "/calls/outbound",
       "params": [],
@@ -3327,6 +3327,42 @@
           "dispatch_safety_unavailable",
           "Dispatch safety could not be confirmed.",
           "Reconcile any existing receipt before deciding on a new request."
+        ],
+        [
+          400,
+          "invalid_request_id",
+          "The supplied request_id is not a supported UUID.",
+          "Create and save one valid UUID for the deliberate call intent before its first submission."
+        ],
+        [
+          409,
+          "request_id_conflict",
+          "This account already used the UUID with different call details.",
+          "Reconcile the existing request. Do not change its payload or automatically allocate a replacement ID."
+        ],
+        [
+          409,
+          "outbound_request_pending",
+          "The same call request is still pending.",
+          "Read the same request ID and call history. Wait; do not submit a new call."
+        ],
+        [
+          409,
+          "outbound_request_unknown",
+          "The saved request has an uncertain outcome.",
+          "Retain its UUID and check call history. Never automatically redial with a new ID."
+        ],
+        [
+          503,
+          "outbound_request_unknown",
+          "The call result or its final journal update could not be confirmed.",
+          "Treat the outcome as unknown and preserve request_id. Check its status before another deliberate intent."
+        ],
+        [
+          503,
+          "outbound_request_unavailable",
+          "The request journal could not be checked.",
+          "For a launch, retain unknown and safe_to_retry:false: an earlier attempt may have dialled. Retry the status read, not a new launch."
         ]
       ],
       "related": [
@@ -3384,6 +3420,12 @@
           "recipient_country": {
             "type": "string",
             "description": "Optional two-letter recipient country code."
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "Account-scoped UUID for one call intent. Save it before sending. Reusing it never starts a second call; changed input conflicts."
           }
         },
         "required": [
@@ -3435,6 +3477,17 @@
             "type": "boolean",
             "description": "When supplied, false: do not repeat an accepted or uncertain call.",
             "const": false
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "Present when the call intent supplied a request UUID."
+          },
+          "request_status": {
+            "type": "string",
+            "const": "unconfirmed",
+            "description": "The accepted call is known but the final request-journal acknowledgement is unconfirmed. Do not redial."
           }
         },
         "required": [
@@ -3458,7 +3511,7 @@
         "to": "+12025550101",
         "from": "+12025550100"
       },
-      "retry": "Never automatically retry POST, including after 429, a timeout or 5xx. A failed response can be uncertain after dispatch. Save call_id, work_id and safe error details when returned; inspect call history and known IDs before any deliberate new call. An initiated response with persistence: unconfirmed must not be replayed.",
+      "retry": "Disable automatic call retries. Save request_id before the first submission. With that ID, an unchanged accepted request can replay its known call without another dispatch; pending and unknown cannot dispatch again. Changed inputs conflict. A new UUID means a new explicit user intent, never an automatic replacement after a timeout, 429 or 5xx. Read the same request ID and call history first. Without request_id, there is no new replay guarantee. An initiated response with persistence: unconfirmed or request_status:unconfirmed must not lead to an automatic redial.",
       "kitExamples": {
         "node": "import Nixflex from 'nixflex';\nconst baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';\nconst client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});\nconst result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:\"Confirm the requested appointment\"});\n// Handle result privately; do not log secrets or call content.",
         "cli": "NIXFLEX_API_KEY=\"$NXF_STAGING_KEY\" nixflex calls create --agent \"$NXF_AGENT_ID\" --from \"$NXF_PHONE_NUMBER\" --to \"$NXF_TO_NUMBER\" --prompt \"Confirm the requested appointment\" --base-url https://nixflex-voice-engine-staging.up.railway.app --json",

@@ -3,10 +3,31 @@ title: "Get a phone number"
 description: "Read one owned Nixflex phone number, its assigned agent and saved settings. Use the encoded international number in the request path."
 openapi: "/api-reference/public.openapi.json GET /phone-numbers/{phoneNumber}"
 playground: "simple"
-sidebarTitle: "Get a phone number"
+sidebarTitle: "Get phone number"
 canonical: "https://docs.nixflex.com/api-reference/phone-numbers/get"
 ---
 Get a phone number in the authenticated account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the number's own settings and its assigned agent.
+- A null override can inherit an agent value; it is not necessarily disabled.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -180,13 +201,13 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | Invalid E.164 phone number. |
-| 401 | Invalid key or inactive account. |
-| 404 | Missing, foreign, pending or internal browser identity; number_not_found. |
-| 429 | Rate limit exceeded. |
-| 500 | Database read failed, not an empty successful result. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid E.164 phone number. | Correct the named field or query using the request table before trying again. |
+| 401 | Invalid key or inactive account. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 · `number_not_found` | The number is absent or inaccessible to this account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. | Wait at least Retry-After and use a bounded read retry. |
+| 500 | Database read failed, not an empty successful result. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
 
 
@@ -196,6 +217,6 @@ Use bounded retries only for temporary read failures. Keep the same filters whil
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [List phone numbers](/api-reference/phone-numbers/list)
+- [Import a phone number](/api-reference/phone-numbers/import)
+- [Errors and recovery](/api-reference/errors#error-envelope)

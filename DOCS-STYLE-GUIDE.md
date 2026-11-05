@@ -47,7 +47,7 @@ Write one idea per short paragraph, usually two or three sentences. Lead with th
 | Element | Standard |
 | --- | --- |
 | Page | White background; dark ink `#0F1720`; secondary text `#4B5563`; ample space |
-| Accent | Green `#25D366`; readable dark green `#128C4A`; pale green `#E8FBF0` for key points |
+| Accent | Green `#25D366`; readable text green `#0F7A40`; pale green `#E8FBF0` for key points |
 | Surfaces | Soft grey `#F7F8FA`, border `#E6E8EC`, 12–14 px corner radius |
 | Type | Inter with a system sans fallback; code uses JetBrains Mono or a legible monospace fallback |
 | Scale | Body about 15.5–16 px, line height about 1.65; H1 34 px desktop / 27 px phone; H2 about 23 px |
@@ -58,6 +58,10 @@ Write one idea per short paragraph, usually two or three sentences. Lead with th
 | Phone | One readable content column; accessible navigation drawer; code/tables scroll within their own container |
 
 Use the shared `nxf-facts`, `nxf-important`, `nxf-flow`, `nxf-conversation` and `nxf-audience` classes from `styles.css` with semantic text/HTML. Use native Mintlify code tabs, callouts, cards and steps where they fit. Do not recreate fake “Copy”, feedback, search, or AI buttons. Keep the existing real contextual menu. Never require colour alone to explain status. Ensure keyboard focus, meaningful link text, readable contrast and no page-wide horizontal overflow.
+
+Set `styling.codeblocks` to `dark` in `docs.json` so code stays on the locked dark surface in both site themes. Use Mintlify's supported setting rather than overriding syntax colours with CSS; see [Appearance and branding](https://www.mintlify.com/docs/organize/settings-appearance#styling). Keep blank lines around Markdown inside HTML panels so both page rendering and Markdown export retain the intended structure.
+
+The small-text green is a contrast correction to the reference's `#128C4A`: it gives 5.03:1 on the pale-green panel and 5.42:1 on white, compared with 4.00:1 and 4.31:1. The brand accent stays `#25D366`. Use the darker colour for small meaningful text; bright green is an accent, not a small-text colour. Dark-mode text green `#75EAA2` gives 10.01:1 on `#102C20`.
 
 **Navigation must look full.** Keep all five tabs in the locked order. Top-level groups are visible; set `expanded: true` on every nested group. Prefer shallow groups with short labels. All entries must be available without opening collapsed topic groups. A long tab naturally scrolls; do not shrink text to force 162 links into one viewport. On phones, the menu may use a drawer, but its topic groups still start expanded. Mintlify documents this behavior in [Navigation](https://www.mintlify.com/docs/organize/navigation).
 
@@ -110,3 +114,16 @@ Mintlify generates page metadata, social images and structured data from configu
 5. Open a reviewed private preview through the operator workflow. A preview URL is public unless authentication or password protection is actually enabled; never call an unlisted URL private. No main merge or production publication is part of C13.
 
 C13 applies this standard to the whole API tab and exactly five Developer samples: `/quickstart`, `/actions/booking-confirmation`, `/actions/google-calendar`, `/guides/developer/call-history`, `/advanced/webhooks`. Those four booking-related guides demonstrate a feature across overview/approval, setup, result reads and webhook processing. Other Developer pages are round 2. Chat D applies the same guide to its owned pages; Chat C does not overwrite their content.
+
+## Where to edit the C13 sources
+
+| Change | Authoritative source |
+| --- | --- |
+| API title, sidebar label, description, lead, key points or audience pair | `spec-source/c13-pages.json`; keep the navigation/title plan in `spec-source/c9-pages.json` aligned |
+| Existing endpoint fields, limits, examples and errors | The relevant C4/C5/C6/C8 source JSON or `spec-source/c9-manual-pages.json`; the established contract builders run first |
+| B56 schema and request-state semantics | `scripts/c13-contracts.mjs`, checked against the pinned engine commit |
+| API concept/event prose | The matching `.mdx.txt` file in `spec-source/c13-concepts/`; `scripts/build-c13-pages.mjs` supplies the shared layout and B56 cross-links |
+| One of the five Developer samples | The matching `.mdx.txt` file in `spec-source/c13-developer/` |
+| Shared visual style | `styles.css`; check both light and dark themes and a phone viewport |
+
+Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, then the C13 editorial layer and the whole-site manifest. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified legacy client examples when adding a newer HTTP capability; label their actual support and version clearly. The permanent source check is `scripts/check-c13-source.mjs`; the old locked gates still run separately and their failures remain visible.

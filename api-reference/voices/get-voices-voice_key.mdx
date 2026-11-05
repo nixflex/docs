@@ -1,31 +1,33 @@
 ---
 title: "Get a voice"
-sidebarTitle: "Get a voice"
+sidebarTitle: "Get voice"
 description: "Read a voice visible to the Nixflex account and its compatibility with an optional agent language. A successful read does not guarantee compatibility."
 openapi: "/api-reference/public.openapi.json GET /voices/{voice_key}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/voices/get-voices-voice_key"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return selectable: false; read the reason before using the voice.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the exact voice key from the catalogue.
+- A missing or unavailable voice needs a deliberate alternative, not a guessed key.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/your-own-voice) · [Developer guide](/concepts/voices) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -156,4 +158,4 @@ This is a read-only request. Retry transient connection or server failures with 
 ## Related endpoints
 
 - [List voices](/api-reference/voices/get-voices)
-- [Update an agent](/api-reference/agents/update)
+- [Errors and recovery](/api-reference/errors#error-envelope)

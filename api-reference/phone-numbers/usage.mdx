@@ -8,6 +8,27 @@ canonical: "https://docs.nixflex.com/api-reference/phone-numbers/usage"
 ---
 Get number usage in the authenticated account.
 
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- These usage counters describe the selected owned number.
+- Do not use counters as an invoice or a complete charge ledger.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
+
 ## Authentication
 
 Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
@@ -222,14 +243,17 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | invalid_phone_format, invalid_period, invalid_timezone or invalid_query. Duplicate/unknown query fields are rejected. |
-| 401 | Missing/invalid API key or inactive account at authentication. |
-| 403 | account_unavailable: account became inactive before the database read. |
-| 404 | number_not_found: absent, foreign, pending or internal identity. |
-| 429 | Existing API rate limit. |
-| 503 | usage_unavailable: timeout, unavailable schema/database or invalid result. Not zero usage; use a shorter period or retry later. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 · `invalid_phone_format` | The phone number is not valid E.164. | Correct the named field or query using the request table before trying again. |
+| 400 · `invalid_period` | The requested period is invalid. | Correct the named field or query using the request table before trying again. |
+| 400 · `invalid_timezone` | The time zone is invalid. | Supply a valid IANA time zone such as Europe/London. |
+| 400 · `invalid_query` | The query contains an invalid, unknown or duplicate field. | Correct the named field or query using the request table before trying again. |
+| 401 | Missing/invalid API key or inactive account at authentication. | Check the full account credential and API host privately; stop the retry loop. |
+| 403 · `account_unavailable` | The account is unavailable for this operation. | Resolve the account or role restriction through an authorised person. |
+| 404 · `number_not_found` | The number is absent or inaccessible to this account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Existing API rate limit. | Wait at least Retry-After and use a bounded read retry. |
+| 503 · `usage_unavailable` | Usage could not be read; it is not zero usage. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
 
 
@@ -239,6 +263,6 @@ Use bounded retries only for temporary read failures. Keep the same filters whil
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [List phone numbers](/api-reference/phone-numbers/list)
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Errors and recovery](/api-reference/errors#error-envelope)

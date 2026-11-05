@@ -1,31 +1,33 @@
 ---
 title: "Get call history"
 sidebarTitle: "Get call history"
-description: "Get call history with the Nixflex API. Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts."
+description: "Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs."
 openapi: "/api-reference/public.openapi.json GET /calls/history"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/calls/get-calls-history"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the same filters while paging through history.
+- Unknown outcome and missing analysis must stay unknown in your UI.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -209,6 +211,6 @@ This is a read-only request. Retry transient connection or server failures with 
 
 ## Related endpoints
 
+- [List calls](/api-reference/calls/list)
 - [Get a call](/api-reference/calls/get)
-- [Get a call recording](/api-reference/calls/get-calls-id-recording)
-- [Pagination and filtering](/api-reference/pagination)
+- [Errors and recovery](/api-reference/errors#error-envelope)

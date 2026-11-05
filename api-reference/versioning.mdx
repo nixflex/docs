@@ -1,12 +1,35 @@
 ---
-title: "API versions and compatibility"
-sidebarTitle: "API versions and compatibility"
+title: "Track API versions and compatibility"
+sidebarTitle: "Versions"
 description: "Track Nixflex API compatibility, additive fields and retired routes. Preserve unknown values and confirm client support before changing a live integration."
 canonical: "https://docs.nixflex.com/api-reference/versioning"
 ---
+Use the versioned API contract and verify client support before relying on a new field or operation.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Versions</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use /v1 and keep identifiers and nullable fields intact.
+- Check the deployed API and client release together before using a new capability.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/whats-new) · [Developer guide](/quickstart) · [Glossary](/guides/glossary)
+
+</div>
+
 ## Versioned base URL
 
 The public API uses `https://api.nixflex.com/v1`. Its path version is separate from SDK, CLI, MCP, and documentation versions. Installing a client does not change the engine deployment or enable an account feature.
+
 
 ## Compatibility rules
 
@@ -67,3 +90,9 @@ The reference now includes four per-number Google Calendar operations: [connect]
 **Compatibility change:** single-SMS suppression now returns HTTP 409 `do_not_contact`, type `conflict`, instead of 400 `invalid_request`. Stop on an opt-out. Campaigns continue to hold affected recipients individually.
 
 [Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. Contact approvals ask the name first, then spell the email, with a separate yes for each. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

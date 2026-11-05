@@ -6,27 +6,28 @@ openapi: "/api-reference/public.openapi.json GET /sms/campaigns"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-list"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-  table:has(th:nth-child(5)) td:nth-child(2), table:has(th:nth-child(5)) td:nth-child(3), table:has(th:nth-child(5)) td:nth-child(4) { font-size: 12px; }
-`}</style>
-
 List this account’s SMS campaigns, newest first. Delivery totals cover all campaign recipients, not just the returned page.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use saved campaign IDs for detail and action requests.
+- A list summary is not the complete recipient outcome record.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [Developer guide](/sms/sms-campaigns) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -176,4 +177,4 @@ This is a read-only request. Retry transient connection or server failures with 
 
 - [Create an SMS campaign](/api-reference/sms/campaigns-create)
 - [Get an SMS campaign](/api-reference/sms/campaigns-get)
-- [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview)
+- [Errors and recovery](/api-reference/errors#error-envelope)

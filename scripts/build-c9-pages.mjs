@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {sample} from './c8-page-content.mjs';
+import {requestIdExample} from './c13-contracts.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const write=(p,s)=>{const file=path.join(root,p);if(!fs.existsSync(file)||fs.readFileSync(file,'utf8')!==s)fs.writeFileSync(file,s);};
@@ -27,7 +28,7 @@ for(const d of manualPages){
  const request=op.requestBody?.content?.['application/json']?.schema;
  const requestTable=request?(request.oneOf||[request]).map((branch,index)=>(request.oneOf?'Choose exactly one carrier pair (option '+(index+1)+').\n\n':'')+table(['Field','Type','Required','Default','Limits and meaning'],Object.entries(branch.properties||{}).map(([n,s])=>['`'+n+'`',type(s),(branch.required||[]).includes(n)?'Yes':'No',s.default!==undefined?JSON.stringify(s.default):['PUT','PATCH'].includes(d.method)?'Unchanged':'Omitted',limits(s)]) )).join('\n\n'):'';
  const params=table(['Field','Type','Required','Default and limits'],(op.parameters||[]).map(p=>['`'+p.name+'` ('+p.in+')',type(p.schema),p.required?'Yes':'No',limits({...p.schema,description:p.description||p.schema.description})]));
- const url='https://api.nixflex.com/v1'+d.path.replace(/\{([^}]+)\}/g,(_,p)=>p==='phoneNumber'?'%2B12025550123':p==='callerNumber'?'%2B12025550101':p==='id'&&d.path.startsWith('/agents')?'agent_example':'call_example');
+ const url='https://api.nixflex.com/v1'+d.path.replace(/\{([^}]+)\}/g,(_,p)=>p==='request_id'?requestIdExample:p==='phoneNumber'?'%2B12025550123':p==='callerNumber'?'%2B12025550101':p==='id'&&d.path.startsWith('/agents')?'agent_example':'call_example');
  const body=d.exampleBody;
  const curl=`curl --request ${d.method} \\\n+  --url '${url}' \\\n+  --header "Authorization: Bearer $NXF_API_KEY"`+(body?` \\\n+  --header 'Content-Type: application/json' \\\n+  --data '${JSON.stringify(body)}'`:'');
  const node=`const response = await fetch('${url}', {\n  method: '${d.method}',\n  headers: { Authorization: \`Bearer \${process.env.NXF_API_KEY}\`${body?", 'Content-Type': 'application/json'":''} },${body?'\n  body: JSON.stringify('+JSON.stringify(body)+'),':''}\n});\nif (!response.ok) throw new Error(\`HTTP \${response.status}\`);\nconst result = await response.json();\n// Handle the private result without logging it.`;

@@ -1,0 +1,2435 @@
+{
+  "design": "docs-design-v1",
+  "api": [
+    {
+      "slug": "api-reference/introduction",
+      "title": "Use the Nixflex API",
+      "sidebarTitle": "API overview",
+      "description": "Explore the Nixflex API for voice agents, calls, numbers, SMS and knowledge. Find authentication, request fields, response shapes and examples.",
+      "lead": "Build voice, SMS and knowledge workflows through the documented Nixflex API.",
+      "important": [
+        "Start with a read-only usage request to check the account and environment.",
+        "Use only documented public operations; a dashboard feature is not automatically an API endpoint."
+      ],
+      "business": "business",
+      "developer": "quickstart",
+      "source": "spec-source/c13-concepts/introduction.mdx.txt"
+    },
+    {
+      "slug": "api-reference/authentication",
+      "title": "Authenticate API requests",
+      "sidebarTitle": "Authentication",
+      "description": "Authenticate Nixflex API requests with a server-side key. Understand account ownership, personal sessions and Owner, Admin and Member permissions.",
+      "lead": "Authenticate server requests with the owning account credential and follow the permission rule for each operation.",
+      "important": [
+        "Keep the full account credential on your server.",
+        "Personal roles and organisation API keys have different authority; follow the operation-specific rule."
+      ],
+      "business": "guides/business/team",
+      "developer": "authentication",
+      "source": "spec-source/c13-concepts/authentication.mdx.txt"
+    },
+    {
+      "slug": "api-reference/errors",
+      "title": "Handle API errors",
+      "sidebarTitle": "Errors",
+      "description": "Find Nixflex API error codes, HTTP statuses and recovery steps. Distinguish invalid input, permission failures, temporary errors and uncertain results.",
+      "lead": "Use the machine-readable error code and the current resource state to decide what to do next.",
+      "important": [
+        "Branch on error.code, not the wording of error.message.",
+        "Unknown write outcomes require reconciliation before another deliberate action."
+      ],
+      "business": "reference/faq",
+      "developer": "guides/developer/errors",
+      "source": "spec-source/c13-concepts/errors.mdx.txt"
+    },
+    {
+      "slug": "api-reference/pagination",
+      "title": "Page through API results",
+      "sidebarTitle": "Pagination",
+      "description": "Page through Nixflex agents, calls, numbers and knowledge. Use each endpoint’s limit, offset or cursor without losing filters or assuming one list shape.",
+      "lead": "Read every result by following the pagination shape and filters documented for that endpoint.",
+      "important": [
+        "Use the paging shape documented for the specific endpoint.",
+        "Keep filters fixed between pages; do not treat one response as a complete account export."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/pagination",
+      "source": "spec-source/c13-concepts/pagination.mdx.txt"
+    },
+    {
+      "slug": "api-reference/rate-limits",
+      "title": "Handle API rate limits",
+      "sidebarTitle": "Rate limits",
+      "description": "Handle Nixflex API rate limits using RateLimit-Limit, RateLimit-Remaining and Retry-After. Keep request quotas separate from call capacity and feature limits.",
+      "lead": "Use the returned rate-limit guidance to control request frequency and keep call capacity checks separate.",
+      "important": [
+        "Read the actual rate-limit headers when returned.",
+        "A rate limit and call capacity are separate controls."
+      ],
+      "business": "guides/business/billing",
+      "developer": "guides/developer/rate-limits",
+      "source": "spec-source/c13-concepts/rate-limits.mdx.txt"
+    },
+    {
+      "slug": "api-reference/idempotency",
+      "title": "Reuse supported operation identities",
+      "sidebarTitle": "Operation identities",
+      "description": "Use Nixflex knowledge operation keys and revisions correctly. Learn which requests support replay and how to handle uncertain calls, SMS and other writes.",
+      "lead": "Keep one operation identity for one intended action only where the endpoint documents replay support.",
+      "important": [
+        "An operation identity protects only the operation that documents it.",
+        "For outbound calls, save the UUID request_id before launch and retain it while the outcome is uncertain."
+      ],
+      "business": "reference/faq",
+      "developer": "guides/developer/idempotency",
+      "source": "spec-source/c13-concepts/idempotency.mdx.txt"
+    },
+    {
+      "slug": "api-reference/webhooks",
+      "title": "Receive and verify webhook events",
+      "sidebarTitle": "Webhook events",
+      "description": "Receive Nixflex call and booking events. Verify raw-body signatures, handle duplicate delivery and fetch private recording links when playback is needed.",
+      "lead": "Verify signed Nixflex events before storing their results or running a business action.",
+      "important": [
+        "Verify the exact body bytes before parsing or taking action.",
+        "Delivery can be delayed, duplicated or missed; keep a reconciliation path."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "source": "spec-source/c13-concepts/webhooks.mdx.txt"
+    },
+    {
+      "slug": "api-reference/retries",
+      "title": "Retry failed API requests",
+      "sidebarTitle": "Retry rules",
+      "description": "Choose safe retry behavior for Nixflex API reads and writes. Honor Retry-After, reconcile unknown outcomes and avoid duplicate calls, messages or purchases.",
+      "lead": "Retry eligible reads with a limit, and reconcile uncertain writes before any deliberate new action.",
+      "important": [
+        "Use bounded retries for eligible reads.",
+        "Never automatically create a new call intent to recover an unknown launch result."
+      ],
+      "business": "reference/faq",
+      "developer": "guides/developer/errors",
+      "source": "spec-source/c13-concepts/retries.mdx.txt"
+    },
+    {
+      "slug": "api-reference/versioning",
+      "title": "Track API versions and compatibility",
+      "sidebarTitle": "Versions",
+      "description": "Track Nixflex API compatibility, additive fields and retired routes. Preserve unknown values and confirm client support before changing a live integration.",
+      "lead": "Use the versioned API contract and verify client support before relying on a new field or operation.",
+      "important": [
+        "Use /v1 and keep identifiers and nullable fields intact.",
+        "Check the deployed API and client release together before using a new capability."
+      ],
+      "business": "guides/business/whats-new",
+      "developer": "quickstart",
+      "source": "spec-source/c13-concepts/versioning.mdx.txt"
+    },
+    {
+      "slug": "api-reference/agents/contract",
+      "title": "Understand agent settings and defaults",
+      "sidebarTitle": "Settings and defaults",
+      "description": "Understand Nixflex agent fields, defaults, limits and nullable values. Configure call behavior, prompts, keyterms, retention and supported channel settings.",
+      "lead": "Use saved agent values and number overrides to determine the effective call settings.",
+      "important": [
+        "Omitted update fields keep saved values.",
+        "Number overrides can change the effective settings for one phone number."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agent-inheritance",
+      "source": "spec-source/c13-concepts/agents--contract.mdx.txt"
+    },
+    {
+      "slug": "api-reference/agents/create",
+      "title": "Create an agent",
+      "sidebarTitle": "Create agent",
+      "description": "Create an agent and receive its agent_id for later reads, updates and calls. A successful create does not assign a phone number or start a call.",
+      "lead": "Create an agent and receive its `agent_id` for later reads, updates and calls.",
+      "important": [
+        "A new agent starts with the documented defaults; read the saved agent before attaching a number.",
+        "A successful create does not assign a phone number or start a call."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agents",
+      "method": "POST",
+      "path": "/agents",
+      "introDetails": "Every request field is optional. Sending `{}` creates an agent with the default settings. Calls have a **300-second duration limit**, a **10-second silence hang-up** and **dynamic greeting enabled** by default. Creating an agent does not place a call or import a phone number."
+    },
+    {
+      "slug": "api-reference/agents/list",
+      "title": "List agents",
+      "sidebarTitle": "List agents",
+      "description": "List Nixflex agents owned by the account. Read their settings and use each agent ID for detail, update or disable requests.",
+      "lead": "List owned agents, with active agents selected by default.",
+      "important": [
+        "Use the returned agent IDs for later reads and changes.",
+        "An empty list only describes this account and the requested page."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agents",
+      "method": "GET",
+      "path": "/agents",
+      "introDetails": "Use the optional status and search filters. Results are a bare array, ordered by created_at DESC then agent_id DESC. Invalid paging or filter queries return 400 invalid_agent_list."
+    },
+    {
+      "slug": "api-reference/agents/get",
+      "title": "Get an agent",
+      "sidebarTitle": "Get agent",
+      "description": "Read one Nixflex agent and its saved settings. Check whether it is active before assigning numbers or starting calls.",
+      "lead": "Get an agent in the authenticated account.",
+      "important": [
+        "Read the saved agent before changing shared behaviour.",
+        "A number override may change the effective value for a particular call."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agents",
+      "method": "GET",
+      "path": "/agents/{id}"
+    },
+    {
+      "slug": "api-reference/agents/update",
+      "title": "Update an agent",
+      "sidebarTitle": "Update agent",
+      "description": "Update selected settings on an owned Nixflex agent. The PUT request is partial: omitted fields keep their saved values.",
+      "lead": "Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted fields keep their saved values. Creation defaults are not reapplied.",
+      "important": [
+        "Omitted fields keep their stored values; send only the intended change.",
+        "Read the agent after an uncertain response before repeating the update."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agents",
+      "method": "PUT",
+      "path": "/agents/{id}"
+    },
+    {
+      "slug": "api-reference/agents/delete",
+      "title": "Disable an agent",
+      "sidebarTitle": "Disable agent",
+      "description": "Disable an owned Nixflex agent. Understand the inactive state, retained record and checks before assigning numbers or starting calls.",
+      "lead": "Switch an owned agent off by setting is_active to false. GET still returns the inactive record. This is not permanent erasure.",
+      "important": [
+        "This sets is_active:false; the owned agent record remains readable.",
+        "It does not detach numbers, erase history or wait for live calls to finish."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/agents",
+      "method": "DELETE",
+      "path": "/agents/{id}"
+    },
+    {
+      "slug": "api-reference/phone-numbers/list",
+      "title": "List phone numbers",
+      "sidebarTitle": "List phone numbers",
+      "description": "List phone numbers owned by the Nixflex account. Read assigned agents and saved number settings before routing or configuration changes.",
+      "lead": "List the public phone numbers owned by the authenticated account.",
+      "important": [
+        "Use E.164 phone numbers as returned by the API.",
+        "Check assignment and channel switches before choosing a number for work."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "GET",
+      "path": "/phone-numbers",
+      "introDetails": "Pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, then phone_number DESC; this is live traversal, not a snapshot."
+    },
+    {
+      "slug": "api-reference/phone-numbers/get",
+      "title": "Get a phone number",
+      "sidebarTitle": "Get phone number",
+      "description": "Read one owned Nixflex phone number, its assigned agent and saved settings. Use the encoded international number in the request path.",
+      "lead": "Get a phone number in the authenticated account.",
+      "important": [
+        "Read the number's own settings and its assigned agent.",
+        "A null override can inherit an agent value; it is not necessarily disabled."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "GET",
+      "path": "/phone-numbers/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/phone-numbers/import",
+      "title": "Import a phone number",
+      "sidebarTitle": "Import a phone number",
+      "description": "Import a phone number you own into Nixflex and assign it to an active agent. Review existing routing before changing the number configuration.",
+      "lead": "Connect a number you already own to an active agent on the same account. Import can replace existing number routing, so another application using that routing can stop receiving calls or texts.",
+      "important": [
+        "This connects an existing supported number to the account.",
+        "A pending import is not permission to send; wait for a usable state."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "POST",
+      "path": "/phone-numbers"
+    },
+    {
+      "slug": "api-reference/phone-numbers/update",
+      "title": "Update a phone number",
+      "sidebarTitle": "Update phone number",
+      "description": "Update an owned Nixflex number's settings or move it to another active agent on the account. Review routing and uncertain outcomes before retrying.",
+      "lead": "Change per-number settings, or move the number to another active agent on the same account. A move and a settings update are separate requests.",
+      "important": [
+        "Change only the fields you intend; omission preserves saved values.",
+        "Read back the number and check its effective agent assignment."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "PATCH",
+      "path": "/phone-numbers/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/phone-numbers/usage",
+      "title": "Get number usage",
+      "sidebarTitle": "Get number usage",
+      "description": "Read usage for an owned Nixflex phone number. Check the response fields and account scope before using the totals in your application.",
+      "lead": "Get number usage in the authenticated account.",
+      "important": [
+        "These usage counters describe the selected owned number.",
+        "Do not use counters as an invoice or a complete charge ledger."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "GET",
+      "path": "/phone-numbers/{phoneNumber}/usage"
+    },
+    {
+      "slug": "api-reference/phone-numbers/delete",
+      "title": "Remove a phone number",
+      "sidebarTitle": "Remove phone number",
+      "description": "Disconnect an owned number from Nixflex and clear routing managed by its import. This does not release the number from your carrier account.",
+      "lead": "Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the number from its carrier account or end that account’s charges.",
+      "important": [
+        "Removal changes the number connection; check the exact target first.",
+        "Tracked cleanup may remain pending after the request is accepted."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "DELETE",
+      "path": "/phone-numbers/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/calls/list",
+      "title": "List calls",
+      "sidebarTitle": "List calls",
+      "description": "Read the legacy call list as a bare array, newest creation time first. Use the documented filters and page limits.",
+      "lead": "Read the legacy call list as a bare array, newest creation time first. Use the history operation when you need filters, totals, failed-start entries or cursor paging.",
+      "important": [
+        "Use the documented filters and page limits.",
+        "A call row can exist before analysis, recording and booking work finishes."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls"
+    },
+    {
+      "slug": "api-reference/calls/get-calls-history",
+      "title": "Get call history",
+      "sidebarTitle": "Get call history",
+      "description": "Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs.",
+      "lead": "Read a filtered call-history envelope with matching totals. History includes failed starts and omits transcripts, event data, extracted data and recording URLs.",
+      "important": [
+        "Keep the same filters while paging through history.",
+        "Unknown outcome and missing analysis must stay unknown in your UI."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls/history"
+    },
+    {
+      "slug": "api-reference/calls/get",
+      "title": "Get a call",
+      "sidebarTitle": "Get call",
+      "description": "Read one account-owned call. Call completion is separate from recording, analysis and booking finalisation.",
+      "lead": "Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata stubs. Omitting view keeps the legacy row response.",
+      "important": [
+        "Use the returned call ID to reconcile this call.",
+        "Call completion is separate from recording, analysis and booking finalisation."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls/{id}"
+    },
+    {
+      "slug": "api-reference/calls/get-calls-id-recording",
+      "title": "Get a call recording",
+      "sidebarTitle": "Get call recording",
+      "description": "Read Nixflex call recording status and obtain a fresh signed download link when available. Handle unavailable, pending and deleted recordings.",
+      "lead": "Read recording status and obtain a fresh signed download link when the managed recording is available. This operation does not read or verify an account-connected storage object.",
+      "important": [
+        "Fetch a fresh link when the user asks to play the recording.",
+        "A missing URL is not proof of deletion; show the returned recording state."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls/{id}/recording"
+    },
+    {
+      "slug": "api-reference/calls/create-outbound",
+      "title": "Create an outbound call",
+      "sidebarTitle": "Create outbound call",
+      "description": "Start an outbound call with an optional saved UUID. Reconcile replayed, pending and unknown requests without automatically placing another call.",
+      "lead": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome.",
+      "important": [
+        "Save one UUID request_id before a deliberate call intent if you need launch reconciliation.",
+        "A 201 means initiated. A same-ID 200 replay returns the existing call; pending or unknown must never trigger a new UUID automatically."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/lead-qualification",
+      "method": "POST",
+      "path": "/calls/outbound"
+    },
+    {
+      "slug": "api-reference/calls/client-safety",
+      "title": "Handle call outcomes and safe retries",
+      "sidebarTitle": "Outcomes and retries",
+      "description": "Handle Nixflex call starts, active calls, deletions and unknown outcomes. Use confirmed state before retrying actions or treating a call as completed.",
+      "lead": "Reconcile a call launch from its saved request or call ID before deciding whether another action is appropriate.",
+      "important": [
+        "A 201 launch reply means initiated, not connected or completed.",
+        "Use the saved request UUID to reconcile pending or unknown launches without redialling."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/lead-qualification",
+      "source": "spec-source/c13-concepts/calls--client-safety.mdx.txt"
+    },
+    {
+      "slug": "api-reference/calls/delete",
+      "title": "Delete a call",
+      "sidebarTitle": "Delete call",
+      "description": "Delete an owned Nixflex call with guarded recording cleanup. Handle blocked or uncertain results without treating them as confirmed deletion.",
+      "lead": "Request guarded cleanup for one owned call.",
+      "important": [
+        "Only the server can confirm that required cleanup and evidence checks have finished.",
+        "A missing recording link or an empty file list does not prove deletion completed."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "DELETE",
+      "path": "/calls/{id}",
+      "introDetails": "In-progress or unsettled work and pending or failed cleanup can return 409/503. This is not a promise of immediate all-copy erasure. Reconcile an uncertain response before another deliberate action."
+    },
+    {
+      "slug": "api-reference/calls/delete-all",
+      "title": "Delete all calls",
+      "sidebarTitle": "Delete all calls",
+      "description": "Request guarded deletion of Nixflex call data for the account. Review scope, cleanup requirements and uncertain outcomes before another request.",
+      "lead": "Request guarded cleanup of the account’s calls without deleting SMS or closing the account.",
+      "important": [
+        "This affects the account's call history; confirm the scope before sending.",
+        "A single-call cleanup rule does not automatically apply to bulk deletion."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "DELETE",
+      "path": "/calls",
+      "introDetails": "Work or cleanup confirmation can remain pending and return 409/503. Legacy recording counters are not all-copy erasure proof. Reconcile an uncertain response before another deliberate action."
+    },
+    {
+      "slug": "api-reference/voice-campaigns/get-campaigns",
+      "title": "List voice campaigns",
+      "sidebarTitle": "List voice campaigns",
+      "description": "List this account’s voice campaigns, newest first. This bounded list has no offset or cursor.",
+      "lead": "List this account’s voice campaigns, newest first. This bounded list has no offset or cursor.",
+      "important": [
+        "Read saved campaign state before any launch, cancel or resume action.",
+        "The campaign list does not prove every recipient finished."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "GET",
+      "path": "/campaigns"
+    },
+    {
+      "slug": "api-reference/calls/batch-create",
+      "title": "Create a voice campaign",
+      "sidebarTitle": "Create voice campaign",
+      "description": "Create a Nixflex voice campaign and its recipients. Default now mode requests launch immediately; use schedule mode to prepare a later launch.",
+      "lead": "Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.",
+      "important": [
+        "The default now mode immediately requests launch; scheduled work can run automatically. There is no public draft-only mode.",
+        "Review recipients, consent and contact rules before creating the campaign, because creation can contact people."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "POST",
+      "path": "/calls/batch"
+    },
+    {
+      "slug": "api-reference/calls/batch-launch",
+      "title": "Launch a voice campaign",
+      "sidebarTitle": "Launch a voice campaign",
+      "description": "Request the first launch of an owned Nixflex voice campaign. Check readiness, consent and launch state before dispatching calls.",
+      "lead": "Request the first launch of an owned voice campaign. Ownership, readiness and launch state are checked before dispatch; each recipient still passes current contact checks.",
+      "important": [
+        "Launching can contact real recipients; review the selected campaign first.",
+        "An uncertain launch must be reconciled from campaign state, not launched again blindly."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "POST",
+      "path": "/calls/batch/{id}/launch"
+    },
+    {
+      "slug": "api-reference/voice-campaigns/post-calls-batch-id-cancel",
+      "title": "Cancel voice campaign",
+      "sidebarTitle": "Cancel voice campaign",
+      "description": "Cancel future work for an owned voice campaign. Calls or messages already in progress may finish.",
+      "lead": "Cancel future work for an owned voice campaign. Calls or messages already in progress may finish.",
+      "important": [
+        "Cancellation stops eligible future work; it cannot recall a dispatched call.",
+        "Read campaign state to see what remains active or pending."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "POST",
+      "path": "/calls/batch/{id}/cancel"
+    },
+    {
+      "slug": "api-reference/voice-campaigns/post-calls-batch-id-resume",
+      "title": "Resume voice campaign",
+      "sidebarTitle": "Resume voice campaign",
+      "description": "Resume a bounded page of verified, unattempted recipients in a running Nixflex voice campaign. Review consent and current campaign state first.",
+      "lead": "Resume one bounded page of verified unattempted recipients in the current running voice campaign. This can dispatch contact and keeps the existing launch generation.",
+      "important": [
+        "This resumes a bounded page of verified unattempted recipients in the current running campaign.",
+        "It can dispatch contact and keeps the existing launch generation; uncertain recipients must not become fresh contacts."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "POST",
+      "path": "/calls/batch/{id}/resume"
+    },
+    {
+      "slug": "api-reference/voice-campaigns/post-calls-batch-id-consent",
+      "title": "Record voice consent",
+      "sidebarTitle": "Record voice consent",
+      "description": "Record consent or withdrawal for the current Nixflex voice campaign policy revision. Review the audience and policy before confirming.",
+      "lead": "Record a consent or consent-withdrawal decision for the current voice campaign policy revision. The owner confirms the selected event explicitly.",
+      "important": [
+        "Record actual consent for the intended campaign.",
+        "This record does not bypass suppression or recipient-local contact checks."
+      ],
+      "business": "guides/business/voice-campaigns",
+      "developer": "guides/developer/campaigns",
+      "method": "POST",
+      "path": "/calls/batch/{id}/consent"
+    },
+    {
+      "slug": "api-reference/sms/send",
+      "title": "Send an SMS",
+      "sidebarTitle": "Send an SMS",
+      "description": "Send one SMS through Nixflex using an explicit, owned sender assigned to the agent. Distinguish acceptance from delivery and handle uncertain results.",
+      "lead": "Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means the send was accepted; it is not proof of delivery to the recipient.",
+      "important": [
+        "This request can send a real text; there is no general replay guarantee.",
+        "Carrier acceptance is not proof that the recipient read or received the message."
+      ],
+      "business": "guides/business/sms-agent",
+      "developer": "sms/send-sms",
+      "method": "POST",
+      "path": "/sms"
+    },
+    {
+      "slug": "api-reference/sms/campaigns-list",
+      "title": "List SMS campaigns",
+      "sidebarTitle": "List SMS campaigns",
+      "description": "List the account's Nixflex SMS campaigns, newest first. Delivery totals cover all campaign recipients, beyond the current recipient page.",
+      "lead": "List this account’s SMS campaigns, newest first. Delivery totals cover all campaign recipients, not just the returned page.",
+      "important": [
+        "Use saved campaign IDs for detail and action requests.",
+        "A list summary is not the complete recipient outcome record."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "GET",
+      "path": "/sms/campaigns"
+    },
+    {
+      "slug": "api-reference/sms/campaigns-create",
+      "title": "Create an SMS campaign",
+      "sidebarTitle": "Create SMS campaign",
+      "description": "Create a Nixflex SMS campaign and its recipients. Default now mode requests launch immediately; use schedule mode to prepare a later launch.",
+      "lead": "Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.",
+      "important": [
+        "The default now mode immediately requests launch; scheduled work can run automatically. There is no public draft-only mode.",
+        "Review recipients, consent and message content before creating the campaign, because creation can send messages."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "POST",
+      "path": "/sms/campaigns"
+    },
+    {
+      "slug": "api-reference/sms/campaigns-get",
+      "title": "Get an SMS campaign",
+      "sidebarTitle": "Get SMS campaign",
+      "description": "Read one owned SMS campaign with recipient and message history. The campaign counters cover the whole campaign; the two history lists have independent cursors.",
+      "lead": "Read one owned SMS campaign with recipient and message history. The campaign counters cover the whole campaign; the two history lists have independent cursors.",
+      "important": [
+        "Read this campaign before changing its state.",
+        "Keep accepted, pending, failed and uncertain recipient results distinct."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "GET",
+      "path": "/sms/campaigns/{id}"
+    },
+    {
+      "slug": "api-reference/sms-campaigns/patch-sms-campaigns-id",
+      "title": "Update SMS reply settings",
+      "sidebarTitle": "Update SMS reply settings",
+      "description": "Update reply behaviour for an owned Nixflex SMS campaign. This request does not edit the campaign's recipients, schedule or outbound message.",
+      "lead": "Update reply behaviour for one owned SMS campaign. This operation does not edit its recipients, schedule or message template, and it is not a cancellation control.",
+      "important": [
+        "These settings control replies associated with the campaign.",
+        "A saved reply setting does not launch or resend campaign messages."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "PATCH",
+      "path": "/sms/campaigns/{id}"
+    },
+    {
+      "slug": "api-reference/sms/campaigns-launch",
+      "title": "Launch an SMS campaign",
+      "sidebarTitle": "Launch an SMS campaign",
+      "description": "Request the first launch of an owned Nixflex SMS campaign. Check readiness, consent and launch state before dispatching messages.",
+      "lead": "Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before dispatch; each recipient still passes current contact checks.",
+      "important": [
+        "Launching can send real messages to the saved recipients.",
+        "After a lost response, read campaign state before a deliberate next action."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "POST",
+      "path": "/sms/campaigns/{id}/launch"
+    },
+    {
+      "slug": "api-reference/sms-campaigns/post-sms-campaigns-id-cancel",
+      "title": "Cancel SMS campaign",
+      "sidebarTitle": "Cancel SMS campaign",
+      "description": "Cancel future work for an owned SMS campaign. Calls or messages already in progress may finish.",
+      "lead": "Cancel future work for an owned SMS campaign. Calls or messages already in progress may finish.",
+      "important": [
+        "Cancellation cannot recall messages already dispatched.",
+        "Read current state before claiming that all contact stopped."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "POST",
+      "path": "/sms/campaigns/{id}/cancel"
+    },
+    {
+      "slug": "api-reference/sms-campaigns/post-sms-campaigns-id-resume",
+      "title": "Resume SMS campaign",
+      "sidebarTitle": "Resume SMS campaign",
+      "description": "Resume a bounded page of verified, unattempted recipients in a running Nixflex SMS campaign. This can dispatch messages after policy checks.",
+      "lead": "Resume one bounded page of verified unattempted recipients in the current running SMS campaign. This can dispatch contact and keeps the existing launch generation.",
+      "important": [
+        "This resumes a bounded page of verified unattempted recipients in the current running campaign.",
+        "It can dispatch messages and keeps the existing launch generation; do not create a second campaign to recover an uncertain result."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "POST",
+      "path": "/sms/campaigns/{id}/resume"
+    },
+    {
+      "slug": "api-reference/sms-campaigns/post-sms-campaigns-id-consent",
+      "title": "Record SMS consent",
+      "sidebarTitle": "Record SMS consent",
+      "description": "Record consent or withdrawal for the current Nixflex SMS campaign policy revision. Review the audience and policy before confirming.",
+      "lead": "Record a consent or consent-withdrawal decision for the current SMS campaign policy revision. The owner confirms the selected event explicitly.",
+      "important": [
+        "Save consent only when it was actually obtained.",
+        "A consent record does not override suppression or allowed contact hours."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "POST",
+      "path": "/sms/campaigns/{id}/consent"
+    },
+    {
+      "slug": "api-reference/sms/campaigns-delete",
+      "title": "Delete an SMS campaign",
+      "sidebarTitle": "Delete SMS campaign",
+      "description": "Delete a settled Nixflex SMS campaign. Handle active-work conflicts, pending settlement and unknown results before removing it from your application.",
+      "lead": "Delete an owned SMS campaign only after active work and final settlement are resolved.",
+      "important": [
+        "Confirm the saved campaign ID and deletion conditions first.",
+        "Deleting campaign data does not retract a delivered message."
+      ],
+      "business": "guides/business/sms-campaigns",
+      "developer": "sms/sms-campaigns",
+      "method": "DELETE",
+      "path": "/sms/campaigns/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-capabilities",
+      "title": "Get knowledge capabilities",
+      "sidebarTitle": "Get capabilities",
+      "description": "Read knowledge limits, defaults and the account scope marker before enabling import, review and testing controls in your app.",
+      "lead": "Read current knowledge limits, defaults and account scope marker.",
+      "important": [
+        "Read supported actions and bounds before enabling a knowledge UI.",
+        "Capability availability is not a promise that a particular write will be admitted."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/capabilities"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-targets",
+      "title": "List knowledge agents",
+      "sidebarTitle": "List agents",
+      "description": "List active owned agents and their live knowledge state, then use the returned agent IDs for scoped knowledge operations.",
+      "lead": "List active owned agents and their live knowledge state.",
+      "important": [
+        "Choose an owned agent from the returned targets.",
+        "Keep opaque IDs unchanged; names are not stable identities."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/targets"
+    },
+    {
+      "slug": "api-reference/knowledge/get-agents-target-knowledge-base",
+      "title": "Get agent knowledge",
+      "sidebarTitle": "Get agent knowledge",
+      "description": "Read an agent’s own knowledge base, settings and current revision. Keep a missing base distinct from an unavailable read.",
+      "lead": "Read the agent’s own knowledge base, settings and current revision.",
+      "important": [
+        "Read this agent’s own knowledge base, settings and current revision.",
+        "A missing base is different from a failed read; preserve that distinction."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/agents/{target}/knowledge-base"
+    },
+    {
+      "slug": "api-reference/knowledge/put-agents-target-knowledge-base",
+      "title": "Set agent knowledge",
+      "sidebarTitle": "Set agent knowledge",
+      "description": "Create an agent’s knowledge base or update its settings with the current revision. Saving settings does not publish source text.",
+      "lead": "Create the agent’s singleton knowledge base or update its settings.",
+      "important": [
+        "Create the agent’s singleton knowledge base or change its settings; this does not attach another agent’s base.",
+        "An existing base needs its current revision. Saving settings does not publish source text."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "PUT",
+      "path": "/agents/{target}/knowledge-base"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb",
+      "title": "Get knowledge base",
+      "sidebarTitle": "Get base",
+      "description": "Read knowledge settings, revision and the active published index. Use the current revision when preparing a guarded edit.",
+      "lead": "Read a knowledge base’s settings, revision and active published index.",
+      "important": [
+        "Read the current base and revision before editing.",
+        "A revision is a concurrency guard, not an idempotency key."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-overview",
+      "title": "Get knowledge overview",
+      "sidebarTitle": "Get overview",
+      "description": "Read knowledge topic, token, publication and review totals, plus seven-day observations, without inferring publication from a source count.",
+      "lead": "Read topic, token, publication, review and seven-day observation totals.",
+      "important": [
+        "Use the overview for current source, topic and job state.",
+        "Do not infer publication from a source or job count alone."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/overview"
+    },
+    {
+      "slug": "api-reference/knowledge/get-agents-target-knowledge-keyterms",
+      "title": "Read automatic keyterms",
+      "sidebarTitle": "Read automatic keyterms",
+      "description": "Read ranked automatic speech terms from live agent knowledge, with configured limits and saved manual terms for comparison.",
+      "lead": "Read ranked automatic speech terms from an agent’s current live knowledge.",
+      "important": [
+        "Automatic candidates default to 80, with an operator-configurable cap of 100; newly edited manual lists have a separate 20-term limit.",
+        "Read the actual effective list; terms are recognition hints, not extra knowledge answers."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/agents/{target}/knowledge-keyterms"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-usage",
+      "title": "Get knowledge usage",
+      "sidebarTitle": "Get usage",
+      "description": "Read private knowledge storage inventory and compatibility allowance counters. These values are not a complete billing ledger.",
+      "lead": "Read private storage inventory and compatibility allowance counters.",
+      "important": [
+        "Read the returned private storage inventory and compatibility allowance counters.",
+        "These counters are not a complete billing ledger."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/usage"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-events",
+      "title": "Read knowledge events",
+      "sidebarTitle": "Read events",
+      "description": "Read ordered knowledge events for the owning account. Keep the documented paging and filters while reconciling changes.",
+      "lead": "Read ordered owner-scoped knowledge events for reconciliation.",
+      "important": [
+        "Read events using their documented paging and filters.",
+        "Events describe available history, not guaranteed delivery to another system."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/events"
+    },
+    {
+      "slug": "api-reference/knowledge/post-agents-target-knowledge-base-source-measure",
+      "title": "Measure knowledge source",
+      "sidebarTitle": "Measure source",
+      "description": "Measure source token usage before import without storing or publishing the source. The preview does not reserve later quota.",
+      "lead": "Preview source token usage before an import without storing the source.",
+      "important": [
+        "Measure the proposed source before importing it.",
+        "Measurement does not publish text or reserve quota for a later import."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/agents/{target}/knowledge-base/source-measure"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources",
+      "title": "Import knowledge source",
+      "sidebarTitle": "Import source",
+      "description": "Import pasted text or a supported raw file and track preparation. Review flags can require approval before publication.",
+      "lead": "Submit pasted text or a raw file and queue preparation of original-word pieces.",
+      "important": [
+        "Use pasted text or a raw supported file; websites use discovery and selection.",
+        "API review:false can publish after preparation, but flags still require review."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/sources"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-sources",
+      "title": "List knowledge sources",
+      "sidebarTitle": "List sources",
+      "description": "List accepted sources with unsuppressed live pieces. Use their saved source IDs for renaming, replacement and deletion.",
+      "lead": "List accepted sources that still have unsuppressed live pieces.",
+      "important": [
+        "Use saved source IDs for rename, replacement or deletion.",
+        "A source's presence does not mean all its prepared text is published."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/sources"
+    },
+    {
+      "slug": "api-reference/knowledge/patch-knowledge-bases-kb-sources-id",
+      "title": "Rename knowledge source",
+      "sidebarTitle": "Rename source",
+      "description": "Rename a saved knowledge source without changing its facts or published index. Confirm the exact source and revision first.",
+      "lead": "Change a source name without changing facts or the published index.",
+      "important": [
+        "Rename the exact saved source.",
+        "A title change does not replace its underlying text."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "PATCH",
+      "path": "/knowledge-bases/{kb}/sources/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources-id-replacements",
+      "title": "Replace knowledge source",
+      "sidebarTitle": "Replace source",
+      "description": "Prepare replacement source text while keeping the accepted version available until the reviewed replacement is published.",
+      "lead": "Prepare replacement source text while preserving the accepted version until publication.",
+      "important": [
+        "Keep the expected revision and intended source identity.",
+        "Review the replacement job; accepted work is not completed publication."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/sources/{id}/replacements"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-sources-refresh",
+      "title": "Refresh website sources",
+      "sidebarTitle": "Refresh website sources",
+      "description": "Refresh selected saved website sources and follow the resulting job. New website content can still require review.",
+      "lead": "Refresh explicitly selected saved website sources.",
+      "important": [
+        "Refresh eligible website sources under the documented limits.",
+        "A refresh can need review; do not assume discovered changes became live answers."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/sources/refresh"
+    },
+    {
+      "slug": "api-reference/knowledge/delete-knowledge-bases-kb-sources-id",
+      "title": "Delete knowledge source",
+      "sidebarTitle": "Delete source",
+      "description": "Remove an accepted knowledge source with explicit affected-topic confirmation and revision checks, then follow its result.",
+      "lead": "Remove an accepted source with explicit confirmation of affected topics.",
+      "important": [
+        "Delete the intended source using its current revision.",
+        "Track cleanup and publication state rather than treating acceptance as completion."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "DELETE",
+      "path": "/knowledge-bases/{kb}/sources/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-website-discoveries",
+      "title": "Discover website pages",
+      "sidebarTitle": "Discover website pages",
+      "description": "Discover selectable public website pages without importing or publishing them. Use the returned page IDs for a later selection.",
+      "lead": "Discover selectable public pages without importing or publishing them.",
+      "important": [
+        "Discover public pages before selecting an import.",
+        "Discovery does not import every URL or grant access to private pages."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/website-discoveries"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-website-imports",
+      "title": "Import selected pages",
+      "sidebarTitle": "Import selected pages",
+      "description": "Import selected page IDs from a completed owned website discovery, then follow preparation and any required review.",
+      "lead": "Import only pages chosen from a completed owned website discovery.",
+      "important": [
+        "Send selected discovery page IDs exactly as returned.",
+        "Follow the preparation job and required review before claiming publication."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/website-imports"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-drafts-id",
+      "title": "Get knowledge draft",
+      "sidebarTitle": "Get draft",
+      "description": "Read proposed knowledge pieces, flags, reminders and the draft revision before editing or approving the selected content.",
+      "lead": "Read proposed pieces, review flags, reminders and draft revision.",
+      "important": [
+        "Read the draft and its current revision before editing or accepting.",
+        "A preview scan is not publication clearance; review flagged content."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/drafts/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/patch-knowledge-bases-kb-drafts-id",
+      "title": "Edit knowledge draft",
+      "sidebarTitle": "Edit draft",
+      "description": "Edit a proposed knowledge piece while preserving evidence and review requirements. Resolve revision conflicts before saving.",
+      "lead": "Edit one proposed piece while preserving evidence and review requirements.",
+      "important": [
+        "Send edits against the current draft revision.",
+        "On a revision conflict, reread and merge intentionally."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "PATCH",
+      "path": "/knowledge-bases/{kb}/drafts/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-drafts-id-accept",
+      "title": "Accept knowledge draft",
+      "sidebarTitle": "Accept draft",
+      "description": "Approve selected reviewed knowledge pieces and queue publication. Follow the job before claiming the new answers are live.",
+      "lead": "Approve an explicit selection of reviewed pieces and queue publication.",
+      "important": [
+        "Accept only the reviewed draft and current revision.",
+        "Follow the resulting publication work; acceptance alone is not proof it is live."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/drafts/{id}/accept"
+    },
+    {
+      "slug": "api-reference/knowledge/delete-knowledge-bases-kb-drafts-id",
+      "title": "Discard knowledge draft",
+      "sidebarTitle": "Discard draft",
+      "description": "Discard a knowledge review draft while retaining the currently published knowledge. Confirm the intended draft before removal.",
+      "lead": "Discard a review draft while retaining currently published knowledge.",
+      "important": [
+        "Discard the intended unaccepted draft.",
+        "This does not automatically remove already published knowledge."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "DELETE",
+      "path": "/knowledge-bases/{kb}/drafts/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-topics",
+      "title": "List knowledge topics",
+      "sidebarTitle": "List topics",
+      "description": "List current knowledge pieces in stable display order and retain the returned topic identities when opening or editing a piece.",
+      "lead": "List current pieces in their stable display order.",
+      "important": [
+        "Use the current topic IDs and paging values.",
+        "One list page is not the whole knowledge base."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/topics"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-topics-id",
+      "title": "Get knowledge topic",
+      "sidebarTitle": "Get topic",
+      "description": "Read one current knowledge piece, its evidence and saved metadata before preparing a revision-guarded edit.",
+      "lead": "Read one current piece, its evidence and saved metadata.",
+      "important": [
+        "Read the exact topic and revision before updating.",
+        "Preserve source context and distinguish draft from published text."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/topics/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-topics",
+      "title": "Create knowledge topic",
+      "sidebarTitle": "Create topic",
+      "description": "Create a manually written knowledge piece and prepare a fresh index. Check the resulting job before claiming publication.",
+      "lead": "Create a manually written piece and prepare a fresh index.",
+      "important": [
+        "Create a focused topic with the documented operation key.",
+        "Read the resulting job or revision before claiming the answer is live."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/topics"
+    },
+    {
+      "slug": "api-reference/knowledge/patch-knowledge-bases-kb-topics-id",
+      "title": "Update knowledge topic",
+      "sidebarTitle": "Update topic",
+      "description": "Correct a live knowledge piece with its current revision and prepare a replacement index without silently overwriting newer work.",
+      "lead": "Correct a live piece and prepare its replacement index.",
+      "important": [
+        "Apply a narrow edit against the current revision.",
+        "Resolve a conflict by reviewing newer text, not by discarding the guard."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "PATCH",
+      "path": "/knowledge-bases/{kb}/topics/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/delete-knowledge-bases-kb-topics-id",
+      "title": "Delete knowledge topic",
+      "sidebarTitle": "Delete topic",
+      "description": "Remove a current knowledge piece and prevent a source refresh from restoring it. Confirm the revision and track the returned work.",
+      "lead": "Remove a current piece and prevent source refresh from restoring it.",
+      "important": [
+        "Confirm the topic and current revision before deletion.",
+        "Track the returned work before showing completion."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "DELETE",
+      "path": "/knowledge-bases/{kb}/topics/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-topic-search",
+      "title": "Search knowledge topics",
+      "sidebarTitle": "Search topics",
+      "description": "Find related current topics in one knowledge base for management. Search results do not predict an agent’s answer on a real call.",
+      "lead": "Find related current topics for knowledge management.",
+      "important": [
+        "Search the chosen base with a bounded query.",
+        "A search result is not proof of how an agent will answer a real call."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/topic-search"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-bases-kb-unanswered",
+      "title": "List unanswered questions",
+      "sidebarTitle": "List unanswered questions",
+      "description": "Read recent real questions without a retrieval match. Review the question before turning it into a trusted knowledge answer.",
+      "lead": "Read recent real questions from delivered turns without a retrieval match.",
+      "important": [
+        "Review actual unanswered questions within the returned scope.",
+        "Do not turn a customer's question into a trusted fact without review."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge-bases/{kb}/unanswered"
+    },
+    {
+      "slug": "api-reference/knowledge/patch-knowledge-bases-kb-settings",
+      "title": "Update knowledge settings",
+      "sidebarTitle": "Update settings",
+      "description": "Update knowledge channels, matching mode or the not-found sentence, using the required guards and preserving omitted settings.",
+      "lead": "Change enabled channels, matching mode or the not-found sentence.",
+      "important": [
+        "Change only the intended settings with the required guards.",
+        "Read back the saved values before changing your UI's assumptions."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "PATCH",
+      "path": "/knowledge-bases/{kb}/settings"
+    },
+    {
+      "slug": "api-reference/knowledge/post-agents-target-knowledge-base-test-sessions",
+      "title": "Start knowledge test",
+      "sidebarTitle": "Start test",
+      "description": "Start a knowledge-only simulated session for an agent with live knowledge. This does not place a real telephone call.",
+      "lead": "Start a knowledge-only simulated test session for an agent with live knowledge.",
+      "important": [
+        "A test session checks the selected agent's knowledge.",
+        "It is separate from a real telephone call and still follows its documented usage limits."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/agents/{target}/knowledge-base/test-sessions"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-test-sessions-id",
+      "title": "Get knowledge test session",
+      "sidebarTitle": "Get test session",
+      "description": "Read the saved knowledge-test conversation and current session state. Missing answers and failed reads remain unconfirmed.",
+      "lead": "Read the saved knowledge-only conversation and its current state.",
+      "important": [
+        "Read the saved session and its state.",
+        "A missing answer or failed read is not a successful knowledge test."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/test-sessions/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-test-sessions-id-messages",
+      "title": "Ask a knowledge test question",
+      "sidebarTitle": "Ask a test question",
+      "description": "Ask a simulated knowledge question and inspect its supplied-piece evidence. Keep one operation identity for the intended message.",
+      "lead": "Ask a simulated question using current knowledge and return supplied-piece evidence.",
+      "important": [
+        "Save one operation identity for the intended test message.",
+        "Check the answer and cited knowledge; replay does not authorise duplicate paid work."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge/test-sessions/{id}/messages"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-test-sessions-id-cancel",
+      "title": "Cancel knowledge test",
+      "sidebarTitle": "Cancel test",
+      "description": "Cancel a simulated knowledge session and related unfinished work. Cancellation does not undo work already performed.",
+      "lead": "Cancel a simulated test session and related unfinished work.",
+      "important": [
+        "Cancel the intended active test session.",
+        "Work already performed is not undone by cancellation."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge/test-sessions/{id}/cancel"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-jobs-id",
+      "title": "Get knowledge job",
+      "sidebarTitle": "Get job",
+      "description": "Read knowledge job state, progress, result and safe failure details. Interpret readiness using the job kind and result.",
+      "lead": "Poll authoritative job state, progress, result and safe failure details.",
+      "important": [
+        "Follow state, stage and error together.",
+        "ready does not always mean text was published; inspect the job kind and result."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/jobs/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-jobs-id-retry",
+      "title": "Retry knowledge job",
+      "sidebarTitle": "Retry job",
+      "description": "Retry a failed knowledge job only when its revision and attempt limit permit it. Review the recorded cause first.",
+      "lead": "Retry a failed job when its revision and attempt limit still permit it.",
+      "important": [
+        "Retry only a job that the API permits to retry.",
+        "Fix its recorded failure first; a new request is not a universal recovery mechanism."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge/jobs/{id}/retry"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-jobs-id-cancel",
+      "title": "Cancel knowledge job",
+      "sidebarTitle": "Cancel job",
+      "description": "Cancel unfinished knowledge work before installation while keeping published knowledge and work already performed.",
+      "lead": "Cancel pending work before installation while keeping published knowledge.",
+      "important": [
+        "Cancel eligible unfinished work.",
+        "Cancellation cannot undo a completed publication or work already charged."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge/jobs/{id}/cancel"
+    },
+    {
+      "slug": "api-reference/knowledge/post-knowledge-bases-kb-exports",
+      "title": "Create knowledge export",
+      "sidebarTitle": "Create export",
+      "description": "Queue a private export of accepted knowledge and settings, then wait for readiness before requesting the download.",
+      "lead": "Queue a private export of accepted knowledge and settings.",
+      "important": [
+        "Create an export for the intended base and revision.",
+        "Wait for export readiness before requesting the download."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "POST",
+      "path": "/knowledge-bases/{kb}/exports"
+    },
+    {
+      "slug": "api-reference/knowledge/get-knowledge-exports-id",
+      "title": "Download knowledge export",
+      "sidebarTitle": "Download export",
+      "description": "Download a ready private knowledge export as structured JSON or readable text through the authenticated export route.",
+      "lead": "Download a ready private export as structured JSON or readable text.",
+      "important": [
+        "Download the prepared export through the authenticated route.",
+        "Keep private knowledge files out of public URLs and logs."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "GET",
+      "path": "/knowledge/exports/{id}"
+    },
+    {
+      "slug": "api-reference/knowledge/delete-agents-target-knowledge-base",
+      "title": "Delete agent knowledge",
+      "sidebarTitle": "Delete agent knowledge",
+      "description": "Revoke an agent’s live knowledge and queue private-data deletion. Follow the job and remaining-object count to confirm cleanup.",
+      "lead": "Revoke an agent’s live knowledge immediately and queue private-data deletion.",
+      "important": [
+        "Access is revoked before private-data cleanup finishes; confirm the intended agent first.",
+        "Follow the deletion job until deleted and private_objects_remaining is zero. The revoked deletion cannot be cancelled."
+      ],
+      "business": "guides/business/knowledge",
+      "developer": "guides/developer/knowledge",
+      "method": "DELETE",
+      "path": "/agents/{target}/knowledge-base"
+    },
+    {
+      "slug": "api-reference/web-agent/get-agent-web-number",
+      "title": "Read web agent settings",
+      "sidebarTitle": "Read web agent settings",
+      "description": "Read website agent settings for one owned number, including its current revision and optional appearance configuration.",
+      "lead": "Read website agent settings for one owned number, including its current revision and optional appearance configuration.",
+      "important": [
+        "Read the web settings for the owned number.",
+        "A saved setting is not a live browser connection test."
+      ],
+      "business": "guides/voice-widget",
+      "developer": "web-assistant/overview",
+      "method": "GET",
+      "path": "/agent-web/{number}"
+    },
+    {
+      "slug": "api-reference/web-agent/patch-agent-web-number",
+      "title": "Update web agent settings",
+      "sidebarTitle": "Update web agent settings",
+      "description": "Update website agent settings for one owned number using its current revision. A stale revision is refused so another editor’s change is preserved.",
+      "lead": "Update website agent settings for one owned number using its current revision. A stale revision is refused so another editor’s change is preserved.",
+      "important": [
+        "Change only the intended web settings.",
+        "Read back the result and test the actual browser flow before rollout."
+      ],
+      "business": "guides/voice-widget",
+      "developer": "web-assistant/overview",
+      "method": "PATCH",
+      "path": "/agent-web/{number}"
+    },
+    {
+      "slug": "api-reference/agent-inbox/get-agent-inbox-features",
+      "title": "Check inbox availability",
+      "sidebarTitle": "Check inbox availability",
+      "description": "Check whether the Nixflex agent inbox is enabled in this environment. The feature check remains available when other inbox operations are disabled.",
+      "lead": "Read whether the agent inbox feature is enabled in this environment. This check remains available when inbox operations are disabled.",
+      "important": [
+        "Use the enabled boolean to decide whether to show the inbox.",
+        "A failed availability request is not the same as enabled:false."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "GET",
+      "path": "/agent-inbox/features"
+    },
+    {
+      "slug": "api-reference/agent-inbox/get-agent-inbox-numbers",
+      "title": "List inbox numbers",
+      "sidebarTitle": "List inbox numbers",
+      "description": "List owned numbers available to the Nixflex inbox and their active agent labels. Pending number imports are excluded from the list.",
+      "lead": "List owned numbers available to the inbox and active agent labels. Pending number imports are excluded; both API and dashboard number sources can appear.",
+      "important": [
+        "Use the returned eligible channel and number combination.",
+        "Do not infer inbox access from an unrelated phone-number list."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "GET",
+      "path": "/agent-inbox/numbers"
+    },
+    {
+      "slug": "api-reference/agent-inbox/get-agent-inbox-channel-number",
+      "title": "List inbox conversations",
+      "sidebarTitle": "List inbox conversations",
+      "description": "List conversations for one owned number and channel. Read-only listing does not mark messages as read.",
+      "lead": "List conversations for one owned number and channel. Read-only listing does not mark messages as read.",
+      "important": [
+        "Keep the channel and number fixed while paging.",
+        "A conversation summary is not the full message thread."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "GET",
+      "path": "/agent-inbox/{channel}/{number}"
+    },
+    {
+      "slug": "api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread",
+      "title": "Read an inbox thread",
+      "sidebarTitle": "Read inbox thread",
+      "description": "Read retained messages in one owned Nixflex inbox thread. The newest page is selected first, with its messages returned in chronological order.",
+      "lead": "Read retained messages in one owned inbox conversation. The newest page is selected first and returned in chronological order; this read does not mark messages as read.",
+      "important": [
+        "Read only an account-owned thread in its original channel.",
+        "Keep private messages out of logs and shared AI prompts."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "GET",
+      "path": "/agent-inbox/{channel}/{number}/thread/{thread}"
+    },
+    {
+      "slug": "api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread",
+      "title": "Update an inbox thread",
+      "sidebarTitle": "Update inbox thread",
+      "description": "Update a Nixflex inbox thread's archive state or acknowledge messages through a known read version. Listing messages alone does not mark them read.",
+      "lead": "Change an owned conversation’s archive state or acknowledge messages through a known read version. This does not delete content or extend retention.",
+      "important": [
+        "This updates supported thread state; it is not a send-message endpoint.",
+        "Read the current thread before resolving an uncertain update."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "PATCH",
+      "path": "/agent-inbox/{channel}/{number}/thread/{thread}"
+    },
+    {
+      "slug": "api-reference/agent-inbox/get-agent-inbox-retention",
+      "title": "Read inbox retention",
+      "sidebarTitle": "Read inbox retention",
+      "description": "Read the Nixflex account retention default and inbox cleanup availability. Include a number to resolve retention for its assigned agent.",
+      "lead": "Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned agent’s web-message retention policy.",
+      "important": [
+        "Use the returned policy for inbox history.",
+        "A retention setting does not prove that every background deletion has finished."
+      ],
+      "business": "guides/business/agent-inbox",
+      "developer": "guides/developer/agent-inbox",
+      "method": "GET",
+      "path": "/agent-inbox/retention"
+    },
+    {
+      "slug": "api-reference/caller-context/delete",
+      "title": "Delete caller context",
+      "sidebarTitle": "Delete caller context",
+      "description": "Delete the complete Nixflex caller-context record for one caller on an owned business number. Review the record's scope before removing it.",
+      "lead": "Delete the complete caller-context record for one caller on one account-owned business number. This removes both customer-supplied and engine-learned context in that record.",
+      "important": [
+        "Delete the intended caller context for the selected number.",
+        "This does not erase all call records or copies held by external systems."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/caller-context",
+      "method": "DELETE",
+      "path": "/phone-numbers/{phoneNumber}/callers/{callerNumber}"
+    },
+    {
+      "slug": "api-reference/caller-context/get",
+      "title": "Get caller context",
+      "sidebarTitle": "Get caller context",
+      "description": "Read saved Nixflex caller context for one caller and owned business number. Handle a missing record without inventing previous caller details.",
+      "lead": "Read the customer-supplied and engine-learned context for one caller on one owned phone number.",
+      "important": [
+        "Context belongs to the selected phone number and caller.",
+        "Treat the returned profile as private data, not instructions to execute."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/caller-context",
+      "method": "GET",
+      "path": "/phone-numbers/{phoneNumber}/callers/{callerNumber}"
+    },
+    {
+      "slug": "api-reference/caller-context/set",
+      "title": "Set caller context",
+      "sidebarTitle": "Set caller context",
+      "description": "Set supplied Nixflex caller context for one caller on an owned business number. Review saved-field behaviour and the response before retrying.",
+      "lead": "Set customer-supplied details for one caller on one owned phone number.",
+      "important": [
+        "Save only the caller fields needed for the intended workflow.",
+        "Read back after an uncertain response; do not overwrite newer context blindly."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/caller-context",
+      "method": "PUT",
+      "path": "/phone-numbers/{phoneNumber}/callers/{callerNumber}",
+      "introDetails": "The record is created if needed. Omitted fields keep their values; null removes a value. last_call and open_item are engine-only and are rejected."
+    },
+    {
+      "slug": "api-reference/caller-context/import",
+      "title": "Import caller context",
+      "sidebarTitle": "Import caller context",
+      "description": "Import caller context for an owned Nixflex business number. Each row merges supplied customer context into the caller's existing record.",
+      "lead": "Import customer-supplied context for callers on one account-owned business number. Each row merges supplied fields into that caller’s saved record; omitted fields stay unchanged.",
+      "important": [
+        "Review the rows and their exact caller-number pairing.",
+        "Inspect row-level results; one accepted request does not prove every row succeeded."
+      ],
+      "business": "guides/business/call-actions",
+      "developer": "concepts/caller-context",
+      "method": "POST",
+      "path": "/phone-numbers/{phoneNumber}/callers/import"
+    },
+    {
+      "slug": "api-reference/contact-controls/post-contact-hours-preview",
+      "title": "Preview contact hours",
+      "sidebarTitle": "Preview contact hours",
+      "description": "Preview recipient-local Nixflex contact windows without sending calls or SMS. Treat the result as advisory and recheck policy at dispatch.",
+      "lead": "Preview recipient-local contact windows without sending calls, SMS or campaign work. The result is advisory and expires after one minute; final dispatch checks still apply.",
+      "important": [
+        "The preview is advice for the supplied recipient location and time.",
+        "It neither sends a message nor reserves a future contact window."
+      ],
+      "business": "guides/business/contact-controls",
+      "developer": "guides/developer/contact-controls",
+      "method": "POST",
+      "path": "/contact-hours/preview"
+    },
+    {
+      "slug": "api-reference/contact-controls/get-contact-suppressions",
+      "title": "List contact suppressions",
+      "sidebarTitle": "List contact suppressions",
+      "description": "List stored Nixflex do-not-contact entries in a channel bucket. Understand the all-channel bucket and how it differs from a combined list.",
+      "lead": "List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all channels; it does not combine the voice and SMS buckets.",
+      "important": [
+        "Check the saved scope and contact identifiers.",
+        "A missing row is not proof of consent to contact that person."
+      ],
+      "business": "guides/business/contact-controls",
+      "developer": "guides/developer/contact-controls",
+      "method": "GET",
+      "path": "/contact-suppressions"
+    },
+    {
+      "slug": "api-reference/contact-controls/post-contact-suppressions",
+      "title": "Add contact suppressions",
+      "sidebarTitle": "Add contact suppressions",
+      "description": "Add Nixflex do-not-contact entries for future contact checks. Existing entries are retained; review the number, channel and suppression reason.",
+      "lead": "Add account-owned do-not-contact entries for future contact checks. Existing entries are retained; a new owner request cannot replace recipient opt-out evidence.",
+      "important": [
+        "Add only the intended recipients and scope.",
+        "Suppression blocks eligible future work; it cannot recall an already dispatched contact."
+      ],
+      "business": "guides/business/contact-controls",
+      "developer": "guides/developer/contact-controls",
+      "method": "POST",
+      "path": "/contact-suppressions"
+    },
+    {
+      "slug": "api-reference/contact-controls/delete-contact-suppressions",
+      "title": "Remove a contact suppression",
+      "sidebarTitle": "Remove contact suppression",
+      "description": "Remove one explicitly removable, owner-created Nixflex suppression. Recipient opt-outs and entries without removal permission remain protected.",
+      "lead": "Remove one explicitly removable owner-created suppression. Recipient opt-outs and entries without verified owner-removal permission remain locked.",
+      "important": [
+        "Removing suppression changes future contact eligibility.",
+        "It does not grant consent or override recipient-local contact hours."
+      ],
+      "business": "guides/business/contact-controls",
+      "developer": "guides/developer/contact-controls",
+      "method": "DELETE",
+      "path": "/contact-suppressions"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-calcom-number-phoneNumber",
+      "title": "Get Cal.com settings",
+      "sidebarTitle": "Get Cal.com settings",
+      "description": "Read the saved Cal.com settings for an owned phone number. Secret values are represented by configuration flags.",
+      "lead": "Read the saved Cal.com settings for an owned phone number. Secret values are represented by configuration flags.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "Only one booking provider can be active for a number."
+      ],
+      "business": "guides/business/calcom",
+      "developer": "actions/calcom",
+      "method": "GET",
+      "path": "/integrations/calcom/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-calcom-number-phoneNumber",
+      "title": "Set Cal.com settings",
+      "sidebarTitle": "Set Cal.com settings",
+      "description": "Replace Cal.com settings for one owned number. Omitted configuration values do not retain the previous saved values.",
+      "lead": "Save Cal.com settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Only one booking provider can be active for a number."
+      ],
+      "business": "guides/business/calcom",
+      "developer": "actions/calcom",
+      "method": "PUT",
+      "path": "/integrations/calcom/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-calcom-number-phoneNumber",
+      "title": "Delete Cal.com settings",
+      "sidebarTitle": "Delete Cal.com settings",
+      "description": "Remove saved Cal.com settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
+      "lead": "Remove the saved Cal.com configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "Only one booking provider can be active for a number."
+      ],
+      "business": "guides/business/calcom",
+      "developer": "actions/calcom",
+      "method": "DELETE",
+      "path": "/integrations/calcom/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-slack-number-phoneNumber",
+      "title": "Get Slack settings",
+      "sidebarTitle": "Get Slack settings",
+      "description": "Read the saved Slack settings for an owned phone number. Secret values are represented by configuration flags.",
+      "lead": "Read the saved Slack settings for an owned phone number. Secret values are represented by configuration flags.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "Saving a destination does not prove a notification reached the channel."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/slack",
+      "method": "GET",
+      "path": "/integrations/slack/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-slack-number-phoneNumber",
+      "title": "Set Slack settings",
+      "sidebarTitle": "Set Slack settings",
+      "description": "Replace saved Slack settings for an owned Nixflex number. Supply the complete intended configuration and review omitted-field behaviour.",
+      "lead": "Save Slack settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Saving a destination does not prove a notification reached the channel."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/slack",
+      "method": "PUT",
+      "path": "/integrations/slack/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-slack-number-phoneNumber",
+      "title": "Delete Slack settings",
+      "sidebarTitle": "Delete Slack settings",
+      "description": "Remove saved Slack settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
+      "lead": "Remove the saved Slack configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "Saving a destination does not prove a notification reached the channel."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/slack",
+      "method": "DELETE",
+      "path": "/integrations/slack/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-zapier-number-phoneNumber",
+      "title": "Get Zapier settings",
+      "sidebarTitle": "Get Zapier settings",
+      "description": "Read the saved Zapier settings for an owned phone number. Secret values are represented by configuration flags.",
+      "lead": "Read the saved Zapier settings for an owned phone number. Secret values are represented by configuration flags.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "GET",
+      "path": "/integrations/zapier/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-zapier-number-phoneNumber",
+      "title": "Set Zapier settings",
+      "sidebarTitle": "Set Zapier settings",
+      "description": "Replace Zapier settings for one owned number, then read back the destination. Saving it does not prove event delivery.",
+      "lead": "Save Zapier settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "PUT",
+      "path": "/integrations/zapier/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-zapier-number-phoneNumber",
+      "title": "Delete Zapier settings",
+      "sidebarTitle": "Delete Zapier settings",
+      "description": "Remove saved Zapier settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
+      "lead": "Remove the saved Zapier configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "DELETE",
+      "path": "/integrations/zapier/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-make-number-phoneNumber",
+      "title": "Get Make settings",
+      "sidebarTitle": "Get Make settings",
+      "description": "Read the saved Make settings for an owned phone number. Secret values are represented by configuration flags.",
+      "lead": "Read the saved Make settings for an owned phone number. Secret values are represented by configuration flags.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "GET",
+      "path": "/integrations/make/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-make-number-phoneNumber",
+      "title": "Set Make settings",
+      "sidebarTitle": "Set Make settings",
+      "description": "Replace saved Make settings for an owned Nixflex number. Supply the complete intended configuration and review omitted-field behaviour.",
+      "lead": "Save Make settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "PUT",
+      "path": "/integrations/make/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-make-number-phoneNumber",
+      "title": "Delete Make settings",
+      "sidebarTitle": "Delete Make settings",
+      "description": "Remove the saved Make configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "lead": "Remove the saved Make configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "An automation destination must handle retries without repeating business actions."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/zapier-make",
+      "method": "DELETE",
+      "path": "/integrations/make/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-gohighlevel-number-phoneNumber",
+      "title": "Get GoHighLevel settings",
+      "sidebarTitle": "Get GoHighLevel settings",
+      "description": "Read saved GoHighLevel settings for an owned Nixflex number. Configuration flags indicate secret presence without returning secret values.",
+      "lead": "Read the saved GoHighLevel settings for an owned phone number. Secret values are represented by configuration flags.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "A saved connection is not proof that a contact update reached the external system."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/gohighlevel",
+      "method": "GET",
+      "path": "/integrations/gohighlevel/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber",
+      "title": "Set GoHighLevel settings",
+      "sidebarTitle": "Set GoHighLevel settings",
+      "description": "Replace saved GoHighLevel settings for an owned Nixflex number. Supply the complete intended configuration for this integration.",
+      "lead": "Save GoHighLevel settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "A saved connection is not proof that a contact update reached the external system."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/gohighlevel",
+      "method": "PUT",
+      "path": "/integrations/gohighlevel/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-gohighlevel-number-phoneNumber",
+      "title": "Delete GoHighLevel settings",
+      "sidebarTitle": "Delete GoHighLevel settings",
+      "description": "Remove saved GoHighLevel settings for an owned Nixflex number. This clears the integration configuration without disconnecting the phone number.",
+      "lead": "Remove the saved GoHighLevel configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "A saved connection is not proof that a contact update reached the external system."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "integrations/gohighlevel",
+      "method": "DELETE",
+      "path": "/integrations/gohighlevel/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-precall-number-phoneNumber",
+      "title": "Get pre-call gate for number",
+      "sidebarTitle": "Get pre-call gate for number",
+      "description": "Read the pre-call gate for an owned Nixflex number. A saved number-specific gate overrides the default from its assigned agent.",
+      "lead": "Read the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent default. Clearing it restores the agent default when one exists.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "GET",
+      "path": "/integrations/precall/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-precall-agent-agentId",
+      "title": "Get pre-call gate for agent",
+      "sidebarTitle": "Get pre-call gate for agent",
+      "description": "Read an owned Nixflex agent's default pre-call gate. Number-specific settings can override this default for individual numbers.",
+      "lead": "Read the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent; a number-specific gate takes precedence.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "GET",
+      "path": "/integrations/precall/agent/{agentId}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-precall-number-phoneNumber",
+      "title": "Set pre-call gate for number",
+      "sidebarTitle": "Set pre-call gate for number",
+      "description": "Set the pre-call gate setting for an owned number. A number-specific gate overrides its agent default. Clearing it restores the agent default when one exists.",
+      "lead": "Set the pre-call gate setting for an owned number. A number-specific gate overrides its agent default. Clearing it restores the agent default when one exists.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "PUT",
+      "path": "/integrations/precall/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-precall-agent-agentId",
+      "title": "Set pre-call gate for agent",
+      "sidebarTitle": "Set pre-call gate for agent",
+      "description": "Set an owned Nixflex agent's default pre-call gate. Number-specific settings can override this default for individual numbers.",
+      "lead": "Set the pre-call gate setting for an owned agent. This is the default for numbers on the agent; a number-specific gate takes precedence.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "PUT",
+      "path": "/integrations/precall/agent/{agentId}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-precall-number-phoneNumber",
+      "title": "Clear pre-call gate for number",
+      "sidebarTitle": "Clear pre-call gate for number",
+      "description": "Clear a saved number-specific Nixflex pre-call gate. Review the assigned agent's default when deciding the number's resulting gate behaviour.",
+      "lead": "Clear the saved pre-call gate setting for an owned number. A number-specific gate overrides its agent default. Clearing it restores the agent default when one exists.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "DELETE",
+      "path": "/integrations/precall/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-precall-agent-agentId",
+      "title": "Clear pre-call gate for agent",
+      "sidebarTitle": "Clear pre-call gate for agent",
+      "description": "Clear the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent; a number-specific gate takes precedence.",
+      "lead": "Clear the saved pre-call gate setting for an owned agent. This is the default for numbers on the agent; a number-specific gate takes precedence.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "The five-second pre-call hook is fail-open; it is not a guaranteed call-blocking control."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/precall-gate",
+      "method": "DELETE",
+      "path": "/integrations/precall/agent/{agentId}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber",
+      "title": "List custom functions",
+      "sidebarTitle": "List custom functions",
+      "description": "List up to 15 saved custom functions for an owned Nixflex number. An empty list means no matching functions are saved for that account and number.",
+      "lead": "Read up to 15 saved custom functions for this account and number. No matching rows returns an empty list; the handler does not separately prove number ownership.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "Verify signed inputs before executing consequential work."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/custom-functions",
+      "method": "GET",
+      "path": "/integrations/custom-functions/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber",
+      "title": "Create a custom function",
+      "sidebarTitle": "Create custom function",
+      "description": "Create a custom function for an owned Nixflex number. Each number allows up to 15 functions with names unique within that number.",
+      "lead": "Create one function for an owned number. Each number can have at most 15 functions; names must be unique for that number.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Verify signed inputs before executing consequential work."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/custom-functions",
+      "method": "POST",
+      "path": "/integrations/custom-functions/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/patch-integrations-custom-functions-number-phoneNumber-id",
+      "title": "Update a custom function",
+      "sidebarTitle": "Update custom function",
+      "description": "Update selected fields of a custom function for an owned Nixflex number. Omitted fields keep their saved values.",
+      "lead": "Change only supplied fields of one owned custom function. Omitted fields keep their saved values; this does not create a missing function.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Verify signed inputs before executing consequential work."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/custom-functions",
+      "method": "PATCH",
+      "path": "/integrations/custom-functions/number/{phoneNumber}/{id}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-custom-functions-number-phoneNumber-id",
+      "title": "Delete a custom function",
+      "sidebarTitle": "Delete custom function",
+      "description": "Delete one custom function by its account, Nixflex number and function ID. Review the response and missing-function behaviour before retrying.",
+      "lead": "Remove one custom function scoped to the account, number and function ID. A missing matching row also returns success.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "Verify signed inputs before executing consequential work."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/custom-functions",
+      "method": "DELETE",
+      "path": "/integrations/custom-functions/number/{phoneNumber}/{id}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-webhook-number-phoneNumber",
+      "title": "Get first webhook",
+      "sidebarTitle": "Get first webhook",
+      "description": "Read the primary webhook setting for an owned Nixflex number. Primary and secondary slots are configured independently.",
+      "lead": "Read the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "GET",
+      "path": "/integrations/webhook/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-webhook2-number-phoneNumber",
+      "title": "Get second webhook",
+      "sidebarTitle": "Get second webhook",
+      "description": "Read the secondary webhook setting for an owned Nixflex number. Secondary and primary slots are configured independently.",
+      "lead": "Read the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "GET",
+      "path": "/integrations/webhook2/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-webhook-number-phoneNumber",
+      "title": "Set first webhook",
+      "sidebarTitle": "Set first webhook",
+      "description": "Set the primary webhook for an owned Nixflex number. Review event contracts, signature verification and duplicate delivery handling.",
+      "lead": "Set the first webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "PUT",
+      "path": "/integrations/webhook/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-webhook2-number-phoneNumber",
+      "title": "Set second webhook",
+      "sidebarTitle": "Set second webhook",
+      "description": "Set the secondary webhook for an owned Nixflex number. Review event contracts, signature verification and duplicate delivery handling.",
+      "lead": "Set the second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "PUT",
+      "path": "/integrations/webhook2/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-webhook-number-phoneNumber",
+      "title": "Clear first webhook",
+      "sidebarTitle": "Clear first webhook",
+      "description": "Clear the primary webhook setting for an owned Nixflex number. This request targets the primary slot independently of the secondary slot.",
+      "lead": "Clear the saved first webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "DELETE",
+      "path": "/integrations/webhook/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-webhook2-number-phoneNumber",
+      "title": "Clear second webhook",
+      "sidebarTitle": "Clear second webhook",
+      "description": "Clear the secondary webhook setting for an owned Nixflex number. This request targets the secondary slot independently of the primary slot.",
+      "lead": "Clear the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "Verify raw-body signatures and deduplicate durably before acknowledging events."
+      ],
+      "business": "guides/business/integrations",
+      "developer": "advanced/webhooks",
+      "method": "DELETE",
+      "path": "/integrations/webhook2/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/get-integrations-web-calls-number-phoneNumber",
+      "title": "Get web calls",
+      "sidebarTitle": "Get web calls",
+      "description": "Read the website voice-call switch for an owned number. Reading the saved setting does not start or prove a browser call.",
+      "lead": "Read the saved web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or changing the switch does not start a call.",
+      "important": [
+        "Read the current setting for this exact owned target before changing it.",
+        "A saved web-call configuration is not proof a browser session connected."
+      ],
+      "business": "guides/voice-widget",
+      "developer": "web-assistant/overview",
+      "method": "GET",
+      "path": "/integrations/web-calls/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/put-integrations-web-calls-number-phoneNumber",
+      "title": "Set web calls",
+      "sidebarTitle": "Set web calls",
+      "description": "Set the website voice-call switch for an owned Nixflex number. Review its saved state without starting a web call.",
+      "lead": "Set the web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or changing the switch does not start a call.",
+      "important": [
+        "Save the setting for the exact owned target, then read it back to confirm.",
+        "A saved web-call configuration is not proof a browser session connected."
+      ],
+      "business": "guides/voice-widget",
+      "developer": "web-assistant/overview",
+      "method": "PUT",
+      "path": "/integrations/web-calls/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/delete-integrations-web-calls-number-phoneNumber",
+      "title": "Clear web calls",
+      "sidebarTitle": "Clear web calls",
+      "description": "Clear the website voice-call switch for an owned number. This changes configuration without starting a browser call.",
+      "lead": "Clear the saved web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or changing the switch does not start a call.",
+      "important": [
+        "Clear only the intended target setting; already dispatched work cannot be recalled.",
+        "A saved web-call configuration is not proof a browser session connected."
+      ],
+      "business": "guides/voice-widget",
+      "developer": "web-assistant/overview",
+      "method": "DELETE",
+      "path": "/integrations/web-calls/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/organisation/roles",
+      "title": "Check organisation roles and permissions",
+      "sidebarTitle": "Roles and permissions",
+      "description": "Compare Owner, Admin and Member permissions in Nixflex. Keep server-side API key authority separate from personal dashboard sessions and membership checks.",
+      "lead": "Check the actor role and operation before offering an organisation action in your app.",
+      "important": [
+        "Use the actor role and the target action together to decide access.",
+        "Never use an organisation key to bypass a personal role restriction in a client."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "source": "spec-source/c13-concepts/organisation--roles.mdx.txt"
+    },
+    {
+      "slug": "api-reference/organisation/get-organisation",
+      "title": "Get organisation context",
+      "sidebarTitle": "Get context",
+      "description": "Read the Nixflex organisation selected by the authenticated credential, including its current permissions and account context.",
+      "lead": "Read the organisation selected by the authenticated credential. The result includes current permissions and identity fields, without a signing secret or balance.",
+      "important": [
+        "Use this context to render the current organisation and role.",
+        "An account API key and a personal session have different authority."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "GET",
+      "path": "/organisation"
+    },
+    {
+      "slug": "api-reference/organisation/get-organisation-members",
+      "title": "List organisation members",
+      "sidebarTitle": "List members",
+      "description": "List Nixflex organisation members, up to 100 pending or expired invitations, and current safety limits. Review role permissions before changes.",
+      "lead": "Read active members, up to 100 pending or expired invitations, and current safety limits. The Owner and Admin can view the team; Members cannot.",
+      "important": [
+        "Use member IDs from this organisation for later actions.",
+        "Do not expose private membership data in public pages or logs."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "GET",
+      "path": "/organisation/members"
+    },
+    {
+      "slug": "api-reference/organisation/get-organisation-activity",
+      "title": "List organisation activity",
+      "sidebarTitle": "List activity",
+      "description": "Read Nixflex organisation activity, newest first, with up to 50 events per JSON page. Check role permissions and paging rules.",
+      "lead": "Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin personal sessions can read activity.",
+      "important": [
+        "Use activity as an audit trail within its retention limits.",
+        "An activity row is not a complete provider delivery or billing record."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "GET",
+      "path": "/organisation/activity"
+    },
+    {
+      "slug": "api-reference/organisation/post-organisation-claim-invite",
+      "title": "Request an owner claim",
+      "sidebarTitle": "Request an owner claim",
+      "description": "Invite a verified recipient to claim an existing, unclaimed Nixflex API-only account. Sending the invitation does not complete the claim.",
+      "lead": "Start an email invitation to claim this existing, unclaimed API-only account. The verified recipient must accept using their own personal login; this does not create an account or new credit.",
+      "important": [
+        "This starts the documented owner-claim flow.",
+        "Requesting a claim does not itself prove ownership or grant Owner access."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "POST",
+      "path": "/organisation/claim-invite"
+    },
+    {
+      "slug": "api-reference/organisation/post-organisation-invites",
+      "title": "Invite a teammate",
+      "sidebarTitle": "Invite a teammate",
+      "description": "Send a 24-hour Nixflex team invitation. The recipient must accept using their own verified login; opening the email does not add membership.",
+      "lead": "Send a 24-hour team invitation. The invited person accepts using their own verified login. Opening an email does not accept the invitation.",
+      "important": [
+        "Invite the intended person with the allowed role.",
+        "An accepted invitation request does not prove the email was delivered or accepted."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "POST",
+      "path": "/organisation/invites"
+    },
+    {
+      "slug": "api-reference/organisation/post-organisation-invites-id-resend",
+      "title": "Resend a team invitation",
+      "sidebarTitle": "Resend a team invitation",
+      "description": "Replace a Nixflex team invitation with a new ID and 24-hour link. The previous link becomes invalid and sending limits still apply.",
+      "lead": "Invalidate the old invitation and send a replacement with a new ID and 24-hour link. Resending uses the daily invitation quota again.",
+      "important": [
+        "Use the existing invitation ID and respect its current state.",
+        "A resend does not guarantee email delivery or reset every invitation rule."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "POST",
+      "path": "/organisation/invites/{id}/resend"
+    },
+    {
+      "slug": "api-reference/organisation/delete-organisation-invites-id",
+      "title": "Revoke a team invitation",
+      "sidebarTitle": "Revoke a team invitation",
+      "description": "Revoke a pending or expired Nixflex invitation before acceptance. The link becomes invalid; this does not remove an existing team member.",
+      "lead": "Revoke a pending or expired invitation before it is accepted. This invalidates its link; it does not remove an existing teammate.",
+      "important": [
+        "Revoke the intended invitation before it is claimed.",
+        "Read the result; revocation is not the same as removing an existing member."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "DELETE",
+      "path": "/organisation/invites/{id}"
+    },
+    {
+      "slug": "api-reference/organisation/patch-organisation-members-id",
+      "title": "Change an organisation role",
+      "sidebarTitle": "Change member role",
+      "description": "Change a non-Owner Nixflex member to Admin or Member using Owner authority. Review the resulting permissions before saving the role.",
+      "lead": "Change a non-Owner member to Admin or Member. Only Owner authority may change roles. This is not an ownership transfer.",
+      "important": [
+        "Check the actor's role and the target's current role first.",
+        "Owner protections still apply; a client must not work around a refused role change."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "PATCH",
+      "path": "/organisation/members/{id}"
+    },
+    {
+      "slug": "api-reference/organisation/delete-organisation-members-id",
+      "title": "Remove an organisation member",
+      "sidebarTitle": "Remove member",
+      "description": "Remove one non-Owner member from a Nixflex organisation. Shared work and the shared API key remain; review any separate access that also needs removal.",
+      "lead": "Remove one non-Owner member from this organisation. Shared work and the shared API key remain. A successful response does not always confirm live disconnection.",
+      "important": [
+        "Check who will lose access before removing a member.",
+        "Owner and self-removal rules differ; follow the returned refusal."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "DELETE",
+      "path": "/organisation/members/{id}"
+    },
+    {
+      "slug": "api-reference/organisation/patch-organisation-name",
+      "title": "Rename an organisation",
+      "sidebarTitle": "Rename an organisation",
+      "description": "Rename a Nixflex organisation using its API key or the Owner's personal session. Set the business name shown for that organisation.",
+      "lead": "Set the business name shown for this organisation. Only the Owner personal session or the organisation API key can rename it.",
+      "important": [
+        "This changes the organisation display name.",
+        "It does not change account identity, credentials or ownership."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "PATCH",
+      "path": "/organisation/name"
+    },
+    {
+      "slug": "api-reference/organisation/get-organisation-signing-secret",
+      "title": "Get the signing secret",
+      "sidebarTitle": "Get the signing secret",
+      "description": "Privately retrieve the Nixflex organisation signing secret to verify event deliveries. Keep it server-side and out of logs, browsers and shared output.",
+      "lead": "Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a private secret store; never expose it in logs, chat or tool output.",
+      "important": [
+        "Retrieve this secret only through the authorised Owner workflow.",
+        "Keep the stable signing secret separate from the API credential and out of logs."
+      ],
+      "business": "guides/business/team",
+      "developer": "guides/developer/organisations",
+      "method": "GET",
+      "path": "/organisation/signing-secret"
+    },
+    {
+      "slug": "api-reference/account/create-key",
+      "title": "Create an API account",
+      "sidebarTitle": "Create API account",
+      "description": "Create a separate Nixflex API-only account and its credential. This does not add another key to an existing account.",
+      "lead": "Create a separate API-only account and its credential. This does not add another key to an existing organisation, create a dashboard login, or grant trial credit.",
+      "important": [
+        "This creates a real account credential; save it in secret storage.",
+        "A lost response must be reconciled before creating another account."
+      ],
+      "business": "guides/business/team-ownership",
+      "developer": "authentication",
+      "method": "POST",
+      "path": "/keys"
+    },
+    {
+      "slug": "api-reference/account/rotate-key",
+      "title": "Rotate the API key",
+      "sidebarTitle": "Rotate API key",
+      "description": "Rotate the Nixflex account's API secret immediately while keeping its key ID. Plan the change because the old secret stops working.",
+      "lead": "Replace the current account secret immediately. The key ID remains the same; the old secret stops working when rotation succeeds. The organisation signing secret is separate and does not rotate here.",
+      "important": [
+        "Rotation changes the credential used by your applications.",
+        "Save and deploy the new secret safely; never repeat rotation merely to check progress."
+      ],
+      "business": "guides/business/team-ownership",
+      "developer": "authentication",
+      "method": "POST",
+      "path": "/keys/rotate"
+    },
+    {
+      "slug": "api-reference/account/usage",
+      "title": "Get account usage",
+      "sidebarTitle": "Get account usage",
+      "description": "Read Nixflex account usage and call-capacity information. Occupancy can include unresolved reservations as well as active calls.",
+      "lead": "Read stored account usage and call-capacity information. Occupancy can include unresolved reservations, so it is not simply the number of connected conversations.",
+      "important": [
+        "Use the returned max_concurrent value for this account.",
+        "Usage counters and unresolved reservations are not the same as an invoice or connected-call count."
+      ],
+      "business": "guides/business/billing",
+      "developer": "guides/developer/billing",
+      "method": "GET",
+      "path": "/usage"
+    },
+    {
+      "slug": "api-reference/account-and-keys/get-account-retention",
+      "title": "Get account retention",
+      "sidebarTitle": "Get account retention",
+      "description": "Read the Nixflex account retention default for new agents. Existing agents retain their saved settings until explicitly updated.",
+      "lead": "Read the account retention default for new agents. Existing agents keep their saved retention settings; use Update an agent to change one agent.",
+      "important": [
+        "Read the saved account retention policy.",
+        "Policy values alone do not prove pending cleanup is complete."
+      ],
+      "business": "guides/business/billing",
+      "developer": "guides/developer/billing",
+      "method": "GET",
+      "path": "/account/retention"
+    },
+    {
+      "slug": "api-reference/account-and-keys/get-keys-activity",
+      "title": "Get key activity",
+      "sidebarTitle": "Get key activity",
+      "description": "Read a snapshot of retained Nixflex API request activity for the account. Distinguish request logs from call history and billing usage.",
+      "lead": "Read a single snapshot of retained API request activity for the authenticated account. This is request activity, separate from organisation audit events and call usage.",
+      "important": [
+        "Read key activity without exposing the credential itself.",
+        "Activity is bounded by its available history and retention."
+      ],
+      "business": "guides/business/team-ownership",
+      "developer": "authentication",
+      "method": "GET",
+      "path": "/keys/activity"
+    },
+    {
+      "slug": "api-reference/voices/get-voices",
+      "title": "List voices",
+      "sidebarTitle": "List voices",
+      "description": "List voices visible to the Nixflex account. Check compatibility for the optional agent context before choosing a voice.",
+      "lead": "List the voices visible to this account. Compatibility is calculated for the optional agent context; catalog availability can change before a call.",
+      "important": [
+        "Use returned voice keys when choosing an available voice.",
+        "The catalogue does not create or clone a voice."
+      ],
+      "business": "guides/business/your-own-voice",
+      "developer": "concepts/voices",
+      "method": "GET",
+      "path": "/voices"
+    },
+    {
+      "slug": "api-reference/voices/get-voices-voice_key",
+      "title": "Get a voice",
+      "sidebarTitle": "Get voice",
+      "description": "Read a voice visible to the Nixflex account and its compatibility with an optional agent language. A successful read does not guarantee compatibility.",
+      "lead": "Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return selectable: false; read the reason before using the voice.",
+      "important": [
+        "Keep the exact voice key from the catalogue.",
+        "A missing or unavailable voice needs a deliberate alternative, not a guessed key."
+      ],
+      "business": "guides/business/your-own-voice",
+      "developer": "concepts/voices",
+      "method": "GET",
+      "path": "/voices/{voice_key}"
+    },
+    {
+      "slug": "api-reference/integration-settings/google-calendar",
+      "title": "Connect Google Calendar",
+      "sidebarTitle": "Connect Google Calendar",
+      "description": "Connect Google Calendar to an owned Nixflex number. Create a consent link, handle return codes and keep OAuth credentials private.",
+      "lead": "Connect Google Calendar to an owned Nixflex number. Create a consent link, handle return codes and keep OAuth credentials private.",
+      "important": [
+        "Open the returned consent link in the user's browser; it expires after ten minutes.",
+        "Consent connects one owned number. It is not proof that any appointment was booked."
+      ],
+      "business": "guides/business/google-calendar",
+      "developer": "actions/google-calendar",
+      "method": "POST",
+      "path": "/integrations/google-calendar/number/{phoneNumber}/connect"
+    },
+    {
+      "slug": "api-reference/integration-settings/google-calendar-status",
+      "title": "Get Google Calendar status",
+      "sidebarTitle": "Get Google Calendar status",
+      "description": "Read the Google Calendar connection for an owned Nixflex number, including reconnect state and whether caller invitations are enabled.",
+      "lead": "Read the Google Calendar connection for an owned Nixflex number, including reconnect state and whether caller invitations are enabled.",
+      "important": [
+        "connected:false is different from a failed status read.",
+        "needs_reconnect asks for fresh consent; reconnect keeps business settings."
+      ],
+      "business": "guides/business/google-calendar",
+      "developer": "actions/google-calendar",
+      "method": "GET",
+      "path": "/integrations/google-calendar/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/google-calendar-disconnect",
+      "title": "Disconnect Google Calendar",
+      "sidebarTitle": "Disconnect Google Calendar",
+      "description": "Disconnect Google Calendar from an owned Nixflex number. Remove local access and understand in-flight bookings and shared Google grants.",
+      "lead": "Disconnect Google Calendar from an owned Nixflex number. Remove local access and understand in-flight bookings and shared Google grants.",
+      "important": [
+        "Disconnect the intended number deliberately.",
+        "Already dispatched calendar work cannot be recalled by removing the connection."
+      ],
+      "business": "guides/business/google-calendar",
+      "developer": "actions/google-calendar",
+      "method": "DELETE",
+      "path": "/integrations/google-calendar/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/integration-settings/google-calendar-settings",
+      "title": "Update Google Calendar settings",
+      "sidebarTitle": "Update Google Calendar settings",
+      "description": "Set calendar timezone, weekly hours, slot length and caller invitations for an owned Nixflex number. Omitted settings retain their saved value.",
+      "lead": "Set calendar timezone, weekly hours, slot length and caller invitations for an owned Nixflex number. Omitted settings retain their saved value.",
+      "important": [
+        "Send all seven days when changing working_hours and use an IANA time zone.",
+        "send_invites requests Google notifications; it does not prove inbox delivery."
+      ],
+      "business": "guides/business/google-calendar",
+      "developer": "actions/google-calendar",
+      "method": "PATCH",
+      "path": "/integrations/google-calendar/number/{phoneNumber}"
+    },
+    {
+      "slug": "api-reference/phone-numbers/credentials",
+      "title": "Update phone number credentials",
+      "sidebarTitle": "Update phone number credentials",
+      "description": "Update carrier credentials for an imported Nixflex phone number in place. Preserve settings and handle uncertain routing or credential saves safely.",
+      "lead": "Update carrier credentials for an imported Nixflex phone number in place. Preserve settings and handle uncertain routing or credential saves safely.",
+      "important": [
+        "Use exactly one supported credential pair; do not mix carrier fields.",
+        "This replaces connection credentials. Keep both request and response out of logs."
+      ],
+      "business": "guides/business/phone-numbers",
+      "developer": "guides/developer/phone-numbers",
+      "method": "POST",
+      "path": "/phone-numbers/{phoneNumber}/credentials"
+    },
+    {
+      "slug": "api-reference/call-bookings",
+      "title": "Receive booking results: call.bookings",
+      "sidebarTitle": "Booking results event",
+      "description": "Receive confirmed Nixflex booking actions and their final results after a call. Verify signatures, count active bookings and handle duplicate deliveries.",
+      "lead": "Receive confirmed calendar mutations and their final booking results after a call ends.",
+      "important": [
+        "timeline lists confirmed actions; final shows the result per booking UID.",
+        "Count active final rows. Creating then cancelling leaves zero active bookings."
+      ],
+      "business": "guides/booking-receptionist",
+      "developer": "advanced/webhooks",
+      "source": "spec-source/c13-concepts/call-bookings.mdx.txt"
+    },
+    {
+      "slug": "api-reference/calls/get-bookings",
+      "title": "Read call booking results",
+      "sidebarTitle": "Read call booking results",
+      "description": "Read confirmed booking results for a Nixflex call. Distinguish ready, none, processing, deleted and unavailable without guessing from a transcript.",
+      "lead": "Read the retained booking result for one account-owned call. Only ready returns confirmed mutations and their final results.",
+      "important": [
+        "Only ready returns a confirmed booking result; every other state has result:null.",
+        "none needs complete evidence of zero successful mutations. unavailable is not an empty result."
+      ],
+      "business": "guides/booking-receptionist",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls/{id}/bookings"
+    },
+    {
+      "slug": "api-reference/calls/get-outbound-request",
+      "title": "Read an outbound call request",
+      "sidebarTitle": "Read outbound call request",
+      "description": "Check a Nixflex outbound request by its saved UUID. Keep pending and unknown outcomes distinct and avoid starting a duplicate call.",
+      "lead": "Check the durable state of the UUID saved for an outbound call intent. This read never dispatches a call, reserves capacity or charges.",
+      "important": [
+        "This read cannot place a call, reserve capacity or charge the account.",
+        "pending and unknown mean keep the same UUID and reconcile; accepted gives the saved call ID."
+      ],
+      "business": "guides/business/call-history",
+      "developer": "guides/developer/call-history",
+      "method": "GET",
+      "path": "/calls/outbound/requests/{request_id}"
+    }
+  ],
+  "developerSamples": [
+    "quickstart",
+    "actions/booking-confirmation",
+    "actions/google-calendar",
+    "guides/developer/call-history",
+    "advanced/webhooks"
+  ]
+}

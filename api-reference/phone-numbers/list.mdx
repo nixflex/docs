@@ -6,7 +6,30 @@ playground: "simple"
 sidebarTitle: "List phone numbers"
 canonical: "https://docs.nixflex.com/api-reference/phone-numbers/list"
 ---
-Owned public numbers only; pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, phone_number DESC; live traversal, not a snapshot.
+List the public phone numbers owned by the authenticated account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use E.164 phone numbers as returned by the API.
+- Check assignment and channel switches before choosing a number for work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
+
+Pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, then phone_number DESC; this is live traversal, not a snapshot.
 
 ## Authentication
 
@@ -173,13 +196,13 @@ Illustrative response with placeholder identifiers.
 
 Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
 
-| Status | Meaning |
-| --- | --- |
-| 400 | Invalid phone-number paging or filter query. |
-| 401 | Invalid or missing API key |
-| 404 | Not found on your account. |
-| 429 | Rate limit exceeded. Honour the Retry-After header. |
-| 500 | Server error. |
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid phone-number paging or filter query. | Correct the named field or query using the request table before trying again. |
+| 401 | Invalid or missing API key | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
+| 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
 
 
@@ -189,6 +212,6 @@ Use bounded retries only for temporary read failures. Keep the same filters whil
 
 ## Related endpoints
 
-- [API overview](/api-reference/introduction)
-- [Errors and recovery](/api-reference/errors)
-- [Pagination](/api-reference/pagination)
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Import a phone number](/api-reference/phone-numbers/import)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,0 +1,29 @@
+---
+title: "API rate limits"
+description: "Handle Nixflex API rate limits using RateLimit-Limit, RateLimit-Remaining and Retry-After. Keep request quotas separate from call capacity and feature limits."
+sidebarTitle: "API rate limits"
+canonical: "https://docs.nixflex.com/api-reference/rate-limits"
+---
+Requests use the limit assigned to the authenticated account key. Read the response headers instead of hard-coding a requests-per-minute value.
+
+## Headers
+
+| Header | Meaning |
+| --- | --- |
+| `RateLimit-Limit` | The current request allowance. |
+| `RateLimit-Remaining` | Requests remaining in the current window. |
+| `Retry-After` | Seconds to wait when the request is throttled. |
+
+An authenticated request over its allowance returns **429 `rate_limit_exceeded`**. Its message is `Rate limit exceeded. Retry after N seconds.`, where N is the returned wait. Details contain `limit` and `retry_after_seconds`.
+
+Account signup is separate: [Create an account](/api-reference/account/create-key) is limited to three attempts per address per hour and can return `429 key_creation_rate_limited`. Invalid credentials can be refused before rate-limit headers are added.
+
+## Respond to throttling
+
+Wait at least `Retry-After`, spread requests with jitter and use a bounded deadline. Cache catalog reads and stop polling completed jobs. Reduce concurrency when repeated throttles occur.
+
+Do not automatically repeat a call, SMS, payment or other write after a timeout or throttle. Use the endpoint’s refusal and receipt to decide whether work occurred; see [retry guidance](/api-reference/retries) and [idempotency](/api-reference/idempotency).
+
+## Other limits
+
+Call capacity, balance, daily Knowledge allowances and resource counts are separate from the HTTP request allowance. Codes such as `busy`, `base_limit`, `session_limit` and `training_limit` describe their own limits. More HTTP capacity does not remove them. Use the endpoint’s error table and the [error catalog](/api-reference/errors).

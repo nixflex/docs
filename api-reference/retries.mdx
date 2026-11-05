@@ -1,10 +1,33 @@
 ---
 title: "Retry failed API requests"
-sidebarTitle: "Retry failed API requests"
+sidebarTitle: "Retry rules"
 description: "Choose safe retry behavior for Nixflex API reads and writes. Honor Retry-After, reconcile unknown outcomes and avoid duplicate calls, messages or purchases."
 canonical: "https://docs.nixflex.com/api-reference/retries"
 ---
+Retry eligible reads with a limit, and reconcile uncertain writes before any deliberate new action.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Retry rules</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use bounded retries for eligible reads.
+- Never automatically create a new call intent to recover an unknown launch result.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/reference/faq) · [Developer guide](/guides/developer/errors) · [Glossary](/guides/glossary)
+
+</div>
+
 **Never automatically retry a write.** A timeout, broken connection, or server error can arrive after the operation took effect. Repeating it can create another agent, call, message, campaign, invitation, or job.
+
 
 ## Choose the next action
 
@@ -47,3 +70,26 @@ Knowledge mutations and test messages use their documented idempotency identity.
 Disable write retries in the HTTP client, SDK, proxy, job runner, and application. If a client only offers a global retry setting, use zero for the client that performs writes. Confirm CLI and MCP behaviour for the installed version before production use.
 
 Use the [error catalog](/api-reference/errors). In particular, `outcome_unknown`, `campaign_outcome_unknown`, and `carrier_outcome_unknown` require reconciliation, not repetition.
+
+## Reconcile an outbound request UUID
+
+Save one UUID before the first request for an intended call. Persist it with the request payload so a process restart cannot accidentally create a new intent. Supply it as the JSON field `request_id`, not an Idempotency-Key header.
+
+| Result | What it proves | Next action |
+| --- | --- | --- |
+| 201 initiated | A call was accepted; completion is still unknown. | Save call_id and request_id; read the call. |
+| 200 replayed:true | This UUID already has an accepted call. | Use the same call_id; no second dispatch occurred. |
+| 409 outbound_request_pending / outbound_request_unknown | The existing intent cannot be launched again. | Keep the UUID and read request status. |
+| 409 request_id_conflict | The same UUID was used with changed input. | Reconcile the original payload; do not automatically replace the UUID. |
+| 503 with details.safe_to_retry:false | The journal or launch outcome is uncertain. | Keep the UUID and use bounded status reads. |
+
+A 201 can also include `request_status:"unconfirmed"` and `safe_to_retry:false`: the call ID is known even though the final journal acknowledgement was lost. Never redial it. A new UUID is a new explicit call intent. Requests without request_id retain their existing behaviour and have no launch replay protection.
+
+Read [outbound request status](/api-reference/calls/get-outbound-request). A 404 or an empty history page does not prove that an uncertain call was never placed.
+
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Authentication](/api-reference/authentication)

@@ -6,26 +6,28 @@ openapi: "/api-reference/public.openapi.json POST /phone-numbers"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/phone-numbers/import"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Connect a number you already own to an active agent on the same account. Import can replace existing number routing, so another application using that routing can stop receiving calls or texts.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>201</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This connects an existing supported number to the account.
+- A pending import is not permission to send; wait for a usable state.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -151,6 +153,6 @@ Never automatically retry an import. Save any returned operation_id from safe er
 
 ## Related endpoints
 
+- [List phone numbers](/api-reference/phone-numbers/list)
 - [Get a phone number](/api-reference/phone-numbers/get)
-- [Update a phone number](/api-reference/phone-numbers/update)
-- [Remove a phone number](/api-reference/phone-numbers/delete)
+- [Errors and recovery](/api-reference/errors#error-envelope)

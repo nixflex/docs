@@ -1,0 +1,25 @@
+---
+title: "API idempotency"
+description: "Use Nixflex knowledge operation keys and revisions correctly. Learn which requests support replay and how to handle uncertain calls, SMS and other writes."
+sidebarTitle: "API idempotency"
+canonical: "https://docs.nixflex.com/api-reference/idempotency"
+---
+Idempotency is supported only where an operation documents it. Sending `Idempotency-Key` to any endpoint does not make every write safe to repeat.
+
+## Knowledge operations
+
+Use the documented key for one intended operation. Preserve the same key, target and payload when reconciling that operation. A changed payload under a used identity can return **409 `idempotency_conflict`**. Revision guards such as `base_revision` prevent an update from silently replacing newer work; they are separate from request identity.
+
+An accepted job can be returned on replay. Save its ID and poll the [job read](/api-reference/knowledge/get-knowledge-jobs-id) instead of submitting another job. `202 Accepted` does not mean the content was published. Check its final state and error.
+
+Each endpoint lists its required key, limits and revision rules. Do not assume the same retention window or replay behavior applies to all operations.
+
+## Calls, SMS and other writes
+
+There is no general replay promise for agent creation, outbound calls, SMS, campaigns or key rotation. A connection failure can happen after work starts. Read the resource or receipt and reconcile the result before any deliberate new attempt.
+
+Contact-policy refusals can explicitly report `outcome: not_sent`, `sent: false` and `charged: false`. An unknown outcome does not provide that guarantee. Internal names such as `single_contact_policy` are not a client idempotency mechanism.
+
+## Client behavior
+
+Disable automatic write retries in your HTTP client, SDK, proxy and job queue. Keep safe correlation identifiers, but do not log credentials, message bodies or caller context. See [retry guidance](/api-reference/retries) for the recovery steps.

@@ -1,13 +1,41 @@
 ---
-title: "Webhooks: verify Nixflex events and process them safely"
-description: "Receive Nixflex call and message events, verify raw-body signatures, deduplicate work and handle delayed processing without repeating business actions."
+title: "Verify and process webhook events in code"
+sidebarTitle: "Webhook receiver"
+description: "Verify raw-body signatures, save events durably, deduplicate booking results and reconcile missed deliveries through authenticated call reads."
 canonical: "https://docs.nixflex.com/advanced/webhooks"
 ---
 import SignatureVerification from "/snippets/guides/signature-verification.mdx";
 
-Build an HTTPS event receiver that verifies the sender before accepting work and can safely receive the same event more than once.
+Build an HTTPS receiver that verifies Nixflex events, saves them durably and handles repeated delivery without repeating business actions.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Verification</small><strong>Exact raw body</strong></div>
+  <div><small>Acceptance</small><strong>Durable save before 2xx</strong></div>
+  <div><small>Recovery</small><strong>Authenticated call reads</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Verify the signature before parsing or executing any business action.
+- Deduplicate call events by trusted account, event name and call ID; SMS needs its separate identity rules.
+- Delivery may be delayed or missed. An unsigned reachability test cannot prove signed-event delivery.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<div className="nxf-flow">
+  <div><strong>1. Verify</strong>Check the unchanged request bytes.</div>
+  <div><strong>2. Store</strong>Use an atomic dedupe constraint.</div>
+  <div><strong>3. Acknowledge</strong>Return 2xx after durable acceptance.</div>
+  <div><strong>4. Process</strong>Retry from your queue and reconcile.</div>
+</div>
 
 ## Prerequisites
 
@@ -61,7 +89,7 @@ SMS booking events have no `call_id` or universal event ID. Store the verified d
 
 ## 5. Reconcile delayed results
 
-Read current call or message state when necessary. A completed call event is not a guarantee analysis and recording are already available. Fetch recording access from its authenticated endpoint. Delivery retries and eventual failures mean events are not an exactly-once or guaranteed-delivery channel.
+Read current call or message state when necessary. For missed booking events, use [GET call booking results](/api-reference/calls/get-bookings): only ready has a result, and none requires complete empty evidence. processing, deleted and unavailable must not be mapped to zero bookings. A completed call event is not a guarantee analysis and recording are already available. Fetch recording access from its authenticated endpoint. Delivery retries and eventual failures mean events are not an exactly-once or guaranteed-delivery channel.
 
 ## Event and callback contracts
 
@@ -165,7 +193,6 @@ The signature timestamp describes delivery, not call start. Compare it with the 
 - [Post-call booking payload and active-count examples](/api-reference/call-bookings)
 - [Webhook settings](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber)
 - [Call results](/guides/developer/call-history)
-- [Custom functions](/advanced/custom-functions)
 
 ## Booking object
 

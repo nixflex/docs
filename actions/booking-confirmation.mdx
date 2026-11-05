@@ -1,15 +1,43 @@
 ---
-title: "Booking confirmation: require a clear customer approval"
-description: "Require Nixflex to read back a booking and collect confirmation before writing it, understand number overrides and test uncertain dates and changed answers."
+title: "Require booking approval in code"
+sidebarTitle: "Booking approval"
+description: "Require clear customer approval before a calendar change, handle number overrides, and separate saved settings from confirmed booking results."
 canonical: "https://docs.nixflex.com/actions/booking-confirmation"
 ---
-Add an explicit confirmation step before a supported calendar mutation. Approval is one condition of booking; the calendar must still accept the action.
+Require a clear read-back and customer approval before the agent makes a supported calendar change.
 
-Using the dashboard? See [the business guide](/guides/business/call-actions).
+<div className="nxf-facts">
+  <div><small>Setting</small><strong>require_booking_confirmation</strong></div>
+  <div><small>Scope</small><strong>Agent + number override</strong></div>
+  <div><small>Proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Name and full-email approvals are separate and always come first for a new booking.
+- The setting controls the optional final action/time approval on calls; it does not replace contact approval.
+- A saved setting or spoken promise is not proof that the calendar accepted a booking.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/booking-receptionist) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<div className="nxf-flow">
+  <div><strong>1. Confirm contact</strong>Name, then full email.</div>
+  <div><strong>2. Read back the plan</strong>Service, date, time and zone.</div>
+  <div><strong>3. Wait for approval</strong>A correction needs a new read-back.</div>
+  <div><strong>4. Check the result</strong>Only claim a confirmed action.</div>
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.11.0 or Python 0.4.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Use an owned agent and a number with the intended calendar connection. Match the host and key to the same environment. This update changes future agent behaviour.
 
 ## 1. Read the current settings
 
@@ -36,8 +64,8 @@ const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', 
   body: JSON.stringify({"require_booking_confirmation":true}),
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result.error?.code || 'unknown'}`);
+// Use the result privately; do not log account or caller data.
 ```
 
 ```python Python
@@ -51,7 +79,8 @@ request = Request(
     data='{"require_booking_confirmation":true}'.encode('utf-8'),
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
+    result = json.load(response)
+# Use the result privately; do not log account or caller data.
 ```
 
 ```powershell CLI (PowerShell)
@@ -69,6 +98,34 @@ For a new booking, ask the name, read it back and get a clear yes. Then ask the 
 This flow applies to calls and SMS for both calendars, independently of `require_booking_confirmation`. That setting controls the optional final approval of the action and time on calls. Email domain checks do not prove a mailbox exists; a suggested spelling correction requires the person's approval.
 
 When Google invitations are on, say “Google will email you an invite” (or update/cancellation). Google controls delivery. Cal.com handles its own mail. Do not claim inbox delivery or owner notification without evidence. In-call SMS must be enabled and a matching carrier acceptance received before saying “I've texted you the details.”
+
+<div className="nxf-conversation">
+
+**Example conversation**
+
+**Agent:** “What name should I use?”
+
+**Caller:** “Sam Carter.”
+
+**Agent:** “Sam Carter. Is that right?”
+
+**Caller:** “Yes.”
+
+**Agent:** “What email should I use?”
+
+**Caller:** “sam at example dot test.”
+
+**Agent:** “s-a-m at e-x-a-m-p-l-e dot t-e-s-t. Is that full email correct?”
+
+**Caller:** “Yes.”
+
+**Agent:** “A consultation on 4 November at 10am, London time. Shall I book it?”
+
+**Caller:** “Yes.”
+
+**App:** Submit the approved action. Only after a confirmed calendar result may the agent say the appointment is booked.
+
+</div>
 
 ## 3. Write a narrow instruction
 
@@ -97,6 +154,6 @@ The agent update returns the safe saved agent projection. Check the intended fie
 
 ## Next steps
 
-- [Update agent](/api-reference/agents/update)
-- [Action overview](/actions/overview)
-- [Setting inheritance](/concepts/agent-inheritance)
+- [Google Calendar setup](/actions/google-calendar)
+- [Read call and booking results](/guides/developer/call-history)
+- [Update the agent setting](/api-reference/agents/update)

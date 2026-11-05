@@ -1,15 +1,87 @@
 ---
-title: "Build Google Calendar booking into your app"
-description: "Connect a Nixflex number to Google Calendar, handle consent results, configure booking hours and invitations, and reconcile signed booking events."
+title: "Google Calendar bookings API"
+sidebarTitle: "Google Calendar setup"
+description: "Connect Google Calendar for an owned number, configure booking hours and invitations, and read confirmed booking results after the call."
 canonical: "https://docs.nixflex.com/actions/google-calendar"
 ---
-Use the public API to connect an owned number to Google Calendar. Owner and Admin personal sessions can change the connection; Members can read status. An organisation server key is an organisation actor. Keep it on the server.
+Connect an owned number to Google Calendar so its agent can check availability and make approved booking changes.
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>One owned number</strong></div>
+  <div><small>Change access</small><strong>Owner / Admin</strong></div>
+  <div><small>Consent link</small><strong>Ten minutes, one use</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Assign an agent before connecting and choose one booking provider for the number.
+- A successful consent flow connects the calendar; it does not book an appointment.
+- Google invitations are requested when enabled. Inbox delivery and owner notification are not guaranteed.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/google-calendar) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<div className="nxf-flow">
+  <div><strong>1. Connect</strong>Create and open a consent link.</div>
+  <div><strong>2. Configure</strong>Check hours, time zone and invitations.</div>
+  <div><strong>3. Confirm and book</strong>Get the required customer approvals.</div>
+  <div><strong>4. Reconcile</strong>Read the call result or signed event.</div>
+</div>
 
 ## Connect and return to your app
+
+Owner and Admin personal sessions can change the connection; Members can read status. An organisation API key acts for the organisation and stays on the server. Do not expose it to work around a person's role.
 
 Assign an agent to the number, then [create a consent link](/api-reference/integration-settings/google-calendar) with your HTTPS `return_url`. Open the returned URL in the user's browser. The link lasts ten minutes and can be used once. A custom app scheme needs operator approval first.
 
 On return, read `status=connected` and `phone_number`, or `status=error` with `access_denied`, `expired_link`, `already_connected` or `google_error`. Reserved result parameters are replaced while ordinary query parameters remain. OAuth credentials never return to your app. Expired state without a trusted destination displays a local error.
+
+Replace the example number with the owned number and use your app’s actual HTTPS return URL. Keep the account credential on the server. This request creates a consent link; the user must still authorise the connection.
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url 'https://api.nixflex.com/v1/integrations/google-calendar/number/%2B12025550123/connect' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header 'Content-Type: application/json' \
+  --data '{"return_url":"https://app.example.com/calendar/return"}'
+```
+
+```javascript Node · HTTP
+const number = encodeURIComponent('+12025550123'); // replace with the owned number
+const response = await fetch(`https://api.nixflex.com/v1/integrations/google-calendar/number/${number}/connect`, {
+  method: 'POST',
+  headers: {Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type': 'application/json'},
+  body: JSON.stringify({return_url: 'https://app.example.com/calendar/return'}),
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result.error?.code || 'unknown'}`);
+// Return the consent URL to the authorised user's browser. Do not log it.
+```
+
+```python Python · HTTP
+import os, json
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+
+number = quote('+12025550123', safe='')  # replace with the owned number
+request = Request(f'https://api.nixflex.com/v1/integrations/google-calendar/number/{number}/connect',
+    method='POST', headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY'], 'Content-Type': 'application/json'},
+    data=json.dumps({'return_url': 'https://app.example.com/calendar/return'}).encode('utf-8'))
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Return the consent URL to the authorised user's browser. Do not log it.
+```
+
+</CodeGroup>
 
 ## Show the current state
 
@@ -32,3 +104,25 @@ These contact approvals are separate from the optional final action/time approva
 Read the calendar result and signed [booking webhook object](/api-reference/webhooks#booking-object). A saved setting or consent link is not booking proof. Duplicate lookup confirmations do not create another public booking event. If access must end, [disconnect this number](/api-reference/integration-settings/google-calendar-disconnect); already dispatched provider work cannot be recalled.
 
 After a call, use [`call.bookings`](/api-reference/call-bookings) for the ordered confirmed actions and final result for each booking. Creating and then cancelling produces zero active bookings. SMS continues to use `sms.booking` per reply, with no delayed thread aggregate.
+
+## Read the booking result
+
+Use [GET call booking results](/api-reference/calls/get-bookings) after the call. `ready` includes the confirmed timeline and final booking rows. `none` confirms no successful mutations only when the retained evidence is complete. `processing`, `deleted` and `unavailable` each return `result:null` and must remain distinct in your UI.
+
+## Errors and what to do
+
+| Code or result | What it means | What to do |
+| --- | --- | --- |
+| `agent_not_assigned` | This number has no eligible agent. | Assign the intended owned agent, then start consent. |
+| `booking_provider_conflict` | Another booking provider is active. | Choose one and disconnect the unwanted connection deliberately. |
+| `expired_link` / `access_denied` | Consent did not complete. | Explain the result and offer a deliberate fresh consent flow. |
+| `invalid_hours` / `invalid_timezone` | Availability settings are invalid. | Send all seven days and a valid IANA time zone. |
+| `needs_reconnect:true` | Saved consent needs renewal. | Ask the authorised person to reconnect; preserve business settings. |
+| 503 status read | Connection state could not be checked. | Keep state unknown and retry the read with a limit. |
+| Lost settings response | The change may have been saved. | Read status/settings before another deliberate write. |
+
+## Next steps
+
+- [Require booking approval](/actions/booking-confirmation)
+- [Read call and booking results](/guides/developer/call-history)
+- [Build the signed-event receiver](/advanced/webhooks)

@@ -1,0 +1,46 @@
+---
+title: "Nixflex API reference"
+sidebarTitle: "Nixflex API reference"
+description: "Explore the Nixflex API for voice agents, calls, numbers, SMS and knowledge. Find authentication, request fields, response shapes and examples."
+canonical: "https://docs.nixflex.com/api-reference/introduction"
+---
+Build voice, messaging, and knowledge workflows with the Nixflex API. The production base URL is **`https://api.nixflex.com`**. Requests use HTTPS with the `/v1` prefix, for example `https://api.nixflex.com/v1/agents`.
+
+## Start here
+
+1. Read [Authentication and permissions](/api-reference/authentication).
+2. [Create an agent](/api-reference/agents/create), then read it back using its returned ID.
+3. Choose the resource page for the operation you need.
+4. Handle [errors](/api-reference/errors), [paging](/api-reference/pagination), and [uncertain write results](/api-reference/retries) explicitly.
+
+## Requests and responses
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` from your server. JSON bodies use `Content-Type: application/json`. Keep credentials out of browser code, URLs, repositories, and logs.
+
+A resource ID belongs to the authenticated account. Use the ID returned by the API; a display name is not an ID. Phone numbers use international E.164 format and must be URL-encoded in paths.
+
+Successful statuses and response shapes vary by operation. Some lists are bare arrays; others contain items and a cursor. A `202` response means accepted work, not completed work. Poll the documented job or resource read until its result is known.
+
+## Supported scope
+
+The public reference covers accounts and keys, agents, voices, phone numbers, calls, campaigns, SMS, contact controls, caller context, web agents, inboxes, knowledge, organisations, and integration settings. A product feature does not automatically provide a public API operation. Only documented public operations belong in an integration.
+
+The [public OpenAPI file](/api-reference/public.openapi.json) describes all 147 documented public operations in this reference. Its operation IDs are stable. Download it for client generation and contract checks. Its `webhooks` section also describes [call.bookings](/api-reference/call-bookings); this adds no callable endpoint.
+
+## Normal agent defaults
+
+A new agent has a maximum call duration of **300 seconds**, a silence hang-up delay of **10 seconds**, and **dynamic greeting enabled**. An existing agent keeps its stored settings when a field is omitted from an update. See the [agent contract](/api-reference/agents/contract) and [versioning and changelog](/api-reference/versioning).
+
+## Environments
+
+Production uses `https://api.nixflex.com`. The staging service is for testing only. Endpoint examples labeled staging use `https://nixflex-voice-engine-staging.up.railway.app` with `NXF_STAGING_KEY`; use your production origin and production key together in a live integration. Never send a staging credential to production.
+
+## Next steps
+
+See [Node](/sdks/node), [Python](/sdks/python), [CLI](/cli/overview), and [MCP](/ai-tools/overview) for client setup. Check a client's operation support and retry settings before using it for a write.
+
+## Shared contracts
+
+Read [Rate limits](/api-reference/rate-limits), [Idempotency](/api-reference/idempotency) and [Webhooks](/api-reference/webhooks) before connecting background jobs. Each endpoint includes authentication, fields, examples, errors and retry rules.
+
+The supplied MCP 0.5.0 candidate has **94 registered tools**, including **19 Knowledge tools**. Knowledge endpoint pages show registered tool calls or explain why a tool is unavailable. Node, Python and CLI examples identify methods supported by the documented kit versions.

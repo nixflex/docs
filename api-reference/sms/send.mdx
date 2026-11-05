@@ -6,26 +6,28 @@ openapi: "/api-reference/public.openapi.json POST /sms"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/sms/send"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means the send was accepted; it is not proof of delivery to the recipient.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>201</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This request can send a real text; there is no general replay guarantee.
+- Carrier acceptance is not proof that the recipient read or received the message.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-agent) · [Developer guide](/sms/send-sms) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -156,7 +158,5 @@ Never automatically retry an SMS write. Preserve the accepted message/work IDs w
 
 ## Related endpoints
 
-- [Get a phone number](/api-reference/phone-numbers/get)
-- [Get an agent](/api-reference/agents/get)
-- [Errors](/api-reference/errors)
-- [Retry and idempotency](/api-reference/retries)
+- [Retry rules](/api-reference/retries)
+- [Errors and recovery](/api-reference/errors#error-envelope)

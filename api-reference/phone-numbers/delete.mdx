@@ -1,31 +1,33 @@
 ---
 title: "Remove a phone number"
-sidebarTitle: "Remove a phone number"
+sidebarTitle: "Remove phone number"
 description: "Disconnect an owned number from Nixflex and clear routing managed by its import. This does not release the number from your carrier account."
 openapi: "/api-reference/public.openapi.json DELETE /phone-numbers/{phoneNumber}"
 playground: "simple"
 canonical: "https://docs.nixflex.com/api-reference/phone-numbers/delete"
 ---
-<style>{`
-  table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
-  div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
-  div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
-  table code { white-space: normal; overflow-wrap: anywhere; }
-  .agent-error-table th:nth-child(1) { width: 14%; }
-  .agent-error-table th:nth-child(2) { width: 27%; }
-  .agent-error-table th:nth-child(3) { width: 25%; }
-  .agent-error-table th:nth-child(4) { width: 34%; }
-
-  table:has(th:nth-child(5)) th:nth-child(1) { width: 20%; }
-  table:has(th:nth-child(5)) th:nth-child(2) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(3) { width: 17%; }
-  table:has(th:nth-child(5)) th:nth-child(4) { width: 14%; }
-  table:has(th:nth-child(5)) th:nth-child(5) { width: 35%; }
-  table:has(th:nth-child(5)) th { font-size: 12px; white-space: nowrap; }
-`}</style>
-
 Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the number from its carrier account or end that account’s charges.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Removal changes the number connection; check the exact target first.
+- Tracked cleanup may remain pending after the request is accepted.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Authentication
 
@@ -132,6 +134,6 @@ Never automatically repeat removal. Initial unconfirmed cleanup returns 503 numb
 
 ## Related endpoints
 
+- [List phone numbers](/api-reference/phone-numbers/list)
 - [Get a phone number](/api-reference/phone-numbers/get)
-- [Import a phone number](/api-reference/phone-numbers/import)
-- [Update a phone number](/api-reference/phone-numbers/update)
+- [Errors and recovery](/api-reference/errors#error-envelope)

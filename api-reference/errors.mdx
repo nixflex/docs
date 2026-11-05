@@ -1,18 +1,35 @@
 ---
-title: "API errors and status codes"
-sidebarTitle: "API errors and status codes"
+title: "Handle API errors"
+sidebarTitle: "Errors"
 description: "Find Nixflex API error codes, HTTP statuses and recovery steps. Distinguish invalid input, permission failures, temporary errors and uncertain results."
 canonical: "https://docs.nixflex.com/api-reference/errors"
 ---
-<style>{`
- table { min-width: 0 !important; width: 100%; table-layout: fixed; }
- table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
- div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
- div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
- td span[id] { scroll-margin-top: 120px; }
-`}</style>
+Use the machine-readable error code and the current resource state to decide what to do next.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Errors</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Branch on error.code, not the wording of error.message.
+- Unknown write outcomes require reconciliation before another deliberate action.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/reference/faq) · [Developer guide](/guides/developer/errors) · [Glossary](/guides/glossary)
+
+</div>
 
 Use the HTTP status and machine-readable code together. Messages can become more specific without changing the code. Never automatically retry a write; follow [Retries and idempotency](/api-reference/retries).
+
+
+<span id="error-envelope"></span>
 
 ## Response shape
 
@@ -82,7 +99,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
 | <span id="base_limit">base_limit</span> | 429 | This account has reached its knowledge base limit. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
-| <span id="booking_provider_conflict">booking_provider_conflict</span> | 409 | Another booking integration is already enabled for this number. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="booking_provider_conflict">booking_provider_conflict</span> | 409 | Choose one provider and disconnect the unwanted connection deliberately. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="busy">busy</span> | 429 | Please wait for the existing knowledge jobs to finish. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
 
 ### C
@@ -100,7 +117,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="campaigns_paused">campaigns_paused</span> | 503 | Campaigns are paused for maintenance. Nothing was created or sent - try again in a few minutes. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="capacity_lookup_unavailable">capacity_lookup_unavailable</span> | 503 | Call capacity could not be confirmed. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="carrier_error">carrier_error</span> | 502 | The carrier refused the call. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="carrier_outcome_unknown">carrier_outcome_unknown</span> | 504 | The carrier did not confirm the call. It may or may not have been placed - check before retrying. | Check call history and work receipts. Do not redial automatically. |
+| <span id="carrier_outcome_unknown">carrier_outcome_unknown</span> | 504 | Reconcile the existing carrier change; do not submit different credentials or assume no change occurred. | Check call history and work receipts. Do not redial automatically. |
 | <span id="catalog_unavailable">catalog_unavailable</span> | 503 | the voices catalog is not loaded yet; try again shortly | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="cleanup_pending_confirmation">cleanup_pending_confirmation</span> | 409 | Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="confirm_topics">confirm_topics</span> | 409 | Confirm the affected topics before removing this source. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
@@ -211,7 +228,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="invalid_remember_callers">invalid_remember_callers</span> | 400 | remember_callers must be true or false. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_request">invalid_request</span> | 400 | This campaign is still sending. You can delete it once it has finished. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_role">invalid_role</span> | 400 | Choose Admin or Member. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
-| <span id="invalid_timezone">invalid_timezone</span> | 400 | Use an IANA time zone such as Europe/London, or UTC. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+| <span id="invalid_timezone">invalid_timezone</span> | 400 | Supply a valid IANA time zone such as Europe/London. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_to_number">invalid_to_number</span> | 400 | The 'to' number is invalid. Use international E.164 format (e.g. +447446466847). | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_topics">invalid_topics</span> | 422, 503 | Prepared knowledge topics could not be validated. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="invalid_token">invalid_token</span> | 401 | The personal dashboard session is invalid or expired. | Sign in with your own verified login again. |
@@ -284,11 +301,11 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="number_move_disabled">number_move_disabled</span> | 503 | Moving numbers is unavailable on this service. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="number_move_unconfirmed">number_move_unconfirmed</span> | 503 | The number move could not be confirmed; read the number. | Read the current number assignment before deciding whether any further move is needed. |
 | <span id="number_not_found">number_not_found</span> | 404 | Phone number not found in your account. | Check the resource ID and owning account. Do not assume an absent item authorises a replacement write. |
-| <span id="number_operation_pending">number_operation_pending</span> | 409 | Another import or removal is pending for this number. Do not change its routing. Retry the same request or contact support. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="number_operation_pending">number_operation_pending</span> | 409 | Wait for the existing number operation to settle and read the number again. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="number_operation_unavailable">number_operation_unavailable</span> | 503 | The number operation could not be confirmed. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="number_pending">number_pending</span> | 409 | This number is being imported or removed. Try again when that has finished. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="number_provider_invalid">number_provider_invalid</span> | 409 | This number has no valid carrier set. Re-import it on the Phone Numbers page. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
-| <span id="number_release_pending">number_release_pending</span> | 409 | This number has a pending provider release. Re-import is blocked until its outcome is checked. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="number_release_pending">number_release_pending</span> | 409 | Wait for removal/release work to settle; do not overwrite credentials during it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="number_save_pending">number_save_pending</span> | 503 | The routing change succeeded but its saved completion is pending. | Read the number and operation receipt. Contact support before a deliberate recovery attempt. |
 
 ### O
@@ -410,18 +427,6 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
 
-<style>{`
- table { min-width: 0 !important; width: 100%; table-layout: fixed; }
- table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
- div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
- div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
- table th:nth-child(1) { width: 26%; }
- table th:nth-child(2) { width: 12%; }
- table th:nth-child(3) { width: 27%; }
- table th:nth-child(4) { width: 35%; }
- td span[id] { scroll-margin-top: 120px; }
-`}</style>
-
 ## Knowledge preparation and keyterm limits
 
 Knowledge job failures can be returned in a successful job-read response; the status below applies when raised as an HTTP error. Messages can be more specific for a particular operation.
@@ -449,11 +454,11 @@ These codes also exist in the engine’s personal-session, account, billing or d
 | <span id="dashboard_session_required">dashboard_session_required</span> | 403 | Sign in to download your data. | Use the required personal session or refresh access. |
 | <span id="export_rate_limited">export_rate_limited</span> | 429 | A download was requested recently. Try again in 15 minutes. | Correct the input or account state before retrying. |
 | <span id="export_unavailable">export_unavailable</span> | 503 | Download could not finish. No data was changed. Try again later or contact support. | Read current state before retrying an uncertain write. |
-| <span id="not_configured">not_configured</span> | 503 | Google Calendar is not configured on this environment | Read current state before retrying an uncertain write. |
+| <span id="not_configured">not_configured</span> | 503 | Ask the operator to complete the required service configuration. | Read current state before retrying an uncertain write. |
 | <span id="ticket_unavailable">ticket_unavailable</span> | 503 | Google connect is not available right now. Try again in a moment. | Read current state before retrying an uncertain write. |
-| <span id="guard_unavailable">guard_unavailable</span> | 503 | Could not check this connection right now. Reload this page in a moment. | Read current state before retrying an uncertain write. |
+| <span id="guard_unavailable">guard_unavailable</span> | 503 | Wait for the access check to recover; do not bypass it. | Read current state before retrying an uncertain write. |
 | <span id="no_refresh_token">no_refresh_token</span> | 409 | Google did not return a refresh token. Connect again. | Correct the input or account state before retrying. |
-| <span id="already_connected">already_connected</span> | 409 | Another calendar row for this number appeared while saving. Reload the page, check the card and connect again if needed. | Correct the input or account state before retrying. |
+| <span id="already_connected">already_connected</span> | 409 | Read the connection status; do not create another consent flow for an already connected number. | Correct the input or account state before retrying. |
 | <span id="save_failed">save_failed</span> | 503 | Google Calendar could not be saved. Connect it again. | Read current state before retrying an uncertain write. |
 | <span id="number_taken">number_taken</span> | 409 | That number is registered to another account | Correct the input or account state before retrying. |
 | <span id="payment_required">payment_required</span> | 402 | Add credit to use the voice preview and the browser test call. | Correct the input or account state before retrying. |
@@ -555,21 +560,40 @@ Google Calendar and in-place credential updates return the standard error envelo
 
 | Code | Status | Recovery |
 | --- | --- | --- |
-| <span id="invalid_return_url">invalid_return_url</span> | 400 | Use HTTPS or an approved app scheme and remove forbidden URL parts. |
-| <span id="agent_not_assigned">agent_not_assigned</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="expired_link">expired_link</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_return_url">invalid_return_url</span> | 400 | Use HTTPS or an approved app scheme; remove forbidden URL parts. |
+| <span id="agent_not_assigned">agent_not_assigned</span> | 409 | Assign an eligible owned agent to this number before connecting the calendar. |
+| <span id="expired_link">expired_link</span> | 409 | Start a fresh consent flow after checking the current connection. |
 | <span id="calendar_unavailable">calendar_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="invalid_settings">invalid_settings</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="invalid_hours">invalid_hours</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="invalid_slot_minutes">invalid_slot_minutes</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="invalid_calendar_id">invalid_calendar_id</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="invalid_send_invites">invalid_send_invites</span> | 400 | Send the JSON boolean true or false. |
-| <span id="not_connected">not_connected</span> | 409 | Connect the calendar before changing settings. |
-| <span id="invalid_credentials">invalid_credentials</span> | 400 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="invalid_settings">invalid_settings</span> | 400 | Send only supported setting fields, using their documented types. |
+| <span id="invalid_hours">invalid_hours</span> | 400 | Send a valid working_hours object containing all seven days. |
+| <span id="invalid_slot_minutes">invalid_slot_minutes</span> | 400 | Use an allowed whole-number slot length from the request contract. |
+| <span id="invalid_calendar_id">invalid_calendar_id</span> | 400 | Supply a valid calendar ID accessible to the connected account. |
+| <span id="invalid_send_invites">invalid_send_invites</span> | 400 | Send the JSON boolean true or false, or omit the field to keep its saved value. |
+| <span id="not_connected">not_connected</span> | 409 | Connect this number before changing calendar settings. |
+| <span id="invalid_credentials">invalid_credentials</span> | 400 | Supply exactly one complete supported credential pair through private secret handling. |
 | <span id="number_not_in_account">number_not_in_account</span> | 404 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="carrier_mismatch">carrier_mismatch</span> | 409 | Read the current state and correct the stated field or conflict before another deliberate request. |
+| <span id="carrier_mismatch">carrier_mismatch</span> | 409 | Use credentials for this number’s existing carrier; this endpoint does not migrate it. |
 | <span id="carrier_unavailable">carrier_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
 | <span id="credential_update_unavailable">credential_update_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
-| <span id="credential_save_pending">credential_save_pending</span> | 503 | Carrier change confirmed; deliberately retry identical details to finish the local save. |
+| <span id="credential_save_pending">credential_save_pending</span> | 503 | The carrier change is confirmed. Deliberately retry identical details only to finish the local save. |
 
 Single-SMS suppression changed from 400 `invalid_request` to 409 `do_not_contact` (type `conflict`). The message was not sent. Stop rather than retrying a known opt-out. Campaigns retain per-recipient holds.
+
+## Call request and booking read errors
+
+| Code | Status | What it means | What to do |
+| --- | --- | --- | --- |
+| <span id="call_bookings_unavailable">call_bookings_unavailable</span> | 503 | The booking result could not be read. | Keep the result unavailable. Retry this read with bounded backoff; do not show no bookings. |
+| <span id="invalid_request_id">invalid_request_id</span> | 400 | The supplied request_id is not a supported UUID. | Create and save one valid UUID for the deliberate call intent before its first submission. |
+| <span id="request_id_conflict">request_id_conflict</span> | 409 | This account already used the UUID with different call details. | Reconcile the existing request. Do not change its payload or automatically allocate a replacement ID. |
+| <span id="outbound_request_pending">outbound_request_pending</span> | 409 | The same call request is still pending. | Read the same request ID and call history. Wait; do not submit a new call. |
+| <span id="outbound_request_unknown">outbound_request_unknown</span> | 409 / 503 | The saved request has an uncertain outcome. The call result or its final journal update could not be confirmed. | Retain its UUID and check call history. Never automatically redial with a new ID. Treat the outcome as unknown and preserve request_id. Check its status before another deliberate intent. |
+| <span id="outbound_request_unavailable">outbound_request_unavailable</span> | 503 | The request journal could not be checked. | For a launch, retain unknown and safe_to_retry:false: an earlier attempt may have dialled. Retry the status read, not a new launch. |
+| <span id="outbound_request_rejected">outbound_request_rejected</span> | 409 | A recorded refusal was replayed without dispatch. | Review the returned reason and original status. A fresh UUID is a new explicit intent, not an automatic retry. |
+
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Retry rules](/api-reference/retries)
+- [Authentication](/api-reference/authentication)

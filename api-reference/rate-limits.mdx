@@ -1,10 +1,33 @@
 ---
-title: "API rate limits"
+title: "Handle API rate limits"
 description: "Handle Nixflex API rate limits using RateLimit-Limit, RateLimit-Remaining and Retry-After. Keep request quotas separate from call capacity and feature limits."
-sidebarTitle: "API rate limits"
+sidebarTitle: "Rate limits"
 canonical: "https://docs.nixflex.com/api-reference/rate-limits"
 ---
+Use the returned rate-limit guidance to control request frequency and keep call capacity checks separate.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Rate limits</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the actual rate-limit headers when returned.
+- A rate limit and call capacity are separate controls.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [Developer guide](/guides/developer/rate-limits) · [Glossary](/guides/glossary)
+
+</div>
+
 Requests use the limit assigned to the authenticated account key. Read the response headers instead of hard-coding a requests-per-minute value.
+
 
 ## Headers
 
@@ -27,3 +50,9 @@ Do not automatically repeat a call, SMS, payment or other write after a timeout 
 ## Other limits
 
 Call capacity, balance, daily Knowledge allowances and resource counts are separate from the HTTP request allowance. Codes such as `busy`, `base_limit`, `session_limit` and `training_limit` describe their own limits. More HTTP capacity does not remove them. Use the endpoint’s error table and the [error catalog](/api-reference/errors).
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

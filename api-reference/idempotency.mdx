@@ -1,10 +1,33 @@
 ---
-title: "API idempotency"
+title: "Reuse supported operation identities"
 description: "Use Nixflex knowledge operation keys and revisions correctly. Learn which requests support replay and how to handle uncertain calls, SMS and other writes."
-sidebarTitle: "API idempotency"
+sidebarTitle: "Operation identities"
 canonical: "https://docs.nixflex.com/api-reference/idempotency"
 ---
+Keep one operation identity for one intended action only where the endpoint documents replay support.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Operation identities</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- An operation identity protects only the operation that documents it.
+- For outbound calls, save the UUID request_id before launch and retain it while the outcome is uncertain.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/reference/faq) · [Developer guide](/guides/developer/idempotency) · [Glossary](/guides/glossary)
+
+</div>
+
 Idempotency is supported only where an operation documents it. Sending `Idempotency-Key` to any endpoint does not make every write safe to repeat.
+
 
 ## Knowledge operations
 
@@ -16,10 +39,33 @@ Each endpoint lists its required key, limits and revision rules. Do not assume t
 
 ## Calls, SMS and other writes
 
-There is no general replay promise for agent creation, outbound calls, SMS, campaigns or key rotation. A connection failure can happen after work starts. Read the resource or receipt and reconcile the result before any deliberate new attempt.
+Agent creation, outbound calls without request_id, SMS, campaigns and key rotation have no general replay promise. A connection failure can happen after work starts. Read the resource or receipt and reconcile the result before any deliberate new attempt.
 
 Contact-policy refusals can explicitly report `outcome: not_sent`, `sent: false` and `charged: false`. An unknown outcome does not provide that guarantee. Internal names such as `single_contact_policy` are not a client idempotency mechanism.
 
 ## Client behavior
 
 Disable automatic write retries in your HTTP client, SDK, proxy and job queue. Keep safe correlation identifiers, but do not log credentials, message bodies or caller context. See [retry guidance](/api-reference/retries) for the recovery steps.
+
+## Reconcile an outbound request UUID
+
+Save one UUID before the first request for an intended call. Persist it with the request payload so a process restart cannot accidentally create a new intent. Supply it as the JSON field `request_id`, not an Idempotency-Key header.
+
+| Result | What it proves | Next action |
+| --- | --- | --- |
+| 201 initiated | A call was accepted; completion is still unknown. | Save call_id and request_id; read the call. |
+| 200 replayed:true | This UUID already has an accepted call. | Use the same call_id; no second dispatch occurred. |
+| 409 outbound_request_pending / outbound_request_unknown | The existing intent cannot be launched again. | Keep the UUID and read request status. |
+| 409 request_id_conflict | The same UUID was used with changed input. | Reconcile the original payload; do not automatically replace the UUID. |
+| 503 with details.safe_to_retry:false | The journal or launch outcome is uncertain. | Keep the UUID and use bounded status reads. |
+
+A 201 can also include `request_status:"unconfirmed"` and `safe_to_retry:false`: the call ID is known even though the final journal acknowledgement was lost. Never redial it. A new UUID is a new explicit call intent. Requests without request_id retain their existing behaviour and have no launch replay protection.
+
+Read [outbound request status](/api-reference/calls/get-outbound-request). A 404 or an empty history page does not prove that an uncertain call was never placed.
+
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

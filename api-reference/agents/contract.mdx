@@ -1,15 +1,38 @@
 ---
-title: "Agent settings and defaults"
+title: "Understand agent settings and defaults"
 description: "Understand Nixflex agent fields, defaults, limits and nullable values. Configure call behavior, prompts, keyterms, retention and supported channel settings."
-sidebarTitle: "Agent settings and defaults"
+sidebarTitle: "Settings and defaults"
 canonical: "https://docs.nixflex.com/api-reference/agents/contract"
 ---
+Use saved agent values and number overrides to determine the effective call settings.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Settings and defaults</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Omitted update fields keep saved values.
+- Number overrides can change the effective settings for one phone number.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agent-inheritance) · [Glossary](/guides/glossary)
+
+</div>
+
 Use these fields with the matching engine and client versions.
 See [settings by channel](/concepts/agent-channels) and
 [privacy/action inheritance](/concepts/agent-inheritance) before treating a saved field
 as an effective behaviour on every channel.
 All four read/write responses use the same reviewed projection. Responses never contain
 `twilio_auth_token`; `twilio_account_sid` is a legacy readable account identifier.
+
 
 ## Inputs
 
@@ -94,3 +117,9 @@ More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 w
 
 - [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long): Keep each word or phrase within 50 characters to save Shorten the term. details.field is boosted_keywords; details.limit is 50.
 - [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large): This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte.
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

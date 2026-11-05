@@ -1,9 +1,31 @@
 ---
-title: "API authentication and permissions"
-sidebarTitle: "API authentication and permissions"
+title: "Authenticate API requests"
+sidebarTitle: "Authentication"
 description: "Authenticate Nixflex API requests with a server-side key. Understand account ownership, personal sessions and Owner, Admin and Member permissions."
 canonical: "https://docs.nixflex.com/api-reference/authentication"
 ---
+Authenticate server requests with the owning account credential and follow the permission rule for each operation.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Authentication</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the full account credential on your server.
+- Personal roles and organisation API keys have different authority; follow the operation-specific rule.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/authentication) · [Glossary](/guides/glossary)
+
+</div>
+
 ## Send your API key
 
 Most public operations require this header:
@@ -14,6 +36,7 @@ Content-Type: application/json
 ```
 
 The credential is the key ID, a colon, and the key secret. A verified personal dashboard Bearer session is a separate credential and is accepted only where an operation explicitly documents it. Keep the entire credential server-side; never put it in a widget, query string, or support screenshot.
+
 
 ## Accounts and permissions
 
@@ -48,3 +71,9 @@ curl 'https://api.nixflex.com/v1/agents?limit=1' -H "Authorization: Bearer $NXF_
 ```
 
 A valid empty list is successful. Authentication failure uses the [standard error shape](/api-reference/errors#response-shape). For throttling, read `Retry-After` and follow the [retry rules](/api-reference/retries).
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

@@ -1,21 +1,33 @@
 ---
-title: "Organisation roles and permissions"
-sidebarTitle: "Organisation roles and permissions"
+title: "Check organisation roles and permissions"
+sidebarTitle: "Roles and permissions"
 description: "Compare Owner, Admin and Member permissions in Nixflex. Keep server-side API key authority separate from personal dashboard sessions and membership checks."
 canonical: "https://docs.nixflex.com/api-reference/organisation/roles"
 ---
-<style>{`
- table { min-width: 0 !important; width: 100%; table-layout: fixed; }
- table th, table td { min-width: 0 !important; overflow-wrap: anywhere; padding-left: 6px; padding-right: 6px; }
- div[style*="min-width: fit-content"] { min-width: 0 !important; width: 100%; }
- div:has(> table) { display: block; width: 100%; padding-left: 0; padding-right: 0; }
- table th:nth-child(1) { width: 28%; }
- table th:nth-child(2), table th:nth-child(3) { width: 20%; }
- table th:nth-child(5) { width: 18%; }
- table th:nth-child(4) { width: 14%; white-space: nowrap; }
-`}</style>
+Check the actor role and operation before offering an organisation action in your app.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Roles and permissions</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the actor role and the target action together to decide access.
+- Never use an organisation key to bypass a personal role restriction in a client.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
 
 The organisation API key is Owner-level server-side authority. Keep it private. A personal dashboard session uses the person’s current membership and MFA; never share the organisation key to bypass a personal role. These routes require organisations to be enabled in the environment. A disabled environment returns 404.
+
 
 ## Role permissions
 
@@ -38,3 +50,9 @@ Removal and role-change responses include `live_disconnect_pending`. A 202 respo
 Activity JSON pages contain up to 50 events with a `next_cursor`. CSV exports stream all matching events in 500-row chunks, with a permission check on each chunk. Activity is retained for up to 12 months. The request fields and response shape are documented on the activity operation page.
 
 [Get the signing secret](/api-reference/organisation/get-organisation-signing-secret) is an explicit private read. It is absent from context and member lists and has no candidate SDK, CLI or MCP reveal method. Never place that response in logs or automatic tool output.
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

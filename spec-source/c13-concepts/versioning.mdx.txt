@@ -1,0 +1,69 @@
+---
+title: "API versions and compatibility"
+sidebarTitle: "API versions and compatibility"
+description: "Track Nixflex API compatibility, additive fields and retired routes. Preserve unknown values and confirm client support before changing a live integration."
+canonical: "https://docs.nixflex.com/api-reference/versioning"
+---
+## Versioned base URL
+
+The public API uses `https://api.nixflex.com/v1`. Its path version is separate from SDK, CLI, MCP, and documentation versions. Installing a client does not change the engine deployment or enable an account feature.
+
+## Compatibility rules
+
+| Change | Integration guidance |
+| --- | --- |
+| New optional response field | Read the fields you need and tolerate additional fields. |
+| New error code | Keep an unknown-code fallback, preserve safe diagnostics, and check the catalog. |
+| Omitted update field | Keep the existing value; omission does not reset it. |
+| Null or empty value | Use only where the individual field permits clearing. |
+| Retired operation | Use its documented replacement. |
+| API-key rotation | Update applications immediately; the old secret becomes invalid. |
+
+Inspect warnings in successful responses; do not assume every supplied field was applied.
+
+## Changelog
+
+### 4 November 2026 — booking results and safer deletion
+
+These changes are confirmed in the reviewed staging engine. Publish and deploy them together for the intended environment; a documentation update alone does not change production behaviour.
+
+| Change | Integration action |
+| --- | --- |
+| New [`call.bookings` event](/api-reference/call-bookings) | Read the ordered confirmed-action `timeline` and the separate `final` result for each booking UID. Count active final results. Verify its required signature and deduplicate `(account, event, call_id)` within each receiver. |
+| SMS campaign deletion | Handle 409 `campaign_settlement_pending` with `details.deleted:false` and 409 `campaign_in_progress`. Keep the campaign until confirmed success. A 503 `deletion_unavailable` leaves the result unconfirmed. |
+| Single-call deletion | A narrowly verified ended, settled call with a skipped, proven-empty recording can complete cleanup. Missing recording links or uncertain evidence still do not prove deletion. Bulk and account deletion are unchanged. |
+| Knowledge draft reads | Legacy repairs are projected without saving. Explicit save or accept persists them. Keep the returned revision; MCP support still depends on registered client tools. |
+| Automatic keyterms | URL and API-path text is excluded from automatic speech hints. Older hints refresh in the background; manual terms and limits are unchanged. |
+| Booking contact approval | Spell the email local part; say an exact familiar domain as words. Name and email need separate approvals. A yes to one clarified letter does not approve the full address. |
+
+The existing `call.completed` and `sms.booking` shapes remain unchanged. There is no new SMS-thread aggregate event or new HTTP operation for `call.bookings`. The updated email design introduces no public API change.
+
+### 1 November 2026 — API foundation and organisation behaviour
+
+New agents normally use **300 seconds maximum call duration**, **10 seconds silence hang-up**, and **dynamic greeting on**. These defaults apply when creation omits those settings; saved agents are not reset. The create response includes resolved values and may contain ignored-field warnings.
+
+Organisation keys remain with the business when ownership changes. Human invitation and ownership acceptance use verified dashboard sign-in. API-key authentication and signing secrets are separate. Activity records actions and results; acceptance does not prove background work completed.
+
+The reference separates authentication, errors, paging, retries, and version history. Phone-number cursor paging is opt-in; agents use offsets. The public OpenAPI foundation contains only the supported operations included in that file.
+
+### 1 November 2026 — knowledge-only Test and source cleanup
+
+Knowledge belongs to the agent. Mutations use their endpoint's revision and idempotency checks. Accepted background work exposes a job or resource to read. Number-specific knowledge routes are retired; use the agent's knowledge base.
+
+Knowledge Test now starts in knowledge-only mode. It does not use full-agent settings, numbers, or call purposes. Old full-agent sessions are closed; create a new knowledge session. The former test-options route is retired. Replies identify whole-base or search selection, remove spoken tags, and return `knowledge_loading` if loading exceeds five seconds. Source lists show live sources; deleting the last topic removes an empty source and its saved original. Live answer counts use the current agent assignment.
+
+Feature availability follows the engine deployed in your environment. Confirm release availability and client support before adopting a newly documented operation in production.
+
+## Follow a change
+
+Check the endpoint, [error catalog](/api-reference/errors), and client documentation together. Keep the engine, reference, bundled schema, and client versions aligned when adopting a change.
+
+## Calendar and credential updates
+
+The reference now includes four per-number Google Calendar operations: [connect](/api-reference/integration-settings/google-calendar), [status](/api-reference/integration-settings/google-calendar-status), [settings](/api-reference/integration-settings/google-calendar-settings) and [disconnect](/api-reference/integration-settings/google-calendar-disconnect). `send_invites` is a boolean and defaults to true when no value was stored; omitting it on PATCH preserves the existing setting.
+
+[Update phone-number credentials](/api-reference/phone-numbers/credentials) changes an existing carrier connection in place and preserves number settings. Handle `carrier_outcome_unknown` and `credential_save_pending` separately; do not recover by deleting and re-importing.
+
+**Compatibility change:** single-SMS suppression now returns HTTP 409 `do_not_contact`, type `conflict`, instead of 400 `invalid_request`. Stop on an opt-out. Campaigns continue to hold affected recipients individually.
+
+[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. Contact approvals ask the name first, then spell the email, with a separate yes for each. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.
