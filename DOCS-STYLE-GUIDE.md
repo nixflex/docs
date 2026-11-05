@@ -63,6 +63,8 @@ Set `styling.codeblocks` to `dark` in `docs.json` so code stays on the locked da
 
 The small-text green is a contrast correction to the reference's `#128C4A`: it gives 5.03:1 on the pale-green panel and 5.42:1 on white, compared with 4.00:1 and 4.31:1. The brand accent stays `#25D366`. Use the darker colour for small meaningful text; bright green is an accent, not a small-text colour. Dark-mode text green `#75EAA2` gives 10.01:1 on `#102C20`.
 
+The shared CSS also applies the readable light-theme green to native selected sidebar links, active contents links and the small page-category label. Keep these rules scoped to navigation and the header: dark code blocks have their own text colours. Brand backgrounds and accents remain unchanged. Check these native labels when upgrading Mintlify because its rendered structure can change.
+
 **Navigation must look full.** Keep all five tabs in the locked order. Top-level groups are visible; set `expanded: true` on every nested group. Prefer shallow groups with short labels. All entries must be available without opening collapsed topic groups. A long tab naturally scrolls; do not shrink text to force 162 links into one viewport. On phones, the menu may use a drawer, but its topic groups still start expanded. Mintlify documents this behavior in [Navigation](https://www.mintlify.com/docs/organize/navigation).
 
 ## Examples and accurate claims
