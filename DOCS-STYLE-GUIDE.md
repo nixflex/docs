@@ -103,6 +103,8 @@ Descriptions should be complete, unique sentences, generally 80–160 characters
 
 Check real generated HTML, readable `.md` routes, `llms.txt`, sitemap page-set equality and canonical URLs. Do not equate equal counts with equal sets. Keep public API schemas downloadable and matching the reviewed source. A local export without a sitemap is not proof of hosted indexing. Keep authoring templates and reports out of the public page/index set.
 
+Keep source backups matching `*.backup*` and `*.bak_*` in `.mintignore`. Check the entire exported file inventory as well as the HTML page set: an old source copy must not become a public static download.
+
 Mintlify generates page metadata, social images and structured data from configuration/frontmatter; inspect the installed and hosted output rather than assuming a new hosted feature exists in an older local CLI. Prefer its native page-specific share image and unique description; do not replace every page with one generic image. Check JSON-LD against visible facts and avoid duplicate custom markup or invented FAQ/review/rating data. [Mintlify SEO](https://www.mintlify.com/docs/optimize/seo) and [Markdown export](https://www.mintlify.com/docs/ai/markdown-export) describe these facilities.
 
 `llms.txt` and Markdown copies help tools consume the docs; they do not guarantee inclusion in Google or an AI answer. Google's AI search guidance requires the same useful, crawlable content as ordinary search and no special AI schema. Keep technical access, textual content and honest claims as the priority. [Google AI features](https://developers.google.com/search/docs/appearance/ai-features) and [title guidance](https://developers.google.com/search/docs/appearance/title-link).
