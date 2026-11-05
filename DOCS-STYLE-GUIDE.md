@@ -123,6 +123,7 @@ C13 applies this standard to the whole API tab and exactly five Developer sample
 | Existing endpoint fields, limits, examples and errors | The relevant C4/C5/C6/C8 source JSON or `spec-source/c9-manual-pages.json`; the established contract builders run first |
 | B56 schema and request-state semantics | `scripts/c13-contracts.mjs`, checked against the pinned engine commit |
 | API concept/event prose | The matching `.mdx.txt` file in `spec-source/c13-concepts/`; `scripts/build-c13-pages.mjs` supplies the shared layout and B56 cross-links |
+| Hand-authored agent-creation endpoint | `spec-source/c13-standalone/agents--create.mdx.txt` holds its contract tables and examples; the C13 plan supplies its lead and layout. Never use the generated page as its own input. |
 | One of the five Developer samples | The matching `.mdx.txt` file in `spec-source/c13-developer/` |
 | Shared visual style | `styles.css`; check both light and dark themes and a phone viewport |
 

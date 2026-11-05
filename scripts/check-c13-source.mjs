@@ -35,7 +35,7 @@ for(const row of site.pages){
   check(!unreviewedCarrierCopy(row.slug,s),row.slug+' approved carrier wording');
  }
  if(row.tab==='API reference'||plan.developerSamples.includes(row.slug)){
-  check(s.includes('className="nxf-facts"')&&s.includes('className="nxf-important"')&&s.includes('className="nxf-audience"'),row.slug+' shared page structure');
+  check(['nxf-facts','nxf-important','nxf-audience'].every(c=>(s.match(new RegExp('className="'+c+'"','g'))||[]).length===1),row.slug+' exactly one facts panel, key-point panel and audience switch');
   check(meta(s,'sidebarTitle').length>0&&meta(s,'sidebarTitle').length<=36,row.slug+' short sidebar title');
   check(!s.includes('<style>'),row.slug+' shared styles only');
   const markup=s.replace(/```[^\n]*\n[\s\S]*?```/g,'');

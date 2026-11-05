@@ -55,7 +55,7 @@ for(const row of plan.api){
  const split=s.split(/^---\s*$/m),body=split.slice(2).join('---').trim(),firstHeading=body.indexOf('\n## ');
  let pre=firstHeading<0?body:body.slice(0,firstHeading),rest=firstHeading<0?'':body.slice(firstHeading).trimStart();
  // Preserve supplementary preamble paragraphs but replace the old lead and page-local style.
- const paragraphs=pre.split(/\n\s*\n/);let extra=(row.source?paragraphs:paragraphs.slice(1)).join('\n\n');
+ const paragraphs=pre.split(/\n\s*\n/);let extra=(row.source&&!row.method?paragraphs:paragraphs.slice(1)).join('\n\n');
  if(row.slug==='api-reference/calls/client-safety')extra='These examples describe reviewed kit candidates, not a claim that the same methods are in your installed client. Verify [release status](/sdks/ecosystem) before using them.';
  const op=row.method?spec.paths[row.path][row.method.toLowerCase()]:null;
  const factRows=op?[['Method',row.method],['Success',Object.keys(op.responses).filter(s=>/^2\d\d$/.test(s)).join(' / ')],['Scope',row.slug==='api-reference/account/create-key'?'New API account':'Owning account']]:[['Guide','API reference'],['Topic',row.sidebarTitle]];
