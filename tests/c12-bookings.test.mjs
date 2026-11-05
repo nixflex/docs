@@ -11,7 +11,7 @@ const page=read('api-reference/call-bookings.mdx');
 const helper=vm.runInNewContext(page.match(/```javascript\s*\n([\s\S]*?)```/)[1]+'\nbookingResult;');
 
 test('C12 exposes booking events separately from callable operations and keeps the page example in sync',()=>{
- assert.equal(Object.values(spec.paths).flatMap(Object.keys).filter(x=>['get','post','put','patch','delete'].includes(x)).length,147);
+ assert.equal(Object.values(spec.paths).flatMap(Object.keys).filter(x=>['get','post','put','patch','delete'].includes(x)).length,149);
  assert.ok(!Object.keys(spec.paths).some(x=>x.includes('call.bookings')));
  const event=spec.webhooks['call.bookings'].post;
  assert.deepEqual(event.security,[]);

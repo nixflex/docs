@@ -41,5 +41,5 @@ test('C10 carrier setup preserves wire names, exact pairs and non-retryable unkn
 test('C10 new operation IDs are unique and all existing IDs remain stable',()=>{
  const previous=JSON.parse(execFileSync('git',['show','a427290:api-reference/public.openapi.json'],{cwd:root,encoding:'utf8',maxBuffer:10*1024*1024}));
  for(const [p,ops]of Object.entries(previous.paths))for(const [m,op]of Object.entries(ops))assert.equal(spec.paths[p][m].operationId,op.operationId,p);
- const ids=Object.values(spec.paths).flatMap(ops=>Object.values(ops).map(op=>op.operationId));assert.equal(ids.length,147);assert.equal(new Set(ids).size,147);
+ const ids=Object.values(spec.paths).flatMap(ops=>Object.values(ops).map(op=>op.operationId));assert.equal(ids.length,149);assert.equal(new Set(ids).size,149);
 });

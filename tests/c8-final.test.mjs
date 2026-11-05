@@ -6,7 +6,7 @@ import {spawnSync} from 'node:child_process';
 const root=path.resolve(import.meta.dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const defs=Object.values(JSON.parse(read('spec-source/c8-knowledge.json')).operations),spec=JSON.parse(read('api-reference/public.openapi.json'));
 test('all historical public operations plus the requested keyterm read have stable, linked pages',()=>{
- const allow=JSON.parse(read('spec-source/public-operations.json'));assert.equal(allow.filter(r=>r.number<=191&&r.public).length,141);assert.equal(allow.filter(r=>r.public).length,147);assert.equal(defs.length,40);
+ const allow=JSON.parse(read('spec-source/public-operations.json'));assert.equal(allow.filter(r=>r.number<=191&&r.public).length,141);assert.equal(allow.filter(r=>r.public).length,149);assert.equal(defs.length,40);
  const nav=JSON.parse(read('docs.json')).navigation.tabs.find(t=>t.tab==='API reference').groups.find(g=>g.group==='Knowledge');assert.equal(nav.pages.length,40);
  const before=spawnSync('git',['show','2da2612:api-reference/public.openapi.json'],{cwd:root,encoding:'utf8',maxBuffer:20*1024*1024});assert.equal(before.status,0);for(const [p,item]of Object.entries(JSON.parse(before.stdout).paths))for(const [m,op]of Object.entries(item))assert.equal(spec.paths[p][m].operationId,op.operationId);
  const errors=read('api-reference/errors.mdx');for(const d of defs){const page=read(d.slug+'.mdx');assert.ok(nav.pages.includes(d.slug));assert.equal((page.match(/^## /gm)||[]).length,8);assert.ok(spec.paths[d.specPath][d.method.toLowerCase()]);for(const e of d.errors)assert.ok(errors.includes('id="'+e[1]+'"'),e[1]);assert.doesNotMatch(page,/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i);}
