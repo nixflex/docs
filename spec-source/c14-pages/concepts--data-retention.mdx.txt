@@ -46,7 +46,7 @@ GET/list expose it. `GET /v1/account/retention` returns the saved default,
 The worker checks the applicable policy and waits for required settlement,
 post-call processing, recording writers and delivery decisions before erasing
 eligible content. A cleanup or storage failure remains pending; it is not reported
-as successful erasure. Worker configuration and deployed SQL must be ready.
+as successful erasure. Read the reported `processing_enabled` state; a saved policy alone does not prove that cleanup is running.
 
 `0` does not delete a live call or suppress its post-call analysis. Required
 post-call data is prepared for the API/webhook workflow first. It does not promise

@@ -33,7 +33,7 @@ Use the supported authenticated session flow to listen to an eligible call witho
 
 The dashboard checks organisation membership, number monitoring and current call eligibility before granting access. Browser media access uses scoped, short-lived authorisation; never expose the shared account API key in browser code or a public playback URL.
 
- The public number monitoring API provides the documented number switch and call view. It is not permission to invent a reusable public media token. Use the supported dashboard session flow for Listen and takeover.
+ Read `monitor_enabled` on the owned number and change its saved permission with the number PATCH. That switch does not create a listening session or media grant. Never invent a reusable public media token. Use the supported dashboard session flow for Listen and takeover.
 
  Listening, requesting takeover and a committed human takeover are distinct states. A failed microphone check leaves no confirmed handover. After confirmed takeover, the AI does not return automatically. Permission changes can end listening or cancel pending takeover; committed human work may retain the controls needed to finish its call.
 
@@ -41,4 +41,4 @@ The dashboard checks organisation membership, number monitoring and current call
 
 - [Use live monitoring](/guides/live-monitoring)
 - [Team roles](/concepts/organisations)
-- [Number monitoring API](/api-reference/phone-numbers/monitor)
+- [Saved monitoring switch](/api-reference/phone-numbers/update)

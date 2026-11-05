@@ -38,21 +38,26 @@ Describe the business, reason for calling, two or three questions and a polite f
 
 ## 2. Create the call
 
+Before dispatch, generate and persist a UUID with the complete inputs, account and base URL. Use the [local preparation examples](/guides/developer/call-requests), then load that saved UUID into `NXF_REQUEST_ID`. Never generate a fresh UUID inside a send or retry loop. These examples use that existing identity.
+
 <CodeGroup>
 
 ```bash cURL
+: "${NXF_REQUEST_ID:?Load the saved request UUID before sending}"
 curl --request POST \
   --url "https://api.nixflex.com/v1/calls/outbound" \
   --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
-  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
+  --data "{\"request_id\":\"$NXF_REQUEST_ID\",\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
 const baseUrl = 'https://api.nixflex.com';
+const requestId = process.env.NXF_REQUEST_ID;
+if (!requestId) throw new Error('Load the saved request UUID before sending');
 const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
-const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
+const result = await client.calls.create({request_id:requestId,agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
 // Handle result privately; do not log secrets or call content.
 ```
 
@@ -62,23 +67,24 @@ from pathlib import Path
 from nixflex import Nixflex
 base_url = "https://api.nixflex.com"
 with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
-    result = client.calls.create(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
+    result = client.calls.create(request_id=os.environ["NXF_REQUEST_ID"],agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
+: "${NXF_REQUEST_ID:?Load the saved request UUID before sending}"
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls create --request-id "$NXF_REQUEST_ID" --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
 ```
 
 </CodeGroup>
 
 ## 3. Save the returned identity
 
-Persist `call_id` with your operation record. Acceptance is not a connected call. If the network response is lost, reconcile before repeating; do not enable automatic transport retries for call creation.
+Persist `call_id` with the existing UUID and operation record. Keep a known call ID even if the receipt reports `request_status:unconfirmed`; it still says `safe_to_retry:false`. Acceptance is not a connected call. If the network response is lost, reconcile before repeating; do not enable automatic transport retries for call creation.
 
 ## 4. Read the outcome
 
-Read the call or consume its signed event. Use observed answers and analysis as reviewable data. A summary can be delayed or unavailable and is not a guarantee every requested question was answered.
+Read the [saved outbound request](/api-reference/calls/get-outbound-request), then read its accepted call or consume the signed event. Pending, unknown and an unavailable request read do not authorise a replacement call. Use observed answers and analysis as reviewable data. A summary can be delayed or unavailable and is not a guarantee every requested question was answered.
 
 ## 5. Plan follow-up deliberately
 

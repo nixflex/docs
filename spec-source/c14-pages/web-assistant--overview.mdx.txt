@@ -82,7 +82,7 @@ nixflex web-agent get '+12025550123' --json --base-url "https://api.nixflex.com"
 
 ## 2. Prepare focused settings
 
-Keep `revision` as the returned decimal string. Use the endpoint’s allowed `settings` fields only. Website instructions are independent from telephone and SMS prompts. The website prompt is limited to 16,000 characters.
+Keep `revision` as the returned decimal string. Use the endpoint’s allowed `settings` fields only. Website instructions are independent from telephone and SMS prompts. The website prompt is limited to 16,000 UTF-16 code units.
 
 ## 3. Save with concurrency protection
 
@@ -106,7 +106,7 @@ GET returns a safe settings projection and revision. A successful save returns t
 | --- | --- |
 | 409 widget_settings_changed | Reread and merge deliberate changes. |
 | Web agent off | Saved voice preference is not effective voice access. |
-| Prompt over 16,000 characters | Shorten channel instructions. |
+| Prompt over 16,000 UTF-16 code units | Shorten channel instructions. |
 | Install not ready | Resolve configured snippet availability. |
 | Visitor identity present | Treat as self-reported, not verified account access. |
 

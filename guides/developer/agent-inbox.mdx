@@ -34,6 +34,8 @@ Use an owning account credential on the server. Check `GET /v1/agent-inbox/featu
 
 ## 1. Read available numbers
 
+SDK and CLI examples use the [exact reviewed candidate packages](/sdks/ecosystem). Verify their identity and release status before using these commands.
+
 <CodeGroup>
 
 ```bash cURL
@@ -97,7 +99,7 @@ The numbers response contains `numbers`, `agents` and `has_more`. Thread replies
 | --- | --- |
 | 400 `invalid_inbox_request` | Check channel, E.164 number, filters and paired cursor. |
 | 404 `inbox_not_found` | Check number/thread ownership. |
-| 409 `widget_settings_changed` | Reread website settings before saving with a fresh revision. |
+| Lost thread update response | Reread this thread before repeating the intended archive or read-marker change. |
 | 503 `agent_inbox_disabled` | Feature is not enabled; do not render an empty-success inbox. |
 | 503 `inbox_unavailable` | Retry bounded reads and preserve local state. |
 

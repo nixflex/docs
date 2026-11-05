@@ -58,14 +58,18 @@ if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.cod
 
 ```python Python
 import os, json
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        return None
 
 request = Request(
     'https://api.nixflex.com/v1/agents/agent_example',
     method='GET',
     headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
 )
-with urlopen(request, timeout=30) as response:
+with build_opener(NoRedirect).open(request, timeout=30) as response:
     result = json.load(response)
     # Handle the private result without logging it.
 ```

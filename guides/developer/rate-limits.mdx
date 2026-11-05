@@ -28,7 +28,31 @@ Use response headers and a bounded polling policy to stay within the account’s
 
 </div>
 
-For a safe read, wait at least that long, add jitter and stop at an application deadline. Cache stable catalog results, share polling work between clients and stop polling terminal jobs. Avoid multiple workers retrying together.
+## Read the current allowance
+
+Use the allowance returned for the authenticated account key. Do not hard-code a requests-per-minute figure from another environment or account.
+
+| Header | What the application should do |
+| --- | --- |
+| `RateLimit-Limit` | Record the current HTTP request allowance. |
+| `RateLimit-Remaining` | Reduce or share polling as the remaining allowance falls. |
+| `Retry-After` | On a throttled safe read, wait at least this many seconds. |
+
+An authenticated request above its allowance returns 429 `rate_limit_exceeded`. Its details include `limit` and `retry_after_seconds`. Invalid credentials can be refused before these headers are added; missing headers are not evidence of an unlimited allowance.
+
+## Bound a read-retry policy
+
+Choose a maximum elapsed time and attempt count for the task. For example, an interactive usage read might allow three attempts within 30 seconds; these are application choices, not server limits.
+
+1. Set a timeout on each read, limited by the remaining overall budget.
+2. On a retryable read failure, use the returned wait guidance. Add a small random delay so workers do not all retry together.
+3. If the required wait would exceed the remaining budget, stop and report that the read is unavailable. Do not shorten `Retry-After` to fit another attempt.
+4. On success, validate the response and preserve null or unavailable fields. A malformed response is not an empty successful result.
+5. Stop on authentication, permission or unchanged validation errors. Correct their cause before another request.
+
+Cache stable catalogue results, share polling work between clients and stop polling terminal jobs. Keep each job's saved ID so a user can resume later instead of creating replacement work. The [Node read example](/sdks/node) and [direct HTTP example](/sdks/other-languages) show bounded individual requests.
+
+## Keep business limits separate
 
 | Limit | What it controls |
 | --- | --- |
@@ -37,4 +61,19 @@ For a safe read, wait at least that long, add jitter and stop at an application 
 | Balance and feature allowances | Whether the requested work can be admitted |
 | Knowledge limits | Resource counts, job capacity and training allowances |
 
-More HTTP capacity does not remove the other limits. A throttle is not general permission to repeat a write. Reconcile any uncertain call, message or credential update using its operation contract. See [rate limits](/api-reference/rate-limits), [errors](/guides/developer/errors) and [idempotency](/guides/developer/idempotency).
+More HTTP capacity does not remove the other limits. Account signup has a separate limit and is not a connectivity test.
+
+## Reconcile writes before another attempt
+
+A throttle is not general permission to repeat a write. Preserve the original call UUID, Knowledge operation key or returned resource identity. A write may already have succeeded before a network response was lost; waiting does not make a replacement safe.
+
+| Result | Next step |
+| --- | --- |
+| 429 on a safe read | Honour the wait and the application deadline. |
+| Transient read failure without wait guidance | Use bounded backoff and retain an unavailable state when the budget expires. |
+| Write result unknown | Reconcile the same operation before another deliberate action. |
+| Call capacity reached | Wait for admitted work to resolve; do not increase HTTP polling to create capacity. |
+
+- [Read the exact header contract](/api-reference/rate-limits)
+- [Handle API errors](/guides/developer/errors)
+- [Preserve operation identities](/guides/developer/idempotency)

@@ -60,6 +60,8 @@ curl --fail-with-body --request PUT \
 ```javascript Node
 const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
   method: 'PUT',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
   headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({"require_booking_confirmation":true}),
 });
@@ -70,7 +72,11 @@ if (!response.ok) throw new Error(`HTTP ${response.status}: ${result.error?.code
 
 ```python Python
 import os, json
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        return None
 
 request = Request(
     'https://api.nixflex.com/v1/agents/agent_example',
@@ -78,7 +84,7 @@ request = Request(
     headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY'], 'Content-Type': 'application/json'},
     data='{"require_booking_confirmation":true}'.encode('utf-8'),
 )
-with urlopen(request, timeout=30) as response:
+with build_opener(NoRedirect).open(request, timeout=30) as response:
     result = json.load(response)
 # Use the result privately; do not log account or caller data.
 ```
