@@ -99,10 +99,13 @@ const view = bookingView(payload); // helper below; keep private booking data of
 
 ```javascript State mapping
 function bookingView(payload) {
-  if (!payload || typeof payload.call_id !== 'string') throw new Error('Invalid booking response');
+  if (!payload || typeof payload.call_id !== 'string' || !payload.call_id) throw new Error('Invalid booking response');
   if (payload.state === 'ready') {
-    if (!payload.result || !Array.isArray(payload.result.final)) throw new Error('Missing ready result');
-    return {state: 'ready', activeBookings: payload.result.final.filter(item => item.status === 'active').length, result: payload.result};
+    const rows = payload.result?.final;
+    if (!Array.isArray(rows) || rows.length === 0 || rows.some(item => !item || !['active', 'cancelled'].includes(item.status))) {
+      throw new Error('Unrecognised booking rows');
+    }
+    return {state: 'ready', activeBookings: rows.filter(item => item.status === 'active').length, result: payload.result};
   }
   if (!['none', 'processing', 'deleted', 'unavailable'].includes(payload.state) || payload.result !== null) {
     throw new Error('Unrecognised booking result');
@@ -110,6 +113,8 @@ function bookingView(payload) {
   return {state: payload.state, activeBookings: payload.state === 'none' ? 0 : null, result: null};
 }
 ```
+
+If this helper rejects an unrecognised response, keep the result unavailable rather than showing zero. It checks the fields used for this count; validate any other fields before using them in your application.
 
 | State | UI meaning | Refresh behaviour |
 | --- | --- | --- |

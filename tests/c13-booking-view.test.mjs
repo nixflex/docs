@@ -23,5 +23,8 @@ test('C13 booking UI counts final active bookings after moves and cancellations'
  }
 });
 test('C13 booking UI refuses malformed and unknown response shapes',()=>{
- for(const value of [null,{}, {call_id:3,state:'none',result:null},{call_id:'call_example',state:'ready',result:null},{call_id:'call_example',state:'none',result:{}},{call_id:'call_example',state:'complete',result:null}])assert.throws(()=>view(value));
+ for(const value of [null,{}, {call_id:3,state:'none',result:null},{call_id:'',state:'none',result:null},{call_id:'call_example',state:'ready',result:null},{call_id:'call_example',state:'none',result:{}},{call_id:'call_example',state:'complete',result:null}])assert.throws(()=>view(value));
+ for(const final of [[],[null],[{}],[{status:'unknown'}],[{status:'active'},{status:'pending'}]]){
+  assert.throws(()=>view({call_id:'call_example',state:'ready',result:{final}}),'Unknown rows must not become a lower active count');
+ }
 });
