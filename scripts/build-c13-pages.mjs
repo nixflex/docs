@@ -86,7 +86,15 @@ for(const row of plan.api){
  if(row.slug==='api-reference/call-bookings')s+='\n\n## Read a retained booking result\n\nUse [GET call booking results](/api-reference/calls/get-bookings) when reconciling a missed event. The read distinguishes ready, none, processing, deleted and unavailable. Only ready includes this public event projection as result; it is data without a delivery signature. An absent event or a completed call alone does not prove there were no bookings.\n';
  if(row.slug==='api-reference/errors'){
   s=s.replace('## Response shape','<span id="error-envelope"></span>\n\n## Response shape');
-  for(const [c,fix]of Object.entries(specific))s=s.replace(new RegExp('(\\| <span id="'+c+'">[^\\n]+?\\| \\d+ \\| )[^\\n]*?( \\|)','g'),'$1'+fix+'$2');
+  // Four-column catalogues retain their meaning; three-column tables contain recovery only.
+  s=s.split('\n').map(line=>{
+   const match=line.match(/^\| <span id="([a-z_]+)">/),fix=match&&specific[match[1]];
+   if(!fix)return line;
+   const columns=line.split('|');
+   if(columns.length!==5&&columns.length!==6)throw new Error('Unexpected error catalogue row: '+match[1]);
+   columns[columns.length-2]=' '+fix+' ';
+   return columns.join('|');
+  }).join('\n');
   const grouped=new Map();
   for(const [status,c,meaning,fix]of c13Errors){if(new RegExp('id="'+c+'"').test(s))continue;const prior=grouped.get(c);if(prior){prior[1]+=' / '+status;prior[2]+=' '+meaning;prior[3]+=' '+fix;}else grouped.set(c,['<span id="'+c+'">'+c+'</span>',String(status),meaning,fix]);}
   s+='\n\n## Call request and booking read errors\n\n'+table(['Code','Status','What it means','What to do'],[...grouped.values()])+'\n';

@@ -62,6 +62,12 @@ for(const row of site.pages){
 check(same(bindings,ops.map(o=>o.key)),'Every public operation has exactly one endpoint page');
 const catalog=read('api-reference/errors.mdx'),ids=[...catalog.matchAll(/<span id="([^"]+)"/g)].map(m=>m[1]);
 check(new Set(ids).size===ids.length,'Error catalog anchors are unique');
+for(const line of read('spec-source/c13-concepts/errors.mdx.txt').split(/\r?\n/)){
+ const match=line.match(/^\| <span id="([a-z_]+)">/),columns=line.split('|');
+ if(!match||columns.length!==6)continue;
+ const generated=catalog.split(/\r?\n/).find(row=>row.startsWith('| <span id="'+match[1]+'">'));
+ check(generated?.split('|')[3].trim()===columns[3].trim(),match[1]+' retains its error meaning separately from recovery');
+}
 for(const r of config.redirects.filter(r=>r.source.startsWith('/errors/')&&!r.source.includes(':')))check(ids.includes(r.destination.split('#')[1]),r.source+' resolves to an explicit error anchor');
 const originalConfig=JSON.parse(git('1dce38d','docs.json'));
 check(JSON.stringify(config.contextual)===JSON.stringify(originalConfig.contextual),'Existing real contextual menu preserved');

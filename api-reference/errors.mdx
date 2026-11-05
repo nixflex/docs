@@ -99,7 +99,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
 | <span id="base_limit">base_limit</span> | 429 | This account has reached its knowledge base limit. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
-| <span id="booking_provider_conflict">booking_provider_conflict</span> | 409 | Choose one provider and disconnect the unwanted connection deliberately. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="booking_provider_conflict">booking_provider_conflict</span> | 409 | Another booking integration is already enabled for this number. | Choose one provider and disconnect the unwanted connection deliberately. |
 | <span id="busy">busy</span> | 429 | Please wait for the existing knowledge jobs to finish. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
 
 ### C
@@ -107,8 +107,8 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
 | <span id="call_data_unavailable">call_data_unavailable</span> | 503 | Could not check this call data. Please try again. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="call_in_progress">call_in_progress</span> | 409 | This call is still in progress. Try again after it ends. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
-| <span id="caller_not_found">caller_not_found</span> | 404 | The requested caller-context record was not found. | Check the resource ID and owning account. Do not assume an absent item authorises a replacement write. |
+| <span id="call_in_progress">call_in_progress</span> | 409 | This call is still in progress. Try again after it ends. | Wait for the call to end, then read its current state before a deliberate deletion. |
+| <span id="caller_not_found">caller_not_found</span> | 404 | The requested caller-context record was not found. | Check the exact caller and owned-number pair; do not substitute another caller’s record. |
 | <span id="campaign_creation_failed">campaign_creation_failed</span> | 400 | Campaign input or creation was refused; inspect the returned validation details. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="campaign_in_progress">campaign_in_progress</span> | 409 | A campaign is still running or scheduled. Cancel it or wait for it to finish before deleting this data. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="campaign_launch_failed">campaign_launch_failed</span> | 400 | The campaign could not be launched as requested. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
@@ -117,9 +117,9 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="campaigns_paused">campaigns_paused</span> | 503 | Campaigns are paused for maintenance. Nothing was created or sent - try again in a few minutes. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="capacity_lookup_unavailable">capacity_lookup_unavailable</span> | 503 | Call capacity could not be confirmed. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="carrier_error">carrier_error</span> | 502 | The carrier refused the call. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="carrier_outcome_unknown">carrier_outcome_unknown</span> | 504 | Reconcile the existing carrier change; do not submit different credentials or assume no change occurred. | Check call history and work receipts. Do not redial automatically. |
+| <span id="carrier_outcome_unknown">carrier_outcome_unknown</span> | 504 | The carrier did not confirm the call. It may or may not have been placed - check before retrying. | Reconcile the existing carrier change; do not submit different credentials or assume no change occurred. |
 | <span id="catalog_unavailable">catalog_unavailable</span> | 503 | the voices catalog is not loaded yet; try again shortly | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="cleanup_pending_confirmation">cleanup_pending_confirmation</span> | 409 | Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="cleanup_pending_confirmation">cleanup_pending_confirmation</span> | 409 | Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it. | Ask support to reconcile the cleanup evidence; a missing file alone is not confirmation. |
 | <span id="confirm_topics">confirm_topics</span> | 409 | Confirm the affected topics before removing this source. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="conflicting_fields">conflicting_fields</span> | 400 | Two aliases supplied conflicting values. | Supply each value once. |
 | <span id="contact_policy_unavailable">contact_policy_unavailable</span> | 503 | Contact hours could not be checked. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
@@ -139,10 +139,10 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="db_update_failed">db_update_failed</span> | 500 | The requested update could not be saved. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="delete_committed">delete_committed</span> | 409 | Deletion has already revoked access and must finish. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="deleting">deleting</span> | 409 | This knowledge base is being deleted. | Wait for the existing deletion to finish; do not write to this base. |
-| <span id="deletion_cleanup_failed">deletion_cleanup_failed</span> | 409 | Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="deletion_cleanup_failed">deletion_cleanup_failed</span> | 409 | Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again. | Contact support about the failed cleanup before trying deletion again. |
 | <span id="deletion_pending">deletion_pending</span> | 503 | Private files are still being deleted. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="deletion_unavailable">deletion_unavailable</span> | 503 | Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="deletion_unsettled">deletion_unsettled</span> | 409 | Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="deletion_unavailable">deletion_unavailable</span> | 503 | Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending. | Keep deletion unconfirmed and reconcile the safety check through support before another deliberate action. |
+| <span id="deletion_unsettled">deletion_unsettled</span> | 409 | Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending. | Keep deletion pending until the outcome and charge are settled; do not repeat the delete automatically. |
 | <span id="deprecated_field">deprecated_field</span> | 400 | An unsupported legacy setting was supplied. | Remove the legacy setting and use the documented resource settings. |
 | <span id="dispatch_safety_unavailable">dispatch_safety_unavailable</span> | 503 | Dispatch safety could not be confirmed; this attempt sent and charged nothing. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="do_not_contact">do_not_contact</span> | 409 | This recipient is on your do-not-contact list. The call was not placed or the message was not sent. | Respect the suppression. Do not resend or remove it automatically. |
@@ -228,7 +228,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="invalid_remember_callers">invalid_remember_callers</span> | 400 | remember_callers must be true or false. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_request">invalid_request</span> | 400 | This campaign is still sending. You can delete it once it has finished. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_role">invalid_role</span> | 400 | Choose Admin or Member. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
-| <span id="invalid_timezone">invalid_timezone</span> | 400 | Supply a valid IANA time zone such as Europe/London. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+| <span id="invalid_timezone">invalid_timezone</span> | 400 | Use an IANA time zone such as Europe/London, or UTC. | Supply a valid IANA time zone such as Europe/London. |
 | <span id="invalid_to_number">invalid_to_number</span> | 400 | The 'to' number is invalid. Use international E.164 format (e.g. +447446466847). | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="invalid_topics">invalid_topics</span> | 422, 503 | Prepared knowledge topics could not be validated. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="invalid_token">invalid_token</span> | 401 | The personal dashboard session is invalid or expired. | Sign in with your own verified login again. |
@@ -301,11 +301,11 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="number_move_disabled">number_move_disabled</span> | 503 | Moving numbers is unavailable on this service. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="number_move_unconfirmed">number_move_unconfirmed</span> | 503 | The number move could not be confirmed; read the number. | Read the current number assignment before deciding whether any further move is needed. |
 | <span id="number_not_found">number_not_found</span> | 404 | Phone number not found in your account. | Check the resource ID and owning account. Do not assume an absent item authorises a replacement write. |
-| <span id="number_operation_pending">number_operation_pending</span> | 409 | Wait for the existing number operation to settle and read the number again. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="number_operation_pending">number_operation_pending</span> | 409 | Another import or removal is pending for this number. Do not change its routing. Retry the same request or contact support. | Wait for the existing number operation to settle and read the number again. |
 | <span id="number_operation_unavailable">number_operation_unavailable</span> | 503 | The number operation could not be confirmed. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="number_pending">number_pending</span> | 409 | This number is being imported or removed. Try again when that has finished. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="number_provider_invalid">number_provider_invalid</span> | 409 | This number has no valid carrier set. Re-import it on the Phone Numbers page. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
-| <span id="number_release_pending">number_release_pending</span> | 409 | Wait for removal/release work to settle; do not overwrite credentials during it. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="number_release_pending">number_release_pending</span> | 409 | This number has a pending provider release. Re-import is blocked until its outcome is checked. | Wait for removal/release work to settle; do not overwrite credentials during it. |
 | <span id="number_save_pending">number_save_pending</span> | 503 | The routing change succeeded but its saved completion is pending. | Read the number and operation receipt. Contact support before a deliberate recovery attempt. |
 
 ### O
@@ -333,7 +333,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="password_pdf">password_pdf</span> | 422 | This PDF is password protected. Remove the password from a copy or paste the text. | Use the stated supported input or a clean readable source, then make a deliberate corrected attempt. |
 | <span id="payload_too_large">payload_too_large</span> | 413 | The JSON body exceeds the request parser limit. | Send a smaller JSON body. |
 | <span id="permission_denied">permission_denied</span> | 403 | Only an Admin or the Owner can do this. | Use an authorised account or ask the organisation owner to review access. |
-| <span id="phone_number_not_found">phone_number_not_found</span> | 404 | The business number was not found in this account. | Check the resource ID and owning account. Do not assume an absent item authorises a replacement write. |
+| <span id="phone_number_not_found">phone_number_not_found</span> | 404 | The business number was not found in this account. | Choose a number belonging to this account before reading caller context. |
 | <span id="prompt_check_unavailable">prompt_check_unavailable</span> | 503 | The prompt could not be checked; nothing was saved. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="prompt_too_long">prompt_too_long</span> | 400 | The system prompt exceeds the accepted prompt budget. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="provider_limit">provider_limit</span> | 413 | The prepared answer was too large. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
@@ -346,7 +346,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | Code | Status | Meaning | What to do |
 | --- | --- | --- | --- |
 | <span id="rate_limit_exceeded">rate_limit_exceeded</span> | 429 | Rate limit exceeded. Retry after N seconds. N is the returned wait. | Wait at least Retry-After when supplied. Reads may use bounded backoff; writes require a deliberate decision. |
-| <span id="recording_cleanup_pending">recording_cleanup_pending</span> | 409 | Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+| <span id="recording_cleanup_pending">recording_cleanup_pending</span> | 409 | Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending. | Keep deletion pending and ask support to confirm storage cleanup before another action. |
 | <span id="retention_inherited">retention_inherited</span> | 400 | inherits the account default on create; use PUT to change it | Omit call_retention_days on create. Read the created agent and use PUT to change it. |
 | <span id="retention_unavailable">retention_unavailable</span> | 503 | Could not check the saved data setting. Please try again. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="retry_unavailable">retry_unavailable</span> | 409 | That file has expired. Upload it again or paste its text. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
@@ -454,11 +454,11 @@ These codes also exist in the engine’s personal-session, account, billing or d
 | <span id="dashboard_session_required">dashboard_session_required</span> | 403 | Sign in to download your data. | Use the required personal session or refresh access. |
 | <span id="export_rate_limited">export_rate_limited</span> | 429 | A download was requested recently. Try again in 15 minutes. | Correct the input or account state before retrying. |
 | <span id="export_unavailable">export_unavailable</span> | 503 | Download could not finish. No data was changed. Try again later or contact support. | Read current state before retrying an uncertain write. |
-| <span id="not_configured">not_configured</span> | 503 | Ask the operator to complete the required service configuration. | Read current state before retrying an uncertain write. |
+| <span id="not_configured">not_configured</span> | 503 | Google Calendar is not configured on this environment | Ask the operator to complete the required service configuration. |
 | <span id="ticket_unavailable">ticket_unavailable</span> | 503 | Google connect is not available right now. Try again in a moment. | Read current state before retrying an uncertain write. |
-| <span id="guard_unavailable">guard_unavailable</span> | 503 | Wait for the access check to recover; do not bypass it. | Read current state before retrying an uncertain write. |
+| <span id="guard_unavailable">guard_unavailable</span> | 503 | Could not check this connection right now. Reload this page in a moment. | Wait for the access check to recover; do not bypass it. |
 | <span id="no_refresh_token">no_refresh_token</span> | 409 | Google did not return a refresh token. Connect again. | Correct the input or account state before retrying. |
-| <span id="already_connected">already_connected</span> | 409 | Read the connection status; do not create another consent flow for an already connected number. | Correct the input or account state before retrying. |
+| <span id="already_connected">already_connected</span> | 409 | Another calendar row for this number appeared while saving. Reload the page, check the card and connect again if needed. | Read the connection status; do not create another consent flow for an already connected number. |
 | <span id="save_failed">save_failed</span> | 503 | Google Calendar could not be saved. Connect it again. | Read current state before retrying an uncertain write. |
 | <span id="number_taken">number_taken</span> | 409 | That number is registered to another account | Correct the input or account state before retrying. |
 | <span id="payment_required">payment_required</span> | 402 | Add credit to use the voice preview and the browser test call. | Correct the input or account state before retrying. |
