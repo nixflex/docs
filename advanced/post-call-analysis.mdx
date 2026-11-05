@@ -1,15 +1,36 @@
 ---
-title: "Post-call analysis: extract useful facts from conversations"
+title: "Extract structured facts after a call"
 description: "Configure Nixflex structured call analysis, handle missing answers and use summaries as reviewable information rather than proof of a completed action."
 canonical: "https://docs.nixflex.com/advanced/post-call-analysis"
+sidebarTitle: "Post-call analysis"
 ---
-Collect a small set of useful answers from completed conversations and send confirmed results into your workflow.
+Define the facts your application needs after a call and preserve incomplete or unavailable analysis until processing finishes.
 
-Using the dashboard? See [the business guide](/guides/business/call-history).
+<div className="nxf-facts">
+  <div><small>Timing</small><strong>After conversation</strong></div>
+  <div><small>Fields</small><strong>data_extraction_fields</strong></div>
+  <div><small>Validation</small><strong>Application responsibility</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A completed call can still have unfinished post-call work.
+- Extracted facts are model output; validate them before consequential actions.
+- Use structured fields and signed results rather than parsing a summary as a receipt.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Choose the business questions the call should answer and how your system represents unknown values.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Choose the business questions the call should answer and how your system represents unknown values.
 
 ## 1. Read the agent configuration
 
@@ -26,11 +47,13 @@ curl --fail-with-body --request GET \
 ```javascript Node
 const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
   method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
   headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
 ```
 
 ```python Python
@@ -43,7 +66,8 @@ request = Request(
     headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
+    result = json.load(response)
+    # Handle the private result without logging it.
 ```
 
 ```powershell CLI (PowerShell)

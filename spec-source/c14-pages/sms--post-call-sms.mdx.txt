@@ -1,0 +1,114 @@
+---
+title: "Configure post-call SMS follow-ups"
+description: "Configure Nixflex post-call texts with a usable template, understand dashboard and API number rules, and avoid duplicate follow-ups after an uncertain result."
+canonical: "https://docs.nixflex.com/sms/post-call-sms"
+sidebarTitle: "Post-call SMS"
+---
+
+Configure a permitted text after a telephone call using a usable template and the number’s actual origin rules.
+
+<div className="nxf-facts">
+  <div><small>Timing</small><strong>After telephone work</strong></div>
+  <div><small>Template</small><strong>Must be nonblank</strong></div>
+  <div><small>Voicemail</small><strong>Automatic text skipped</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Post-call SMS is separate from in-call SMS, replies and a direct send.
+- API-origin numbers do not automatically inherit the agent enable switch.
+- Avoid sending the same follow-up again from your webhook handler.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Choose the intended agent and review the sending number’s import origin.
+
+## 1. Read the agent
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/agents/agent_example" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
+```
+
+```python Python
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request(
+    'https://api.nixflex.com/v1/agents/agent_example',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+    # Handle the private result without logging it.
+```
+
+```powershell CLI (PowerShell)
+nixflex agents get agent_example --json --base-url https://api.nixflex.com
+```
+
+</CodeGroup>
+
+## 2. Save a usable template
+
+Update the agent with `post_call_sms_enabled:true` and a nonblank `post_call_sms_template`. Use documented single-brace values such as `{caller_name}` and `{business_name}`. Write neutral wording that works for inbound and outbound conversations.
+
+## 3. Apply origin and override rules
+
+Dashboard-origin numbers can use the agent enable/template. API-origin numbers do not inherit the enable switch automatically. An explicit documented per-call enable override can enable either origin. Template selection prefers a nonblank per-call template, then the agent template.
+
+## 4. Respect sending checks
+
+No usable template means no send; there is no fallback message to rely on. The route also needs an eligible owned sender and real recipient, and skips detected voicemail. Current contact and account checks still apply.
+
+## 5. Avoid a second follow-up
+
+If your signed-event handler sends a custom text too, make sure it does not duplicate the automatic path. Deduplicate event handling and reconcile uncertain sends. An ended call is not proof its post-call message was delivered.
+
+## Example response
+
+Saved agent fields describe configuration. Call completion and SMS acceptance are separate outcomes; inspect the available event or message records rather than manufacturing a delivery receipt from the settings.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| No nonblank template | No automatic send. |
+| API-origin number | Set a deliberate per-call override or use your own send workflow. |
+| Detected voicemail | Automatic post-call SMS is skipped. |
+| Unknown message result | Reconcile; do not blindly send again. |
+| In-call SMS off | It is a separate switch, not a universal outbound-text ban. |
+
+## Next steps
+
+- [Inheritance details](/concepts/agent-inheritance)
+- [Send one SMS](/sms/send-sms)
+- [Signed events](/advanced/webhooks)

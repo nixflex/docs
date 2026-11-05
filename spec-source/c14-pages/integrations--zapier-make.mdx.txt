@@ -1,0 +1,105 @@
+---
+title: "Build event automations with Zapier or Make"
+description: "Connect Nixflex events to Zapier or Make, use the intended number-level destination and build duplicate handling around actual event and action outcomes."
+canonical: "https://docs.nixflex.com/integrations/zapier-make"
+sidebarTitle: "Zapier and Make"
+---
+
+Receive Nixflex events in an automation workflow that authenticates deliveries and avoids repeating business actions.
+
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Signed event</strong></div>
+  <div><small>Acceptance</small><strong>Durable queue</strong></div>
+  <div><small>Processing</small><strong>Deduplicated action</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Verify the original delivery bytes before trusting event data.
+- Acknowledge only after durable acceptance, then process asynchronously.
+- Use event-specific duplicate keys; do not treat every event as one completed call.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an authorised test destination with fictional business data.
+
+## 1. Read the saved connection
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/zapier/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("zapier", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('zapier', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get zapier '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Save the intended destination
+
+
+Choose the documented [Zapier PUT route](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber) or [Make PUT route](/api-reference/integration-settings/put-integrations-make-number-phoneNumber). Supply its authorised HTTPS destination in `post_call_url`; each integration has independent saved state and a separate DELETE route.
+
+Use literal `is_active:false` to disable the selected integration. Optional `agent_id` is a fallback for an unassigned number, not a number move. If the automation platform cannot verify the unchanged body and signature, place your own verified HTTPS receiver and durable queue in front of it; do not accept an unsigned event as trusted business evidence.
+
+## 3. Define what success means
+
+Treat automation triggers as event delivery, not an exactly-once transaction. Deduplicate work before sending texts, creating appointments or charging a customer. A repeated event must not repeat an irreversible downstream action.
+
+For booking outcomes, route [`call.bookings`](/api-reference/call-bookings) separately from `call.completed`. Verify the signature and deduplicate `(account, event, call_id)` within the receiver. Count active rows in `final`; the action timeline can include both creating and cancelling one appointment. Do not run the same booking-created action once from each event family.
+
+## 4. Test a complete workflow
+
+Use one approved test call and inspect both its Nixflex result and the receiving system. Check missing fields, delayed processing and duplicate delivery. Do not promise a notification arrives within a fixed number of seconds.
+
+## 5. Disconnect and reconcile
+
+Use the documented integration DELETE route to stop future use. Previously delivered external records remain subject to that system’s controls. If a save or deletion response is lost, read the current settings before repeating it.
+
+## Example response
+
+GET returns the safe saved integration configuration. The settings response confirms configuration state; external delivery and business-action results must be checked separately.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid credentials/destination | Correct configuration before retrying. |
+| Saved but no notification | Inspect call state and external delivery separately. |
+| Duplicate event | Deduplicate before repeating a side effect. |
+| Unknown save/delete result | Read current configuration. |
+| Data deleted in Nixflex | Manage previously sent external copies separately. |
+
+## Next steps
+
+- [Read settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber)
+- [Signed event receiver](/advanced/webhooks)
+- [Call history](/guides/developer/call-history)

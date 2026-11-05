@@ -1,11 +1,44 @@
 ---
-title: "Voice campaigns: build and track calls with the Nixflex API"
+title: "Build a voice campaign workflow"
 description: "Build Nixflex voice campaigns with reviewed recipients, duplicate handling, consent and local contact hours, then reconcile launch and cancellation results."
 canonical: "https://docs.nixflex.com/guides/developer/campaigns"
+sidebarTitle: "Voice campaign workflow"
 ---
-Create a voice campaign that can run immediately or when scheduled. Creation is executable work: the public API has no draft-only mode.
+Prepare a voice campaign’s recipients and permission checks, create executable work, then track that same campaign through its results.
 
-Using the dashboard? See [the business guide](/guides/business/voice-campaigns).
+<div className="nxf-facts">
+  <div><small>Creation</small><strong>Executable work</strong></div>
+  <div><small>Recipients</small><strong>Reviewed rows</strong></div>
+  <div><small>Recovery</small><strong>Existing campaign ID</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Campaign creation can launch immediately or run when its schedule is due.
+- A duplicate warning is not a sending lock; choose the required policy deliberately.
+- Cancel stops future dispatch and does not hang up active calls.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Prepare and launch](/guides/developer/campaigns/prepare-and-launch) | Validate the complete recipient set before executable work. |
+| [Results and controls](/guides/developer/campaigns/results-and-controls) | Resolve holds and control future dispatch. |
 
 ## Prerequisites
 

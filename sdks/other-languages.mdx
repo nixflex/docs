@@ -1,83 +1,107 @@
 ---
-title: "Other languages: integrate with the Nixflex HTTP API"
-description: "Call the Nixflex API from other languages using HTTPS, bearer authentication, careful retries, and the public OpenAPI foundation for supported operations."
-icon: "code"
+title: "Call the API from another language"
+sidebarTitle: "HTTP and other languages"
+description: "Use direct HTTPS with private bearer credentials, bounded reads and schema-aware error handling, then verify generated clients against the public contract."
 canonical: "https://docs.nixflex.com/sdks/other-languages"
 ---
-The Nixflex API is plain HTTPS + JSON with a bearer key. The [Node.js SDK](/sdks/node) and [Python SDK](/sdks/python) are the official clients; from any other language you call the API directly, or generate a client from the OpenAPI specification.
+Use standard HTTPS from any server language, following the public contract and explicit retry rules for each operation.
 
-## Call the API directly
+<div className="nxf-facts">
+  <div><small>Protocol</small><strong>HTTPS and JSON</strong></div>
+  <div><small>Credential</small><strong>Server-side bearer pair</strong></div>
+  <div><small>Contract</small><strong>Public OpenAPI 3.1</strong></div>
+</div>
 
-Start with the operations documented in the [API reference](/api-reference/introduction). Three things to get right:
+<div className="nxf-important">
 
-1. **Authentication** - `Authorization: Bearer KEY_ID:KEY_SECRET`, both halves joined by a colon.
-2. **Numbers in URLs** - URL-encode the leading `+` as `%2B` (`/v1/phone-numbers/%2B447446466847`).
-3. **Errors** - the standard error helper returns `{ "error": { "type", "code", "message", "doc_url", "details" } }` with a meaningful HTTP status. Keep a fallback for incomplete or non-JSON errors. See [Errors](/api-reference/errors).
+**The important part**
 
-<CodeGroup>
-```python Python
-import requests
+- Send the complete bearer credential only to the intended API host.
+- A timeout or malformed write response can hide success; do not automatically replay it.
+- A generated client does not add missing idempotency, privacy or business-result checks.
 
-KEY = "nxf_xxx:nxfs_xxx"
-r = requests.post(
-    "https://api.nixflex.com/v1/calls/outbound",
-    headers={"Authorization": f"Bearer {KEY}"},
-    json={"agent_id": "agent_15d1a9ee16294087", "to_number": "+447453573770",
-          "prompt": "Call Sam to confirm his appointment on Tuesday at 11."},
-    timeout=30,
-)
-call = r.json()
-if r.status_code >= 400:
-    raise RuntimeError(f"{call['error']['code']}: {call['error']['message']}")
-print(call["call_id"])
-```
-```go Go
-req, _ := http.NewRequest("POST", "https://api.nixflex.com/v1/calls/outbound",
-    strings.NewReader(`{"agent_id":"agent_15d1a9ee16294087","to_number":"+447453573770","prompt":"Call Sam to confirm his appointment on Tuesday at 11."}`))
-req.Header.Set("Authorization", "Bearer "+os.Getenv("NIXFLEX_API_KEY"))
-req.Header.Set("Content-Type", "application/json")
-res, err := http.DefaultClient.Do(req)
-```
-```bash curl
-curl -X POST https://api.nixflex.com/v1/calls/outbound \
-  -H "Authorization: Bearer KEY_ID:KEY_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"agent_id":"agent_15d1a9ee16294087","to_number":"+447453573770","prompt":"Call Sam to confirm his appointment on Tuesday at 11."}'
-```
-</CodeGroup>
+</div>
 
-## Retries and uncertain results
+<div className="nxf-audience">
 
-Never automatically retry a write, including POST, PUT, PATCH, or DELETE. A timeout can happen after the operation succeeds. Read the resource or job to check the result before deciding whether to send a new request. Use bounded retries only for safe reads. See [Retries and idempotency](/api-reference/retries).
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
 
-## Generate a client from the OpenAPI spec
+</div>
 
-The public OpenAPI 3.1 foundation lives at `https://docs.nixflex.com/api-reference/public.openapi.json`. It contains the operations currently included in the bundled schema; it is not yet a complete client-generation contract for every public operation. Generate a typed client for your language:
+## Make a read without an SDK
 
-```bash
-npx @openapitools/openapi-generator-cli generate \
-  -i https://docs.nixflex.com/api-reference/public.openapi.json \
-  -g python -o ./nixflex-python
-```
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately. Use an origin without `/v1` and verify it belongs to the intended environment. This Python standard-library example makes one usage read, refuses redirects and avoids printing private response data:
 
-Supported generators include `python`, `go`, `java`, `csharp`, `ruby`, `php`, `kotlin`, `swift` and more. Import the same file into Postman or Insomnia to explore the API interactively.
+```python
+import json
+import os
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-## Verify webhooks in any language
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        return None
 
-Webhook payloads are signed. The header is `X-Nixflex-Signature: t=<unix_ts>,v1=<hex>`; the signature is HMAC-SHA256 of `"<timestamp>.<raw_body>"` with the organisation signing secret, which is separate from the API key secret. Reject if the timestamp is older than 300 seconds or the HMAC does not match (compare in constant time). Full detail and a Node example on [Webhooks](/advanced/webhooks).
-
-```python Python
-import hmac, hashlib, time
-
-def verify(raw_body: bytes, header: str, signing_secret: str, tolerance=300) -> bool:
-    parts = dict(p.split("=", 1) for p in header.split(","))
-    ts, sig = parts.get("t"), parts.get("v1")
-    if not ts or not sig or abs(time.time() - int(ts)) > tolerance:
-        return False
-    expected = hmac.new(signing_secret.encode(), f"{ts}.".encode() + raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, sig)
+base = os.environ["NIXFLEX_BASE_URL"].rstrip("/")
+parsed = urlsplit(base)
+if parsed.scheme != "https" or not parsed.netloc or parsed.path or parsed.query or parsed.fragment or parsed.username:
+    raise ValueError("Use the intended HTTPS API origin without a path or credentials")
+request = Request(base + "/v1/usage", method="GET", headers={
+    "Authorization": "Bearer " + os.environ["NIXFLEX_API_KEY"],
+    "Accept": "application/json",
+})
+try:
+    with build_opener(NoRedirect).open(request, timeout=30) as response:
+        usage = json.load(response)
+    if not isinstance(usage, dict):
+        raise ValueError("Unexpected usage response")
+    print("Usage read succeeded.")
+except HTTPError as error:
+    print({"status": error.code})
+    raise SystemExit(1)
 ```
 
-## From the terminal or an assistant
+Apply the same boundary in Java, Go, PHP or another HTTP client: private headers, an explicit timeout, no credential-bearing redirects, safe JSON parsing and operation-specific result handling. Keep response bodies private.
 
-No code at all: the [CLI](/cli/overview) exposes supported operations from a shell, and the [MCP server](/ai-tools/overview) lets Claude Desktop, Claude Code, Codex or Cursor drive your account.
+## Construct requests from the contract
+
+| Part | Rule |
+| --- | --- |
+| Base URL | Use the selected API origin and `/v1` exactly once. |
+| Authentication | `Authorization: Bearer KEY_ID:KEY_SECRET`, stored server-side. |
+| Path values | URL-encode each identifier, especially a number’s leading plus sign. |
+| JSON body | Send documented fields and `Content-Type: application/json`. |
+| File input | Use the specific raw-byte Knowledge upload contract, not generic JSON/base64. |
+| Output | Preserve null, pending, unavailable and confirmed-empty states. |
+
+An HTTP success can mean queued or accepted work. Read its operation state before reporting a call, delivery, publication or booking as complete.
+
+## Handle failures before adding writes
+
+Keep a fallback for non-JSON and incomplete error responses. Inspect safe HTTP status, machine code and request ID; avoid logging complete private bodies. Retry eligible reads with a bound and server guidance.
+
+For an unknown write, preserve the original operation identity and reconcile first. Outbound calls use a saved UUID in `request_id`; Knowledge writes use their documented `Idempotency-Key`. Neither mechanism is a universal idempotency header for every endpoint.
+
+## Use the public OpenAPI artifact carefully
+
+The API reference is generated from the reviewed public OpenAPI 3.1 contract with 149 operations. Use that contract when generating a client, and verify the served artifact is actually available and matches the reviewed release. The conventional raw-spec URL alone is not proof that a deployment exposes it.
+
+If a docs preview does not serve the raw JSON, obtain the reviewed release artifact rather than scraping HTML into a guessed schema. Preserve operation IDs, nullable fields, error responses and required revisions. Test a generated client against local fixtures and an approved environment before relying on writes.
+
+Do not generate routes from dashboard requests or compatibility account interfaces outside the supported public inventory. Personal ownership and closure flows are not invented public endpoints.
+
+## Receive events securely
+
+Use the [raw-byte signature examples](/advanced/webhooks) for your receiver. Verify before JSON parsing, save durably, deduplicate atomically and acknowledge promptly. An SDK install or generated HTTP client does not create a webhook listener.
+
+- [Read the API introduction](/api-reference/introduction)
+- [Choose a reviewed SDK](/sdks/ecosystem)
+- [Build outbound request recovery](/guides/developer/call-requests)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="call-the-api-directly"></span>
+<span id="retries-and-uncertain-results"></span>
+<span id="generate-a-client-from-the-openapi-spec"></span>
+<span id="verify-webhooks-in-any-language"></span>
+<span id="from-the-terminal-or-an-assistant"></span>

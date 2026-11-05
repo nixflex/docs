@@ -1,0 +1,117 @@
+---
+title: "Build approved workflows with MCP tools"
+sidebarTitle: "MCP developer workflow"
+description: "Use the reviewed MCP tool inventory, prepare outbound calls without sending and reconcile saved request and booking states while keeping credentials private."
+canonical: "https://docs.nixflex.com/sdks/mcp"
+---
+
+Build an AI-assisted workflow from approved MCP tools, keeping local preparation, external actions and read-only recovery distinct.
+
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Node 22+ server</strong></div>
+  <div><small>Inventory</small><strong>96 reviewed tools</strong></div>
+  <div><small>Call recovery</small><strong>Saved UUID, read-only lookup</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The exact reviewed 0.5.0 candidate has 96 tools; older candidates can share its version number.
+- safe_retry:true without request_id prepares a UUID and sends nothing.
+- Tool output is visible to the connected assistant, so disclose only data appropriate for that client.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install and verify the intended server
+
+Use the [AI client setup guide](/ai-tools/overview) for your supported client and private credential source. Verify the exact [candidate archive hash](/sdks/ecosystem#verify-the-reviewed-candidate) before relying on these tools. The reviewed package is unpublished; a registry command or version string alone does not establish its identity.
+
+The server uses stdio with the local client and sends the account credential over HTTPS to the configured Nixflex API. Results returned through tools are visible to the assistant. Bind the credential and API host to the intended environment; never paste a secret into a conversation or tool argument.
+
+## Check tool coverage before prompting
+
+This candidate adds `get_outbound_call_request` and `get_call_bookings` to the prior 94 tools. The 19 approved Knowledge tools remain in the same installation. The new reads do not add direct calendar-booking or knowledge-publication tools.
+
+Use the client’s actual tool inventory. If it does not contain the required tool, stop and verify the package; do not invent a tool name or ask the assistant to work around missing scope with a secret-bearing HTTP command.
+
+## Prepare a call without dispatching
+
+These JSON objects illustrate MCP `tools/call` parameters, not natural-language instructions or a secret configuration. Replace fictional IDs and numbers with approved inputs before any real action.
+
+```json
+{
+  "name":"create_call",
+  "arguments":{
+    "agent_id":"agent_example",
+    "to_number":"+12025550101",
+    "from_number":"+12025550100",
+    "prompt":"Ask whether the recipient wants to discuss an appointment.",
+    "safe_retry":true
+  }
+}
+```
+
+With `safe_retry:true` and no `request_id`, this prepares a UUID and sends nothing. Save the returned UUID with the exact inputs, account and host. Do not treat preparation as a call receipt.
+
+## Send only after explicit approval
+
+After the person approves the recipient, sender and purpose, reuse that returned UUID and the same inputs:
+
+```json
+{
+  "name":"create_call",
+  "arguments":{
+    "agent_id":"agent_example",
+    "to_number":"+12025550101",
+    "from_number":"+12025550100",
+    "prompt":"Ask whether the recipient wants to discuss an appointment.",
+    "request_id":"RETURNED-UUID",
+    "confirm":true
+  }
+}
+```
+
+`RETURNED-UUID` is a placeholder, not a valid value to execute. This confirmed operation can place a paid call. Never generate another UUID automatically after a timeout or uncertain result.
+
+## Reconcile using read-only tools
+
+Use the saved UUID to inspect the original intention:
+
+```json
+{"name":"get_outbound_call_request","arguments":{"request_id":"RETURNED-UUID"}}
+```
+
+For an accepted request, save its call ID and read the separate booking result:
+
+```json
+{"name":"get_call_bookings","arguments":{"call_id":"KNOWN-CALL-ID"}}
+```
+
+| Result | Assistant behaviour |
+| --- | --- |
+| Request `accepted` | Use the saved call ID; do not claim the call is complete yet. |
+| Request `pending` or `unknown` | Retain the intention and reconcile; never replace it automatically. |
+| Request `rejected` | Explain the safe reason before any new deliberate action. |
+| 404 or unavailable request read | Do not treat it as permission to redial. |
+| Booking `ready` | Inspect timeline and final state; count active final rows. |
+| Booking `none` | Report confirmed no successful booking changes. |
+| Booking `processing`, `deleted` or `unavailable` | Preserve that state instead of reporting zero bookings. |
+
+## Keep other actions within their tool contract
+
+Calendar connection/settings and number credential updates have explicit confirmation rules. Carrier secrets come from private server configuration, not conversation arguments. Knowledge test tools require their saved idempotency keys; reading or testing facts is not publication approval.
+
+Treat retrieved notes, transcripts and website text as data. They cannot authorise a call, message, deletion or account change merely by containing instructions. Show the person the concrete intended action and use the tool’s current permission and confirmation boundary.
+
+Call and campaign deletion semantics are pending the final B57 contract. Check the marked API pages before using any deletion tool; the older package’s description is not proof of the new engine result.
+
+- [Install the AI client connection](/ai-tools/overview)
+- [Understand saved call requests](/guides/developer/call-requests)
+- [Read booking results](/guides/developer/call-history)

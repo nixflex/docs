@@ -1,15 +1,36 @@
 ---
-title: "Custom functions: connect Nixflex to your business service"
+title: "Connect an agent to your business API"
 description: "Connect Nixflex to a custom HTTPS function, verify signed requests, enforce business permissions and handle timeouts without repeating uncertain actions."
 canonical: "https://docs.nixflex.com/advanced/custom-functions"
+sidebarTitle: "Custom functions"
 ---
-Let an agent request a narrowly defined action from your service. Your service must authenticate the request, validate arguments and decide whether the business action is allowed.
+Expose a narrowly scoped business function to an agent and treat its response as the authority for whether the action succeeded.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Arguments</small><strong>Validate server-side</strong></div>
+  <div><small>Result</small><strong>Explicit success</strong></div>
+  <div><small>Website</small><strong>Separate number grant</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Describe exact arguments and validate them in your service.
+- Public website access requires all enabled number functions to be safe for visitors.
+- A timeout can follow a successful business write; reconcile before repeating it.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Prepare a public HTTPS endpoint you control and a signing credential for request verification.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Prepare a public HTTPS endpoint you control and a signing credential for request verification.
 
 ## 1. Read functions on the number
 

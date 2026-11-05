@@ -1,87 +1,87 @@
 ---
-title: "CLI overview"
-description: "Manage agents, calls, numbers and caller context from your terminal"
-icon: "terminal"
+title: "Use the CLI with a private account connection"
+sidebarTitle: "CLI setup and safety"
+description: "Install the reviewed CLI, choose the account and API host explicitly, understand private input and distinguish read retries from deliberate writes."
 canonical: "https://docs.nixflex.com/cli/overview"
 ---
-The `nixflex` command lets you do from a terminal what you would otherwise do in the dashboard or with the API: create an agent, place a call, load a customer list, launch a campaign, check your balance. It ships inside the [`nixflex`](https://www.npmjs.com/package/nixflex) npm package - the same package as the Node SDK - and every command is a call into that SDK, so the CLI can never say something the API does not do. A test in the package fails if any SDK method has no command.
+Use the CLI for explicit terminal operations with a private credential, a known API host and checked command results.
 
-```bash
-npx nixflex --help
-```
+<div className="nxf-facts">
+  <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
+  <div><small>Scripts</small><strong>Check exit code and result</strong></div>
+  <div><small>Credentials</small><strong>Private environment preferred</strong></div>
+</div>
 
-## Install
+<div className="nxf-important">
 
-Run it without installing (`npx nixflex ...`), or install once:
+**The important part**
 
-```bash
-npm install -g nixflex
+- The CLI ships in the reviewed Node package and needs Node 18 or later.
+- Pass the intended base URL explicitly; NIXFLEX_BASE_URL alone is not the legacy CLI’s host selector.
+- A command can perform a write without a confirmation flag, so read its contract before running it.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed CLI
+
+Verify the [exact candidate archive](/sdks/ecosystem#verify-the-reviewed-candidate), then install it locally or globally according to your environment. For a dedicated terminal installation:
+
+```powershell
+npm install -g '.\nixflex-0.11.0.tgz'
+if ($LASTEXITCODE -ne 0) { throw 'CLI installation failed.' }
 nixflex --version
+if ($LASTEXITCODE -ne 0) { throw 'CLI version check failed.' }
 ```
 
-Requires Node.js 18 or newer. No other dependencies are installed.
+A plain registry install does not prove that this candidate is published. The archive hash matters because earlier candidates can share the same version number.
 
-## Reviewed 0.11.0 candidate
+## Select the account and environment
 
-K6 adds Google Calendar status, connection, settings and disconnection, plus in-place
-number credential updates. It is supplied as a locally built candidate. Verify its
-archive hash before using `npm install -g ./nixflex-0.11.0.tgz`, then check
-`nixflex --version`. Generic registry commands do not establish this version's availability.
-See [the five new commands and private input rules](/cli/commands#google-calendar-and-number-credentials).
+Privately provision `NIXFLEX_API_KEY` in the terminal process. Supply the intended host through `--base-url`, using an origin without `/v1`. The examples pass `$env:NIXFLEX_BASE_URL` explicitly after checking it is set.
 
-## Authenticate
+Legacy credential resolution is command `--key`, then `NIXFLEX_API_KEY`, then the local login file. Avoid the key argument because it can appear in process listings and shell history. The number credential command rejects `--key` entirely.
 
-The CLI needs your full API key - both halves, `nxf_xxx:nxfs_xxx`. It looks in three places, in this order:
+`nixflex login` verifies and stores a key in `~/.nixflex/config.json`. That is plaintext storage, not an encrypted vault; POSIX file mode is not a Windows ACL guarantee. If using this legacy flow, preserve the explicit host and protect the file. Do not paste a key into chat or source code.
 
-| Order | Where | Use it for |
-|---|---|---|
-| 1 | `--key nxf_xxx:nxfs_xxx` on the command | One-off commands against another account |
-| 2 | `NIXFLEX_API_KEY` environment variable | CI, scripts, servers |
-| 3 | `~/.nixflex/config.json` | Your own machine - written by `nixflex login` |
+## Understand what a command can do
 
-```bash
-nixflex login          # prompts for the key and verifies it against the API
-nixflex whoami         # which key is in use, plus usage and balance
-nixflex logout         # removes the stored key
-```
+| Kind | Behaviour |
+| --- | --- |
+| Reads such as `usage` | Can use bounded GET retries; no write is intended. |
+| `calls prepare` | Local UUID/body preparation; sends nothing and can save without overwriting. |
+| Creates such as `calls create` | Can start paid work immediately; do not assume `--confirm` is required. |
+| Guarded controls | Commands that require confirmation preview or refuse until `--confirm`; inspect the command’s own result. |
+| Credential update | Private environment/stdin only, explicit confirmation and no automatic write retry. |
 
-<Note>
-  Legacy `login` stores plaintext in `~/.nixflex/config.json`; this is not an encrypted vault. POSIX file mode is not a guarantee of Windows ACL protection. The file contains `api_key` and optional `base_url`; staging must retain its explicit URL. Never put keys in scripts, shell history, chat or client JSON. The [MCP foundation draft](/ai-tools/overview) binds key and URL together; the candidate MCP clients use separate private key setup; legacy CLI login still writes this plaintext file.
-</Note>
+The reviewed SDK retries eligible GET reads only. A mutation timeout can hide success even though the client did not retry. An application or shell retry loop can still create duplicate work.
 
-## Output
+## Read script output carefully
 
-Every command prints a table for humans. Add `--json` for scripts - the output is then exactly what the API returned, and errors come back as JSON on stdout too. Progress messages go to stderr, so stdout can be piped safely.
+Use `--json` when a script needs structured output. Some commands return deliberate safe projections rather than the complete raw server body. API errors can appear as structured JSON; argument or configuration failures can write diagnostics to stderr. Treat stdout and stderr as private until you have inspected their contents.
 
-```bash
-nixflex agents list --json | jq '.[].agent_id'
-```
+| Exit code | Meaning |
+| --- | --- |
+| `0` | The command completed, which can include a local preview requiring confirmation. Inspect its result. |
+| `1` | API, command or processing error. A failed write can remain uncertain. |
+| `2` | Missing or invalid credential configuration. |
 
-## Safety rails
+An exit code alone does not prove a call connected, a message arrived or deletion finished. Use the operation’s result state and read-back rules.
 
-- **Destructive commands preview first.** `agents delete`, `calls delete`, `calls delete-all`, `numbers delete`, `callers delete`, `sms campaigns delete`, `webhooks delete`, `storage|llm|tts delete` and `keys rotate` all show what would happen and stop until you add `--confirm` (or `--yes`).
-- **Nothing is retried or batched silently.** `callers import` sends a file in chunks of 1,000 and reports progress; a bad row stops its chunk before anything in it is written.
-- **Prompts from files.** Anywhere a prompt or message is accepted, `@path/to/file.txt` reads it from disk.
-- **Use the command contract.** General creates and updates accept `--set` and `--body`; sensitive number credentials accept only private environment or stdin input.
+- [Make the first safe read](/cli/quickstart)
+- [Choose a command](/cli/commands)
+- [Use the MCP developer workflow](/sdks/mcp)
 
-## Exit codes
-
-| Code | Meaning |
-|---|---|
-| `0` | Success |
-| `1` | The API returned an error, or the command was wrong (a suggestion is printed for typos) |
-| `2` | No API key found (run `nixflex login`) |
-
-## Next
-
-<CardGroup cols={3}>
-  <Card title="Quickstart" icon="bolt" href="/cli/quickstart">
-    An agent, a call and a caller record in two minutes.
-  </Card>
-  <Card title="Commands" icon="list" href="/cli/commands">
-    Every command with a real example.
-  </Card>
-  <Card title="MCP" icon="diagram-project" href="/ai-tools/overview">
-    Claude Desktop, Claude Code, Codex and Cursor; see the unpublished foundation and release status.
-  </Card>
-</CardGroup>
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="install"></span>
+<span id="reviewed-0110-candidate"></span>
+<span id="authenticate"></span>
+<span id="output"></span>
+<span id="safety-rails"></span>
+<span id="exit-codes"></span>
+<span id="next"></span>

@@ -1,0 +1,64 @@
+---
+title: "Import and connect an owned phone number"
+sidebarTitle: "Import and connect"
+description: "Prepare a supported number connection, use the dashboard for new imports and verify saved state and routing without exposing private credentials."
+canonical: "https://docs.nixflex.com/guides/developer/phone-numbers/import-and-connect"
+---
+
+Connect an existing eligible number to an active owned agent, then verify both the saved number and its routing outcome.
+
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Existing owned number</strong></div>
+  <div><small>Assignment</small><strong>Active owned agent</strong></div>
+  <div><small>Finish</small><strong>Saved state and routing checked</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Import can replace routing used by another application.
+- New setup uses the supported dashboard flow; the public import schema omits legacy credential fields.
+- A pending or uncertain import is not permission to use or re-import the number.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prepare the connection
+
+Confirm that the number belongs to the intended carrier account and that you may change its routing. Import connects an existing number; it is not a purchase or port. Choose an active agent owned by the same Nixflex account.
+
+Record the current routing through your authorised configuration process before a deliberate change. Import can replace call or SMS routing, so an application previously receiving those events may stop receiving them.
+
+## Use the supported setup path
+
+For a new connection, use the signed-in dashboard. The [public import reference](/api-reference/phone-numbers/import) documents public number and agent fields but deliberately omits the existing legacy credential payload. Do not guess neutral aliases or treat the public schema as a complete import credential validator.
+
+An existing integration may use its securely prepared private import payload unchanged. Keep that file outside source control, logs and shared workspaces, and submit only through an authorised server process. Never put credentials in a URL or a copied command argument.
+
+## Save and verify once
+
+Submit the intended import once, with automatic write retries disabled. Preserve any returned operation information. Read the [owned number](/api-reference/phone-numbers/get) and check its agent, channel switches and safe state projection. Credentials are write-only.
+
+Verify the real routing through the approved connection test. A saved credential or signature-key candidate does not prove that a later callback was verified. Do not start ordinary traffic while the connection remains pending.
+
+## Reconcile an uncertain result
+
+| Code | Recovery |
+| --- | --- |
+| `number_already_imported` | Read the existing number; use PATCH for settings or a deliberate move. |
+| `number_operation_pending` | Wait for the existing operation and read its state. |
+| `number_cleanup_uncertain` | Keep routing unchanged and ask support to reconcile. |
+| `number_save_pending` | Routing may have changed; reconcile completion before another write. |
+| `agent_not_owned` or `agent_unavailable` | Choose an active owned agent; do not bypass the account check. |
+
+Do not remove and re-import as recovery. Moving to another agent within the account uses an agent-only number PATCH after current busy work settles.
+
+- [Change routing and overrides](/guides/developer/phone-numbers/routing-and-overrides)
+- [Update credentials or remove a connection](/guides/developer/phone-numbers/credentials-and-removal)
+- [Read the import contract](/api-reference/phone-numbers/import)

@@ -37,9 +37,17 @@ Build an HTTPS receiver that verifies Nixflex events, saves them durably and han
   <div><strong>4. Process</strong>Retry from your queue and reconcile.</div>
 </div>
 
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Choose events](/guides/developer/webhooks/event-types) | Select the event that proves the needed result. |
+| [Delivery and recovery](/guides/developer/webhooks/delivery-and-recovery) | Reconcile late, repeated or missing deliveries. |
+
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
 
 ## 1. Read the configured destination
 

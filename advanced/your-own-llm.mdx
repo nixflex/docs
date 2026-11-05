@@ -1,23 +1,44 @@
 ---
-title: "Custom models: manage a compatible Nixflex connection"
+title: "Connect a compatible model account"
 description: "Configure a compatible model connection for Nixflex, keep credentials private and understand verification, fallback and the boundaries of account-wide settings."
 canonical: "https://docs.nixflex.com/advanced/your-own-llm"
+sidebarTitle: "Your own model"
 ---
-Manage the account connection and verify how it behaves during real work. Configuration success and runtime success are separate.
+Connect an authorised compatible model account and test its actual conversation behaviour before using it with customers.
 
-Using the dashboard? See [the business guide](/guides/business/your-own-model).
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Account connection</strong></div>
+  <div><small>Credential</small><strong>Private provider key</strong></div>
+  <div><small>Verification</small><strong>Probe and conversation</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the supported connection flow and keep the provider credential private.
+- Saving a connection does not prove every later request will succeed.
+- Account connection settings and the legacy agent llm_model field are different.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/your-own-model) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Support scope
 
-The account service and storage interfaces shown here are existing compatibility interfaces, outside the supported public API inventory. They describe an existing integration dependency, not a new public API commitment. Use the signed-in dashboard for new setup; confirm support before building a new dependency on these routes or older kit commands.
+The account service and storage interfaces shown here are existing compatibility interfaces, outside the supported public API inventory. They describe an existing integration dependency, not a new public API commitment. Use the signed-in dashboard for new setup; confirm support before building a new dependency on these routes or old client commands.
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use authorised connection details and keep all secrets out of examples.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use the supported dashboard flow for new connections. Use authorised connection details and keep all secrets out of examples.
 
 ## 1. Read the safe configuration
 
-Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. These HTTP examples describe an existing compatibility interface; the reviewed SDK and CLI do not expose this account service. No example retries a mutation automatically.
 
 <CodeGroup>
 
@@ -30,11 +51,13 @@ curl --fail-with-body --request GET \
 ```javascript Node
 const response = await fetch('https://api.nixflex.com/v1/account/llm', {
   method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
   headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
 ```
 
 ```python Python
@@ -47,11 +70,8 @@ request = Request(
     headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
-```
-
-```powershell CLI (PowerShell)
-nixflex llm get --json --base-url https://api.nixflex.com
+    result = json.load(response)
+    # Handle the private result without logging it.
 ```
 
 </CodeGroup>

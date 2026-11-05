@@ -1,15 +1,44 @@
 ---
-title: "Web agent settings: configure website chat and voice"
+title: "Configure website chat and voice in code"
 description: "Read and update Nixflex website settings with revisions, configure chat and voice switches and keep public visitor actions separate from phone capabilities."
 canonical: "https://docs.nixflex.com/web-assistant/overview"
+sidebarTitle: "Web agent settings"
 ---
-Manage the saved website configuration for a number. Install the widget through the dashboard-generated snippet, then use the API for supported settings.
+Manage a number’s website settings with revision checks, then verify the dashboard-generated installation on the real site.
 
-Using the dashboard? See [the business guide](/guides/voice-widget).
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Save guard</small><strong>Observed revision</strong></div>
+  <div><small>Install</small><strong>Generated snippet</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Never give the browser the account API credential.
+- Website voice needs both the Web agent and voice switches enabled.
+- Public visitor details are unverified, and enabled custom functions must be safe for them.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Install and verify](/guides/developer/website/install-and-verify) | Check the actual installed visitor journey. |
+| [Troubleshoot](/guides/developer/website/troubleshooting) | Resolve revisions, microphone access and channel limits. |
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Choose an owned number. Browser visitors must never receive the account credential.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Choose an owned number. Browser visitors must never receive the account credential.
 
 ## 1. Read the current revision
 

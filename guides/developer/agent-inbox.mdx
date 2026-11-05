@@ -1,11 +1,32 @@
 ---
-title: "Agent inbox: read conversation state with the Nixflex API"
+title: "Build an inbox for SMS and web conversations"
 description: "Read Nixflex SMS and website inboxes, page through messages, use read versions and archive threads while keeping visitor identity and retention limits clear."
 canonical: "https://docs.nixflex.com/guides/developer/agent-inbox"
+sidebarTitle: "Conversation inbox"
 ---
-Build an authenticated conversation view for a number’s SMS or website channel. Preserve server paging and version values so an old screen cannot mark newer messages read by mistake.
+Read a number’s SMS or website threads, preserve server paging and mark only the messages the user actually saw as read.
 
-Using the dashboard? See [the business guide](/guides/business/agent-inbox).
+<div className="nxf-facts">
+  <div><small>Channels</small><strong>SMS and web</strong></div>
+  <div><small>Read marker</small><strong>Observed version</strong></div>
+  <div><small>Archive</small><strong>Inbox state only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Check feature availability before rendering an empty inbox.
+- Preserve read_version as a decimal string and pair both message cursor fields.
+- Archiving does not delete messages or turn off automatic replies.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 

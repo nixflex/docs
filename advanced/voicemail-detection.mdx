@@ -1,15 +1,36 @@
 ---
-title: "Voicemail: configure detection and a brief message"
+title: "Configure outbound voicemail behaviour"
 description: "Configure Nixflex voicemail detection and messages, understand number origin rules and test timing without assuming every answering system is recognised."
 canonical: "https://docs.nixflex.com/advanced/voicemail-detection"
+sidebarTitle: "Voicemail behaviour"
 ---
-Decide what an outbound agent should do when it reaches an answering system.
+Configure machine detection and a brief voicemail message for outbound calls without assuming a message will always be left.
 
-Using the dashboard? See [the business guide](/guides/business/call-actions).
+<div className="nxf-facts">
+  <div><small>Channel</small><strong>Outbound phone</strong></div>
+  <div><small>Message</small><strong>Nonblank when enabled</strong></div>
+  <div><small>Detection</small><strong>Can end before message</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- API-origin and dashboard-origin numbers select message settings differently.
+- Carrier machine detection can end the call before the leave-message path.
+- Detected voicemail skips automatic post-call SMS.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Review whether the sending number is dashboard-origin or API-origin.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Review whether the sending number is dashboard-origin or API-origin.
 
 ## 1. Read current configuration
 
@@ -26,11 +47,13 @@ curl --fail-with-body --request GET \
 ```javascript Node
 const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
   method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
   headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
 ```
 
 ```python Python
@@ -43,7 +66,8 @@ request = Request(
     headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
+    result = json.load(response)
+    # Handle the private result without logging it.
 ```
 
 ```powershell CLI (PowerShell)

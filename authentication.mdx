@@ -1,9 +1,32 @@
 ---
-title: "API authentication: store and rotate your Nixflex key"
+title: "Authenticate API requests securely"
 description: "Authenticate Nixflex requests with the full account credential, keep it on the server, rotate it deliberately and verify signed events separately."
 canonical: "https://docs.nixflex.com/authentication"
+sidebarTitle: "Authentication"
 ---
-Requests to the public API use the full account credential in the Authorization header:
+Authenticate server requests with the full account credential and keep personal team access separate from API authority.
+
+<div className="nxf-facts">
+  <div><small>Header</small><strong>Authorization: Bearer</strong></div>
+  <div><small>Credential</small><strong>KEY_ID:KEY_SECRET</strong></div>
+  <div><small>Key reveal</small><strong>Owner workflow</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Send both key parts in the Bearer header; never put the credential in a browser bundle.
+- The shared account key is not a restricted Member credential.
+- API-key rotation and webhook signing-secret rotation are separate actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ```http
 Authorization: Bearer KEY_ID:KEY_SECRET

@@ -1,0 +1,138 @@
+---
+title: "Add knowledge sources through the API"
+sidebarTitle: "Add sources"
+description: "Create an agent knowledge base, submit text or files for review, and discover website pages without mistaking preparation for publication."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge/ingest-sources"
+---
+
+Prepare text, files or selected website pages for an agent’s knowledge base, with review requested before new facts become live.
+
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Text, files or selected pages</strong></div>
+  <div><small>Output</small><strong>Preparation job</strong></div>
+  <div><small>Next task</small><strong>Review the draft</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Create one knowledge base for the agent, not for each number.
+- Save the operation key and returned job ID before starting another import.
+- Set review:true explicitly; the API default can publish after preparation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge/add-facts) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Before you start
+
+- An account API credential in `NIXFLEX_API_KEY` and an owned active agent ID in `NXF_AGENT_ID`.
+- Knowledge enabled for the account. API-managed and mixed-origin agents can be hidden from dashboard knowledge screens while remaining accessible to the owning API key.
+- A durable operation record in your application. Knowledge writes require an `Idempotency-Key`: 8–128 letters, digits, dots, underscores, colons or hyphens. The `prompt:` prefix is reserved. Use one key per intended operation and retain it across an uncertain response.
+
+The examples use the production API address. Choose the intended environment and its matching credential before running anything. Node/CLI 0.11.0 and Python 0.4.0 knowledge methods are release candidates; use cURL until the corresponding kit release is available. No example here is a promise that an unpublished package is installed.
+
+## Create or read the base
+
+Read [capabilities](/api-reference/knowledge/get-knowledge-capabilities) and `GET /v1/agents/{agent_id}/knowledge-base`. The scope reply contains `own` and `effective`; they can be null before creation. Create the singleton with `PUT` at the same path, a new idempotency key and this body:
+
+```json
+{"settings":{"channels":["inbound"],"match":"Strict","not_found":"I don't have that information right now."}}
+```
+
+Save `own.id` as `NXF_KNOWLEDGE_BASE_ID` and its integer `rev`. An update to an existing base needs its current `expected_revision`. The settings channels are `inbound`, `outbound`, `web_voice`, `web_chat` and `sms`; only inbound starts enabled. Campaigns use outbound, with no separate campaign switch. `not_found` must be nonblank and at most 500 characters.
+
+[Create or update an agent base](/api-reference/knowledge/put-agents-target-knowledge-base) documents the scope envelope. Retired number-knowledge routes return 410; never create a number-level base. Old retained number-base rows are not automatically converted into live agent knowledge. Re-add the intended facts to the current agent and review them explicitly.
+
+## Submit material for review
+
+Set `NXF_IDEMPOTENCY_KEY` to a fresh operation key. The same text import is shown in all four tabs:
+
+Use this body in each example. Save it as `request-112.json` for the CLI.
+
+```json
+{
+  "source": {
+    "type": "text",
+    "title": "Appointments",
+    "text": "Appointments are available Monday to Friday."
+  },
+  "review": true
+}
+```
+
+<CodeGroup>
+
+```bash cURL (Bash)
+curl --request POST \
+  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/sources" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"source":{"type":"text","title":"Appointments","text":"Appointments are available Monday to Friday."},"review":true}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.addSource(process.env.NXF_KNOWLEDGE_BASE_ID, {"source":{"type":"text","title":"Appointments","text":"Appointments are available Monday to Friday."},"review":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.add_source(os.environ["NXF_KNOWLEDGE_BASE_ID"], {
+      "source": {
+        "type": "text",
+        "title": "Appointments",
+        "text": "Appointments are available Monday to Friday."
+      },
+      "review": True
+    }, idempotency_key=os.environ["NXF_IDEMPOTENCY_KEY"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+# Save the JSON above privately as request-112.json.
+nixflex knowledge addSource "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-112.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+`review:true` is deliberate. The public API defaults to false, which can publish after preparation; dashboard imports always require review. Flags and review reminders can force a draft even when false was requested.
+
+For files, POST raw bytes to the same source endpoint with `Content-Type: application/octet-stream`, `X-Filename`, `X-Review: true` and the idempotency header. Do not send base64 or a local path. Supported contents are UTF-8 text, PDF with selectable text and DOCX. A preview via [source measure](/api-reference/knowledge/post-agents-target-knowledge-base-source-measure) counts privately without saving a source; it is not publication clearance.
+
+For websites, create a [discovery job](/api-reference/knowledge/post-knowledge-bases-kb-website-discoveries), read its `result.pages`, let the user choose IDs, then submit `discovery_id`, `page_ids` and `review:true` to [website imports](/api-reference/knowledge/post-knowledge-bases-kb-website-imports). A direct `source.type:url` or `qa` is refused.
+
+## Check the accepted job
+
+HTTP 202 means preparation was accepted. Save the job ID in the same application record as the base ID and idempotency key. Read the job until it reaches `needs_review`, `ready`, `failed`, `cancelled` or `deleted`. `ready` can also mean unchanged input; it does not by itself prove that new facts were published.
+
+If the response is lost, retry the same intention with the original key and unchanged input. A new key could add a duplicate source. Honour `next_retry_at` and stop polling when the user leaves; resume from the saved job later.
+
+## Fix rejected sources
+
+| Result | Next step |
+| --- | --- |
+| 413 | Reduce the source or saved inventory; read current capabilities and usage. |
+| 415 or 422 | Supply supported readable content; an image-only PDF needs selectable text or pasted text. |
+| Safety check waiting | Follow the job retry time; do not bypass the configured scanner by repeatedly importing. |
+| 409 revision conflict | Read the current base and review the intended change again. |
+| 429 busy | Wait for current jobs; keep their existing IDs. |
+
+Local file validation is not a complete virus scan. A configured but unavailable scanner may hold PDF or DOCX processing at `safety_check` or `safety_waiting` until its reported expiry.
+
+## Continue the workflow
+
+- [Review and publish the draft](/guides/developer/knowledge/review-and-publish)
+- [Read exact source fields and limits](/api-reference/knowledge/post-knowledge-bases-kb-sources)
+- [Understand source, job and topic IDs](/concepts/knowledge)

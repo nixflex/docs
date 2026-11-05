@@ -1,0 +1,55 @@
+---
+title: "Understand caller memory and greetings"
+description: "Understand Nixflex caller memory, separate name greetings, explicit context updates and website visitor information before using returning-caller facts."
+canonical: "https://docs.nixflex.com/concepts/caller-context"
+sidebarTitle: "Caller memory"
+---
+
+Use saved caller context to continue a telephone conversation while treating it as information to confirm, not verified identity.
+
+<div className="nxf-facts">
+  <div><small>Key</small><strong>Business and caller pair</strong></div>
+  <div><small>Identity</small><strong>Not verified</strong></div>
+  <div><small>Deletion</small><strong>Separate record action</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Memory and a saved-name greeting are separate switches.
+- Call retention does not erase every caller or visitor record.
+- Explicit caller-context updates and website visitor cards have separate scopes.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/privacy) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Memory and greetings are separate
+
+`remember_callers:false` stops ordinary telephone context use and learning. It does not delete existing records or prevent deliberate caller-context API writes. `greet_by_name:false` disables the dedicated inbound name-greeting hint; it is not a global anonymisation control.
+
+| Remember callers | Greet by name | Result |
+| --- | --- | --- |
+| On | On | Context and the saved-name greeting may be used |
+| Off | On | Ordinary memory is off; a saved name can still be used in the greeting |
+| On | Off | Memory remains available without the dedicated greeting hint |
+| Off | Off | Both ordinary memory and the dedicated hint are off |
+
+## Where information comes from
+
+Saved caller records can be learned from permitted telephone work or managed through the caller-context API. A recent call record, caller memory and a campaign recipient's variables are different data. Do not assume every field is a durable memory or that clearing a transcript clears the caller record.
+
+Website visitor cards and messages are separate from telephone memory. A visitor's name, email and phone number are self-reported. Browser recognition can end when storage changes and does not verify identity.
+
+## Retention and correction
+
+Call retention controls call data. It is not a blanket promise to delete every caller, message, integration record or customer-owned recording after the same period. Use the documented caller-context update or deletion route for that record, and check the response before declaring it removed.
+
+- [Privacy settings](/guides/business/privacy)
+- [Read caller context](/api-reference/caller-context/get)
+- [Delete caller context](/api-reference/caller-context/delete)

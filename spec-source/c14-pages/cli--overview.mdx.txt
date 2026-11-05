@@ -1,0 +1,79 @@
+---
+title: "Use the CLI with a private account connection"
+sidebarTitle: "CLI setup and safety"
+description: "Install the reviewed CLI, choose the account and API host explicitly, understand private input and distinguish read retries from deliberate writes."
+canonical: "https://docs.nixflex.com/cli/overview"
+---
+
+Use the CLI for explicit terminal operations with a private credential, a known API host and checked command results.
+
+<div className="nxf-facts">
+  <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
+  <div><small>Scripts</small><strong>Check exit code and result</strong></div>
+  <div><small>Credentials</small><strong>Private environment preferred</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The CLI ships in the reviewed Node package and needs Node 18 or later.
+- Pass the intended base URL explicitly; NIXFLEX_BASE_URL alone is not the legacy CLI’s host selector.
+- A command can perform a write without a confirmation flag, so read its contract before running it.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed CLI
+
+Verify the [exact candidate archive](/sdks/ecosystem#verify-the-reviewed-candidate), then install it locally or globally according to your environment. For a dedicated terminal installation:
+
+```powershell
+npm install -g '.\nixflex-0.11.0.tgz'
+if ($LASTEXITCODE -ne 0) { throw 'CLI installation failed.' }
+nixflex --version
+if ($LASTEXITCODE -ne 0) { throw 'CLI version check failed.' }
+```
+
+A plain registry install does not prove that this candidate is published. The archive hash matters because earlier candidates can share the same version number.
+
+## Select the account and environment
+
+Privately provision `NIXFLEX_API_KEY` in the terminal process. Supply the intended host through `--base-url`, using an origin without `/v1`. The examples pass `$env:NIXFLEX_BASE_URL` explicitly after checking it is set.
+
+Legacy credential resolution is command `--key`, then `NIXFLEX_API_KEY`, then the local login file. Avoid the key argument because it can appear in process listings and shell history. The number credential command rejects `--key` entirely.
+
+`nixflex login` verifies and stores a key in `~/.nixflex/config.json`. That is plaintext storage, not an encrypted vault; POSIX file mode is not a Windows ACL guarantee. If using this legacy flow, preserve the explicit host and protect the file. Do not paste a key into chat or source code.
+
+## Understand what a command can do
+
+| Kind | Behaviour |
+| --- | --- |
+| Reads such as `usage` | Can use bounded GET retries; no write is intended. |
+| `calls prepare` | Local UUID/body preparation; sends nothing and can save without overwriting. |
+| Creates such as `calls create` | Can start paid work immediately; do not assume `--confirm` is required. |
+| Guarded controls | Commands that require confirmation preview or refuse until `--confirm`; inspect the command’s own result. |
+| Credential update | Private environment/stdin only, explicit confirmation and no automatic write retry. |
+
+The reviewed SDK retries eligible GET reads only. A mutation timeout can hide success even though the client did not retry. An application or shell retry loop can still create duplicate work.
+
+## Read script output carefully
+
+Use `--json` when a script needs structured output. Some commands return deliberate safe projections rather than the complete raw server body. API errors can appear as structured JSON; argument or configuration failures can write diagnostics to stderr. Treat stdout and stderr as private until you have inspected their contents.
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | The command completed, which can include a local preview requiring confirmation. Inspect its result. |
+| `1` | API, command or processing error. A failed write can remain uncertain. |
+| `2` | Missing or invalid credential configuration. |
+
+An exit code alone does not prove a call connected, a message arrived or deletion finished. Use the operation’s result state and read-back rules.
+
+- [Make the first safe read](/cli/quickstart)
+- [Choose a command](/cli/commands)
+- [Use the MCP developer workflow](/sdks/mcp)

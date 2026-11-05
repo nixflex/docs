@@ -1,0 +1,64 @@
+---
+title: "Troubleshoot website chat and voice"
+sidebarTitle: "Website troubleshooting"
+description: "Diagnose missing installation, stale settings, blocked microphone access and website channel limits using saved state and actual visitor results."
+canonical: "https://docs.nixflex.com/guides/developer/website/troubleshooting"
+---
+Diagnose website failures by checking installation, saved revisions and effective permissions before changing the visitor experience.
+
+<div className="nxf-facts">
+  <div><small>First check</small><strong>Installed environment</strong></div>
+  <div><small>Settings</small><strong>Current revision</strong></div>
+  <div><small>Evidence</small><strong>Browser and inbox result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep unavailable connection state distinct from a disabled saved preference.
+- Re-read stale settings instead of silently overwriting another editor.
+- Visitor contact details are unverified and cannot grant access to private data.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Check installation first
+
+Confirm that the site uses the current dashboard-generated snippet for the intended number and environment. An install-not-ready message means the environment cannot yet provide its snippet. Do not work around it with a guessed script URL or account key in the browser.
+
+Compare the dashboard preview with the actual site. A working preview does not test that site’s microphone permissions, embedding restrictions, storage behaviour or contact collection. Inspect only safe diagnostic details; do not copy visitor messages or credentials into public logs.
+
+## Read effective voice permissions
+
+Website voice needs both the Web agent and voice switches enabled. A saved voice preference can remain true while the Web agent is off. Account access, the assigned agent, balance and admission checks also affect a new session.
+
+| Symptom | Check and next step |
+| --- | --- |
+| Chat appears but voice is unavailable | Read both switches and current admission state. |
+| Microphone request denied | Let the visitor use the browser’s permission controls or continue with an available channel. |
+| Changed settings disappear | Read the current revision and inspect the actual save response. |
+| 409 `widget_settings_changed` | Review concurrent changes before saving a new focused update. |
+| Wrong instructions or knowledge | Check website instructions and the separate website knowledge channels. |
+| Returning visitor not recognised | Browser storage may have changed; avoid inventing a verified identity. |
+
+## Check settings limits
+
+The website prompt is limited to 16,000 UTF-16 code units. The API accepts only documented settings. `web_appearance` replaces the complete appearance value; omitted nested wording is not automatically retained. Send the whole intended appearance object from the current schema.
+
+Keep `revision` as its returned decimal string to avoid precision loss. A lost PATCH response requires a read before another deliberate save.
+
+## Diagnose action expectations
+
+Built-in phone booking, SMS, transfer, keypad and menu actions are not enabled by website voice. Website custom functions are separately controlled by `web_functions_enabled`. If enabled, every active function on that number must be safe for public visitors; the switch is not a per-function permission grant.
+
+Use the [inbox](/guides/developer/agent-inbox) to inspect the correct website conversation scope. Do not combine it with SMS threads merely because the visitor supplied the same phone number.
+
+- [Install and verify the site](/guides/developer/website/install-and-verify)
+- [Read the settings contract](/api-reference/web-agent/patch-agent-web-number)
+- [Review custom functions](/advanced/custom-functions)

@@ -1,0 +1,50 @@
+---
+title: "Use dynamic variables without guessing data"
+description: "Understand Nixflex call variables, campaign recipient fields and message placeholders, including missing values and the limits of saved caller context."
+canonical: "https://docs.nixflex.com/concepts/variables"
+sidebarTitle: "Dynamic variables"
+---
+
+Insert known application data into the correct call or message template and reject missing consequential values before sending work.
+
+<div className="nxf-facts">
+  <div><small>Call values</small><strong>dynamic_vars</strong></div>
+  <div><small>Campaign values</small><strong>Nested variables</strong></div>
+  <div><small>Missing data</small><strong>Ask or correct</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Single calls use dynamic_vars; campaign rows use nested variables.
+- Template syntax varies by field and must be checked against its contract.
+- Caller-supplied contact details are data, not proof of identity.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Call-purpose variables
+
+A single outbound call uses `dynamic_vars` with placeholders such as `{{name}}` in its required `prompt`. A voice campaign supplies each recipient as `{"phone":"+12025550101","variables":{"name":"Sam"}}`. Keep recipient variables nested; flattening them into the row changes the request shape.
+
+Validate required input before submitting a call. Do not rely on an unresolved placeholder becoming a safe empty string. A missing name, appointment time or other required field should produce a clear review step in your application.
+
+## Message and integration placeholders
+
+Post-call templates and integration configuration can use their own documented placeholders, sometimes single braces. Do not assume a call-purpose double-brace placeholder works in every message or URL. Use the field's reference and test the final rendered value.
+
+Treat values as data when constructing JSON, URLs or SQL. Escape them for the destination rather than concatenating untrusted caller text into commands. A supplied email or phone number is not proof the caller owns it.
+
+## Saved records
+
+Dynamic variables, call history and caller memory are different. Some context may be recorded with a call or deliberately saved through a context feature. Do not claim all supplied variables are immediately discarded or that a call-retention change erases every related record.
+
+- [Build an outbound call](/guides/lead-qualification)
+- [Create a voice campaign](/guides/developer/campaigns)
+- [Caller memory](/concepts/caller-context)

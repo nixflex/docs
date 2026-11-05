@@ -1,0 +1,134 @@
+---
+title: "Find the CLI command for your task"
+sidebarTitle: "CLI command reference"
+description: "Find reviewed CLI command families, exact call recovery commands, private credential inputs and confirmation boundaries before running a change."
+canonical: "https://docs.nixflex.com/cli/commands"
+---
+
+Choose the command for one task and read its effect, required inputs and recovery rule before execution.
+
+<div className="nxf-facts">
+  <div><small>Syntax</small><strong>nixflex group command</strong></div>
+  <div><small>Output</small><strong>--json when scripting</strong></div>
+  <div><small>Writes</small><strong>No automatic retry</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the exact reviewed candidate and explicit --base-url for your account.
+- A confirmation preview is command-specific; creates can send immediately.
+- Use private input for secrets and keep JSON results out of shared logs.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read command syntax and results
+
+Run `nixflex --help` for the installed command inventory. The tables below omit the leading `nixflex`; angle-bracket values are placeholders, not literal arguments. Append `--base-url` for the intended host and `--json` where structured output is needed.
+
+General creates and updates accept documented `--body '@file.json'` and repeated `--set field=value` inputs. The parser recognises booleans, null and numbers; `@file` reads text. Do not assume a future API field is accepted by an older typed command. Read back a deliberate change.
+
+## Account and safe reads
+
+| Command | Effect |
+| --- | --- |
+| `usage` | Read account usage and balance. |
+| `whoami` | Read the selected key identity and usage; treat output as private. |
+| `doctor` | Inspect CLI/runtime/configuration and make a connectivity read. |
+| `login` / `logout` | Manage the legacy plaintext local credential file. |
+| `keys create --body '@account.json' --confirm` | Create an account credential; not a connectivity test. |
+| `keys rotate --confirm` | Replace the secret; existing integrations need an authorised rollout. |
+| `completion <bash\|zsh\|pwsh>` | Print a completion script for review before shell installation. |
+
+Never put a key in command history. See [private connection setup](/cli/overview).
+
+## Agents and call reads
+
+| Command | Effect |
+| --- | --- |
+| `agents list` / `agents get <id>` | Read agents using supported filters. |
+| `agents create --body '@agent.json'` | Create the specified agent. |
+| `agents update <id> --body '@changes.json'` | Update the documented supplied fields. |
+| `agents delete <id> --confirm` | Request deletion of the selected agent. |
+| `calls list --limit 50` | Read legacy offset results; no agent filter. |
+| `calls history --agent <id> --limit 50` | Read filtered history with the returned paging contract. |
+| `calls get <id>` / `calls read <id>` | Read legacy or explicit detail projection respectively. |
+| `calls recording <id>` | Read current authorised playback availability and expiry. |
+| `calls bookings <id>` | Read ready, none, processing, deleted or unavailable booking evidence. |
+
+## Prepare, send and reconcile one call
+
+| Command | Effect |
+| --- | --- |
+| `calls prepare --body '@intent.json' --output prepared-call.json --json` | Generate and save a UUID locally; sends nothing and never overwrites. |
+| `calls create --body '@prepared-call.json'` | Send the approved saved call once. |
+| `calls create ... --request-id <uuid>` | Use an explicitly saved UUID with the exact original inputs. |
+| `calls outboundRequest <uuid>` | Read durable request state without dispatching. |
+
+`--var name=Sam` maps to `dynamic_vars` for `{{name}}`. Use one variables alias only. `--wait` on a send polls for completion; its timeout is not a hangup timer. A late result must not cause another call. Follow the complete [CLI quickstart](/cli/quickstart).
+
+## Campaigns and contact controls
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `campaigns list`, `create`, `launch`, `consent`, `cancel`, `resume` | Voice campaign work; creation can launch immediately and cancel does not hang up active calls. |
+| `sms campaigns list`, `get`, `create`, `launch`, `update`, `consent`, `cancel`, `resume` | SMS campaign work; sent, delivered and replies remain separate. |
+| `contacts` commands | Contact-hour previews and suppression operations from the installed help. |
+
+Prefer complete JSON bodies for nested recipient variables, country and time-zone data. A CSV convenience importer does not make every column a top-level recipient policy field. Review [voice preparation](/guides/developer/campaigns/prepare-and-launch) or [SMS preparation](/guides/developer/sms-campaigns/prepare-and-send) before creating work.
+
+`calls delete`, `calls delete-all` and `sms campaigns delete` require confirmation, but their next-release deletion contract is pending B57 review. Do not use an older settlement-wait rule or infer an immediate-delete response. See the marked API deletion pages before executing.
+
+## Numbers, callers, SMS and inbox
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `numbers list`, `get`, `usage`, `update`, `delete` | Owned-number reads and deliberate changes; move with an agent-only update. |
+| `numbers web-calls <number> get` | Read the website-call preference; effective voice also needs the Web agent enabled. |
+| `callers get`, `set`, `import`, `delete` | Number-scoped caller context; imports batch records and need partial-result handling. |
+| `sms send` | Send one message; acceptance is not delivery and opt-outs must stop sending. |
+| `web-agent` commands | Website settings with the observed revision. |
+| `inbox` commands | Channel-scoped conversations, messages, read state and archive changes. |
+
+For a new number import, use the supported dashboard setup. The public import schema omits legacy credential fields. Never copy carrier secrets into `--set` arguments or invent credential aliases.
+
+## Google Calendar and number credentials
+
+| Command | Effect |
+| --- | --- |
+| `integrations getGoogleCalendar <number>` | Read the safe connection state; the engine may check existing access internally. |
+| `integrations connectGoogleCalendar <number> --return-url <https-url> --confirm` | Create a private ten-minute consent link for the authorised person. |
+| `integrations updateGoogleCalendarSettings <number> --body '@calendar-settings.json' --confirm` | Save supplied settings; hours replace the complete seven-day map. |
+| `integrations disconnectGoogleCalendar <number> --confirm` | Remove saved access; dispatched calendar work cannot be recalled. |
+| `numbers updateCredentials <number> --provider twilio --confirm` | Update the existing carrier connection using its private environment pair. |
+
+The credential command accepts private environment variables or `--credentials-stdin` from a trusted private process pipe. It rejects `--key`, `--body`, `--set`, credential files and secret command arguments. Use `NIXFLEX_TWILIO_SID` plus `NIXFLEX_TWILIO_TOKEN`, or select `telnyx` with `NIXFLEX_TELNYX_API_KEY` plus `NIXFLEX_TELNYX_CONNECTION_ID`.
+
+Stop on `carrier_outcome_unknown`. `credential_save_pending` needs deliberate completion with identical input, not a general automatic retry. A credential update does not switch carriers or remove/re-import the number.
+
+## Knowledge, team and integrations
+
+| Family | Next guide |
+| --- | --- |
+| `knowledge` | [Source, draft, job and publication workflow](/guides/developer/knowledge); preserve idempotency keys and revisions. |
+| `organisation` | [Invitations and roles](/guides/developer/team/invitations-and-roles); personal ownership/closure remains in its authenticated flow. |
+| `organisation activityCsv --output <file>` | Export privately with the documented filters and streaming behaviour. |
+| `integrations` and `webhooks` | [Integration setup](/integrations/overview) and [signed receiver](/advanced/webhooks). |
+| `mcp setup` | [AI client installation](/ai-tools/overview); a tool server setup is separate from a business operation. |
+
+The reviewed CLI does not expose the old account model, voice or storage command groups. Use their supported dashboard connection flows rather than commands copied from an older package.
+
+## Handle failures
+
+Check both exit code and result. A preview can exit successfully without sending, and a failed command can follow an accepted write. Keep only safe codes and IDs in diagnostics. Reconcile the saved resource or request before repeating a mutation.
+
+- [Run the safe quickstart](/cli/quickstart)
+- [Check the exact package](/sdks/ecosystem)
+- [Read API error recovery](/reference/errors)

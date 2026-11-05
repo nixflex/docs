@@ -1,173 +1,151 @@
 ---
-title: "CLI commands"
-description: "Every nixflex command, with an example"
-icon: "list"
+title: "Find the CLI command for your task"
+sidebarTitle: "CLI command reference"
+description: "Find reviewed CLI command families, exact call recovery commands, private credential inputs and confirmation boundaries before running a change."
 canonical: "https://docs.nixflex.com/cli/commands"
 ---
-Commands support `--json` output and `--base-url`. Use a privately configured `NIXFLEX_API_KEY`; the number credential command explicitly rejects `--key`. Destructive commands preview and stop unless you pass `--confirm` (alias `--yes`).
+Choose the command for one task and read its effect, required inputs and recovery rule before execution.
+
+<div className="nxf-facts">
+  <div><small>Syntax</small><strong>nixflex group command</strong></div>
+  <div><small>Output</small><strong>--json when scripting</strong></div>
+  <div><small>Writes</small><strong>No automatic retry</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the exact reviewed candidate and explicit --base-url for your account.
+- A confirmation preview is command-specific; creates can send immediately.
+- Use private input for secrets and keep JSON results out of shared logs.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
+
+## Read command syntax and results
+
+Run `nixflex --help` for the installed command inventory. The tables below omit the leading `nixflex`; angle-bracket values are placeholders, not literal arguments. Append `--base-url` for the intended host and `--json` where structured output is needed.
+
+General creates and updates accept documented `--body '@file.json'` and repeated `--set field=value` inputs. The parser recognises booleans, null and numbers; `@file` reads text. Do not assume a future API field is accepted by an older typed command. Read back a deliberate change.
+
+## Account and safe reads
+
+| Command | Effect |
+| --- | --- |
+| `usage` | Read account usage and balance. |
+| `whoami` | Read the selected key identity and usage; treat output as private. |
+| `doctor` | Inspect CLI/runtime/configuration and make a connectivity read. |
+| `login` / `logout` | Manage the legacy plaintext local credential file. |
+| `keys create --body '@account.json' --confirm` | Create an account credential; not a connectivity test. |
+| `keys rotate --confirm` | Replace the secret; existing integrations need an authorised rollout. |
+| `completion <bash\|zsh\|pwsh>` | Print a completion script for review before shell installation. |
+
+Never put a key in command history. See [private connection setup](/cli/overview).
+
+## Agents and call reads
+
+| Command | Effect |
+| --- | --- |
+| `agents list` / `agents get <id>` | Read agents using supported filters. |
+| `agents create --body '@agent.json'` | Create the specified agent. |
+| `agents update <id> --body '@changes.json'` | Update the documented supplied fields. |
+| `agents delete <id> --confirm` | Request deletion of the selected agent. |
+| `calls list --limit 50` | Read legacy offset results; no agent filter. |
+| `calls history --agent <id> --limit 50` | Read filtered history with the returned paging contract. |
+| `calls get <id>` / `calls read <id>` | Read legacy or explicit detail projection respectively. |
+| `calls recording <id>` | Read current authorised playback availability and expiry. |
+| `calls bookings <id>` | Read ready, none, processing, deleted or unavailable booking evidence. |
+
+## Prepare, send and reconcile one call
+
+| Command | Effect |
+| --- | --- |
+| `calls prepare --body '@intent.json' --output prepared-call.json --json` | Generate and save a UUID locally; sends nothing and never overwrites. |
+| `calls create --body '@prepared-call.json'` | Send the approved saved call once. |
+| `calls create ... --request-id <uuid>` | Use an explicitly saved UUID with the exact original inputs. |
+| `calls outboundRequest <uuid>` | Read durable request state without dispatching. |
+
+`--var name=Sam` maps to `dynamic_vars` for `{{name}}`. Use one variables alias only. `--wait` on a send polls for completion; its timeout is not a hangup timer. A late result must not cause another call. Follow the complete [CLI quickstart](/cli/quickstart).
+
+## Campaigns and contact controls
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `campaigns list`, `create`, `launch`, `consent`, `cancel`, `resume` | Voice campaign work; creation can launch immediately and cancel does not hang up active calls. |
+| `sms campaigns list`, `get`, `create`, `launch`, `update`, `consent`, `cancel`, `resume` | SMS campaign work; sent, delivered and replies remain separate. |
+| `contacts` commands | Contact-hour previews and suppression operations from the installed help. |
+
+Prefer complete JSON bodies for nested recipient variables, country and time-zone data. A CSV convenience importer does not make every column a top-level recipient policy field. Review [voice preparation](/guides/developer/campaigns/prepare-and-launch) or [SMS preparation](/guides/developer/sms-campaigns/prepare-and-send) before creating work.
+
+`calls delete`, `calls delete-all` and `sms campaigns delete` require confirmation, but their next-release deletion contract is pending B57 review. Do not use an older settlement-wait rule or infer an immediate-delete response. See the marked API deletion pages before executing.
+
+## Numbers, callers, SMS and inbox
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `numbers list`, `get`, `usage`, `update`, `delete` | Owned-number reads and deliberate changes; move with an agent-only update. |
+| `numbers web-calls <number> get` | Read the website-call preference; effective voice also needs the Web agent enabled. |
+| `callers get`, `set`, `import`, `delete` | Number-scoped caller context; imports batch records and need partial-result handling. |
+| `sms send` | Send one message; acceptance is not delivery and opt-outs must stop sending. |
+| `web-agent` commands | Website settings with the observed revision. |
+| `inbox` commands | Channel-scoped conversations, messages, read state and archive changes. |
+
+For a new number import, use the supported dashboard setup. The public import schema omits legacy credential fields. Never copy carrier secrets into `--set` arguments or invent credential aliases.
 
 ## Google Calendar and number credentials
 
-These five commands ship in the supplied **Node/CLI 0.11.0 K6 candidate**, not as a
-claim of public registry availability. Confirm your installed version first.
-Each write previews with zero requests unless you pass `--confirm`; the commands
-below are separate actions, not a sequence to run against a real number.
-
-| Command (after `nixflex`) | Behaviour |
+| Command | Effect |
 | --- | --- |
-| `integrations connectGoogleCalendar <number> --return-url <https-url> --confirm` | Return a private ten-minute link for human consent; never auto-open. |
-| `integrations getGoogleCalendar <number> --json` | Read six status fields; the engine may refresh/check existing credentials internally. |
-| `integrations updateGoogleCalendarSettings <number> --body @calendar-settings.json --confirm` | Change supplied settings; hours replace all seven days. |
-| `integrations disconnectGoogleCalendar <number> --confirm` | Remove saved access; cannot recall dispatched work. |
-| `numbers updateCredentials <number> --provider twilio --confirm` | Read the private environment pair and update this number's routing/settings in place. |
+| `integrations getGoogleCalendar <number>` | Read the safe connection state; the engine may check existing access internally. |
+| `integrations connectGoogleCalendar <number> --return-url <https-url> --confirm` | Create a private ten-minute consent link for the authorised person. |
+| `integrations updateGoogleCalendarSettings <number> --body '@calendar-settings.json' --confirm` | Save supplied settings; hours replace the complete seven-day map. |
+| `integrations disconnectGoogleCalendar <number> --confirm` | Remove saved access; dispatched calendar work cannot be recalled. |
+| `numbers updateCredentials <number> --provider twilio --confirm` | Update the existing carrier connection using its private environment pair. |
 
-```powershell
-nixflex integrations getGoogleCalendar '+12025550123' --json
-# A separate approved change; the file contains settings only, never secrets:
-nixflex integrations updateGoogleCalendarSettings '+12025550123' --body '@calendar-settings.json' --confirm
-```
+The credential command accepts private environment variables or `--credentials-stdin` from a trusted private process pipe. It rejects `--key`, `--body`, `--set`, credential files and secret command arguments. Use `NIXFLEX_TWILIO_SID` plus `NIXFLEX_TWILIO_TOKEN`, or select `telnyx` with `NIXFLEX_TELNYX_API_KEY` plus `NIXFLEX_TELNYX_CONNECTION_ID`.
 
-For example, `calendar-settings.json` can contain `{"send_invites":false}`.
-Other fields are `timezone`, `hours`, `slot_minutes` (15/30/45/60) and `calendar_id`.
-Omitted fields remain saved. A closed day is `null`; invitations do not prove inbox delivery.
+Stop on `carrier_outcome_unknown`. `credential_save_pending` needs deliberate completion with identical input, not a general automatic retry. A credential update does not switch carriers or remove/re-import the number.
 
-For credentials, privately configure `NIXFLEX_TWILIO_SID` + `NIXFLEX_TWILIO_TOKEN`,
-or use `--provider telnyx` with `NIXFLEX_TELNYX_API_KEY` + `NIXFLEX_TELNYX_CONNECTION_ID`.
-Alternatively `--credentials-stdin` accepts the exact JSON pair from a trusted private
-process pipe. This command rejects `--key`, `--body`, `--set`, credential files and
-secret command-line flags. It returns only a safe receipt. No automatic write retry:
-stop on `carrier_outcome_unknown`; only manually complete `credential_save_pending`
-with identical input. [Review the routing consequences](/api-reference/phone-numbers/credentials).
+## Knowledge, team and integrations
 
-SMS JSON errors preserve 409 `conflict` / `do_not_contact`; stop without resending,
-while retaining old 400 handling. Booking model additions do not create a CLI listener.
+| Family | Next guide |
+| --- | --- |
+| `knowledge` | [Source, draft, job and publication workflow](/guides/developer/knowledge); preserve idempotency keys and revisions. |
+| `organisation` | [Invitations and roles](/guides/developer/team/invitations-and-roles); personal ownership/closure remains in its authenticated flow. |
+| `organisation activityCsv --output <file>` | Export privately with the documented filters and streaming behaviour. |
+| `integrations` and `webhooks` | [Integration setup](/integrations/overview) and [signed receiver](/advanced/webhooks). |
+| `mcp setup` | [AI client installation](/ai-tools/overview); a tool server setup is separate from a business operation. |
 
-## Setting any field
+The reviewed CLI does not expose the old account model, voice or storage command groups. Use their supported dashboard connection flows rather than commands copied from an older package.
 
-General create/update commands accept `--set field=value` - as many times as you like - and `--body @file.json` for nested objects. Values are parsed: `true`, `false`, `null`, numbers, and `@path` reads a file. Any field the API accepts works, including ones added after this CLI was released.
+## Handle failures
 
-```bash
-nixflex agents update agent_15d1a9ee16294087 --set silence_hangup_seconds=12 --set incall_sms_enabled=true
-nixflex agents update agent_15d1a9ee16294087 --set system_prompt=@prompt.txt
-nixflex numbers import --body @number.json
-```
+Check both exit code and result. A preview can exit successfully without sending, and a failed command can follow an accepted write. Keep only safe codes and IDs in diagnostics. Reconcile the saved resource or request before repeating a mutation.
 
-Named flags exist for common fields; `--set` covers the rest. Use documented names:
-number PATCH can ignore unknown fields alongside valid fields. Check read-back.
+- [Run the safe quickstart](/cli/quickstart)
+- [Check the exact package](/sdks/ecosystem)
+- [Read API error recovery](/reference/errors)
 
-## Account
-
-| Command | What it does |
-|---|---|
-| `nixflex login` | Store your API key in `~/.nixflex/config.json` after verifying it. Reads `NIXFLEX_API_KEY` if set. |
-| `nixflex logout` | Remove the stored key. |
-| `nixflex whoami` | The key id in use, plus usage and balance. |
-| `nixflex usage` | Usage and balance - [GET /v1/usage](/api-reference/account/usage). |
-| `nixflex doctor` | CLI version, Node version, where the key came from, base URL, and whether the API answers. |
-| `nixflex keys rotate --confirm` | New secret. **The current one stops working immediately** - update every integration, then `nixflex login` again. Previews without `--confirm`. |
-| `nixflex completion <bash\|zsh\|pwsh>` | Prints a shell completion script. `nixflex completion bash >> ~/.bashrc` |
-
-## Agents
-
-| Command | Notes |
-|---|---|
-| `agents list [--limit N]` | |
-| `agents get <agent_id>` | |
-| `agents create --name NAME --prompt TEXT\|@file [--voice ID] [--language xx] [--set k=v ...]` | See [Create agent](/api-reference/agents/create). |
-| `agents update <agent_id> [--name] [--prompt] [--voice] [--language] [--incall-sms true\|false] [--set k=v ...]` | Only what you pass changes. |
-| `agents delete <agent_id> --confirm` | |
-
-## Calls
-
-| Command | Notes |
-|---|---|
-| `calls create --agent ID --to +44... --prompt TEXT\|@file [--from +44...] [--var key=value ...] [--wait] [--timeout S]` | Places a call now. `--var name=Sam` fills `{{name}}` via `dynamic_vars` in the batch 1 candidate. `--wait` polls for the end; default timeout 300 s, not a hangup timer. See [client safety](/api-reference/calls/client-safety). |
-| `calls list [--limit N] [--agent ID]` | Newest first. |
-| `calls get <call_id>` | |
-| `calls delete <call_id> --confirm` | Requests guarded cleanup; pending/safety refusals are not deletion. |
-| `calls delete-all --confirm` | Requests guarded call cleanup, not SMS or account erasure. Never blindly retry an uncertain response. |
-
-```bash
-nixflex calls create --agent agent_15d1a9ee16294087 --to +447453573770 --prompt @reminder.txt --var name=Sam --wait
-```
-
-## Campaigns (voice batch)
-
-| Command | Notes |
-|---|---|
-| `campaigns create --agent ID --from +44... --prompt TEXT\|@file --csv people.csv [--name NAME] [--set k=v ...]` | One prompt, many calls. Scheduling fields (`schedule_type`, `scheduled_date`, window) via `--set`. See [Create batch](/api-reference/calls/batch-create). |
-| `campaigns launch <campaign_id>` | Starts a campaign created with `--set schedule_type=schedule`. Campaigns created without that dial immediately. |
-
-CSV columns: `phone` (required, E.164), `prompt_override` (optional - replaces the campaign prompt for that person), and every other column becomes a variable the agent receives for that call.
-
-```csv
-phone,name,appointment
-+447453573770,Sam,Tuesday 11:00
-+447700900002,Priya,Wednesday 14:30
-```
-
-## Numbers
-
-| Command | Notes |
-|---|---|
-| `numbers list [--agent ID] [--provider twilio\|telnyx] [--limit N] [--cursor CURSOR]` | Paging opt-in; count means returned rows. Local unpublished Group2 build. |
-| `numbers get <number> --json` | All safe settings, read-only source and key status. Local unpublished Group2 build. |
-| `numbers import --set phone_number=+44... --set agent_id=ID --set twilio_sid=... --set twilio_token=...` | Or `--set telnyx_api_key=... --set telnyx_connection_id=...`, or `--body @number.json`. See [Import phone number](/api-reference/phone-numbers/import). |
-| `numbers update <number> [--sms-reply true\|false] [--sms-prompt TEXT\|@file\|null] [--dtmf true\|false\|null] [--set k=v ...]` | `--dtmf null` inherits the agent setting. See [Update phone number](/api-reference/phone-numbers/update). |
-| `numbers delete <number> --confirm` | Disconnects from Nixflex; your carrier keeps the number. |
-| `numbers monitor <number> [get\|on\|off]` | Enabling is free. The listening premium applies only when a live listener actually attaches to the call, inbound or outbound. |
-| `numbers web-calls <number> [get\|on\|off]` | Browser calls for the number. |
-
-## Callers (caller context)
-
-For all seven typed number switches and examples, see [number switches](/api-reference/phone-numbers/switches).
-
-What the agent knows about a caller on one of your numbers. First number is yours, second is the caller's. See [Caller context](/concepts/caller-context).
-
-| Command | Notes |
-|---|---|
-| `callers get <your_number> <caller_number>` | |
-| `callers set <your_number> <caller_number> [--name] [--email] [--phone] [--location] [--reference] [--preference]` | Omitted fields are kept; pass `null` to remove one. |
-| `callers import <your_number> <file.csv>` | Columns: `caller_number` (required), `name`, `email`, `phone`, `location`, `reference_id`, `preference`. Sent in chunks of 1,000. |
-| `callers delete <your_number> <caller_number> --confirm` | Erases your fields and the engine's. |
-
-## SMS
-
-| Command | Notes |
-|---|---|
-| `sms send --agent ID --from +44... --to +44... --message TEXT` | One message. See [Send SMS](/sms/send-sms). |
-| `sms campaigns create --agent ID --from +44... --message TEXT\|@file --csv people.csv [--set k=v ...]` | Bulk. CSV: `phone` + any columns as `{{variables}}` in the message. See [SMS campaigns](/sms/sms-campaigns). |
-| `sms campaigns launch <id>` | |
-| `sms campaigns list [--status S] [--limit N]` | |
-| `sms campaigns get <id>` | Delivery counts. |
-| `sms campaigns delete <id> --confirm` | Pending recipients are not messaged; sent messages cannot be recalled. |
-
-## Webhooks (per number)
-
-| Command | Notes |
-|---|---|
-| `webhooks set <number> <url> [--slot 1\|2]` | Post-call webhook. Two slots per number. See [Webhooks](/advanced/webhooks). |
-| `webhooks get <number> [--slot 1\|2]` | |
-| `webhooks delete <number> [--slot 1\|2] --confirm` | |
-
-## Bring your own
-
-| Command | Notes |
-|---|---|
-| `storage set --set k=v ...` / `storage get` / `storage delete --confirm` | Your own S3-compatible bucket. See [Your own storage](/advanced/your-own-storage). |
-| `llm set --set k=v ...` / `llm get` / `llm delete --confirm` | Your own compatible model. See [Your own LLM](/advanced/your-own-llm). |
-| `tts set --set k=v ...` / `tts get` / `tts delete --confirm` | Your own voice provider. See [Your own TTS](/advanced/your-own-tts). |
-
-`set` verifies the connection with a real probe before saving; `get` never returns secrets.
-
-## MCP
-
-| Command | Notes |
-|---|---|
-| `mcp setup <claude\|cursor> [--mcp-local <package-directory>] [--confirm]` | K6 pins MCP 0.5.0 and refuses an unpublished registry target. Use the supplied local package before publication. Setup preserves explicit destination binding and does not copy keys into client JSON. Claude Code and Codex use manual configuration; this installer still accepts only Claude Desktop or Cursor. See [AI tools](/ai-tools/overview). |
-
-## Errors and exit codes
-
-Errors print as `error <status> <code>: <message>` with a link to the error's page, and the process exits with code `1`. With `--json` the same information is returned on stdout as `{ "error": { "code", "status", "message", "doc_url" } }`. No key at all exits with `2`. A mistyped command exits `1` with a suggestion.
-
-Progress lines (imports, `--wait`) go to stderr, so stdout stays clean for pipes. All codes are listed on [Errors](/reference/errors).
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="setting-any-field"></span>
+<span id="account"></span>
+<span id="agents"></span>
+<span id="calls"></span>
+<span id="campaigns-voice-batch"></span>
+<span id="numbers"></span>
+<span id="callers-caller-context"></span>
+<span id="sms"></span>
+<span id="webhooks-per-number"></span>
+<span id="bring-your-own"></span>
+<span id="mcp"></span>
+<span id="errors-and-exit-codes"></span>

@@ -1,0 +1,73 @@
+---
+title: "Understand API quotas and call capacity"
+sidebarTitle: "Limits reference"
+description: "Separate Nixflex HTTP request allowances, concurrent calls, messaging capacity and Knowledge limits, then handle each refusal using its actual result."
+canonical: "https://docs.nixflex.com/reference/rate-limits"
+---
+
+Plan HTTP requests and business work against their separate current limits instead of assuming one fixed allowance.
+
+<div className="nxf-facts">
+  <div><small>HTTP allowance</small><strong>Response headers</strong></div>
+  <div><small>Call capacity</small><strong>Account setting</strong></div>
+  <div><small>Recovery</small><strong>Operation-specific</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read rate headers and current max_concurrent; neither is a universal throughput promise.
+- A successful usage read does not reserve a call slot.
+- A throttle does not make an uncertain write safe to repeat.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Concurrent calls
+
+Call concurrency is the amount of simultaneous admitted work, not the number of HTTP requests. Read `max_concurrent` from [usage](/api-reference/account/usage). The legacy fallback is 10 when no positive value is stored; it is not a promise that every account has the same current limit or that higher limits are automatically available.
+
+Optional `occupied_call_slots` can include unresolved reservations, not just connected conversations. If that field is absent, do not substitute zero. Balance, active-state and recipient policy checks still apply at admission.
+
+## Batch campaign concurrency
+
+Voice campaigns dispatch against the account's current admission checks and capacity. Shared inbound and outbound work can compete for that capacity. Queued or held recipients are not connected calls; inspect the campaign and its hold reasons.
+
+Do not promise that every refused single call is automatically queued, that no request is ever dropped, or that a busy call has one universal billing/history result. Use the actual refusal or retained call record.
+
+## HTTP request allowance
+
+| Header / result | Meaning | Action |
+| --- | --- | --- |
+| `RateLimit-Limit` | Current HTTP allowance | Use the returned value rather than a hard-coded requests-per-minute number. |
+| `RateLimit-Remaining` | Remaining requests in the window | Share polling and cache stable reads. |
+| 429 `rate_limit_exceeded` | Request allowance reached | Wait at least `Retry-After` for a safe read, with a deadline and jitter. |
+| Missing headers after a refusal | No verified allowance information | Handle authentication or the exact error first. |
+
+## SMS pacing
+
+Message admission, account restrictions and carrier throughput can constrain sending. Encoding and segmentation also affect transport. No single messages-per-second number applies to every destination and account. Use campaign state and returned outcomes; adding senders must not bypass a recipient opt-out or duplicate an uncertain message.
+
+## Webhook delivery
+
+Persist an authenticated delivery before returning 2xx, then process it asynchronously. Queue delivery has a bounded attempt budget; a responsive endpoint and an accepted HTTP response do not prove your downstream business action finished. See [delivery recovery](/guides/developer/webhooks/delivery-and-recovery).
+
+## Knowledge and other feature limits
+
+Knowledge capabilities and usage expose separate base, source, job, storage and test allowances. A `busy`, `base_limit`, `session_limit` or `training_limit` response needs its own recovery decision. More HTTP capacity does not remove these limits.
+
+## Need more?
+
+Measure the limiting resource and contact support with the required workload and safe diagnostics. Approval and availability must be confirmed; this guide does not promise an automatic limit increase.
+
+## Next steps
+
+- [Implement request pacing](/guides/developer/rate-limits)
+- [Read usage and capacity](/guides/developer/billing)
+- [Handle API refusals](/guides/developer/errors)

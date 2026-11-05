@@ -1,0 +1,100 @@
+---
+title: "Provide context before an inbound call"
+description: "Configure a Nixflex inbound pre-call hook, verify its request and return caller context or an explicit refusal within the fail-open timing budget."
+canonical: "https://docs.nixflex.com/advanced/precall-gate"
+sidebarTitle: "Pre-call context"
+---
+
+Use the pre-call hook to supply temporary context or an explicit rejection before an eligible inbound conversation.
+
+<div className="nxf-facts">
+  <div><small>Timing</small><strong>Before admission</strong></div>
+  <div><small>Failure policy</small><strong>Fail-open</strong></div>
+  <div><small>Context</small><strong>This call only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Hook failure is fail-open; do not use it as the sole security boundary.
+- Verify signatures over the exact request bytes.
+- The outbound call purpose is supplied on the call request, not through this hook.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/inbound-support) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an HTTPS receiver and verify the signing header before using supplied caller information.
+
+## 1. Read the hook configuration
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/precall/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("precall", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('precall', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get precall '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Choose the scope
+
+A configured number URL wins over the agent URL; otherwise the agent setting applies. If neither is configured, this hook does not run. Use the documented number or agent integration route, not an outbound call-purpose field.
+
+## 3. Verify the request
+
+The POST body contains `event:call.inbound`, `from`, `to` and `call_id`. Current code attaches a signature when a signing value is available. Verify exact raw bytes using the [signature helper](/advanced/webhooks). Reject unverified requests in your service; do not accept them because the caller data looks plausible.
+
+## 4. Return a clear decision
+
+A successful JSON response containing `{"action":"reject","reason":"account_inactive"}` explicitly refuses the call. Other valid responses allow it. A permitted `caller` object can supply validated current-call context. Invalid context fields are ignored individually; do not assume every supplied field was accepted.
+
+## 5. Design for fail-open
+
+The whole request and reply-body read share a five-second budget. Timeout, network failure, unsuccessful HTTP or invalid/oversized JSON causes the call to proceed. Reply bodies are limited to 64 KiB. Protect sensitive downstream actions with their own authorisation, because this hook is not a fail-closed security boundary.
+
+## Example response
+
+Illustrative receiver reply: `{"action":"accept","caller":{"name":"Sam"}}`. This provides call context; later learning and call records follow their own policies, so it is not a promise that no related information will ever be stored.
+
+## Errors and limits
+
+| Condition | Engine behaviour |
+| --- | --- |
+| Explicit reject in successful JSON | Refuse the call. |
+| Timeout/non-success/invalid JSON | Proceed under fail-open policy. |
+| Invalid caller field | Drop that field rather than reject the whole call. |
+| No configured URL | Proceed without the hook. |
+| Outbound call | This inbound hook is not used as its purpose mechanism. |
+
+## Next steps
+
+- [Save number hook](/api-reference/integration-settings/put-integrations-precall-number-phoneNumber)
+- [Save agent hook](/api-reference/integration-settings/put-integrations-precall-agent-agentId)
+- [Caller context](/concepts/caller-context)

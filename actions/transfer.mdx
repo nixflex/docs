@@ -1,15 +1,36 @@
 ---
-title: "Call transfer: configure a cold or warm human handoff"
+title: "Configure a human call handoff"
 description: "Configure Nixflex cold or warm transfers, provide an appropriate handoff instruction and inspect the actual result when the destination is busy or unavailable."
 canonical: "https://docs.nixflex.com/actions/transfer"
+sidebarTitle: "Call transfer"
 ---
-Hand a telephone caller to a suitable person using the agent’s configured transfer policy.
+Configure cold or warm transfer and report a successful handoff only after the transfer result confirms it.
 
-Using the dashboard? See [the business guide](/guides/business/call-actions).
+<div className="nxf-facts">
+  <div><small>Types</small><strong>Cold or warm</strong></div>
+  <div><small>Destination</small><strong>Configured number</strong></div>
+  <div><small>Success</small><strong>Confirmed handoff</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use an eligible destination and the intended transfer type.
+- Warm transfer can use a whisper; cold transfer follows a different path.
+- A transfer request alone does not prove a human answered.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Replace `agent_example` with an owned agent. This update changes future agent behaviour.
 
 ## 1. Read the current settings
 
@@ -36,8 +57,8 @@ const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', 
   body: JSON.stringify({"transfer_type":"warm"}),
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
 ```
 
 ```python Python
@@ -51,7 +72,8 @@ request = Request(
     data='{"transfer_type":"warm"}'.encode('utf-8'),
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
+    result = json.load(response)
+    # Handle the private result without logging it.
 ```
 
 ```powershell CLI (PowerShell)

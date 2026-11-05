@@ -1,15 +1,44 @@
 ---
-title: "Cal.com booking: connect a number with the Nixflex API"
+title: "Connect Cal.com bookings in code"
 description: "Connect a Nixflex number to Cal.com, use the agent time zone and confirmation controls, and check real calendar outcomes before promising a booking."
 canonical: "https://docs.nixflex.com/actions/calcom"
+sidebarTitle: "Cal.com bookings"
 ---
-Configure a number’s calendar connection and test the booking, lookup, reschedule and cancellation outcomes.
+Connect Cal.com to an owned number, choose the intended event settings and verify booking results before confirming an appointment.
 
-Using the dashboard? See [the business guide](/guides/business/calcom).
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Provider</small><strong>One active connection</strong></div>
+  <div><small>Result</small><strong>Confirmed appointment</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Calendar access and the agent’s permission to act are separate.
+- Confirm the spoken name and email independently before booking.
+- Use returned booking results; an accepted action is not proof of notification delivery.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/calcom) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Troubleshoot bookings](/guides/developer/bookings/troubleshooting) | Check access, approvals, local time and final evidence. |
+| [Read booking results](/guides/developer/call-history) | Keep active bookings separate from action history. |
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
 
 ## 1. Read the saved connection
 

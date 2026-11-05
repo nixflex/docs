@@ -1,57 +1,72 @@
 ---
-title: "Rate limits"
-description: "Concurrency and pacing limits, and how to raise them"
-icon: "gauge-high"
+title: "Understand API quotas and call capacity"
+sidebarTitle: "Limits reference"
+description: "Separate Nixflex HTTP request allowances, concurrent calls, messaging capacity and Knowledge limits, then handle each refusal using its actual result."
 canonical: "https://docs.nixflex.com/reference/rate-limits"
 ---
-Nixflex keeps things simple: there is no per-minute request limit on the API. The limits that matter are about **how many calls run at the same time** (concurrency), and the natural pacing of SMS and webhooks.
+Plan HTTP requests and business work against their separate current limits instead of assuming one fixed allowance.
 
-<Note>
-  Most projects never come close to these limits. If you are planning a high-volume launch, tell us in advance at [support@nixflex.com](mailto:support@nixflex.com) and we will raise your concurrency before you need it.
-</Note>
+<div className="nxf-facts">
+  <div><small>HTTP allowance</small><strong>Response headers</strong></div>
+  <div><small>Call capacity</small><strong>Account setting</strong></div>
+  <div><small>Recovery</small><strong>Operation-specific</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read rate headers and current max_concurrent; neither is a universal throughput promise.
+- A successful usage read does not reserve a call slot.
+- A throttle does not make an uncertain write safe to repeat.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Concurrent calls
 
-Concurrency is the number of calls happening **at the same moment**, not per day.
+Call concurrency is the amount of simultaneous admitted work, not the number of HTTP requests. Read `max_concurrent` from [usage](/api-reference/account/usage). The legacy fallback is 10 when no positive value is stored; it is not a promise that every account has the same current limit or that higher limits are automatically available.
 
-By default your account can run **up to 10 concurrent calls**, and this can be raised to **50 on request**. If you need more than 50, we will size it with you.
-
-<Steps>
-  <Step title="Outbound calls queue when the limit is reached">
-    If you trigger more outbound calls than your concurrency allows, the extra calls wait in a queue and dial automatically as slots free up. Nothing is dropped.
-  </Step>
-  <Step title="Inbound calls get a busy signal at the limit">
-    Your limit is a single pool shared by inbound and outbound calls. If an inbound call arrives while you are at your limit, the caller gets a busy signal. The call is never answered, so **you are not billed for it** and it does not appear in your call history.
-  </Step>
-  <Step title="You can see when this happens">
-    The **API Keys** page in the dashboard shows your peak concurrent calls this month, and warns you if any calls were turned away. If you see that warning, it is time to raise your limit.
-  </Step>
-  <Step title="Raising your limit">
-    Email [support@nixflex.com](mailto:support@nixflex.com) with the concurrency you need and we will raise it.
-  </Step>
-</Steps>
+Optional `occupied_call_slots` can include unresolved reservations, not just connected conversations. If that field is absent, do not substitute zero. Balance, active-state and recipient policy checks still apply at admission.
 
 ## Batch campaign concurrency
 
-A batch campaign does not need its own throttle. Every recipient is queued, and calls dial only as slots free up under your account's concurrency limit. A large campaign simply takes longer to work through - it never overloads your account.
+Voice campaigns dispatch against the account's current admission checks and capacity. Shared inbound and outbound work can compete for that capacity. Queued or held recipients are not connected calls; inspect the campaign and its hold reasons.
 
-Because inbound and outbound share the same limit, a large campaign can use up slots an inbound caller would otherwise get. If you run big campaigns and take inbound calls on the same key, ask us to raise your limit.
+Do not promise that every refused single call is automatically queued, that no request is ever dropped, or that a busy call has one universal billing/history result. Use the actual refusal or retained call record.
+
+## HTTP request allowance
+
+| Header / result | Meaning | Action |
+| --- | --- | --- |
+| `RateLimit-Limit` | Current HTTP allowance | Use the returned value rather than a hard-coded requests-per-minute number. |
+| `RateLimit-Remaining` | Remaining requests in the window | Share polling and cache stable reads. |
+| 429 `rate_limit_exceeded` | Request allowance reached | Wait at least `Retry-After` for a safe read, with a deadline and jitter. |
+| Missing headers after a refusal | No verified allowance information | Handle authentication or the exact error first. |
 
 ## SMS pacing
 
-SMS is paced by your carrier, not by Nixflex. The usual default is about **one message per second per sending number**. For higher volume:
-
-- Add more sending numbers so messages spread across them.
-- Ask your carrier to raise your per-number throughput.
-- Use SMS campaigns, which respect your carrier's pacing automatically.
+Message admission, account restrictions and carrier throughput can constrain sending. Encoding and segmentation also affect transport. No single messages-per-second number applies to every destination and account. Use campaign state and returned outcomes; adding senders must not bypass a recipient opt-out or duplicate an uncertain message.
 
 ## Webhook delivery
 
-Webhooks fire as fast as your endpoint can accept them, with no Nixflex-side throttle. To keep up:
+Persist an authenticated delivery before returning 2xx, then process it asynchronously. Queue delivery has a bounded attempt budget; a responsive endpoint and an accepted HTTP response do not prove your downstream business action finished. See [delivery recovery](/guides/developer/webhooks/delivery-and-recovery).
 
-- Return a `2xx` response quickly.
-- Do the heavy work in a background queue, not inside the webhook handler.
+## Knowledge and other feature limits
+
+Knowledge capabilities and usage expose separate base, source, job, storage and test allowances. A `busy`, `base_limit`, `session_limit` or `training_limit` response needs its own recovery decision. More HTTP capacity does not remove these limits.
 
 ## Need more?
 
-If you are regularly close to your concurrency, that is a good problem - email [support@nixflex.com](mailto:support@nixflex.com) and we will raise your limit.
+Measure the limiting resource and contact support with the required workload and safe diagnostics. Approval and availability must be confirmed; this guide does not promise an automatic limit increase.
+
+## Next steps
+
+- [Implement request pacing](/guides/developer/rate-limits)
+- [Read usage and capacity](/guides/developer/billing)
+- [Handle API refusals](/guides/developer/errors)

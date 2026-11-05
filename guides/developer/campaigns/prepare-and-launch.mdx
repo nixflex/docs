@@ -1,0 +1,84 @@
+---
+title: "Prepare and launch a voice campaign"
+sidebarTitle: "Prepare and launch"
+description: "Validate voice campaign recipients, consent, local hours and duplicate policy before creating executable campaign work once."
+canonical: "https://docs.nixflex.com/guides/developer/campaigns/prepare-and-launch"
+---
+Prepare a voice campaign as executable work: validate recipients and sending choices before creating it.
+
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Reviewed recipient rows</strong></div>
+  <div><small>Creation</small><strong>Can launch calls</strong></div>
+  <div><small>Recovery</small><strong>Saved campaign ID</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Default now mode requests launch immediately; scheduled work can launch when due.
+- Duplicate warnings do not block dispatch or provide request idempotency.
+- Save campaign_id even when creation succeeds but launch is refused or uncertain.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prepare each recipient
+
+Choose an active owned agent and an eligible owned sender. Provide a nonblank campaign `prompt`. Each recipient needs an E.164 `phone`; put template values inside its `variables` object. Use `prompt_override` only when that row deliberately needs different instructions.
+
+Set known `country` and IANA `timezone` values for each recipient. A campaign time zone does not fill an unknown recipient location. Preview [contact hours](/guides/developer/contact-controls) and record permission to contact the people before creating work.
+
+## Choose duplicates and timing
+
+| Choice | Effect |
+| --- | --- |
+| `duplicate_policy:reject` | Refuses repeated accepted numbers. |
+| `warn` | Retains duplicate rows and reports them; it can still launch. |
+| `allow` | Explicitly retains every duplicate row. |
+| `schedule_type:now` | Requests launch after creation; also the default. |
+| `schedule_type:schedule` | Uses `scheduled_date` and may launch automatically when due. |
+
+There is no public draft-only flag. `duplicate_choice_required` is advisory, not a safe sending lock. If wider hours are requested, supply the required explanation; consent, suppression, recipient-local policy and capacity checks still apply at dispatch.
+
+## Build the request before sending
+
+This is a request-body illustration for [POST /calls/batch](/api-reference/calls/batch-create), with fictional IDs and numbers. It is not a runnable test fixture. Replace every identifier, date and contact choice deliberately; scheduled work can contact recipients when due.
+
+```json
+{
+  "agent_id":"agent_example",
+  "from_number":"+12025550100",
+  "name":"Appointment follow-up",
+  "prompt":"Ask {{name}} whether they want to discuss an appointment.",
+  "recipients":[{"phone":"+12025550101","variables":{"name":"Sam"},"country":"US","timezone":"America/New_York"}],
+  "duplicate_policy":"reject",
+  "schedule_type":"schedule",
+  "scheduled_date":"2030-11-04",
+  "consent_confirmed":false
+}
+```
+
+The false consent value leaves contact held until valid consent is recorded; it is not a general sandbox flag. Use the exact endpoint schema for optional hours and scheduling fields. Up to 100,000 accepted recipients are supported, but request-size limits can apply first.
+
+## Submit once and retain the result
+
+Create the campaign once with automatic write retries disabled. Save `campaign_id`, accepted/rejected row counts and current state. Immediate launch may return `queued`, `failed` and legacy `dialed`; `dialed` counts enqueued jobs, not connected calls.
+
+| Result | Next step |
+| --- | --- |
+| Validation refusal | Correct the named input before a new deliberate request. |
+| Saved campaign, launch refused | Read the returned campaign ID; resolve the hold on existing work. |
+| `campaign_outcome_unknown` | Preserve the ID from error details and reconcile; never recreate automatically. |
+| Network response lost | Inspect saved work and seek reconciliation if the ID is unavailable. |
+
+`reuse_campaign_id` can replace an owned never-launched draft or scheduled voice campaign. It is not an idempotency key and cannot safely replay an unknown launch.
+
+- [Track results and control dispatch](/guides/developer/campaigns/results-and-controls)
+- [Read the complete create contract](/api-reference/calls/batch-create)
+- [Review contact controls](/guides/developer/contact-controls)

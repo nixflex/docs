@@ -1,15 +1,36 @@
 ---
-title: "Zapier and Make: connect Nixflex events to automations"
+title: "Build event automations with Zapier or Make"
 description: "Connect Nixflex events to Zapier or Make, use the intended number-level destination and build duplicate handling around actual event and action outcomes."
 canonical: "https://docs.nixflex.com/integrations/zapier-make"
+sidebarTitle: "Zapier and Make"
 ---
-Connect the intended number to a business destination and verify the result end to end.
+Receive Nixflex events in an automation workflow that authenticates deliveries and avoids repeating business actions.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Signed event</strong></div>
+  <div><small>Acceptance</small><strong>Durable queue</strong></div>
+  <div><small>Processing</small><strong>Deduplicated action</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Verify the original delivery bytes before trusting event data.
+- Acknowledge only after durable acceptance, then process asynchronously.
+- Use event-specific duplicate keys; do not treat every event as one completed call.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an authorised test destination with fictional business data.
 
 ## 1. Read the saved connection
 
@@ -43,7 +64,10 @@ nixflex integrations get zapier '+12025550123' --json --base-url "https://api.ni
 
 ## 2. Save the intended destination
 
-Choose the documented Zapier or Make number integration PUT route and save the authorised HTTPS destination. Each connection has its own settings and DELETE route; do not assume changing one also changes the other.
+
+Choose the documented [Zapier PUT route](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber) or [Make PUT route](/api-reference/integration-settings/put-integrations-make-number-phoneNumber). Supply its authorised HTTPS destination in `post_call_url`; each integration has independent saved state and a separate DELETE route.
+
+Use literal `is_active:false` to disable the selected integration. Optional `agent_id` is a fallback for an unassigned number, not a number move. If the automation platform cannot verify the unchanged body and signature, place your own verified HTTPS receiver and durable queue in front of it; do not accept an unsigned event as trusted business evidence.
 
 ## 3. Define what success means
 

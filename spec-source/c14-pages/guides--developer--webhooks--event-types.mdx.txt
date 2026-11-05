@@ -1,0 +1,72 @@
+---
+title: "Choose webhook events for your integration"
+sidebarTitle: "Choose webhook events"
+description: "Choose call, booking and SMS events by what they prove, and keep pre-call callbacks, custom functions and unsigned reachability tests separate."
+canonical: "https://docs.nixflex.com/guides/developer/webhooks/event-types"
+---
+
+Choose the event that proves the business result you need, then process it using its own identity and delivery rules.
+
+<div className="nxf-facts">
+  <div><small>Call lifecycle</small><strong>Started and completed</strong></div>
+  <div><small>Booking result</small><strong>call.bookings</strong></div>
+  <div><small>SMS booking</small><strong>Separate identity rules</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Call completion does not prove final analysis, recording access or a booking result.
+- Use call.bookings for confirmed post-call calendar mutations and reconcile its final state.
+- Unsigned test traffic must never trigger business actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Compare the event families
+
+| Surface | Body and behaviour | Receiver rule |
+| --- | --- | --- |
+| Pre-call `call.inbound` | `{event,from,to,call_id}`; number URL takes precedence over agent URL | Verify the raw body. The five-second hook is fail-open; a verification refusal does not force the engine to reject the incoming call. |
+| `call.started` | Flat call payload, normally queued about two seconds after connection; reads current call data when delivered | Do not assume later fields are always null or that this arrives before completion. |
+| `call.completed` | Same flat fields; current call data is rebuilt for each queued delivery | Keep null, pending and unknown states distinct; this is not final billing or permanent-storage proof. |
+| [`call.bookings`](/api-reference/call-bookings) | Confirmed ordered `timeline` and per-UID `final` after call end; emitted only for successful calendar mutations | Count `final` rows whose status is `active`. Verify the required signature and deduplicate the logical event; do not infer bookings from a transcript. |
+| `sms.booking` | `event`, `from`, `to`, `agent_id`, `conversation:[{role,text}]`, `booking`, `at` | No `call_id` is promised. Reconcile booking identity and action; deduplicate locally without logging message bodies. |
+| Number primary/secondary and automation destinations | The same applicable call payload family | Keep destination configuration explicit; do not invent a new automation envelope. |
+| Custom function | Non-GET sends `{name,args,variables}`; GET uses query arguments | Verify the signed body. GET signs an empty body, not its query. Use a signed non-GET for consequential arguments. |
+| Dashboard `webhook.test` | `{event,test,message,timestamp}`; unsigned reachability sample | Never perform business actions. It cannot prove real signed-event delivery. |
+
+`sms.booking` describes an actual booking action, not a general `sms.received` or `sms.delivered` contract. Call `bookings` is an array of recorded appointment actions, empty when none; reconcile booking identity plus action rather than parsing a transcript for appointment state.
+
+## Choose a business trigger
+
+For a “call finished” workflow, accept `call.completed` and store the call ID for later reads. For a booking confirmation workflow, consume `call.bookings` and inspect its ordered `timeline` and per-UID `final` state. Count active final rows instead of counting every creation or move in the timeline.
+
+SMS booking events describe confirmed calendar actions in an SMS conversation. They do not define a general inbound-message or delivery-status webhook. Their identity cannot be inferred from a missing call ID.
+
+## Keep callbacks distinct
+
+The pre-call callback participates in inbound handling and has a five-second fail-open boundary. A receiver refusal does not force the engine to reject the caller. Custom functions execute a configured action during a conversation; the model’s request is not a result until that action completes.
+
+For consequential custom-function arguments, use a signed non-GET request. GET signs an empty body, so the signature does not authenticate its query arguments.
+
+## Set the destination and verify it
+
+Use the number’s [webhook settings](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber) and the [receiver guide](/advanced/webhooks). Obtain the correct signing secret privately. An unsigned dashboard test checks reachability only; a controlled, genuinely signed event is required to prove verification and processing.
+
+| Observation | Decision |
+| --- | --- |
+| Completed event arrives before started | Accept valid events independently; do not assume arrival order. |
+| No booking event yet | Read the authenticated booking result; do not infer zero bookings. |
+| Null recording URL | Request current authenticated recording access when needed. |
+| Duplicate event | Update permitted projections without repeating business actions. |
+
+- [Build a verified receiver](/advanced/webhooks)
+- [Handle delivery and recovery](/guides/developer/webhooks/delivery-and-recovery)
+- [Read the booking event contract](/api-reference/call-bookings)

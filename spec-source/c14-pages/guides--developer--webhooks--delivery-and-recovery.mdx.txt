@@ -1,0 +1,69 @@
+---
+title: "Recover delayed or repeated webhook deliveries"
+sidebarTitle: "Webhook delivery and recovery"
+description: "Handle webhook timing, retries, duplicates and missed events with durable acceptance and authenticated reads instead of repeating calls or bookings."
+canonical: "https://docs.nixflex.com/guides/developer/webhooks/delivery-and-recovery"
+---
+
+Recover delayed, repeated or missing webhook deliveries by reconciling saved work with authenticated resource reads.
+
+<div className="nxf-facts">
+  <div><small>Acceptance</small><strong>Durable save first</strong></div>
+  <div><small>Duplicates</small><strong>Atomic identity check</strong></div>
+  <div><small>Recovery</small><strong>Read current state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save verified events durably before returning 2xx.
+- Use an atomic deduplication key and a separate durable processing queue.
+- Delivery timing is not a deadline or a guarantee that an event will arrive.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Understand delivery timing
+
+The queued path defaults to five attempts. Completed calls and `call.bookings` normally start with a 60-second queue delay; SMS booking events use five seconds, and started calls request about two seconds. Retry backoff is 5, 5, 5 and 60 minutes. These are queue settings, not delivery deadlines; retention, recovery, account closure and missing data can stop or delay work.
+
+Queued 2xx and 3xx responses count as delivered. Avoid redirects: they are not followed as successful forwarding. Network failures, 408, 429 and 5xx are retryable; other 4xx are treated as permanent. The transport helper can also retry a transport failure once. Return a prompt 2xx only after validated work is durably saved, and reconcile missed events through the call API.
+
+The signature timestamp describes delivery, not call start. Compare it with the receiver's current clock; an old call can legitimately produce a newly signed late event.
+
+## Make duplicate delivery harmless
+
+After verification, atomically store/deduplicate the event and queue durable processing before returning a prompt 2xx. For call events, use `(account, event, call_id)` within each receiver, taking account identity from trusted configuration. Call ID alone would incorrectly merge started, completed and booking events. A separate check and insert can race: use a unique constraint and transaction. Quarantine a null identifier needed for deduplication. Legacy started/completed retries can contain fresher fields, so update projections deliberately without repeating business actions.
+
+SMS booking events have no `call_id` or universal event ID. Store the verified delivery under a separate SMS path; a trusted-account plus raw-body digest can suppress exact queue redeliveries, but it is not a universal booking-action ID. Protect business actions separately using the confirmed booking operation and your own records. Do not deduplicate only by booking UID: later moves and cancellations can affect the same booking.
+
+## Reconcile delayed results
+
+Read current call or message state when necessary. For missed booking events, use [GET call booking results](/api-reference/calls/get-bookings): only ready has a result, and none requires complete empty evidence. processing, deleted and unavailable must not be mapped to zero bookings. A completed call event is not a guarantee analysis and recording are already available. Fetch recording access from its authenticated endpoint. Delivery retries and eventual failures mean events are not an exactly-once or guaranteed-delivery channel.
+
+## Diagnose a missing event
+
+| Check | Meaning and next step |
+| --- | --- |
+| Destination and number | Read the saved integration; verify that it belongs to the intended number and environment. |
+| Signature or timestamp refused | Check raw-body handling, the correct secret and the receiver clock. Never disable verification to make a test pass. |
+| Redirect response | Configure the final HTTPS receiver directly; a 3xx can be counted as delivered without forwarding. |
+| Permanent 4xx | Correct the receiver contract; do not expect the queue to keep trying indefinitely. |
+| Event saved but processing failed | Retry from your durable queue using the same business-action record. |
+| Event unavailable after retries | Reconcile call or booking state through authenticated reads and retain an unknown result when evidence is incomplete. |
+
+Do not place a replacement call or create another booking because its webhook is late. Those are new external actions, not delivery recovery.
+
+## Prove the receiver before rollout
+
+Use a controlled signed event, replay it to test deduplication, and test a processing failure after durable acceptance. Confirm that the queue can resume without another external action. Keep raw customer payloads and signing material out of routine logs; record safe IDs and error codes.
+
+- [Verify exact request bytes](/advanced/webhooks#3-verify-exact-request-bytes)
+- [Choose the correct event](/guides/developer/webhooks/event-types)
+- [Read call and booking results](/guides/developer/call-history)

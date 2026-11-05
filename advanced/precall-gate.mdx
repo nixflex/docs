@@ -1,15 +1,36 @@
 ---
-title: "Pre-call hook: supply context before an inbound call"
+title: "Provide context before an inbound call"
 description: "Configure a Nixflex inbound pre-call hook, verify its request and return caller context or an explicit refusal within the fail-open timing budget."
 canonical: "https://docs.nixflex.com/advanced/precall-gate"
+sidebarTitle: "Pre-call context"
 ---
-Consult your service before an incoming call begins. This hook can supply caller context or explicitly reject a call; it deliberately allows calls when the hook fails.
+Use the pre-call hook to supply temporary context or an explicit rejection before an eligible inbound conversation.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Timing</small><strong>Before admission</strong></div>
+  <div><small>Failure policy</small><strong>Fail-open</strong></div>
+  <div><small>Context</small><strong>This call only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Hook failure is fail-open; do not use it as the sole security boundary.
+- Verify signatures over the exact request bytes.
+- The outbound call purpose is supplied on the call request, not through this hook.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/inbound-support) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an HTTPS receiver and verify the signing header before using supplied caller information.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an HTTPS receiver and verify the signing header before using supplied caller information.
 
 ## 1. Read the hook configuration
 

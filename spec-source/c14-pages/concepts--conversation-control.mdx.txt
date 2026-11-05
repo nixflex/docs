@@ -1,0 +1,50 @@
+---
+title: "Understand conversation controls and actions"
+description: "Understand Nixflex turn-taking, silence handling and action controls, and why clear instructions and real-call tests matter alongside enabled feature switches."
+canonical: "https://docs.nixflex.com/concepts/conversation-control"
+sidebarTitle: "Conversation controls"
+---
+
+Combine clear turn-taking instructions with the effective action switches, timers and actual conversation results.
+
+<div className="nxf-facts">
+  <div><small>Instructions</small><strong>One task at a time</strong></div>
+  <div><small>Timers</small><strong>Distinct purposes</strong></div>
+  <div><small>Actions</small><strong>Check the result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A prompt cannot guarantee timing or enable a disabled action.
+- Waiting, silence handling and call duration are separate controls.
+- Confirm actions only after their results succeed.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Instructions and facts have different jobs
+
+Keep the main call instructions focused on identity, purpose, essential facts, questions, action rules and fallback behaviour. Put longer details in agent knowledge. SMS and website instructions are separate; outbound calls add a specific purpose.
+
+## Waiting and ending
+
+Silence handling, an explicit wait action and the maximum call duration serve different purposes. A wait action is useful when a caller asks for time; it does not remove the hard duration limit. Phone-menu navigation can wait for a menu while listening for a human, subject to its configured limits.
+
+An end-call request can politely finish a completed task. The `func_end_call:false` setting disables the configured silence and maximum-duration timers; it is not a general prohibition on model-requested hangups. A transfer request is not proof that another person answered.
+
+## Interruption and uncertainty
+
+Short turns and one question at a time make interruptions easier to handle. Check names, dates and important numbers instead of guessing from a weak transcript. No setting guarantees perfect interruption detection in noisy audio.
+
+Verify actions from their actual results. Say a booking is confirmed only after the booking result succeeds, and avoid promising delivery merely because a message was accepted. For unavailable facts, use the configured knowledge fallback or offer a suitable handoff.
+
+- [Write clear instructions](/best-practices/prompting-guide)
+- [Call actions](/actions/overview)
+- [Business action controls](/guides/business/call-actions)

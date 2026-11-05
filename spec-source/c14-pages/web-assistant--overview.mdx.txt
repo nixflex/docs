@@ -1,0 +1,117 @@
+---
+title: "Configure website chat and voice in code"
+description: "Read and update Nixflex website settings with revisions, configure chat and voice switches and keep public visitor actions separate from phone capabilities."
+canonical: "https://docs.nixflex.com/web-assistant/overview"
+sidebarTitle: "Web agent settings"
+---
+
+Manage a number’s website settings with revision checks, then verify the dashboard-generated installation on the real site.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Save guard</small><strong>Observed revision</strong></div>
+  <div><small>Install</small><strong>Generated snippet</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Never give the browser the account API credential.
+- Website voice needs both the Web agent and voice switches enabled.
+- Public visitor details are unverified, and enabled custom functions must be safe for them.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Install and verify](/guides/developer/website/install-and-verify) | Check the actual installed visitor journey. |
+| [Troubleshoot](/guides/developer/website/troubleshooting) | Resolve revisions, microphone access and channel limits. |
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Choose an owned number. Browser visitors must never receive the account credential.
+
+## 1. Read the current revision
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/agent-web/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
+  maxRetries: 0,
+});
+const result = await c.webAgent.get("+12025550123");
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
+    max_retries=0,
+) as c:
+    result = c.web_agent.get('+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex web-agent get '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Prepare focused settings
+
+Keep `revision` as the returned decimal string. Use the endpoint’s allowed `settings` fields only. Website instructions are independent from telephone and SMS prompts. The website prompt is limited to 16,000 characters.
+
+## 3. Save with concurrency protection
+
+PATCH `/v1/agent-web/{number}` with the observed revision and intended settings. On `widget_settings_changed`, reread and review the concurrent changes before saving. Do not silently overwrite another editor’s choices.
+
+## 4. Check effective permissions
+
+Website voice needs the Web agent enabled and its voice switch on. Knowledge has separate website-chat and website-voice channels. `web_functions_enabled` defaults off and applies to all enabled custom functions on that number; each must be safe for public visitors. Built-in phone booking, SMS, transfers, keypad and menu navigation remain unavailable.
+
+## 5. Install and inspect
+
+Copy the current Install snippet from the dashboard. If installation is not ready, resolve that environment configuration first. Test contact collection and microphone access on the installed site, then inspect the website inbox. Visitor-supplied details are unverified.
+
+## Example response
+
+GET returns a safe settings projection and revision. A successful save returns the new state; do not fabricate a permanent browser token or script URL from the account API credential.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| 409 widget_settings_changed | Reread and merge deliberate changes. |
+| Web agent off | Saved voice preference is not effective voice access. |
+| Prompt over 16,000 characters | Shorten channel instructions. |
+| Install not ready | Resolve configured snippet availability. |
+| Visitor identity present | Treat as self-reported, not verified account access. |
+
+## Next steps
+
+- [Website settings API](/api-reference/web-agent/patch-agent-web-number)
+- [Agent inbox](/guides/developer/agent-inbox)
+- [Website calls](/concepts/web-calls)

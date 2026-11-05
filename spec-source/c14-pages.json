@@ -1,0 +1,3519 @@
+{
+  "baseline": "5df76a43e18d4671f63f07bb47cb597080c88c97",
+  "d6": "14f94cab31154ddd0cfe9bb435747241095f1bd7",
+  "engine": "f6ff94dfe87611dfb8ac96adfafa61e568caf2b5",
+  "pages": [
+    {
+      "slug": "guides",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build a Nixflex integration",
+      "sidebarTitle": "Start building",
+      "business": "business",
+      "lead": "Build an integration by verifying one authenticated read, then adding a workflow whose results you can track.",
+      "important": [
+        "Keep the account credential on your server and match it to the intended API host.",
+        "Record a write before sending it; a lost response may conceal success.",
+        "Use the task guides below and the API reference for exact fields."
+      ],
+      "facts": [
+        [
+          "First task",
+          "One safe read"
+        ],
+        [
+          "Next step",
+          "Choose a workflow"
+        ],
+        [
+          "Credential",
+          "Server only"
+        ]
+      ],
+      "legacyAnchors": [
+        "before-sending-work",
+        "understand-the-behaviour-behind-each-workflow"
+      ]
+    },
+    {
+      "slug": "quickstart",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/quickstart.mdx.txt",
+      "existing": true,
+      "review": "accepted_sample_reviewed",
+      "legacyAnchors": [
+        "prerequisites",
+        "1-choose-the-account-and-environment",
+        "2-read-usage",
+        "3-check-the-result",
+        "4-handle-errors-before-adding-writes",
+        "5-choose-one-business-workflow",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "authentication",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/authentication.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Authenticate API requests securely",
+      "sidebarTitle": "Authentication",
+      "business": "business",
+      "lead": "Authenticate server requests with the full account credential and keep personal team access separate from API authority.",
+      "important": [
+        "Send both key parts in the Bearer header; never put the credential in a browser bundle.",
+        "The shared account key is not a restricted Member credential.",
+        "API-key rotation and webhook signing-secret rotation are separate actions."
+      ],
+      "facts": [
+        [
+          "Header",
+          "Authorization: Bearer"
+        ],
+        [
+          "Credential",
+          "KEY_ID:KEY_SECRET"
+        ],
+        [
+          "Key reveal",
+          "Owner workflow"
+        ]
+      ],
+      "legacyAnchors": [
+        "keep-the-key-server-side",
+        "rotate-deliberately",
+        "signed-requests-are-separate",
+        "handle-refusals"
+      ]
+    },
+    {
+      "slug": "guides/developer/errors",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--errors.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Handle API errors in code",
+      "sidebarTitle": "Handle errors",
+      "business": "business",
+      "lead": "Use the HTTP status and machine error code to choose between correcting input, retrying a read and reconciling a write.",
+      "important": [
+        "Branch on error.code, not the wording of error.message.",
+        "An error or lost connection can leave a write outcome unknown.",
+        "Keep a non-JSON error fallback and log only safe diagnostic fields."
+      ],
+      "facts": [
+        [
+          "Decision",
+          "Status and code"
+        ],
+        [
+          "Write failure",
+          "Reconcile first"
+        ],
+        [
+          "Logs",
+          "Safe fields only"
+        ]
+      ],
+      "legacyAnchors": [
+        "sms-suppression-change",
+        "preserve-uncertainty"
+      ]
+    },
+    {
+      "slug": "guides/developer/pagination",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--pagination.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "title": "Build reliable paginated API reads",
+      "sidebarTitle": "Pagination",
+      "business": "business",
+      "lead": "Build a list adapter for each endpoint’s paging shape, preserving its account, filters and progress until the scan finishes.",
+      "important": [
+        "There is no universal page parameter or list envelope.",
+        "Reject repeated cursors and bound long scans.",
+        "Store progress after processing a page; concurrent changes can shift offset rows."
+      ],
+      "facts": [
+        [
+          "Cursor",
+          "Opaque server value"
+        ],
+        [
+          "Offsets",
+          "Not a snapshot"
+        ],
+        [
+          "Progress",
+          "After processing"
+        ]
+      ],
+      "description": "Read Nixflex cursor and offset lists without changing their filters, losing message ties or treating an offset scan as a stable snapshot.",
+      "canonical": "https://docs.nixflex.com/guides/developer/pagination",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/rate-limits",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--rate-limits.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Pace API requests and polling",
+      "sidebarTitle": "Request pacing",
+      "business": "guides/business/billing",
+      "lead": "Use response headers and a bounded polling policy to stay within the account’s current API request allowance.",
+      "important": [
+        "Honour Retry-After for a safe read and stop at an application deadline.",
+        "HTTP request quotas, call capacity and feature limits are different.",
+        "A throttle does not grant permission to repeat an uncertain write."
+      ],
+      "facts": [
+        [
+          "HTTP quota",
+          "Read headers"
+        ],
+        [
+          "Polling",
+          "Bounded duration"
+        ],
+        [
+          "Call capacity",
+          "Separate limit"
+        ]
+      ],
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/idempotency",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--idempotency.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "title": "Prevent duplicate work in code",
+      "sidebarTitle": "Prevent duplicates",
+      "business": "guides/business/call-one-number",
+      "lead": "Persist each intended operation before sending it and use the identity mechanism supported by that specific endpoint.",
+      "important": [
+        "A call request UUID is not the same as a Knowledge Idempotency-Key header.",
+        "Keep the original account, API base URL, identity and exact input while reconciling.",
+        "A new identity represents a new action and can create duplicate work."
+      ],
+      "facts": [
+        [
+          "Calls",
+          "Saved request_id"
+        ],
+        [
+          "Knowledge",
+          "Idempotency-Key"
+        ],
+        [
+          "Other writes",
+          "Read and reconcile"
+        ]
+      ],
+      "description": "Save outbound call UUIDs and Knowledge operation keys correctly, keep their account and environment binding, and reconcile other uncertain writes.",
+      "canonical": "https://docs.nixflex.com/guides/developer/idempotency",
+      "legacyAnchors": [
+        "knowledge-operations",
+        "other-operations"
+      ]
+    },
+    {
+      "slug": "guides/developer/knowledge",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "title": "Build an agent knowledge workflow",
+      "sidebarTitle": "Knowledge workflow",
+      "business": "guides/business/knowledge",
+      "lead": "Build an agent knowledge workflow from source preparation through reviewed publication and tested answers.",
+      "important": [
+        "Each agent owns one base shared by its attached numbers.",
+        "Request review explicitly; accepted preparation is not confirmed publication.",
+        "Keep base, source, draft, topic and job IDs distinct."
+      ],
+      "facts": [
+        [
+          "Owner",
+          "One agent"
+        ],
+        [
+          "Publication",
+          "Reviewed job result"
+        ],
+        [
+          "Recovery",
+          "Saved operation and revision"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-capabilities-and-create-the-agent-base",
+        "2-add-a-source-with-review-enabled",
+        "3-poll-the-job-and-review-its-draft",
+        "4-accept-selected-topics-and-wait-for-publication",
+        "5-test-maintain-and-export",
+        "read-automatic-and-manual-keyterms",
+        "errors-and-limits",
+        "next-steps",
+        "sources-jobs-and-pieces"
+      ],
+      "description": "Choose the right knowledge task: ingest sources, review facts, test answers, maintain exports or manage agent keyterms.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge"
+    },
+    {
+      "slug": "guides/lead-qualification",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--lead-qualification.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build a single outbound call",
+      "sidebarTitle": "Single outbound call",
+      "business": "guides/business/call-one-number",
+      "lead": "Create one authorised outbound call with a specific purpose, then reconcile its request and call results without automatic redial.",
+      "important": [
+        "Creating the request can place a real call and incur charges.",
+        "Save a UUID with the exact account, base URL and call inputs before the first send.",
+        "An accepted request, a completed call and a confirmed booking are different results."
+      ],
+      "facts": [
+        [
+          "Effect",
+          "One outbound call"
+        ],
+        [
+          "Identity",
+          "Saved request UUID"
+        ],
+        [
+          "Result",
+          "Read and reconcile"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-prepare-a-clear-purpose",
+        "2-create-the-call",
+        "3-save-the-returned-identity",
+        "4-read-the-outcome",
+        "5-plan-follow-up-deliberately",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/campaigns",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--campaigns.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build a voice campaign workflow",
+      "sidebarTitle": "Voice campaign workflow",
+      "business": "guides/business/voice-campaigns",
+      "lead": "Prepare a voice campaign’s recipients and permission checks, create executable work, then track that same campaign through its results.",
+      "important": [
+        "Campaign creation can launch immediately or run when its schedule is due.",
+        "A duplicate warning is not a sending lock; choose the required policy deliberately.",
+        "Cancel stops future dispatch and does not hang up active calls."
+      ],
+      "facts": [
+        [
+          "Creation",
+          "Executable work"
+        ],
+        [
+          "Recipients",
+          "Reviewed rows"
+        ],
+        [
+          "Recovery",
+          "Existing campaign ID"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-existing-campaigns",
+        "2-prepare-and-preview-recipients",
+        "3-create-executable-work",
+        "4-track-and-control-the-existing-campaign",
+        "5-reconcile-before-replacement",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/contact-controls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--contact-controls.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Apply recipient contact controls",
+      "sidebarTitle": "Contact controls",
+      "business": "guides/business/contact-controls",
+      "lead": "Preview recipient-local contact hours and enforce suppression decisions before requesting calls or messages.",
+      "important": [
+        "A preview sends nothing and does not authorise later dispatch.",
+        "Use known recipient location; do not substitute the business time zone.",
+        "Recipient opt-outs remain enforced and cannot be removed as business entries."
+      ],
+      "facts": [
+        [
+          "Preview",
+          "1–20 recipients"
+        ],
+        [
+          "Validity",
+          "60 seconds"
+        ],
+        [
+          "Dispatch",
+          "Checks again"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-request-a-bounded-preview",
+        "2-read-the-server-result",
+        "3-read-suppressions",
+        "4-change-business-entries-deliberately",
+        "5-handle-dispatch-refusals",
+        "example-response",
+        "errors-and-limits",
+        "next-steps",
+        "single-sms-suppression-response-change"
+      ]
+    },
+    {
+      "slug": "guides/developer/phone-numbers",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--phone-numbers.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Manage phone number settings in code",
+      "sidebarTitle": "Number settings",
+      "business": "guides/business/phone-numbers",
+      "lead": "Read an owned number, change only its intended settings and verify the result without recreating its connections.",
+      "important": [
+        "URL-encode the number, including the leading plus sign.",
+        "Moving an owned number preserves number-owned settings but changes inherited agent behaviour.",
+        "Null means inherit only on fields that explicitly document it."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Owned number"
+        ],
+        [
+          "Move",
+          "Agent-only PATCH"
+        ],
+        [
+          "Verification",
+          "Read back"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-number",
+        "2-check-ownership-and-channel-switches",
+        "3-send-a-focused-change",
+        "4-move-without-re-importing",
+        "5-read-back-and-reconcile",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/organisations",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--organisations.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build team administration in code",
+      "sidebarTitle": "Team administration",
+      "business": "guides/business/team",
+      "lead": "Build team administration from the current organisation context, role rules and invitation state.",
+      "important": [
+        "People use personal logins; a shared API key has account authority.",
+        "Admins manage Members, while ownership and Admin changes require the Owner.",
+        "Ownership acceptance and account closure use the person’s dashboard flow."
+      ],
+      "facts": [
+        [
+          "Roles",
+          "Owner / Admin / Member"
+        ],
+        [
+          "Invites",
+          "24-hour links"
+        ],
+        [
+          "Personal actions",
+          "Dashboard flow"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-organisation",
+        "2-apply-the-role-policy",
+        "3-invite-or-manage-membership",
+        "4-read-activity",
+        "5-keep-personal-actions-personal",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/agent-inbox",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--agent-inbox.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build an inbox for SMS and web conversations",
+      "sidebarTitle": "Conversation inbox",
+      "business": "guides/business/agent-inbox",
+      "lead": "Read a number’s SMS or website threads, preserve server paging and mark only the messages the user actually saw as read.",
+      "important": [
+        "Check feature availability before rendering an empty inbox.",
+        "Preserve read_version as a decimal string and pair both message cursor fields.",
+        "Archiving does not delete messages or turn off automatic replies."
+      ],
+      "facts": [
+        [
+          "Channels",
+          "SMS and web"
+        ],
+        [
+          "Read marker",
+          "Observed version"
+        ],
+        [
+          "Archive",
+          "Inbox state only"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-available-numbers",
+        "2-list-a-channels-threads",
+        "3-page-the-conversation",
+        "4-change-only-the-intended-state",
+        "5-show-identity-and-retention-honestly",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/call-history",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--call-history.mdx.txt",
+      "existing": true,
+      "review": "accepted_sample_reviewed",
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-history",
+        "2-page-using-server-values",
+        "3-show-separate-processing-states",
+        "read-the-retained-booking-result",
+        "4-request-a-current-recording-link",
+        "5-apply-retention-and-deletion-honestly",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "guides/developer/billing",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--billing.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Read usage and plan call capacity",
+      "sidebarTitle": "Usage and capacity",
+      "business": "guides/business/billing",
+      "lead": "Read the account’s usage and capacity without treating counters as invoices or a promise that the next call will start.",
+      "important": [
+        "Null or absent values mean unknown, not zero.",
+        "Call capacity and HTTP request limits are separate.",
+        "Payments and saved payment methods use the permitted dashboard workflow."
+      ],
+      "facts": [
+        [
+          "Public read",
+          "GET /usage"
+        ],
+        [
+          "Capacity",
+          "Current max_concurrent"
+        ],
+        [
+          "Payments",
+          "Dashboard workflow"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-current-usage",
+        "2-preserve-unknown-values",
+        "3-use-current-capacity",
+        "4-handle-current-admission",
+        "5-reconcile-payment-changes-in-billing",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "sms/send-sms",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/sms--send-sms.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Send one SMS with the API",
+      "sidebarTitle": "Send one SMS",
+      "business": "guides/business/sms-campaigns",
+      "lead": "Send one requested message from an explicit owned sender and retain the acceptance result without assuming delivery.",
+      "important": [
+        "This request can contact a real recipient; it has no dry-run mode.",
+        "Use to for the recipient and from_number for the owned sender.",
+        "Do not resend an unknown outcome or bypass a do_not_contact refusal."
+      ],
+      "facts": [
+        [
+          "Effect",
+          "One message"
+        ],
+        [
+          "Sender",
+          "Explicit owned number"
+        ],
+        [
+          "Acceptance",
+          "Not delivery proof"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-prepare-the-message",
+        "2-send-once",
+        "3-save-the-acceptance-result",
+        "4-interpret-uncertainty",
+        "5-handle-replies-and-events",
+        "example-response",
+        "errors-and-limits",
+        "next-steps",
+        "single-sms-suppression-response-change"
+      ]
+    },
+    {
+      "slug": "sms/sms-agent",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/sms--sms-agent.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure automatic SMS replies",
+      "sidebarTitle": "SMS replies",
+      "business": "guides/business/sms-agent",
+      "lead": "Give an owned number SMS-specific instructions, enable replies deliberately and check the resulting conversations.",
+      "important": [
+        "Telephone instructions and the SMS prompt are separate.",
+        "Archiving a thread does not disable replies.",
+        "Knowledge and calendar actions need their own enabled channel or connection."
+      ],
+      "facts": [
+        [
+          "Prompt",
+          "sms_prompt"
+        ],
+        [
+          "Limit",
+          "20,000 characters"
+        ],
+        [
+          "Switch",
+          "sms_reply_enabled"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-number-settings",
+        "2-write-the-sms-instructions",
+        "3-enable-the-reply-switch",
+        "4-connect-knowledge-and-permitted-booking",
+        "5-review-a-test-conversation",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "sms/sms-campaigns",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/sms--sms-campaigns.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build an SMS campaign workflow",
+      "sidebarTitle": "SMS campaign workflow",
+      "business": "guides/business/sms-campaigns",
+      "lead": "Prepare an SMS campaign’s template, recipients and contact checks, then track acceptance, delivery and replies separately.",
+      "important": [
+        "Creating a campaign can send immediately or when scheduled.",
+        "SMS creation makes new work; it has no reuse_campaign_id replacement mode.",
+        "Keep uncertain sends visible and reconcile the saved campaign ID."
+      ],
+      "facts": [
+        [
+          "Creation",
+          "Can send immediately"
+        ],
+        [
+          "Variables",
+          "Nested per recipient"
+        ],
+        [
+          "Results",
+          "Separate counts"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-inspect-campaign-state",
+        "2-prepare-the-template-and-replies",
+        "3-review-and-create",
+        "4-handle-delivery-separately",
+        "5-control-unsent-work",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "sms/post-call-sms",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/sms--post-call-sms.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure post-call SMS follow-ups",
+      "sidebarTitle": "Post-call SMS",
+      "business": "guides/business/call-actions",
+      "lead": "Configure a permitted text after a telephone call using a usable template and the number’s actual origin rules.",
+      "important": [
+        "Post-call SMS is separate from in-call SMS, replies and a direct send.",
+        "API-origin numbers do not automatically inherit the agent enable switch.",
+        "Avoid sending the same follow-up again from your webhook handler."
+      ],
+      "facts": [
+        [
+          "Timing",
+          "After telephone work"
+        ],
+        [
+          "Template",
+          "Must be nonblank"
+        ],
+        [
+          "Voicemail",
+          "Automatic text skipped"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-agent",
+        "2-save-a-usable-template",
+        "3-apply-origin-and-override-rules",
+        "4-respect-sending-checks",
+        "5-avoid-a-second-follow-up",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "web-assistant/overview",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/web-assistant--overview.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure website chat and voice in code",
+      "sidebarTitle": "Web agent settings",
+      "business": "guides/voice-widget",
+      "lead": "Manage a number’s website settings with revision checks, then verify the dashboard-generated installation on the real site.",
+      "important": [
+        "Never give the browser the account API credential.",
+        "Website voice needs both the Web agent and voice switches enabled.",
+        "Public visitor details are unverified, and enabled custom functions must be safe for them."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Owned number"
+        ],
+        [
+          "Save guard",
+          "Observed revision"
+        ],
+        [
+          "Install",
+          "Generated snippet"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-revision",
+        "2-prepare-focused-settings",
+        "3-save-with-concurrency-protection",
+        "4-check-effective-permissions",
+        "5-install-and-inspect",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/booking-confirmation",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--booking-confirmation.mdx.txt",
+      "existing": true,
+      "review": "accepted_sample_reviewed",
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "contact-approval-always-comes-first",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/in-call-sms",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--in-call-sms.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure SMS during a phone call",
+      "sidebarTitle": "In-call SMS",
+      "business": "guides/business/call-actions",
+      "lead": "Allow the phone agent to send a useful text during a conversation only when the in-call SMS switch and recipient checks permit it.",
+      "important": [
+        "Prompt wording does not bypass a disabled SMS action.",
+        "In-call texts, post-call texts and SMS replies use separate controls.",
+        "A send acceptance must not be presented as confirmed handset delivery."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Telephone calls"
+        ],
+        [
+          "Gate",
+          "incall_sms_enabled"
+        ],
+        [
+          "Result",
+          "Check send outcome"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/end-call",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--end-call.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure call endings and timers",
+      "sidebarTitle": "Call endings",
+      "business": "guides/business/call-actions",
+      "lead": "Configure silence and duration limits alongside clear instructions for ending a completed conversation.",
+      "important": [
+        "Silence timeout and maximum call duration serve different purposes.",
+        "func_end_call:false disables those timers, not every model-requested hangup.",
+        "A client polling timeout does not end the telephone call."
+      ],
+      "facts": [
+        [
+          "Silence",
+          "Separate timer"
+        ],
+        [
+          "Duration",
+          "Separate timer"
+        ],
+        [
+          "Client wait",
+          "Not a hangup"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/wait",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--wait.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Let a caller ask the agent to wait",
+      "sidebarTitle": "Wait during a call",
+      "business": "guides/business/call-actions",
+      "lead": "Use the prompt-enabled wait action when a telephone caller needs time, while preserving the call’s other limits.",
+      "important": [
+        "Enable the behaviour in the instructions that the current call uses.",
+        "Waiting does not remove the maximum duration or other end conditions.",
+        "Website voice does not use this telephone WAIT action."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Telephone calls"
+        ],
+        [
+          "Setting",
+          "wait_tag_seconds"
+        ],
+        [
+          "Enablement",
+          "Current call prompt"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/ivr-navigation",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--ivr-navigation.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure outbound phone-menu waiting",
+      "sidebarTitle": "Phone-menu waiting",
+      "business": "guides/business/call-actions",
+      "lead": "Configure bounded waiting while an outbound call navigates a phone menu and listens for a human.",
+      "important": [
+        "The menu wait limit is separate from caller silence and call duration.",
+        "Use clear routing instructions and test the actual menu.",
+        "This is an outbound telephone behaviour, not website navigation."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Outbound phone"
+        ],
+        [
+          "Timer",
+          "ivr_timeout_seconds"
+        ],
+        [
+          "Verification",
+          "Actual menu test"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/transfer",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--transfer.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure a human call handoff",
+      "sidebarTitle": "Call transfer",
+      "business": "guides/business/call-actions",
+      "lead": "Configure cold or warm transfer and report a successful handoff only after the transfer result confirms it.",
+      "important": [
+        "Use an eligible destination and the intended transfer type.",
+        "Warm transfer can use a whisper; cold transfer follows a different path.",
+        "A transfer request alone does not prove a human answered."
+      ],
+      "facts": [
+        [
+          "Types",
+          "Cold or warm"
+        ],
+        [
+          "Destination",
+          "Configured number"
+        ],
+        [
+          "Success",
+          "Confirmed handoff"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-current-settings",
+        "2-save-the-intended-setting",
+        "3-write-a-narrow-instruction",
+        "4-test-the-actual-outcome",
+        "5-review-the-result",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/overview",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--overview.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Connect call instructions to actions",
+      "sidebarTitle": "Call action workflow",
+      "business": "guides/business/call-actions",
+      "lead": "Connect a phone agent’s instructions to configured actions and use each action’s result to decide what the agent may confirm.",
+      "important": [
+        "A prompt cannot grant an action that its switch or connection blocks.",
+        "Verify booking, sending and transfer results before claiming success.",
+        "Website visitors have a different action boundary from telephone callers."
+      ],
+      "facts": [
+        [
+          "Instructions",
+          "Describe intent"
+        ],
+        [
+          "Permissions",
+          "Separate checks"
+        ],
+        [
+          "Result",
+          "Confirm before saying done"
+        ]
+      ],
+      "legacyAnchors": [
+        "tags-request-work",
+        "channels-have-different-capabilities"
+      ]
+    },
+    {
+      "slug": "actions/calcom",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--calcom.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Connect Cal.com bookings in code",
+      "sidebarTitle": "Cal.com bookings",
+      "business": "guides/business/calcom",
+      "lead": "Connect Cal.com to an owned number, choose the intended event settings and verify booking results before confirming an appointment.",
+      "important": [
+        "Calendar access and the agent’s permission to act are separate.",
+        "Confirm the spoken name and email independently before booking.",
+        "Use returned booking results; an accepted action is not proof of notification delivery."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Owned number"
+        ],
+        [
+          "Provider",
+          "One active connection"
+        ],
+        [
+          "Result",
+          "Confirmed appointment"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-saved-connection",
+        "2-save-the-connection",
+        "3-describe-permitted-booking",
+        "4-test-the-calendar-result",
+        "5-handle-follow-up-separately",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "actions/google-calendar",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/actions--google-calendar.mdx.txt",
+      "existing": true,
+      "review": "accepted_sample_reviewed",
+      "legacyAnchors": [
+        "connect-and-return-to-your-app",
+        "show-the-current-state",
+        "configure-availability-and-invitations",
+        "confirm-the-person-then-book",
+        "reconcile-the-result",
+        "read-the-booking-result",
+        "errors-and-what-to-do",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "integrations/slack",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/integrations--slack.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Send call results to Slack",
+      "sidebarTitle": "Slack notifications",
+      "business": "guides/business/integrations",
+      "lead": "Connect an owned number’s Slack notification settings and test the result with approved call data.",
+      "important": [
+        "Keep connection credentials and private workspace data on the server.",
+        "A saved connection is not proof that every future notification will arrive.",
+        "Reconcile an uncertain update before changing the same connection again."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Owned number"
+        ],
+        [
+          "Data",
+          "Call results"
+        ],
+        [
+          "Verification",
+          "Test destination"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-saved-connection",
+        "2-save-the-intended-destination",
+        "3-define-what-success-means",
+        "4-test-a-complete-workflow",
+        "5-disconnect-and-reconcile",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "integrations/gohighlevel",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/integrations--gohighlevel.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Connect call results to GoHighLevel",
+      "sidebarTitle": "GoHighLevel",
+      "business": "guides/business/integrations",
+      "lead": "Connect the intended GoHighLevel workspace to an owned number and check the resulting contact or call update.",
+      "important": [
+        "Use the exact workspace and permissions required by the saved connection.",
+        "Connection success and a later business update are separate results.",
+        "Keep uncertain outcomes visible instead of creating duplicate records."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Owned number"
+        ],
+        [
+          "Target",
+          "Selected workspace"
+        ],
+        [
+          "Recovery",
+          "Read before repeating"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-saved-connection",
+        "2-save-the-intended-destination",
+        "3-define-what-success-means",
+        "4-test-a-complete-workflow",
+        "5-disconnect-and-reconcile",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "integrations/zapier-make",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/integrations--zapier-make.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Build event automations with Zapier or Make",
+      "sidebarTitle": "Zapier and Make",
+      "business": "guides/business/integrations",
+      "lead": "Receive Nixflex events in an automation workflow that authenticates deliveries and avoids repeating business actions.",
+      "important": [
+        "Verify the original delivery bytes before trusting event data.",
+        "Acknowledge only after durable acceptance, then process asynchronously.",
+        "Use event-specific duplicate keys; do not treat every event as one completed call."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Signed event"
+        ],
+        [
+          "Acceptance",
+          "Durable queue"
+        ],
+        [
+          "Processing",
+          "Deduplicated action"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-saved-connection",
+        "2-save-the-intended-destination",
+        "3-define-what-success-means",
+        "4-test-a-complete-workflow",
+        "5-disconnect-and-reconcile",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "integrations/overview",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/integrations--overview.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Choose an integration workflow",
+      "sidebarTitle": "Choose an integration",
+      "business": "guides/business/integrations",
+      "lead": "Choose the connection or event workflow that matches the business task, its permissions and its recovery requirements.",
+      "important": [
+        "Use a calendar connection for booking and signed events for downstream processing.",
+        "Number connections and account-wide services have different scopes.",
+        "Confirm the result in the destination before presenting work as complete."
+      ],
+      "facts": [
+        [
+          "Choose by",
+          "Task and scope"
+        ],
+        [
+          "Setup",
+          "Current permissions"
+        ],
+        [
+          "Success",
+          "Destination result"
+        ]
+      ],
+      "legacyAnchors": [
+        "scope-and-permissions",
+        "configuration-is-not-completion"
+      ]
+    },
+    {
+      "slug": "integrations/number-connection",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/integrations--number-connection.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Prepare a phone number connection",
+      "sidebarTitle": "Connect a number",
+      "business": "guides/business/phone-numbers",
+      "lead": "Prepare an owned carrier number for Nixflex with the correct credentials, agent assignment and routing checks.",
+      "important": [
+        "Import connects an existing eligible number; it is not a number purchase or port.",
+        "Credentials stay private and must match the selected carrier and account.",
+        "An uncertain routing result needs reconciliation before another import."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Owned carrier number"
+        ],
+        [
+          "Assignment",
+          "Active owned agent"
+        ],
+        [
+          "Routing",
+          "Verify result"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-existing-numbers",
+        "2-check-the-target-account-and-agent",
+        "3-prepare-the-documented-import",
+        "4-reconcile-the-saved-state",
+        "5-move-with-the-supported-update",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/webhooks",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--webhooks.mdx.txt",
+      "existing": true,
+      "review": "accepted_sample_reviewed",
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-configured-destination",
+        "2-configure-an-https-receiver",
+        "3-verify-exact-request-bytes",
+        "4-store-and-acknowledge",
+        "5-reconcile-delayed-results",
+        "event-and-callback-contracts",
+        "example-signed-call-event",
+        "use-verification-before-event-parsing",
+        "delivery-timing-and-retries",
+        "errors-and-limits",
+        "next-steps",
+        "booking-object"
+      ]
+    },
+    {
+      "slug": "advanced/custom-functions",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--custom-functions.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Connect an agent to your business API",
+      "sidebarTitle": "Custom functions",
+      "business": "guides/business/call-actions",
+      "lead": "Expose a narrowly scoped business function to an agent and treat its response as the authority for whether the action succeeded.",
+      "important": [
+        "Describe exact arguments and validate them in your service.",
+        "Public website access requires all enabled number functions to be safe for visitors.",
+        "A timeout can follow a successful business write; reconcile before repeating it."
+      ],
+      "facts": [
+        [
+          "Arguments",
+          "Validate server-side"
+        ],
+        [
+          "Result",
+          "Explicit success"
+        ],
+        [
+          "Website",
+          "Separate number grant"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-functions-on-the-number",
+        "2-define-a-narrow-function",
+        "3-verify-and-validate-the-request",
+        "4-return-a-concise-result",
+        "5-handle-timing-and-public-access",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/precall-gate",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--precall-gate.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Provide context before an inbound call",
+      "sidebarTitle": "Pre-call context",
+      "business": "guides/inbound-support",
+      "lead": "Use the pre-call hook to supply temporary context or an explicit rejection before an eligible inbound conversation.",
+      "important": [
+        "Hook failure is fail-open; do not use it as the sole security boundary.",
+        "Verify signatures over the exact request bytes.",
+        "The outbound call purpose is supplied on the call request, not through this hook."
+      ],
+      "facts": [
+        [
+          "Timing",
+          "Before admission"
+        ],
+        [
+          "Failure policy",
+          "Fail-open"
+        ],
+        [
+          "Context",
+          "This call only"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-hook-configuration",
+        "2-choose-the-scope",
+        "3-verify-the-request",
+        "4-return-a-clear-decision",
+        "5-design-for-fail-open",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/call-recording",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--call-recording.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure recording and private playback",
+      "sidebarTitle": "Call recording",
+      "business": "guides/business/call-history",
+      "lead": "Configure the effective recording decision and use authenticated recording access to check whether audio is actually available.",
+      "important": [
+        "A number’s explicit recording value overrides the agent, including false and true.",
+        "Changing settings affects new work and does not erase old audio.",
+        "An absent URL or pending recording is not proof that no copy exists."
+      ],
+      "facts": [
+        [
+          "Decision",
+          "Number then agent"
+        ],
+        [
+          "Playback",
+          "Authorised access"
+        ],
+        [
+          "Capture",
+          "Check actual state"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-recording-access",
+        "2-resolve-the-setting",
+        "3-choose-the-capture-path",
+        "4-request-playback-when-needed",
+        "5-apply-retention-and-storage-rules",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/keypad-input",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--keypad-input.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure telephone keypad input",
+      "sidebarTitle": "Keypad input",
+      "business": "guides/business/call-actions",
+      "lead": "Enable the number-aware keypad setting when a telephone workflow needs digits and verify the captured result.",
+      "important": [
+        "Number overrides and the agent setting determine effective keypad access.",
+        "Website chat and voice do not gain telephone keypad actions.",
+        "Validate received digits before using them for a business action."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Telephone calls"
+        ],
+        [
+          "Field",
+          "dtmf_enabled"
+        ],
+        [
+          "Input",
+          "Validate digits"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-number-settings",
+        "2-enable-the-input-control",
+        "3-ask-for-only-needed-digits",
+        "4-test-completion-and-corrections",
+        "5-verify-before-acting",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/voicemail-detection",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--voicemail-detection.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Configure outbound voicemail behaviour",
+      "sidebarTitle": "Voicemail behaviour",
+      "business": "guides/business/call-actions",
+      "lead": "Configure machine detection and a brief voicemail message for outbound calls without assuming a message will always be left.",
+      "important": [
+        "API-origin and dashboard-origin numbers select message settings differently.",
+        "Carrier machine detection can end the call before the leave-message path.",
+        "Detected voicemail skips automatic post-call SMS."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Outbound phone"
+        ],
+        [
+          "Message",
+          "Nonblank when enabled"
+        ],
+        [
+          "Detection",
+          "Can end before message"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-current-configuration",
+        "2-choose-detection-deliberately",
+        "3-set-a-short-message",
+        "4-test-the-actual-destination-behaviour",
+        "5-read-the-call-outcome",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/post-call-analysis",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--post-call-analysis.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Extract structured facts after a call",
+      "sidebarTitle": "Post-call analysis",
+      "business": "guides/business/call-history",
+      "lead": "Define the facts your application needs after a call and preserve incomplete or unavailable analysis until processing finishes.",
+      "important": [
+        "A completed call can still have unfinished post-call work.",
+        "Extracted facts are model output; validate them before consequential actions.",
+        "Use structured fields and signed results rather than parsing a summary as a receipt."
+      ],
+      "facts": [
+        [
+          "Timing",
+          "After conversation"
+        ],
+        [
+          "Fields",
+          "data_extraction_fields"
+        ],
+        [
+          "Validation",
+          "Application responsibility"
+        ]
+      ],
+      "legacyAnchors": [
+        "prerequisites",
+        "1-read-the-agent-configuration",
+        "2-define-focused-fields",
+        "3-keep-unknown-answers-unknown",
+        "4-wait-for-current-results",
+        "5-validate-business-actions-separately",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/your-own-llm",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--your-own-llm.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Connect a compatible model account",
+      "sidebarTitle": "Your own model",
+      "business": "guides/business/your-own-model",
+      "lead": "Connect an authorised compatible model account and test its actual conversation behaviour before using it with customers.",
+      "important": [
+        "Use the supported connection flow and keep the provider credential private.",
+        "Saving a connection does not prove every later request will succeed.",
+        "Account connection settings and the legacy agent llm_model field are different."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Account connection"
+        ],
+        [
+          "Credential",
+          "Private provider key"
+        ],
+        [
+          "Verification",
+          "Probe and conversation"
+        ]
+      ],
+      "legacyAnchors": [
+        "support-scope",
+        "prerequisites",
+        "1-read-the-safe-configuration",
+        "2-review-compatibility",
+        "3-save-and-verify",
+        "4-test-calls-and-fallback",
+        "5-disconnect-deliberately",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/your-own-tts",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--your-own-tts.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Use a voice from your own provider account",
+      "sidebarTitle": "Your own voice",
+      "business": "guides/business/your-own-voice",
+      "lead": "Use a voice from your own provider account by connecting its authorised key and voice identifier through the supported account settings.",
+      "important": [
+        "The voice already belongs to your provider account; supply its existing identifier.",
+        "Keep the provider key private and verify the connection before using it on calls.",
+        "A later failure can use a fallback path, so test actual speech and charges."
+      ],
+      "facts": [
+        [
+          "Voice",
+          "Existing provider voice"
+        ],
+        [
+          "Credential",
+          "Bring your own key"
+        ],
+        [
+          "Scope",
+          "Account connection"
+        ]
+      ],
+      "legacyAnchors": [
+        "support-scope",
+        "prerequisites",
+        "1-read-the-safe-configuration",
+        "2-review-the-voice-connection",
+        "3-save-through-the-supported-connection-flow",
+        "4-test-actual-speech",
+        "5-disconnect-deliberately",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "advanced/your-own-storage",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/advanced--your-own-storage.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Store recordings in your own bucket",
+      "sidebarTitle": "Your own recording storage",
+      "business": "guides/byo-storage-r2",
+      "lead": "Connect your own compatible storage bucket and verify the private recording object, playback and cleanup behaviour.",
+      "important": [
+        "Connection verification and a later recording upload are separate results.",
+        "Keep bucket credentials and playback access private.",
+        "Automatic Nixflex retention does not remove your own bucket’s copies."
+      ],
+      "facts": [
+        [
+          "Storage",
+          "Customer-owned bucket"
+        ],
+        [
+          "Playback",
+          "Private access"
+        ],
+        [
+          "Retention",
+          "Your bucket policy"
+        ]
+      ],
+      "legacyAnchors": [
+        "support-scope",
+        "prerequisites",
+        "1-read-the-safe-configuration",
+        "2-prepare-the-bucket",
+        "3-save-and-verify",
+        "4-handle-fallback-and-playback",
+        "5-manage-your-own-lifecycle",
+        "example-response",
+        "errors-and-limits",
+        "next-steps"
+      ]
+    },
+    {
+      "slug": "best-practices/prompting-guide",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/best-practices--prompting-guide.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Write clear agent instructions",
+      "sidebarTitle": "Agent instructions",
+      "business": "business",
+      "lead": "Write instructions that state the task, essential facts and action boundaries, then test both normal and uncertain conversations.",
+      "important": [
+        "Use one question at a time and confirm consequential names, dates and contact details.",
+        "Put longer business facts in knowledge instead of repeating them in every prompt.",
+        "Instructions do not bypass disabled actions or grant permissions."
+      ],
+      "facts": [
+        [
+          "Prompt",
+          "Purpose and rules"
+        ],
+        [
+          "Knowledge",
+          "Longer facts"
+        ],
+        [
+          "Testing",
+          "Success and uncertainty"
+        ]
+      ],
+      "legacyAnchors": [
+        "give-each-section-a-job",
+        "put-detailed-facts-in-knowledge",
+        "check-facts-and-outcomes"
+      ]
+    },
+    {
+      "slug": "best-practices/ivr-navigation",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/best-practices--ivr-navigation.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Write reliable phone-menu instructions",
+      "sidebarTitle": "Phone-menu instructions",
+      "business": "guides/business/call-actions",
+      "lead": "Describe the intended department and exit conditions so an outbound agent can navigate and test a real phone menu.",
+      "important": [
+        "Test the current menu rather than relying on an old digit sequence.",
+        "Keep menu waiting bounded and explain what to do when the route fails.",
+        "An answered menu is not a completed human handoff."
+      ],
+      "facts": [
+        [
+          "Target",
+          "Specific department"
+        ],
+        [
+          "Wait",
+          "Bounded"
+        ],
+        [
+          "Success",
+          "Human reached"
+        ]
+      ],
+      "legacyAnchors": [
+        "describe-the-destination-not-just-a-digit",
+        "give-waiting-a-limit",
+        "test-the-current-menu"
+      ]
+    },
+    {
+      "slug": "concepts/knowledge",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--knowledge.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand how agent knowledge is used",
+      "sidebarTitle": "Knowledge concepts",
+      "business": "guides/business/knowledge",
+      "lead": "Agent knowledge supplies reviewed facts to enabled channels without granting permission to take actions.",
+      "important": [
+        "One agent owns the base shared by its attached numbers.",
+        "Small bases can supply all topics; Test evidence is supplied context, not an accuracy score.",
+        "A source, draft, publication job and live topic represent different stages."
+      ],
+      "facts": [
+        [
+          "Owner",
+          "Agent"
+        ],
+        [
+          "Channels",
+          "Individually enabled"
+        ],
+        [
+          "Publication",
+          "Confirm live topics"
+        ]
+      ],
+      "legacyAnchors": [
+        "which-agent-owns-the-knowledge",
+        "how-does-the-agent-find-an-answer",
+        "what-does-test-prove",
+        "what-happens-after-an-edit"
+      ]
+    },
+    {
+      "slug": "concepts/agent-channels",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--agent-channels.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand settings across agent channels",
+      "sidebarTitle": "Settings by channel",
+      "business": "business",
+      "lead": "Choose settings for the channel that actually uses them; a saved field does not have the same effect on every conversation.",
+      "important": [
+        "Phone, SMS and website instructions are separate.",
+        "Website visitors have a narrower built-in action set.",
+        "Compatibility fields may be stored without controlling current runtime behaviour."
+      ],
+      "facts": [
+        [
+          "Channels",
+          "Phone / SMS / web"
+        ],
+        [
+          "Settings",
+          "Channel-specific"
+        ],
+        [
+          "Actions",
+          "Separate grants"
+        ]
+      ],
+      "legacyAnchors": [
+        "compatibility-only-fields",
+        "defaults-and-scope",
+        "knowledge-across-channels",
+        "related-guides"
+      ]
+    },
+    {
+      "slug": "concepts/agent-inheritance",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--agent-inheritance.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Resolve number overrides and agent defaults",
+      "sidebarTitle": "Setting inheritance",
+      "business": "guides/business/privacy",
+      "lead": "Resolve each effective setting using its documented number, agent and channel rules rather than one universal inheritance rule.",
+      "important": [
+        "An explicit number recording value wins over the agent.",
+        "Caller memory and name greetings are independent controls.",
+        "New-agent retention is inherited once; later default changes are not bulk edits."
+      ],
+      "facts": [
+        [
+          "Recording",
+          "Number override wins"
+        ],
+        [
+          "Memory",
+          "Separate from greeting"
+        ],
+        [
+          "Retention",
+          "Inherited on creation"
+        ]
+      ],
+      "legacyAnchors": [
+        "remembering-callers-is-different-from-greeting-by-name",
+        "recording-number-first-then-agent",
+        "dashboard-imported-versus-api-imported-phone-numbers",
+        "new-agent-retention-is-inherited-once",
+        "website-custom-functions-belong-to-the-number",
+        "related-guides"
+      ]
+    },
+    {
+      "slug": "concepts/data-retention",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--data-retention.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand retention and saved copies",
+      "sidebarTitle": "Data retention",
+      "business": "guides/business/privacy",
+      "lead": "Set call and message retention while keeping policy eligibility, completed cleanup and customer-owned copies distinct.",
+      "important": [
+        "New agents inherit the account default; existing agents keep their saved policy.",
+        "A saved policy or elapsed time does not prove cleanup completed.",
+        "Apply separate retention to your bucket, downloads and webhook storage."
+      ],
+      "facts": [
+        [
+          "Policies",
+          "90 / 30 / 7 / 1 / 0"
+        ],
+        [
+          "Zero",
+          "After-call eligibility"
+        ],
+        [
+          "Own copies",
+          "Separate policy"
+        ]
+      ],
+      "legacyAnchors": [
+        "account-default-and-agent-setting",
+        "eligibility-is-not-proof-of-deletion",
+        "recordings-and-copies",
+        "manual-actions-are-separate",
+        "related-guides"
+      ]
+    },
+    {
+      "slug": "concepts/voices",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--voices.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Choose voices and speaking settings",
+      "sidebarTitle": "Voice selection",
+      "business": "business",
+      "lead": "Choose an eligible catalog voice and verify the actual spoken result for the intended channel and language.",
+      "important": [
+        "Use the current catalog key instead of a hard-coded display-name list.",
+        "speaking_rate affects speed; legacy voice_speed does not.",
+        "Fallback can change the voice heard even when configuration was saved."
+      ],
+      "facts": [
+        [
+          "Selection",
+          "Current voice_key"
+        ],
+        [
+          "Speed",
+          "speaking_rate"
+        ],
+        [
+          "Verification",
+          "Actual speech"
+        ]
+      ],
+      "legacyAnchors": [
+        "catalog-voices-and-legacy-aliases",
+        "speaking-rate",
+        "language-and-fallback"
+      ]
+    },
+    {
+      "slug": "concepts/agents",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--agents.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand agents and number ownership",
+      "sidebarTitle": "Agent ownership",
+      "business": "business",
+      "lead": "Use an agent for shared conversation behaviour and knowledge, with phone numbers carrying their own channels and connections.",
+      "important": [
+        "Separate agents when branches need different knowledge.",
+        "Moving a number changes inherited behaviour while number-owned settings remain.",
+        "Deleting an agent switches it off; it does not erase history or detach numbers."
+      ],
+      "facts": [
+        [
+          "Agent",
+          "Behaviour and knowledge"
+        ],
+        [
+          "Number",
+          "Channels and connections"
+        ],
+        [
+          "Delete",
+          "Soft disable"
+        ]
+      ],
+      "legacyAnchors": [
+        "what-belongs-where",
+        "instructions-are-not-permission-switches",
+        "language-voices-and-recognition",
+        "privacy-and-history"
+      ]
+    },
+    {
+      "slug": "concepts/caller-context",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--caller-context.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand caller memory and greetings",
+      "sidebarTitle": "Caller memory",
+      "business": "guides/business/privacy",
+      "lead": "Use saved caller context to continue a telephone conversation while treating it as information to confirm, not verified identity.",
+      "important": [
+        "Memory and a saved-name greeting are separate switches.",
+        "Call retention does not erase every caller or visitor record.",
+        "Explicit caller-context updates and website visitor cards have separate scopes."
+      ],
+      "facts": [
+        [
+          "Key",
+          "Business and caller pair"
+        ],
+        [
+          "Identity",
+          "Not verified"
+        ],
+        [
+          "Deletion",
+          "Separate record action"
+        ]
+      ],
+      "legacyAnchors": [
+        "memory-and-greetings-are-separate",
+        "where-information-comes-from",
+        "retention-and-correction"
+      ]
+    },
+    {
+      "slug": "concepts/organisations",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--organisations.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand organisation roles and credentials",
+      "sidebarTitle": "Organisation roles",
+      "business": "guides/business/team",
+      "lead": "Keep shared organisation work separate from personal membership, role permissions and the account API credential.",
+      "important": [
+        "Owner, Admin and Member permissions are enforced by the server.",
+        "A shared API key does not inherit the restricted role of the person holding it.",
+        "Ownership offers and account closure require personal dashboard actions."
+      ],
+      "facts": [
+        [
+          "Roles",
+          "Three roles"
+        ],
+        [
+          "API key",
+          "Account authority"
+        ],
+        [
+          "Membership",
+          "Personal login"
+        ]
+      ],
+      "legacyAnchors": [
+        "invitations-and-ownership",
+        "keys-leaving-and-closure"
+      ]
+    },
+    {
+      "slug": "concepts/phone-numbers",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--phone-numbers.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand phone number ownership and scope",
+      "sidebarTitle": "Phone number scope",
+      "business": "guides/business/phone-numbers",
+      "lead": "Treat a phone number as an owned connection with its own settings and one current attached agent.",
+      "important": [
+        "Import origin is provenance, not a writable permission switch.",
+        "A move preserves number-owned data while changing inherited agent behaviour.",
+        "Removal from Nixflex does not imply external number rental has ended."
+      ],
+      "facts": [
+        [
+          "Owner",
+          "One account"
+        ],
+        [
+          "Assignment",
+          "One current agent"
+        ],
+        [
+          "Overrides",
+          "Field-specific"
+        ]
+      ],
+      "legacyAnchors": [
+        "number-settings-and-agent-behaviour",
+        "import-origin-is-descriptive",
+        "moving-and-removing"
+      ]
+    },
+    {
+      "slug": "concepts/inbound-calls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--inbound-calls.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand inbound call admission and results",
+      "sidebarTitle": "Inbound calls",
+      "business": "guides/inbound-support",
+      "lead": "Follow an inbound call from account and number admission checks through conversation actions and later results.",
+      "important": [
+        "A connected number does not guarantee every call will be answered.",
+        "The pre-call hook is fail-open and cannot be the only security boundary.",
+        "Call completion does not prove recording, messages or event delivery succeeded."
+      ],
+      "facts": [
+        [
+          "Admission",
+          "Current checks"
+        ],
+        [
+          "Conversation",
+          "Effective settings"
+        ],
+        [
+          "Results",
+          "Separate processing"
+        ]
+      ],
+      "legacyAnchors": [
+        "what-shapes-the-conversation",
+        "which-actions-can-happen",
+        "what-remains-afterwards"
+      ]
+    },
+    {
+      "slug": "concepts/outbound-calls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--outbound-calls.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand outbound requests and call outcomes",
+      "sidebarTitle": "Outbound call concepts",
+      "business": "guides/business/call-one-number",
+      "lead": "Treat an outbound call as an authorised request with a specific purpose, a saved identity and results that arrive in separate stages.",
+      "important": [
+        "A purpose is required and is not permission to contact a recipient.",
+        "Save request_id before sending and keep its original account and base URL.",
+        "Acceptance, completion and a booking result are different states."
+      ],
+      "facts": [
+        [
+          "Create",
+          "POST /calls/outbound"
+        ],
+        [
+          "Intent",
+          "Saved UUID"
+        ],
+        [
+          "Read",
+          "Request then call"
+        ]
+      ],
+      "legacyAnchors": [
+        "single-calls-and-campaigns",
+        "admission-is-checked-at-dispatch",
+        "a-timeout-is-not-proof-of-failure"
+      ]
+    },
+    {
+      "slug": "concepts/languages",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--languages.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Choose language and recognition settings",
+      "sidebarTitle": "Languages and recognition",
+      "business": "business",
+      "lead": "Choose a supported speech language for the selected voice route and test the names and phrases your callers use.",
+      "important": [
+        "A prompt cannot add language support missing from a speech route.",
+        "Recognition hints do not control pronunciation or guarantee a transcript.",
+        "A written chat test does not validate live speech behaviour."
+      ],
+      "facts": [
+        [
+          "Language",
+          "Route-specific support"
+        ],
+        [
+          "Manual hints",
+          "20 editable terms"
+        ],
+        [
+          "Verification",
+          "Real conversation"
+        ]
+      ],
+      "legacyAnchors": [
+        "choosing-a-language",
+        "names-and-unusual-words",
+        "speech-and-written-channels-differ"
+      ]
+    },
+    {
+      "slug": "concepts/live-monitor",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--live-monitor.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand live monitoring and takeover",
+      "sidebarTitle": "Live monitoring",
+      "business": "guides/live-monitoring",
+      "lead": "Let authorised teammates listen to eligible active calls and distinguish a requested takeover from a committed human handoff.",
+      "important": [
+        "Eligible Members can use Listen and takeover without becoming general writers.",
+        "After committed takeover the AI does not return automatically.",
+        "An accepted End request is not proof the connection has ended."
+      ],
+      "facts": [
+        [
+          "Listen",
+          "No microphone added"
+        ],
+        [
+          "Takeover",
+          "Confirmed handoff"
+        ],
+        [
+          "Access",
+          "Current eligibility"
+        ]
+      ],
+      "legacyAnchors": [
+        "access-and-call-state"
+      ]
+    },
+    {
+      "slug": "concepts/live-listen",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--live-listen.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand authenticated live listening",
+      "sidebarTitle": "Live Listen",
+      "business": "guides/live-monitoring",
+      "lead": "Use the supported authenticated session flow to listen to an eligible call without exposing the shared account key to the browser.",
+      "important": [
+        "Media access is scoped and short-lived.",
+        "Listening and speaking through a committed takeover are different states.",
+        "Expiry, call completion and permission changes can end audio access."
+      ],
+      "facts": [
+        [
+          "Access",
+          "Personal session"
+        ],
+        [
+          "Media grant",
+          "Short-lived"
+        ],
+        [
+          "Browser",
+          "No account key"
+        ]
+      ],
+      "legacyAnchors": [
+        "access-and-call-state"
+      ]
+    },
+    {
+      "slug": "concepts/web-calls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--web-calls.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand website voice permissions",
+      "sidebarTitle": "Website voice",
+      "business": "guides/voice-widget",
+      "lead": "Enable website voice through the installed widget while preserving the number’s website settings and public-visitor boundaries.",
+      "important": [
+        "Both web_agent_enabled and web_calls_enabled must permit voice.",
+        "Visitor contact details are self-reported, not verified identity.",
+        "Website functions do not unlock built-in telephone booking, SMS or transfer actions."
+      ],
+      "facts": [
+        [
+          "Channel",
+          "Browser voice"
+        ],
+        [
+          "Install",
+          "Generated widget"
+        ],
+        [
+          "Visitor",
+          "Public and unverified"
+        ]
+      ],
+      "legacyAnchors": [
+        "saved-switches-and-effective-voice",
+        "public-visitors-and-actions",
+        "installation-and-testing"
+      ]
+    },
+    {
+      "slug": "concepts/conversation-control",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--conversation-control.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Understand conversation controls and actions",
+      "sidebarTitle": "Conversation controls",
+      "business": "guides/business/call-actions",
+      "lead": "Combine clear turn-taking instructions with the effective action switches, timers and actual conversation results.",
+      "important": [
+        "A prompt cannot guarantee timing or enable a disabled action.",
+        "Waiting, silence handling and call duration are separate controls.",
+        "Confirm actions only after their results succeed."
+      ],
+      "facts": [
+        [
+          "Instructions",
+          "One task at a time"
+        ],
+        [
+          "Timers",
+          "Distinct purposes"
+        ],
+        [
+          "Actions",
+          "Check the result"
+        ]
+      ],
+      "legacyAnchors": [
+        "instructions-and-facts-have-different-jobs",
+        "waiting-and-ending",
+        "interruption-and-uncertainty"
+      ]
+    },
+    {
+      "slug": "concepts/variables",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/concepts--variables.mdx.txt",
+      "existing": true,
+      "review": "body_reviewed_and_rewritten",
+      "title": "Use dynamic variables without guessing data",
+      "sidebarTitle": "Dynamic variables",
+      "business": "guides/business/call-one-number",
+      "lead": "Insert known application data into the correct call or message template and reject missing consequential values before sending work.",
+      "important": [
+        "Single calls use dynamic_vars; campaign rows use nested variables.",
+        "Template syntax varies by field and must be checked against its contract.",
+        "Caller-supplied contact details are data, not proof of identity."
+      ],
+      "facts": [
+        [
+          "Call values",
+          "dynamic_vars"
+        ],
+        [
+          "Campaign values",
+          "Nested variables"
+        ],
+        [
+          "Missing data",
+          "Ask or correct"
+        ]
+      ],
+      "legacyAnchors": [
+        "call-purpose-variables",
+        "message-and-integration-placeholders",
+        "saved-records"
+      ]
+    },
+    {
+      "slug": "reference/errors",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/reference--errors.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "title": "Debug failed requests safely",
+      "sidebarTitle": "Debugging reference",
+      "business": "business",
+      "lead": "Investigate a failed request using its status, machine code and safe diagnostic identifier before deciding whether any action should be repeated.",
+      "important": [
+        "A response can be missing, incomplete or non-JSON; keep a fallback parser.",
+        "A 2xx response can accept background work without completing it.",
+        "Never replay a copied write merely to reproduce an error."
+      ],
+      "facts": [
+        [
+          "Branch on",
+          "HTTP status and code"
+        ],
+        [
+          "Diagnostics",
+          "Safe identifiers"
+        ],
+        [
+          "Write recovery",
+          "Read current state"
+        ]
+      ],
+      "description": "Investigate Nixflex API failures using safe request identifiers and machine codes, while preserving unknown write outcomes and non-JSON errors.",
+      "canonical": "https://docs.nixflex.com/reference/errors",
+      "legacyAnchors": [
+        "the-error-object",
+        "error-types",
+        "status-codes",
+        "common-errors",
+        "the-web-agent-endpoint-is-different",
+        "debugging-with-request-ids",
+        "handling-errors-well"
+      ]
+    },
+    {
+      "slug": "reference/rate-limits",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/reference--rate-limits.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "title": "Understand API quotas and call capacity",
+      "sidebarTitle": "Limits reference",
+      "business": "guides/business/billing",
+      "lead": "Plan HTTP requests and business work against their separate current limits instead of assuming one fixed allowance.",
+      "important": [
+        "Read rate headers and current max_concurrent; neither is a universal throughput promise.",
+        "A successful usage read does not reserve a call slot.",
+        "A throttle does not make an uncertain write safe to repeat."
+      ],
+      "facts": [
+        [
+          "HTTP allowance",
+          "Response headers"
+        ],
+        [
+          "Call capacity",
+          "Account setting"
+        ],
+        [
+          "Recovery",
+          "Operation-specific"
+        ]
+      ],
+      "description": "Separate Nixflex HTTP request allowances, concurrent calls, messaging capacity and Knowledge limits, then handle each refusal using its actual result.",
+      "canonical": "https://docs.nixflex.com/reference/rate-limits",
+      "legacyAnchors": [
+        "concurrent-calls",
+        "batch-campaign-concurrency",
+        "sms-pacing",
+        "webhook-delivery",
+        "need-more"
+      ]
+    },
+    {
+      "slug": "sdks/node",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/sdks--node.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "install",
+        "reviewed-0110-candidate",
+        "authenticate",
+        "agents",
+        "calls",
+        "phone-numbers",
+        "caller-context",
+        "sms",
+        "campaigns-voice",
+        "usage-and-keys",
+        "webhooks",
+        "pagination",
+        "errors",
+        "retries",
+        "typescript",
+        "versioning"
+      ],
+      "title": "Use the Node SDK in a server application",
+      "sidebarTitle": "Node SDK",
+      "description": "Install the reviewed Node SDK candidate, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries.",
+      "canonical": "https://docs.nixflex.com/sdks/node",
+      "business": "guides/business/integrations",
+      "lead": "Use the Node SDK for server-side reads and deliberate writes, with durable outbound request records for uncertain call outcomes.",
+      "important": [
+        "Keep the complete account credential on the server and supply the intended base URL.",
+        "Install the exact reviewed 0.11.0 candidate; the version alone is not its identity.",
+        "Prepare and save a call locally before a separately approved send."
+      ],
+      "facts": [
+        [
+          "Runtime",
+          "Node 18+"
+        ],
+        [
+          "Package",
+          "nixflex 0.11.0 candidate"
+        ],
+        [
+          "Write retries",
+          "Disabled by the client"
+        ]
+      ]
+    },
+    {
+      "slug": "sdks/python",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/sdks--python.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "reviewed-040-candidate",
+        "authenticate",
+        "async",
+        "agents",
+        "calls",
+        "phone-numbers",
+        "caller-context",
+        "sms",
+        "webhooks",
+        "account-and-bring-your-own",
+        "errors",
+        "retries",
+        "related"
+      ],
+      "title": "Use the Python SDK with sync or async code",
+      "sidebarTitle": "Python SDK",
+      "description": "Install the reviewed Python candidate, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states.",
+      "canonical": "https://docs.nixflex.com/sdks/python",
+      "business": "guides/business/integrations",
+      "lead": "Use the Python SDK with a managed synchronous or asynchronous client, keeping reads, approved writes and recovery separate.",
+      "important": [
+        "The reviewed 0.4.0 package requires Python 3.9 or later and httpx.",
+        "Automatic retries are GET-only; a failed mutation can still have happened.",
+        "Local call preparation stays synchronous even on AsyncNixflex."
+      ],
+      "facts": [
+        [
+          "Runtime",
+          "Python 3.9+"
+        ],
+        [
+          "Clients",
+          "Sync and async"
+        ],
+        [
+          "Recovery",
+          "Saved UUID and current reads"
+        ]
+      ]
+    },
+    {
+      "slug": "sdks/other-languages",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/sdks--other-languages.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "call-the-api-directly",
+        "retries-and-uncertain-results",
+        "generate-a-client-from-the-openapi-spec",
+        "verify-webhooks-in-any-language",
+        "from-the-terminal-or-an-assistant"
+      ],
+      "title": "Call the API from another language",
+      "sidebarTitle": "HTTP and other languages",
+      "description": "Use direct HTTPS with private bearer credentials, bounded reads and schema-aware error handling, then verify generated clients against the public contract.",
+      "canonical": "https://docs.nixflex.com/sdks/other-languages",
+      "business": "guides/business/integrations",
+      "lead": "Use standard HTTPS from any server language, following the public contract and explicit retry rules for each operation.",
+      "important": [
+        "Send the complete bearer credential only to the intended API host.",
+        "A timeout or malformed write response can hide success; do not automatically replay it.",
+        "A generated client does not add missing idempotency, privacy or business-result checks."
+      ],
+      "facts": [
+        [
+          "Protocol",
+          "HTTPS and JSON"
+        ],
+        [
+          "Credential",
+          "Server-side bearer pair"
+        ],
+        [
+          "Contract",
+          "Public OpenAPI 3.1"
+        ]
+      ]
+    },
+    {
+      "slug": "sdks/ecosystem",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/sdks--ecosystem.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "reviewed-kit-versions"
+      ],
+      "title": "Choose an API client or developer tool",
+      "sidebarTitle": "Choose a client",
+      "description": "Compare the reviewed Node, Python, CLI and MCP candidates, check exact package identity and choose HTTP when a client method is not verified.",
+      "canonical": "https://docs.nixflex.com/sdks/ecosystem",
+      "business": "guides/business/integrations",
+      "lead": "Choose a client for your application, then verify the exact reviewed package before relying on its methods.",
+      "important": [
+        "The reviewed packages are unpublished candidates; a registry install does not prove that they are available.",
+        "The same version number can identify different candidate archives, so check the release hash.",
+        "Use the public HTTP contract when a client method is not verified."
+      ],
+      "facts": [
+        [
+          "Node and CLI",
+          "0.11.0 candidate"
+        ],
+        [
+          "Python",
+          "0.4.0 candidate"
+        ],
+        [
+          "MCP",
+          "0.5.0 candidate, 96 tools"
+        ]
+      ]
+    },
+    {
+      "slug": "cli/overview",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/cli--overview.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "install",
+        "reviewed-0110-candidate",
+        "authenticate",
+        "output",
+        "safety-rails",
+        "exit-codes",
+        "next"
+      ],
+      "title": "Use the CLI with a private account connection",
+      "sidebarTitle": "CLI setup and safety",
+      "description": "Install the reviewed CLI, choose the account and API host explicitly, understand private input and distinguish read retries from deliberate writes.",
+      "canonical": "https://docs.nixflex.com/cli/overview",
+      "business": "guides/business/integrations",
+      "lead": "Use the CLI for explicit terminal operations with a private credential, a known API host and checked command results.",
+      "important": [
+        "The CLI ships in the reviewed Node package and needs Node 18 or later.",
+        "Pass the intended base URL explicitly; NIXFLEX_BASE_URL alone is not the legacy CLI’s host selector.",
+        "A command can perform a write without a confirmation flag, so read its contract before running it."
+      ],
+      "facts": [
+        [
+          "Package",
+          "nixflex 0.11.0 candidate"
+        ],
+        [
+          "Scripts",
+          "Check exit code and result"
+        ],
+        [
+          "Credentials",
+          "Private environment preferred"
+        ]
+      ]
+    },
+    {
+      "slug": "cli/quickstart",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/cli--quickstart.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "everything-as-json",
+        "load-a-customer-list"
+      ],
+      "title": "Make a safe CLI read and prepare a call",
+      "sidebarTitle": "CLI quickstart",
+      "description": "Verify the CLI account connection with a usage read, prepare an outbound UUID locally and keep any approved send separate from read-only recovery.",
+      "canonical": "https://docs.nixflex.com/cli/quickstart",
+      "business": "guides/business/call-one-number",
+      "lead": "Verify the CLI with one safe read, then prepare a recoverable call intention locally before deciding whether to send it.",
+      "important": [
+        "The first request reads usage and does not create an account, call or message.",
+        "Use --output for prepared JSON; do not rely on PowerShell redirection encoding.",
+        "Never put preparation and sending inside an automatic retry loop."
+      ],
+      "facts": [
+        [
+          "First request",
+          "Read usage"
+        ],
+        [
+          "Preparation",
+          "Local file, no send"
+        ],
+        [
+          "Recovery",
+          "Original UUID"
+        ]
+      ]
+    },
+    {
+      "slug": "cli/commands",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/cli--commands.mdx.txt",
+      "existing": true,
+      "review": "written_and_reviewed",
+      "legacyAnchors": [
+        "google-calendar-and-number-credentials",
+        "setting-any-field",
+        "account",
+        "agents",
+        "calls",
+        "campaigns-voice-batch",
+        "numbers",
+        "callers-caller-context",
+        "sms",
+        "webhooks-per-number",
+        "bring-your-own",
+        "mcp",
+        "errors-and-exit-codes"
+      ],
+      "title": "Find the CLI command for your task",
+      "sidebarTitle": "CLI command reference",
+      "description": "Find reviewed CLI command families, exact call recovery commands, private credential inputs and confirmation boundaries before running a change.",
+      "canonical": "https://docs.nixflex.com/cli/commands",
+      "business": "guides/business/integrations",
+      "lead": "Choose the command for one task and read its effect, required inputs and recovery rule before execution.",
+      "important": [
+        "Use the exact reviewed candidate and explicit --base-url for your account.",
+        "A confirmation preview is command-specific; creates can send immediately.",
+        "Use private input for secrets and keep JSON results out of shared logs."
+      ],
+      "facts": [
+        [
+          "Syntax",
+          "nixflex group command"
+        ],
+        [
+          "Output",
+          "--json when scripting"
+        ],
+        [
+          "Writes",
+          "No automatic retry"
+        ]
+      ]
+    },
+    {
+      "slug": "guides/developer/knowledge/ingest-sources",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge--ingest-sources.mdx.txt",
+      "existing": false,
+      "title": "Add knowledge sources through the API",
+      "sidebarTitle": "Add sources",
+      "description": "Create an agent knowledge base, submit text or files for review, and discover website pages without mistaking preparation for publication.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge/ingest-sources",
+      "business": "guides/business/knowledge/add-facts",
+      "lead": "Prepare text, files or selected website pages for an agent’s knowledge base, with review requested before new facts become live.",
+      "important": [
+        "Create one knowledge base for the agent, not for each number.",
+        "Save the operation key and returned job ID before starting another import.",
+        "Set review:true explicitly; the API default can publish after preparation."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Text, files or selected pages"
+        ],
+        [
+          "Output",
+          "Preparation job"
+        ],
+        [
+          "Next task",
+          "Review the draft"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/knowledge/review-and-publish",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge--review-and-publish.mdx.txt",
+      "existing": false,
+      "title": "Review and publish knowledge drafts",
+      "sidebarTitle": "Review and publish",
+      "description": "Inspect prepared facts, save draft edits with current revisions, approve selected topics and confirm the publication job before using new answers.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge/review-and-publish",
+      "business": "guides/business/knowledge",
+      "lead": "Turn a prepared knowledge draft into live answers by reviewing its facts, choosing topics and confirming publication.",
+      "important": [
+        "A prepared source is not the same as published knowledge.",
+        "Use the latest base revision and draft edit revision for each save or acceptance.",
+        "Warnings and flagged topics need explicit human choices."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Prepared draft"
+        ],
+        [
+          "Concurrency",
+          "Current revisions"
+        ],
+        [
+          "Finish",
+          "Confirmed live topics"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/knowledge/test-and-troubleshoot",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge--test-and-troubleshoot.mdx.txt",
+      "existing": false,
+      "title": "Test and troubleshoot knowledge answers",
+      "sidebarTitle": "Test knowledge answers",
+      "description": "Run an agent knowledge-only test, inspect supplied topic evidence and resolve missing, stale or loading answers without placing calls or sending messages.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge/test-and-troubleshoot",
+      "business": "guides/business/knowledge/test-and-fix",
+      "lead": "Test whether an agent can answer from its published knowledge, then use the returned evidence to fix missing or stale facts.",
+      "important": [
+        "Knowledge tests use live unsuppressed facts and perform no call, booking or message action.",
+        "Evidence shows supplied context; it does not prove every listed topic shaped the answer.",
+        "A full call test is a separate step for agent instructions, speech and actions."
+      ],
+      "facts": [
+        [
+          "Mode",
+          "Knowledge only"
+        ],
+        [
+          "Channel",
+          "Choose explicitly"
+        ],
+        [
+          "Evidence",
+          "Supplied live topics"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/knowledge/refresh-and-export",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge--refresh-and-export.mdx.txt",
+      "existing": false,
+      "title": "Refresh and export agent knowledge",
+      "sidebarTitle": "Refresh and export",
+      "description": "Maintain saved knowledge sources, preserve reviewed changes and download a revision-bound export while handling stale jobs and cleanup safely.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge/refresh-and-export",
+      "business": "guides/business/knowledge/test-and-fix",
+      "lead": "Refresh saved source material deliberately and export a known knowledge revision without losing reviewed changes.",
+      "important": [
+        "A website source changes only when you request and review the appropriate refresh.",
+        "Deleting a topic prevents that same saved source from recreating it on refresh.",
+        "Exports expire after one hour and become stale when the base revision changes."
+      ],
+      "facts": [
+        [
+          "Refresh",
+          "Selected saved sources"
+        ],
+        [
+          "Export",
+          "Revision-bound result"
+        ],
+        [
+          "Cleanup",
+          "Track the returned job"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/knowledge/keyterms",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--knowledge--keyterms.mdx.txt",
+      "existing": false,
+      "title": "Read and manage agent keyterms",
+      "sidebarTitle": "Knowledge keyterms",
+      "description": "Read automatic knowledge hints and saved manual keyterms, respect the returned limits and update only the writable manual agent field.",
+      "canonical": "https://docs.nixflex.com/guides/developer/knowledge/keyterms",
+      "business": "guides/business/knowledge/keyterms",
+      "lead": "Read the speaking hints derived from an agent’s knowledge and manage the separate manual keyterms you choose.",
+      "important": [
+        "Automatic knowledge_keyterms are read-only and do not consume the manual allowance.",
+        "Write manual terms through boosted_keywords on the agent.",
+        "Use the returned limits; dashboard chips can differ from the raw saved API lists."
+      ],
+      "facts": [
+        [
+          "Automatic",
+          "Derived from knowledge"
+        ],
+        [
+          "Manual",
+          "Saved on the agent"
+        ],
+        [
+          "Purpose",
+          "Recognition hints"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/webhooks/event-types",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--webhooks--event-types.mdx.txt",
+      "existing": false,
+      "title": "Choose webhook events for your integration",
+      "sidebarTitle": "Choose webhook events",
+      "description": "Choose call, booking and SMS events by what they prove, and keep pre-call callbacks, custom functions and unsigned reachability tests separate.",
+      "canonical": "https://docs.nixflex.com/guides/developer/webhooks/event-types",
+      "business": "guides/business/integrations",
+      "lead": "Choose the event that proves the business result you need, then process it using its own identity and delivery rules.",
+      "important": [
+        "Call completion does not prove final analysis, recording access or a booking result.",
+        "Use call.bookings for confirmed post-call calendar mutations and reconcile its final state.",
+        "Unsigned test traffic must never trigger business actions."
+      ],
+      "facts": [
+        [
+          "Call lifecycle",
+          "Started and completed"
+        ],
+        [
+          "Booking result",
+          "call.bookings"
+        ],
+        [
+          "SMS booking",
+          "Separate identity rules"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/webhooks/delivery-and-recovery",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--webhooks--delivery-and-recovery.mdx.txt",
+      "existing": false,
+      "title": "Recover delayed or repeated webhook deliveries",
+      "sidebarTitle": "Webhook delivery and recovery",
+      "description": "Handle webhook timing, retries, duplicates and missed events with durable acceptance and authenticated reads instead of repeating calls or bookings.",
+      "canonical": "https://docs.nixflex.com/guides/developer/webhooks/delivery-and-recovery",
+      "business": "guides/business/integrations",
+      "lead": "Recover delayed, repeated or missing webhook deliveries by reconciling saved work with authenticated resource reads.",
+      "important": [
+        "Save verified events durably before returning 2xx.",
+        "Use an atomic deduplication key and a separate durable processing queue.",
+        "Delivery timing is not a deadline or a guarantee that an event will arrive."
+      ],
+      "facts": [
+        [
+          "Acceptance",
+          "Durable save first"
+        ],
+        [
+          "Duplicates",
+          "Atomic identity check"
+        ],
+        [
+          "Recovery",
+          "Read current state"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/team/invitations-and-roles",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--team--invitations-and-roles.mdx.txt",
+      "existing": false,
+      "title": "Manage team invitations and role changes",
+      "sidebarTitle": "Invitations and roles",
+      "description": "Build team administration with personal role checks, invitation expiry and seat limits, while preserving unknown invitation and removal outcomes.",
+      "canonical": "https://docs.nixflex.com/guides/developer/team/invitations-and-roles",
+      "business": "guides/business/team",
+      "lead": "Invite people and manage permitted roles from the current organisation context, keeping personal access separate from the shared server key.",
+      "important": [
+        "Admins manage Members; Admin and ownership changes require the Owner.",
+        "Pending unexpired invitations count towards seats.",
+        "A person’s role restriction must never be bypassed with a shared key in the browser."
+      ],
+      "facts": [
+        [
+          "Roles",
+          "Owner, Admin, Member"
+        ],
+        [
+          "Invite life",
+          "24 hours"
+        ],
+        [
+          "Authority",
+          "Check current context"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/team/ownership-and-closure",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--team--ownership-and-closure.mdx.txt",
+      "existing": false,
+      "title": "Handle ownership changes and account closure",
+      "sidebarTitle": "Ownership and closure",
+      "description": "Keep ownership acceptance, leaving and account closure in the authenticated personal flow, and reconcile access, key handling and unfinished work.",
+      "canonical": "https://docs.nixflex.com/guides/developer/team/ownership-and-closure",
+      "business": "guides/business/team",
+      "lead": "Direct ownership and closure decisions through the authorised person’s dashboard flow, then reconcile the resulting access in your integration.",
+      "important": [
+        "Ownership acceptance and account closure require a personal authenticated flow.",
+        "Never invent public transfer or closure endpoints from dashboard behaviour.",
+        "A removed membership does not revoke a separately shared server key."
+      ],
+      "facts": [
+        [
+          "Decision maker",
+          "Current authorised person"
+        ],
+        [
+          "Flow",
+          "Authenticated dashboard"
+        ],
+        [
+          "Afterward",
+          "Refresh access and work state"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/campaigns/prepare-and-launch",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--campaigns--prepare-and-launch.mdx.txt",
+      "existing": false,
+      "title": "Prepare and launch a voice campaign",
+      "sidebarTitle": "Prepare and launch",
+      "description": "Validate voice campaign recipients, consent, local hours and duplicate policy before creating executable campaign work once.",
+      "canonical": "https://docs.nixflex.com/guides/developer/campaigns/prepare-and-launch",
+      "business": "guides/business/voice-campaigns",
+      "lead": "Prepare a voice campaign as executable work: validate recipients and sending choices before creating it.",
+      "important": [
+        "Default now mode requests launch immediately; scheduled work can launch when due.",
+        "Duplicate warnings do not block dispatch or provide request idempotency.",
+        "Save campaign_id even when creation succeeds but launch is refused or uncertain."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Reviewed recipient rows"
+        ],
+        [
+          "Creation",
+          "Can launch calls"
+        ],
+        [
+          "Recovery",
+          "Saved campaign ID"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/campaigns/results-and-controls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--campaigns--results-and-controls.mdx.txt",
+      "existing": false,
+      "title": "Track voice campaign results and controls",
+      "sidebarTitle": "Voice results and controls",
+      "description": "Read voice campaign state, resolve holds and cancel or resume unsent work while keeping queued calls, connected calls and final outcomes distinct.",
+      "canonical": "https://docs.nixflex.com/guides/developer/campaigns/results-and-controls",
+      "business": "guides/business/voice-campaigns",
+      "lead": "Track the saved voice campaign and control future dispatch without recreating recipients whose outcomes are uncertain.",
+      "important": [
+        "Queued work and the legacy dialed count do not prove a connected call.",
+        "Cancel stops future dispatch; it does not hang up active calls.",
+        "Resume operates on the existing campaign and does not mean repeat completed recipients."
+      ],
+      "facts": [
+        [
+          "Track",
+          "Existing campaign"
+        ],
+        [
+          "Cancel",
+          "Future dispatch"
+        ],
+        [
+          "Outcomes",
+          "Read individual calls"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/sms-campaigns/prepare-and-send",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--sms-campaigns--prepare-and-send.mdx.txt",
+      "existing": false,
+      "title": "Prepare and send an SMS campaign",
+      "sidebarTitle": "Prepare and send",
+      "description": "Build SMS campaign templates and recipient variables, review consent and hours, and create one campaign while preserving uncertain outcomes.",
+      "canonical": "https://docs.nixflex.com/guides/developer/sms-campaigns/prepare-and-send",
+      "business": "guides/business/sms-campaigns",
+      "lead": "Prepare a complete SMS template and recipient set, then create the campaign once with explicit contact choices.",
+      "important": [
+        "Creating a campaign can send immediately or automatically when scheduled.",
+        "Every template placeholder needs a value in each recipient’s nested variables.",
+        "SMS creation always creates new work; reuse_campaign_id is not supported."
+      ],
+      "facts": [
+        [
+          "Content",
+          "Message template"
+        ],
+        [
+          "Recipients",
+          "Nested variables"
+        ],
+        [
+          "Creation",
+          "Can send messages"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/sms-campaigns/delivery-and-controls",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--sms-campaigns--delivery-and-controls.mdx.txt",
+      "existing": false,
+      "title": "Read SMS campaign delivery and controls",
+      "sidebarTitle": "SMS delivery and controls",
+      "description": "Track SMS sent, delivered, failed and reply counts separately, cancel unsent work and reconcile uncertain sends without creating duplicate campaigns.",
+      "canonical": "https://docs.nixflex.com/guides/developer/sms-campaigns/delivery-and-controls",
+      "business": "guides/business/sms-campaigns",
+      "lead": "Track the existing SMS campaign’s delivery and reply evidence, then control only the work that remains eligible to send.",
+      "important": [
+        "Sent, delivered, failed and reply counts describe different outcomes.",
+        "Cancel stops future dispatch and cannot recall a message already sent.",
+        "Deletion guidance is pending the final B57 contract; do not infer it from cancellation."
+      ],
+      "facts": [
+        [
+          "Track",
+          "Saved campaign ID"
+        ],
+        [
+          "Delivery",
+          "Separate evidence"
+        ],
+        [
+          "Controls",
+          "Existing unsent work"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/phone-numbers/import-and-connect",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--phone-numbers--import-and-connect.mdx.txt",
+      "existing": false,
+      "title": "Import and connect an owned phone number",
+      "sidebarTitle": "Import and connect",
+      "description": "Prepare a supported number connection, use the dashboard for new imports and verify saved state and routing without exposing private credentials.",
+      "canonical": "https://docs.nixflex.com/guides/developer/phone-numbers/import-and-connect",
+      "business": "guides/business/phone-numbers",
+      "lead": "Connect an existing eligible number to an active owned agent, then verify both the saved number and its routing outcome.",
+      "important": [
+        "Import can replace routing used by another application.",
+        "New setup uses the supported dashboard flow; the public import schema omits legacy credential fields.",
+        "A pending or uncertain import is not permission to use or re-import the number."
+      ],
+      "facts": [
+        [
+          "Input",
+          "Existing owned number"
+        ],
+        [
+          "Assignment",
+          "Active owned agent"
+        ],
+        [
+          "Finish",
+          "Saved state and routing checked"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/phone-numbers/credentials-and-removal",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--phone-numbers--credentials-and-removal.mdx.txt",
+      "existing": false,
+      "title": "Update number credentials or remove a connection",
+      "sidebarTitle": "Credentials and removal",
+      "description": "Replace carrier credentials in place, preserve number settings and reconcile uncertain routing or removal without deleting and re-importing.",
+      "canonical": "https://docs.nixflex.com/guides/developer/phone-numbers/credentials-and-removal",
+      "business": "guides/business/phone-numbers",
+      "lead": "Replace a number’s carrier credentials in place, or remove its connection deliberately while tracking external routing cleanup.",
+      "important": [
+        "Credential updates keep the existing number and its settings; they do not switch carrier.",
+        "Use one supported credential pair and keep the request private.",
+        "An uncertain routing or removal result requires reconciliation, not automatic replay."
+      ],
+      "facts": [
+        [
+          "Credentials",
+          "Write-only replacement"
+        ],
+        [
+          "Scope",
+          "Existing carrier and number"
+        ],
+        [
+          "Removal",
+          "Separate cleanup operation"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/phone-numbers/routing-and-overrides",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--phone-numbers--routing-and-overrides.mdx.txt",
+      "existing": false,
+      "title": "Move a number and manage its overrides",
+      "sidebarTitle": "Routing and overrides",
+      "description": "Move an owned number with an agent-only PATCH, understand inherited settings and read back focused changes without re-importing the connection.",
+      "canonical": "https://docs.nixflex.com/guides/developer/phone-numbers/routing-and-overrides",
+      "business": "guides/business/phone-numbers",
+      "lead": "Move an owned number to another agent or change its explicit overrides while preserving the number’s connection and history.",
+      "important": [
+        "Use an agent-only PATCH for a move within the same account.",
+        "Moving changes inherited agent behaviour and knowledge, while number-owned settings remain.",
+        "Null means inherit only on fields whose contract explicitly allows it."
+      ],
+      "facts": [
+        [
+          "Move",
+          "Agent-only PATCH"
+        ],
+        [
+          "Overrides",
+          "Number-owned fields"
+        ],
+        [
+          "Verification",
+          "Read back saved state"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/call-requests",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--call-requests.mdx.txt",
+      "existing": false,
+      "title": "Prepare and reconcile one outbound call",
+      "sidebarTitle": "Outbound request recovery",
+      "description": "Save an outbound request UUID before dispatch, send one approved call and read its durable state without turning a timeout into a duplicate call.",
+      "canonical": "https://docs.nixflex.com/guides/developer/call-requests",
+      "business": "guides/business/call-one-number",
+      "lead": "Save a call intention before sending it, then reconcile that same request until you know whether a call was accepted.",
+      "important": [
+        "Generate and persist request_id before the first dispatch.",
+        "Keep the same account, base URL, UUID and inputs during reconciliation.",
+        "Pending, unknown, 404 or an unavailable read never authorise an automatic redial."
+      ],
+      "facts": [
+        [
+          "Before dispatch",
+          "Durable UUID and inputs"
+        ],
+        [
+          "Send",
+          "One approved attempt"
+        ],
+        [
+          "Recovery",
+          "Read request state"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/website/install-and-verify",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--website--install-and-verify.mdx.txt",
+      "existing": false,
+      "title": "Install and verify website chat and voice",
+      "sidebarTitle": "Install and verify",
+      "description": "Install the dashboard-generated website agent snippet, verify effective channel switches and test the real site without exposing account credentials.",
+      "canonical": "https://docs.nixflex.com/guides/developer/website/install-and-verify",
+      "business": "guides/voice-widget",
+      "lead": "Install the current generated website snippet and verify chat, voice and inbox results on the actual site.",
+      "important": [
+        "The browser must never receive the account API credential.",
+        "Use the current dashboard-generated snippet; do not invent a script URL or permanent token.",
+        "A dashboard preview does not prove the final website’s microphone, storage or embedding behaviour."
+      ],
+      "facts": [
+        [
+          "Install",
+          "Generated snippet"
+        ],
+        [
+          "Credential",
+          "Server only"
+        ],
+        [
+          "Verification",
+          "Actual website"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/website/troubleshooting",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--website--troubleshooting.mdx.txt",
+      "existing": false,
+      "title": "Troubleshoot website chat and voice",
+      "sidebarTitle": "Website troubleshooting",
+      "description": "Diagnose missing installation, stale settings, blocked microphone access and website channel limits using saved state and actual visitor results.",
+      "canonical": "https://docs.nixflex.com/guides/developer/website/troubleshooting",
+      "business": "guides/voice-widget",
+      "lead": "Diagnose website failures by checking installation, saved revisions and effective permissions before changing the visitor experience.",
+      "important": [
+        "Keep unavailable connection state distinct from a disabled saved preference.",
+        "Re-read stale settings instead of silently overwriting another editor.",
+        "Visitor contact details are unverified and cannot grant access to private data."
+      ],
+      "facts": [
+        [
+          "First check",
+          "Installed environment"
+        ],
+        [
+          "Settings",
+          "Current revision"
+        ],
+        [
+          "Evidence",
+          "Browser and inbox result"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/bookings/google-calendar-settings",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--bookings--google-calendar-settings.mdx.txt",
+      "existing": false,
+      "title": "Set Google Calendar hours and invitations",
+      "sidebarTitle": "Calendar hours and invitations",
+      "description": "Save Google Calendar time zone, seven-day hours, slot length and invitation preferences with explicit replacement and delivery rules.",
+      "canonical": "https://docs.nixflex.com/guides/developer/bookings/google-calendar-settings",
+      "business": "guides/business/google-calendar",
+      "lead": "Set the availability and invitation rules for a connected Google Calendar number, then read back the saved configuration.",
+      "important": [
+        "A supplied hours object replaces all seven days; overnight intervals are refused.",
+        "Omitted fields retain their saved values.",
+        "send_invites requests Google notifications; it does not prove inbox delivery or notify the owner separately."
+      ],
+      "facts": [
+        [
+          "Scope",
+          "Connected owned number"
+        ],
+        [
+          "Hours",
+          "Complete seven-day map"
+        ],
+        [
+          "Invitations",
+          "Boolean preference"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "guides/developer/bookings/troubleshooting",
+      "tab": "Developer guide",
+      "source": "spec-source/c14-pages/guides--developer--bookings--troubleshooting.mdx.txt",
+      "existing": false,
+      "title": "Troubleshoot calendar booking outcomes",
+      "sidebarTitle": "Booking troubleshooting",
+      "description": "Diagnose calendar access, contact approval, availability and post-call booking states without confusing an accepted action with a confirmed appointment.",
+      "canonical": "https://docs.nixflex.com/guides/developer/bookings/troubleshooting",
+      "business": "guides/business/booking-results",
+      "lead": "Find whether a booking failed at connection, approval, availability or result handling before attempting another calendar action.",
+      "important": [
+        "Confirm the spoken name and full email separately before creating a booking.",
+        "A call summary is not proof that the calendar mutation succeeded.",
+        "processing, deleted and unavailable are different from confirmed no bookings."
+      ],
+      "facts": [
+        [
+          "Connection",
+          "One booking provider"
+        ],
+        [
+          "Evidence",
+          "Confirmed action result"
+        ],
+        [
+          "Recovery",
+          "Read before repeating"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    },
+    {
+      "slug": "sdks/mcp",
+      "tab": "SDKs & CLI",
+      "source": "spec-source/c14-pages/sdks--mcp.mdx.txt",
+      "existing": false,
+      "title": "Build approved workflows with MCP tools",
+      "sidebarTitle": "MCP developer workflow",
+      "description": "Use the reviewed MCP tool inventory, prepare outbound calls without sending and reconcile saved request and booking states while keeping credentials private.",
+      "canonical": "https://docs.nixflex.com/sdks/mcp",
+      "business": "guides/business/integrations",
+      "lead": "Build an AI-assisted workflow from approved MCP tools, keeping local preparation, external actions and read-only recovery distinct.",
+      "important": [
+        "The exact reviewed 0.5.0 candidate has 96 tools; older candidates can share its version number.",
+        "safe_retry:true without request_id prepares a UUID and sends nothing.",
+        "Tool output is visible to the connected assistant, so disclose only data appropriate for that client."
+      ],
+      "facts": [
+        [
+          "Runtime",
+          "Node 22+ server"
+        ],
+        [
+          "Inventory",
+          "96 reviewed tools"
+        ],
+        [
+          "Call recovery",
+          "Saved UUID, read-only lookup"
+        ]
+      ],
+      "review": "written_and_reviewed",
+      "legacyAnchors": []
+    }
+  ],
+  "newPages": [
+    "guides/developer/knowledge/ingest-sources",
+    "guides/developer/knowledge/review-and-publish",
+    "guides/developer/knowledge/test-and-troubleshoot",
+    "guides/developer/knowledge/refresh-and-export",
+    "guides/developer/knowledge/keyterms",
+    "guides/developer/webhooks/event-types",
+    "guides/developer/webhooks/delivery-and-recovery",
+    "guides/developer/team/invitations-and-roles",
+    "guides/developer/team/ownership-and-closure",
+    "guides/developer/campaigns/prepare-and-launch",
+    "guides/developer/campaigns/results-and-controls",
+    "guides/developer/sms-campaigns/prepare-and-send",
+    "guides/developer/sms-campaigns/delivery-and-controls",
+    "guides/developer/phone-numbers/import-and-connect",
+    "guides/developer/phone-numbers/credentials-and-removal",
+    "guides/developer/phone-numbers/routing-and-overrides",
+    "guides/developer/call-requests",
+    "guides/developer/website/install-and-verify",
+    "guides/developer/website/troubleshooting",
+    "guides/developer/bookings/google-calendar-settings",
+    "guides/developer/bookings/troubleshooting",
+    "sdks/mcp"
+  ],
+  "pendingDeletionPages": [
+    "api-reference/calls/delete",
+    "api-reference/calls/delete-all",
+    "api-reference/sms/campaigns-delete",
+    "guides/developer/errors",
+    "guides/developer/campaigns",
+    "sms/sms-campaigns",
+    "concepts/data-retention",
+    "guides/developer/call-history",
+    "guides/developer/campaigns/results-and-controls",
+    "guides/developer/sms-campaigns/delivery-and-controls",
+    "cli/commands",
+    "sdks/mcp",
+    "advanced/call-recording"
+  ],
+  "notes": "C14 source copies are authoritative for all Developer and SDK pages; existing locked tests and validators remain unchanged.",
+  "kitSources": {
+    "node": {
+      "head": "53a473ec10a1fa6482ea9853289dacee5c5cd3b9",
+      "version": "0.11.0"
+    },
+    "python": {
+      "head": "8ecb4d4848c289a704fde571c6b71ae14316cf86",
+      "version": "0.4.0"
+    },
+    "mcp": {
+      "head": "8f1a4be4b5848b2ff93de0eae53d935d23d827b2",
+      "version": "0.5.0",
+      "tools": 96
+    },
+    "published": false
+  }
+}

@@ -1,0 +1,114 @@
+---
+title: "Use a voice from your own provider account"
+description: "Read a Nixflex custom voice connection, test speaking behaviour and understand account scope, fallback and credential changes before using it on calls."
+canonical: "https://docs.nixflex.com/advanced/your-own-tts"
+sidebarTitle: "Your own voice"
+---
+
+Use a voice from your own provider account by connecting its authorised key and voice identifier through the supported account settings.
+
+<div className="nxf-facts">
+  <div><small>Voice</small><strong>Existing provider voice</strong></div>
+  <div><small>Credential</small><strong>Bring your own key</strong></div>
+  <div><small>Scope</small><strong>Account connection</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The voice already belongs to your provider account; supply its existing identifier.
+- Keep the provider key private and verify the connection before using it on calls.
+- A later failure can use a fallback path, so test actual speech and charges.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/your-own-voice) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Support scope
+
+The account service and storage interfaces shown here are existing compatibility interfaces, outside the supported public API inventory. They describe an existing integration dependency, not a new public API commitment. Use the signed-in dashboard for new setup; confirm support before building a new dependency on these routes or old client commands.
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use the supported dashboard flow for new connections. Use authorised connection details and keep all secrets out of examples.
+
+## 1. Read the safe configuration
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. These HTTP examples describe an existing compatibility interface; the reviewed SDK and CLI do not expose this account service. No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/account/tts" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/account/tts', {
+  method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
+```
+
+```python Python
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request(
+    'https://api.nixflex.com/v1/account/tts',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+    # Handle the private result without logging it.
+```
+
+</CodeGroup>
+
+## 2. Review the voice connection
+
+The custom voice setting is account-scoped and separate from selecting a voice in the standard catalog. Only supported authorised connection types can be saved; do not invent a generic provider enum or assume every endpoint is compatible.
+
+## 3. Save through the supported connection flow
+
+Use Settings → Your own voice to supply the supported connection credentials and voice identifier, then Test & save. This guide intentionally does not substitute a made-up value for the connection type expected by the write contract. Secrets remain private.
+
+## 4. Test actual speech
+
+Test names, numbers, language, speed and a normal conversation. A saved verification only proves the test request succeeded. Later failures can trigger fallback, and mixed routes can affect the resulting voice and price.
+
+## 5. Disconnect deliberately
+
+DELETE `/v1/account/tts` clears the custom connection for future work. Do not assume it deletes a voice or ends a separate external account. Recheck the next call and actual charges after the change.
+
+## Example response
+
+GET returns a safe saved-configuration projection without the full secret. Preserve its enabled and verification state; it is not a live service-health guarantee.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Verification fails | Correct the endpoint, permissions or credentials before saving. |
+| Runtime dependency fails | Read the call’s actual fallback or unavailable state. |
+| Secret changed externally | Update the saved connection and test again. |
+| Unknown save response | Read the current configuration before repeating it. |
+| Pricing or retention | Use current Billing and the policy for the actual path. |
+
+## Next steps
+
+- [Usage and capacity](/guides/developer/billing)
+- [Recording access](/advanced/call-recording)
+- [Privacy settings](/concepts/data-retention)

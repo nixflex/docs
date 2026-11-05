@@ -1,15 +1,40 @@
 ---
-title: "Call recording: configure capture and private playback"
+title: "Configure recording and private playback"
 description: "Configure Nixflex call recording, resolve agent and number overrides and request fresh playback access while preserving recording, retention and storage states."
 canonical: "https://docs.nixflex.com/advanced/call-recording"
+sidebarTitle: "Call recording"
 ---
-Enable recording only where it is intended, then display the actual capture and playback result.
+Configure the effective recording decision and use authenticated recording access to check whether audio is actually available.
 
-Using the dashboard? See [the business guide](/guides/business/privacy).
+<div className="nxf-facts">
+  <div><small>Decision</small><strong>Number then agent</strong></div>
+  <div><small>Playback</small><strong>Authorised access</strong></div>
+  <div><small>Capture</small><strong>Check actual state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A number’s explicit recording value overrides the agent, including false and true.
+- Changing settings affects new work and does not erase old audio.
+- An absent URL or pending recording is not proof that no copy exists.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Review the applicable customer notice and business policy for the call before recording.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Review the applicable customer notice and business policy for the call before recording.
 
 ## 1. Read recording access
 

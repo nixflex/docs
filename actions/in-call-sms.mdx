@@ -1,15 +1,36 @@
 ---
-title: "In-call SMS: control texts sent during Nixflex phone calls"
+title: "Configure SMS during a phone call"
 description: "Configure the Nixflex in-call text switch, request permitted messages and handle booking confirmations without confusing this setting with other SMS workflows."
 canonical: "https://docs.nixflex.com/actions/in-call-sms"
+sidebarTitle: "In-call SMS"
 ---
-Allow or prevent texts requested during a telephone call, including supported booking-confirmation texts.
+Allow the phone agent to send a useful text during a conversation only when the in-call SMS switch and recipient checks permit it.
 
-Using the dashboard? See [the business guide](/guides/business/call-actions).
+<div className="nxf-facts">
+  <div><small>Channel</small><strong>Telephone calls</strong></div>
+  <div><small>Gate</small><strong>incall_sms_enabled</strong></div>
+  <div><small>Result</small><strong>Check send outcome</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Prompt wording does not bypass a disabled SMS action.
+- In-call texts, post-call texts and SMS replies use separate controls.
+- A send acceptance must not be presented as confirmed handset delivery.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Replace `agent_example` with an owned agent. This update changes future agent behaviour.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Replace `agent_example` with an owned agent. This update changes future agent behaviour.
 
 ## 1. Read the current settings
 
@@ -36,8 +57,8 @@ const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', 
   body: JSON.stringify({"incall_sms_enabled":true}),
 });
 const result = await response.json();
-if (!response.ok) throw new Error(JSON.stringify(result));
-console.log(result);
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
 ```
 
 ```python Python
@@ -51,7 +72,8 @@ request = Request(
     data='{"incall_sms_enabled":true}'.encode('utf-8'),
 )
 with urlopen(request, timeout=30) as response:
-    print(json.load(response))
+    result = json.load(response)
+    # Handle the private result without logging it.
 ```
 
 ```powershell CLI (PowerShell)

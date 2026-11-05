@@ -1,0 +1,65 @@
+---
+title: "Read SMS campaign delivery and controls"
+sidebarTitle: "SMS delivery and controls"
+description: "Track SMS sent, delivered, failed and reply counts separately, cancel unsent work and reconcile uncertain sends without creating duplicate campaigns."
+canonical: "https://docs.nixflex.com/guides/developer/sms-campaigns/delivery-and-controls"
+---
+Track the existing SMS campaign’s delivery and reply evidence, then control only the work that remains eligible to send.
+
+<div className="nxf-facts">
+  <div><small>Track</small><strong>Saved campaign ID</strong></div>
+  <div><small>Delivery</small><strong>Separate evidence</strong></div>
+  <div><small>Controls</small><strong>Existing unsent work</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Sent, delivered, failed and reply counts describe different outcomes.
+- Cancel stops future dispatch and cannot recall a message already sent.
+- Deletion guidance is pending the final B57 contract; do not infer it from cancellation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
+
+## Read the current campaign
+
+Use [campaign detail](/api-reference/sms/campaigns-get) with the saved ID. Preserve `sent_count`, `delivered_count`, `failed_count` and `reply_count` as distinct fields. Do not derive one by subtracting unrelated totals or treat message acceptance as delivery.
+
+Replies can arrive after the original send. Campaign reply association depends on its configured window and context; actual auto-reply still depends on the number’s SMS settings. Inspect the related [inbox](/guides/developer/agent-inbox) when your workflow needs the conversation.
+
+## Resolve contact holds
+
+Missing consent, contact hours, suppression and uncertain transport outcomes require different decisions. Record genuine consent using the documented consent action, honour recipient-local policy and keep unknown sends visible. A new campaign is not a way to reconcile the original send.
+
+## Cancel, resume or edit
+
+Use [cancel](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel) to stop future dispatch and [resume](/api-reference/sms-campaigns/post-sms-campaigns-id-resume) only when the current state and contact checks allow it. Read back the campaign after a confirmed result. After a lost response, reconcile that same campaign before another write.
+
+The [update route](/api-reference/sms-campaigns/patch-sms-campaigns-id) permits only documented fields and states. It is not a way to alter an already accepted message at its destination.
+
+## Keep deletion separate
+
+The reviewed deletion endpoint is [DELETE SMS campaign](/api-reference/sms/campaigns-delete). Its next-release semantics are explicitly pending B57 review. Do not use the older settlement refusal as the final new-release rule, and do not invent an immediate-delete response. Cancellation and deletion are separate actions, and neither recalls a sent text.
+
+| Observation | What to show or do |
+| --- | --- |
+| Sent but delivery not confirmed | Retain the actual delivery state; do not mark it delivered. |
+| Reply arrives later | Associate it using the current campaign and conversation rules. |
+| Unknown send outcome | Reconcile the existing recipient; do not automatically resend. |
+| Control response lost | Read the campaign before repeating the control. |
+| Delete result unconfirmed | Keep a pending result until the final supported contract confirms the outcome. |
+
+- [Prepare an SMS campaign](/guides/developer/sms-campaigns/prepare-and-send)
+- [Read the campaign response schema](/api-reference/sms/campaigns-get)
+- [Work with SMS conversations](/guides/developer/agent-inbox)

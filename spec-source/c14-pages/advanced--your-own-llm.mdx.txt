@@ -1,0 +1,114 @@
+---
+title: "Connect a compatible model account"
+description: "Configure a compatible model connection for Nixflex, keep credentials private and understand verification, fallback and the boundaries of account-wide settings."
+canonical: "https://docs.nixflex.com/advanced/your-own-llm"
+sidebarTitle: "Your own model"
+---
+
+Connect an authorised compatible model account and test its actual conversation behaviour before using it with customers.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Account connection</strong></div>
+  <div><small>Credential</small><strong>Private provider key</strong></div>
+  <div><small>Verification</small><strong>Probe and conversation</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the supported connection flow and keep the provider credential private.
+- Saving a connection does not prove every later request will succeed.
+- Account connection settings and the legacy agent llm_model field are different.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/your-own-model) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Support scope
+
+The account service and storage interfaces shown here are existing compatibility interfaces, outside the supported public API inventory. They describe an existing integration dependency, not a new public API commitment. Use the signed-in dashboard for new setup; confirm support before building a new dependency on these routes or old client commands.
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use the supported dashboard flow for new connections. Use authorised connection details and keep all secrets out of examples.
+
+## 1. Read the safe configuration
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. These HTTP examples describe an existing compatibility interface; the reviewed SDK and CLI do not expose this account service. No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/account/llm" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/account/llm', {
+  method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
+```
+
+```python Python
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request(
+    'https://api.nixflex.com/v1/account/llm',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+    # Handle the private result without logging it.
+```
+
+</CodeGroup>
+
+## 2. Review compatibility
+
+The connection expects a compatible streaming chat-completions protocol and tool calling. Use a public HTTPS endpoint and model identifier from your authorised connection. The saved connection is account-scoped; do not promise it independently replaces every internal task or channel.
+
+## 3. Save and verify
+
+PUT `/v1/account/llm` with `endpoint`, `model` and write-only `api_key`. A completion/tool probe checks the connection before saving. Use your own approved endpoint, such as `https://model.example.com/v1`, with real credentials stored privately. Probe success does not guarantee future availability.
+
+## 4. Test calls and fallback
+
+Test short replies, a tool action and a slow/unavailable endpoint. Runtime fallback can change which processing path served the call. Do not promise uninterrupted audio, fixed savings or zero additional charges from a successful configuration test.
+
+## 5. Disconnect deliberately
+
+DELETE `/v1/account/llm` clears the connection for future work. Inspect actual call and billing outcomes; third-party model charges and Nixflex charges are separate.
+
+## Example response
+
+GET returns a safe saved-configuration projection without the full secret. Preserve its enabled and verification state; it is not a live service-health guarantee.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Verification fails | Correct the endpoint, permissions or credentials before saving. |
+| Runtime dependency fails | Read the call’s actual fallback or unavailable state. |
+| Secret changed externally | Update the saved connection and test again. |
+| Unknown save response | Read the current configuration before repeating it. |
+| Pricing or retention | Use current Billing and the policy for the actual path. |
+
+## Next steps
+
+- [Usage and capacity](/guides/developer/billing)
+- [Recording access](/advanced/call-recording)
+- [Privacy settings](/concepts/data-retention)

@@ -1,9 +1,32 @@
 ---
-title: "Agent instructions: write clear tasks and useful fallbacks"
+title: "Write clear agent instructions"
 description: "Write Nixflex agent instructions with a clear purpose, essential facts and action rules, then test ordinary questions, missing facts and failed actions."
 canonical: "https://docs.nixflex.com/best-practices/prompting-guide"
+sidebarTitle: "Agent instructions"
 ---
-Good instructions describe one useful job in plain language. They do not need repeated demands or a long list of claims that every request will succeed.
+Write instructions that state the task, essential facts and action boundaries, then test both normal and uncertain conversations.
+
+<div className="nxf-facts">
+  <div><small>Prompt</small><strong>Purpose and rules</strong></div>
+  <div><small>Knowledge</small><strong>Longer facts</strong></div>
+  <div><small>Testing</small><strong>Success and uncertainty</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use one question at a time and confirm consequential names, dates and contact details.
+- Put longer business facts in knowledge instead of repeating them in every prompt.
+- Instructions do not bypass disabled actions or grant permissions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 Using the dashboard? Start with [set up your business agent](/business). Developers can save the same intended behaviour through the [agent contract](/api-reference/agents/contract).
 
@@ -27,7 +50,9 @@ Help the caller understand a service and request an appointment.
 Ask which service they want, then their preferred date and time.
 Use approved knowledge for service details. Do not invent prices.
 Check the connected calendar before offering a specific slot.
-Read back the service, date, time and time zone when confirmation is required.
+Ask for the customer’s name, read it back and wait for approval.
+Ask for the email address, read it back and wait for separate approval.
+Read back the service, date, time and time zone when final action confirmation is required.
 Say the appointment is booked only after the calendar confirms success.
 If an answer is missing, explain that and offer the business's follow-up option.
 Ask one question at a time and keep replies short.

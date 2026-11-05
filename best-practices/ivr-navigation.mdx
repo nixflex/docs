@@ -1,9 +1,32 @@
 ---
-title: "Phone menu instructions: test a route to the right person"
+title: "Write reliable phone-menu instructions"
 description: "Write Nixflex phone-menu instructions for an approved destination, allow bounded waiting and handle changed options or unanswered calls without looping."
 canonical: "https://docs.nixflex.com/best-practices/ivr-navigation"
+sidebarTitle: "Phone-menu instructions"
 ---
-A useful phone-menu instruction names the person or department needed and gives a bounded fallback. It does not assume that every menu will keep the same options or recognise every spoken request.
+Describe the intended department and exit conditions so an outbound agent can navigate and test a real phone menu.
+
+<div className="nxf-facts">
+  <div><small>Target</small><strong>Specific department</strong></div>
+  <div><small>Wait</small><strong>Bounded</strong></div>
+  <div><small>Success</small><strong>Human reached</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Test the current menu rather than relying on an old digit sequence.
+- Keep menu waiting bounded and explain what to do when the route fails.
+- An answered menu is not a completed human handoff.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Describe the destination, not just a digit
 
@@ -30,6 +53,5 @@ Use an approved destination and test the real route. Include a changed option, a
 
 Avoid repeated automatic attempts when the route fails. A timed-out client can leave the original call active, and another call could duplicate work. Save the original call identity and reconcile its state before trying again.
 
-Using the dashboard? See [call actions](/guides/business/call-actions). Developers can use the [outbound call workflow](/guides/lead-qualification) and [client safety rules](/api-reference/calls/client-safety).
 
 Record the intended destination, the test date and the outcome in your own rollout notes. Recheck the route when the destination changes its greeting or menu. Keep an alternative human process for cases the agent cannot complete.

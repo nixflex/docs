@@ -1,0 +1,73 @@
+---
+title: "Move a number and manage its overrides"
+sidebarTitle: "Routing and overrides"
+description: "Move an owned number with an agent-only PATCH, understand inherited settings and read back focused changes without re-importing the connection."
+canonical: "https://docs.nixflex.com/guides/developer/phone-numbers/routing-and-overrides"
+---
+
+Move an owned number to another agent or change its explicit overrides while preserving the number’s connection and history.
+
+<div className="nxf-facts">
+  <div><small>Move</small><strong>Agent-only PATCH</strong></div>
+  <div><small>Overrides</small><strong>Number-owned fields</strong></div>
+  <div><small>Verification</small><strong>Read back saved state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use an agent-only PATCH for a move within the same account.
+- Moving changes inherited agent behaviour and knowledge, while number-owned settings remain.
+- Null means inherit only on fields whose contract explicitly allows it.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read before changing
+
+Read [the number](/api-reference/phone-numbers/get) and the intended destination agent. URL-encode the number’s leading plus sign. Keep its read-only `source`, current assignment and explicit settings in your application record; origin labels do not transfer ownership.
+
+## Move within the account
+
+Send an agent-only [PATCH](/api-reference/phone-numbers/update) body after confirming that the destination agent is active and owned by the same account:
+
+```json
+{"agent_id":"agent_destination"}
+```
+
+The identifier is illustrative. Live calls, replies, campaigns or another number operation can produce `number_busy`. Wait for that work to settle and read again. Do not remove and re-import the number as a normal move.
+
+Number-owned settings, integrations and history remain. Inherited agent instructions, behaviour and knowledge change to the destination. Review those effective differences before the move, especially where the number has no explicit override.
+
+## Change one setting deliberately
+
+A focused body such as the following changes the SMS reply switch, not its instructions:
+
+```json
+{"sms_reply_enabled":true}
+```
+
+Only documented nullable fields accept null. For recording, an explicit number boolean overrides the agent and null inherits. Do not use null as a universal reset or send a full stale object copied from a previous read.
+
+Website voice requires both `web_agent_enabled` and `web_calls_enabled`. Website custom functions require `web_functions_enabled`, whose scope includes every enabled function on that number. Review those functions for public visitors before enabling them.
+
+## Confirm the effective result
+
+After a confirmed save, read the number again and inspect the relevant channel. After a lost response, read before repeating. A saved switch is not proof that a future call, SMS or visitor session has succeeded.
+
+| Result | Recovery |
+| --- | --- |
+| `number_busy` | Wait for current work and refresh the resource. |
+| Destination inaccessible | Verify its account and active state. |
+| Invalid null or field | Use the exact update schema; preserve unrelated fields. |
+| Unknown mutation outcome | Reconcile the current number before another write. |
+
+- [Understand agent inheritance](/concepts/agent-inheritance)
+- [Read the update contract](/api-reference/phone-numbers/update)
+- [Configure website settings](/web-assistant/overview)

@@ -1,0 +1,50 @@
+---
+title: "Understand phone number ownership and scope"
+description: "Understand how Nixflex phone numbers attach to agents, carry channel settings and move between agents without losing number-owned connections or history."
+canonical: "https://docs.nixflex.com/concepts/phone-numbers"
+sidebarTitle: "Phone number scope"
+---
+
+Treat a phone number as an owned connection with its own settings and one current attached agent.
+
+<div className="nxf-facts">
+  <div><small>Owner</small><strong>One account</strong></div>
+  <div><small>Assignment</small><strong>One current agent</strong></div>
+  <div><small>Overrides</small><strong>Field-specific</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Import origin is provenance, not a writable permission switch.
+- A move preserves number-owned data while changing inherited agent behaviour.
+- Removal from Nixflex does not imply external number rental has ended.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Number settings and agent behaviour
+
+The number has separate incoming-call, outgoing-call, SMS and website switches. Its integrations and saved overrides remain with it. The attached agent supplies inherited call behaviour and knowledge. An explicit number override can beat the agent default; null means inherit only for fields that document that meaning.
+
+## Import origin is descriptive
+
+`source` records whether a number was imported through the dashboard or API. It is assigned by the import route and cannot be changed into a permission by PATCH. Both origins remain owned by their account. Some dashboard lists deliberately show dashboard-managed numbers only.
+
+Post-call messages and voicemail have different origin-specific rules. [Setting inheritance](/concepts/agent-inheritance) explains those exceptions. Do not assume an agent switch enables every number.
+
+## Moving and removing
+
+Moving a number to an active agent in the same account preserves number-owned connections, history and overrides. It changes inherited behaviour and the knowledge available to the number. Busy work can block a move; wait for the current work to finish.
+
+Removing a number can involve external routing cleanup. A pending or uncertain response is not confirmed removal, and removing the Nixflex connection is not a promise that external rental has ended. Re-importing is not the normal way to move between agents.
+
+- [Manage numbers in the dashboard](/guides/business/phone-numbers)
+- [Manage numbers with code](/guides/developer/phone-numbers)
+- [Connect a number](/integrations/number-connection)

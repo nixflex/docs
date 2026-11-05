@@ -1,20 +1,77 @@
 ---
-title: "Prevent duplicate API work"
-description: "Use Nixflex knowledge idempotency keys and resource revisions correctly. Reconcile other writes instead of assuming every endpoint supports replay."
+title: "Prevent duplicate work in code"
+sidebarTitle: "Prevent duplicates"
+description: "Save outbound call UUIDs and Knowledge operation keys correctly, keep their account and environment binding, and reconcile other uncertain writes."
 canonical: "https://docs.nixflex.com/guides/developer/idempotency"
 ---
-Record the intended operation in your application before sending it. Store its request, returned ID and observed result privately. After a timeout, use that record to decide what to read or repeat.
+Persist each intended operation before sending it and use the identity mechanism supported by that specific endpoint.
+
+<div className="nxf-facts">
+  <div><small>Calls</small><strong>Saved request_id</strong></div>
+  <div><small>Knowledge</small><strong>Idempotency-Key</strong></div>
+  <div><small>Other writes</small><strong>Read and reconcile</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A call request UUID is not the same as a Knowledge Idempotency-Key header.
+- Keep the original account, API base URL, identity and exact input while reconciling.
+- A new identity represents a new action and can create duplicate work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Save the operation before sending
+
+Store the intended effect, the owning account/environment association, the exact request and its identity in private durable storage. Do not include the API secret in that operation record. Record the returned resource ID and outcome separately.
+
+| Operation | Identity | Recovery after a lost reply |
+| --- | --- | --- |
+| Single outbound call with UUID | JSON `request_id` saved before first send | Read that request in the same account and API environment. |
+| Documented Knowledge write | Required `Idempotency-Key` header | Keep the same key and identical input; reconcile its resource/job using the endpoint's rules. |
+| Other mutation | No universal replay guarantee | Read current state or use the documented operator recovery path. |
+
+## Reconcile an outbound UUID
+
+A first call acceptance returns 201. Reusing an already accepted UUID with matching input can return 200 with `replayed:true` and the existing call ID. Pending, unknown or conflicting requests are refused; they do not authorise another call under a replacement UUID.
+
+Use [GET request state](/api-reference/calls/get-outbound-request) and retain `pending`, `accepted`, `rejected` and `unknown` as different results. A 404 or failed read is not permission to redial. An accepted call ID remains important even if the launch reply includes `request_status:unconfirmed` and `safe_to_retry:false`.
+
+The same UUID in another account or environment is a separate scope. See the complete [saved-call workflow](/guides/developer/call-requests), including durable preparation and process restarts.
 
 ## Knowledge operations
 
-Knowledge writes that require `Idempotency-Key` document it in their request fields. Use 8–128 letters, digits, dots, underscores, colons or hyphens; `prompt:` is reserved. Keep the same key and identical request when retrying the same intended operation. Use a new key for a new action. A revision conflict needs a fresh read and a deliberate new decision, not a loop that overwrites newer work.
+Use 8–128 letters, digits, dots, underscores, colons or hyphens for the required header. The `prompt:` prefix is reserved. A new import, an edit and draft acceptance are separate intended operations, each with its own saved key.
 
-Sources, preparation jobs, reviewed drafts and publication jobs are different steps. HTTP 202 means accepted work; poll the job and inspect its final state. An accepted source does not prove live knowledge has changed.
+A revision guard protects newer state; it is not the operation identity. On `stale_revision`, reread the correct base, source or draft and review the change before making a new decision. Never turn a conflict into a loop that overwrites newer work.
+
+HTTP 202 accepts a job. Poll the returned job ID and inspect its result. Preparation, review and publication remain separate stages. An accepted source is not proof live topics changed.
 
 ## Other operations
 
-Do not add a generic idempotency header and assume it protects calls, SMS or number updates. Disable automatic mutation retries unless the endpoint explicitly documents safe replay. A lost response can conceal success.
+Do not add a generic `Idempotency-Key` and assume it protects SMS, campaigns, key rotation or number updates. Disable automatic mutation retries unless the exact operation documents a safe recovery action.
 
-For credential updates, only `credential_save_pending` instructs you to retry identical details to finish the local save. `carrier_outcome_unknown` requires investigation. For Google Calendar consent, read status after an uncertain result before starting a fresh flow.
+For number credentials, only `credential_save_pending` permits deliberate identical-input completion of the local save. `carrier_outcome_unknown` requires reconciliation. For calendar consent, read the connection state before starting another flow after an uncertain reply.
 
-See [idempotency rules](/api-reference/idempotency), [knowledge workflow](/guides/developer/knowledge) and [error handling](/guides/developer/errors).
+## Handle conflicting evidence
+
+| Evidence | What to do |
+| --- | --- |
+| Known accepted call ID | Retain it and inspect that call; never replace it with a new launch. |
+| Unknown launch outcome | Keep the original UUID and show an unresolved state. |
+| Knowledge key reused with changed input | Preserve the old operation; decide whether a separate new action is intended. |
+| Fresh resource revision | Review the change before writing against it. |
+| Empty history page | Do not treat absence from that page as proof nothing happened. |
+
+## Next steps
+
+- [Prepare and reconcile a call](/guides/developer/call-requests)
+- [Review and publish Knowledge](/guides/developer/knowledge/review-and-publish)
+- [Handle errors in code](/guides/developer/errors)

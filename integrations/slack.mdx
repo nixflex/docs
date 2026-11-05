@@ -1,15 +1,36 @@
 ---
-title: "Slack notifications: connect Nixflex call outcomes safely"
+title: "Send call results to Slack"
 description: "Configure Nixflex Slack notifications for the intended number, protect the destination and distinguish a saved connection from successful notification delivery."
 canonical: "https://docs.nixflex.com/integrations/slack"
+sidebarTitle: "Slack notifications"
 ---
-Connect the intended number to a business destination and verify the result end to end.
+Connect an owned number’s Slack notification settings and test the result with approved call data.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Data</small><strong>Call results</strong></div>
+  <div><small>Verification</small><strong>Test destination</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep connection credentials and private workspace data on the server.
+- A saved connection is not proof that every future notification will arrive.
+- Reconcile an uncertain update before changing the same connection again.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an authorised test destination with fictional business data.
 
 ## 1. Read the saved connection
 
@@ -43,7 +64,10 @@ nixflex integrations get slack '+12025550123' --json --base-url "https://api.nix
 
 ## 2. Save the intended destination
 
-Use the Slack integration PUT route with the documented configuration and an authorised destination. Keep the destination credential private. Use the current connection UI or workspace administration flow to obtain it.
+
+Use the [Slack PUT route](/api-reference/integration-settings/put-integrations-slack-number-phoneNumber) with `webhook_url` from the authorised workspace. It must use HTTPS with the exact host `hooks.slack.com`. Treat the URL as a credential and keep it out of logs, prompts and shared screenshots.
+
+`is_active` defaults to true; send the JSON boolean false to disable it. Optional `agent_id` is a fallback only when the number has no assigned agent. It does not move the number or override its existing assignment.
 
 ## 3. Define what success means
 

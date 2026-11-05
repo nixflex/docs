@@ -1,0 +1,153 @@
+---
+title: "Use the Node SDK in a server application"
+sidebarTitle: "Node SDK"
+description: "Install the reviewed Node SDK candidate, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries."
+canonical: "https://docs.nixflex.com/sdks/node"
+---
+
+Use the Node SDK for server-side reads and deliberate writes, with durable outbound request records for uncertain call outcomes.
+
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Node 18+</strong></div>
+  <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
+  <div><small>Write retries</small><strong>Disabled by the client</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the complete account credential on the server and supply the intended base URL.
+- Install the exact reviewed 0.11.0 candidate; the version alone is not its identity.
+- Prepare and save a call locally before a separately approved send.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed package
+
+Compare the supplied archive with the [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your application:
+
+```bash
+npm install ./nixflex-0.11.0.tgz
+```
+
+This is a local candidate installation, not a promise that a registry install resolves to the reviewed code. The SDK uses native fetch and has no runtime dependencies. The CLI ships in the same package.
+
+## Make one safe read
+
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately for the intended account and environment. The base URL is the origin without `/v1`; the client adds that prefix. Save this as an ES module, for example `read-usage.mjs`:
+
+```javascript
+import Nixflex, { NixflexError } from 'nixflex';
+
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+if (!apiKey || !baseUrl) throw new Error('Configure the account and API host privately.');
+const client = new Nixflex({apiKey, baseUrl, timeoutMs: 30_000, maxRetries: 0});
+
+try {
+  const usage = await client.usage.get();
+  if (!usage || typeof usage !== 'object') throw new Error('Unexpected usage response.');
+  console.log('Usage read succeeded.');
+} catch (error) {
+  if (error instanceof NixflexError) {
+    console.error({status: error.status, code: error.code, requestId: error.requestId});
+    process.exitCode = 1;
+  } else {
+    throw error;
+  }
+}
+```
+
+Keep the returned usage object private. Avoid logging complete error objects because details or upstream messages can contain request data.
+
+## Prepare a call without sending it
+
+The following local script reads a private `intent.json` containing the reviewed call fields. It generates the UUID and saves an exclusive file; it sends no request. Store the file in an application-owned private directory and retain its account/environment binding.
+
+```javascript
+import { readFileSync, writeFileSync } from 'node:fs';
+import { prepareOutboundCall } from 'nixflex';
+
+const intent = JSON.parse(readFileSync('intent.json', 'utf8'));
+const prepared = prepareOutboundCall(intent);
+writeFileSync('prepared-call.json', JSON.stringify(prepared, null, 2) + '\n', {
+  encoding: 'utf8', flag: 'wx', mode: 0o600,
+});
+console.log('Prepared locally; no call sent.');
+```
+
+Use the [outbound workflow](/guides/developer/call-requests) for the complete input shape. POSIX file mode does not establish Windows ACL protection; apply your platform’s private-directory permissions. Never run preparation again as a retry.
+
+## Send the saved intention once
+
+This separate script places a paid call. Run it only after approval of the saved recipient, sender and purpose. Do not wrap it in an automatic retry loop.
+
+```javascript
+import Nixflex, { NixflexError } from 'nixflex';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+if (!apiKey || !baseUrl) throw new Error('Configure the original account and API host.');
+const saved = JSON.parse(readFileSync('prepared-call.json', 'utf8'));
+const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
+try {
+  const receipt = await client.calls.create(saved);
+  writeFileSync('call-receipt.json', JSON.stringify(receipt, null, 2) + '\n', {
+    encoding: 'utf8', flag: 'wx', mode: 0o600,
+  });
+  console.log('Receipt saved; inspect the call separately.');
+} catch (error) {
+  if (error instanceof NixflexError) {
+    console.error({status: error.status, code: error.code, requestId: saved.request_id});
+    process.exitCode = 1;
+  } else {
+    throw error;
+  }
+}
+```
+
+A local receipt-write failure can occur after a call was accepted. Reconcile the saved UUID rather than running the send again. Typed calls with `request_id` return `OutboundRequestReceipt`, where to/from are optional; no-ID calls retain the older response type.
+
+## Reconcile with reads
+
+Read `client.calls.outboundRequest(saved.request_id)` separately. For `accepted`, retain `call_id` and use `calls.read(call_id)` for current detail and `calls.bookings(call_id)` for booking evidence. `pending` and `unknown` require reconciliation, never a replacement UUID. A 404 is not permission to redial.
+
+Booking states are `ready`, `none`, `processing`, `deleted` and `unavailable`. Only ready carries the result. Count active rows in `result.final`; do not count every action in `timeline` or turn unavailable into an empty list.
+
+## Choose the resource and paging method
+
+| Task | Method |
+| --- | --- |
+| Agent reads | `client.agents.list()` and `client.agents.get(id)` |
+| Filtered call history | `client.calls.history({agent: id, limit: 50})` |
+| Private playback access | `client.calls.recording(callId)`; honour returned expiry. |
+| Owned number settings | `client.phoneNumbers.get(number)` and focused `update`. |
+| Knowledge | `client.knowledge`; use saved idempotency keys and revisions. |
+| Calendar and integrations | `client.integrations`; use exact documented methods and private inputs. |
+
+`calls.iter(100)` takes a numeric page size from 1 to 200, not a query object. It uses offset pages and is not a frozen snapshot. For filtered reads use `calls.history`; legacy `calls.list` does not accept an agent filter. See [pagination](/guides/developer/pagination).
+
+## Handle errors and webhooks
+
+The default timeout is 30 seconds. `maxRetries` defaults to one eligible GET retry, with a supported range of 0–3; writes are never automatically retried. `NixflexOutcomeUnknownError` means a mutation may already have happened. The outbound request family also exposes `NixflexOutboundRequestError` and its pending, unknown, conflict and unavailable variants.
+
+| Failure | Recovery |
+| --- | --- |
+| Authentication or permission refusal | Correct the account/environment or authorised role. |
+| Read rate limit | Honour retry guidance with a bound. |
+| Unknown write | Read saved state before another deliberate operation. |
+| SMS `do_not_contact` | Stop; do not resend around the refusal. |
+
+For webhooks, use the strict raw-byte verifier and durable receiver in the [webhook guide](/advanced/webhooks). Provision the separate organisation signing secret where organisations are enabled; the full API authentication string is not the signing secret.
+
+- [Read the Python equivalent](/sdks/python)
+- [Prepare calls with the CLI](/cli/quickstart)
+- [Read the exact HTTP contract](/api-reference/introduction)

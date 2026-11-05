@@ -1,162 +1,56 @@
 ---
-title: "Knowledge base: manage agent facts with the Nixflex API"
-description: "Build an agent knowledge workflow with sources, jobs, reviewed drafts and publication. Handle revisions, test sessions, errors, exports and safe polling."
+title: "Build an agent knowledge workflow"
+sidebarTitle: "Knowledge workflow"
+description: "Choose the right knowledge task: ingest sources, review facts, test answers, maintain exports or manage agent keyterms."
 canonical: "https://docs.nixflex.com/guides/developer/knowledge"
 ---
-Build a review-first workflow: **agent base → source → preparation job → draft → accept → publication job → live topics**. Knowledge belongs to the agent, and all its attached numbers use that base when the channel is enabled.
+Build an agent knowledge workflow from source preparation through reviewed publication and tested answers.
 
-Using the dashboard? See [teach your agent about your business](/guides/business/knowledge).
+<div className="nxf-facts">
+  <div><small>Owner</small><strong>One agent</strong></div>
+  <div><small>Publication</small><strong>Reviewed job result</strong></div>
+  <div><small>Recovery</small><strong>Saved operation and revision</strong></div>
+</div>
 
-## Prerequisites
+<div className="nxf-important">
 
-- An account API credential in `NIXFLEX_API_KEY` and an owned active agent ID in `NXF_AGENT_ID`.
-- Knowledge enabled for the account. API-managed and mixed-origin agents can be hidden from dashboard knowledge screens while remaining accessible to the owning API key.
-- A durable operation record in your application. Knowledge writes require an `Idempotency-Key`: 8–128 letters, digits, dots, underscores, colons or hyphens. The `prompt:` prefix is reserved. Use one key per intended operation and retain it across an uncertain response.
+**The important part**
 
-The examples use the production API address. Choose the intended environment and its matching credential before running anything. Node/CLI 0.11.0 and Python 0.4.0 knowledge methods are release candidates; use cURL until the corresponding kit release is available. No example here is a promise that an unpublished package is installed.
+- Each agent owns one base shared by its attached numbers.
+- Request review explicitly; accepted preparation is not confirmed publication.
+- Keep base, source, draft, topic and job IDs distinct.
 
-## 1. Read capabilities and create the agent base
+</div>
 
-Read [capabilities](/api-reference/knowledge/get-knowledge-capabilities) and `GET /v1/agents/{agent_id}/knowledge-base`. The scope reply contains `own` and `effective`; they can be null before creation. Create the singleton with `PUT` at the same path, a new idempotency key and this body:
+<div className="nxf-audience">
 
-```json
-{"settings":{"channels":["inbound"],"match":"Strict","not_found":"I don't have that information right now."}}
-```
+[Business guide](/guides/business/knowledge) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
 
-Save `own.id` as `NXF_KNOWLEDGE_BASE_ID` and its integer `rev`. An update to an existing base needs its current `expected_revision`. The settings channels are `inbound`, `outbound`, `web_voice`, `web_chat` and `sms`; only inbound starts enabled. Campaigns use outbound, with no separate campaign switch. `not_found` must be nonblank and at most 500 characters.
+</div>
 
-[Create or update an agent base](/api-reference/knowledge/put-agents-target-knowledge-base) documents the scope envelope. Retired number-knowledge routes return 410; never create a number-level base. Old retained number-base rows are not automatically converted into live agent knowledge. Re-add the intended facts to the current agent and review them explicitly.
+## Choose the task
 
-## 2. Add a source with review enabled
+| Task | Guide | Done when |
+| --- | --- | --- |
+| Add text, files or website pages | [Add sources](/guides/developer/knowledge/ingest-sources) | The preparation job has a known result. |
+| Approve facts for use | [Review and publish](/guides/developer/knowledge/review-and-publish) | The publication job and live topics confirm the change. |
+| Check answers and missing facts | [Test and troubleshoot](/guides/developer/knowledge/test-and-troubleshoot) | The answer and supplied evidence match the published facts. |
+| Refresh material or save a copy | [Refresh and export](/guides/developer/knowledge/refresh-and-export) | The requested revision is published or exported. |
+| Improve recognition of names | [Keyterms](/guides/developer/knowledge/keyterms) | The saved manual list and automatic hints are understood. |
 
-Set `NXF_IDEMPOTENCY_KEY` to a fresh operation key. The same text import is shown in all four tabs:
+## Understand the objects
 
-Use this body in each example. Save it as `request-112.json` for the CLI.
+A source is submitted material. A job prepares, publishes, exports or cleans up that material. A draft holds facts for review; live topics are the pieces available for answers. An accepted source is not automatically a live answer.
 
-```json
-{
-  "source": {
-    "type": "text",
-    "title": "Appointments",
-    "text": "Appointments are available Monday to Friday."
-  },
-  "review": true
-}
-```
+Use the agent’s current knowledge scope. Retired number-level knowledge routes return 410; old number rows are not automatically converted into live agent facts. Re-add intended content to the current agent and review it explicitly.
 
-<CodeGroup>
+## Keep each operation recoverable
 
-```bash cURL (Bash)
-curl --request POST \
-  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/sources" \
-  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
-  --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{"source":{"type":"text","title":"Appointments","text":"Appointments are available Monday to Friday."},"review":true}'
-```
+Knowledge writes require an `Idempotency-Key` of 8–128 letters, digits, dots, underscores, colons or hyphens; `prompt:` is reserved. Save the key before submitting, retain it across an uncertain response and use a new key only for a new intention.
 
-```javascript Node
-import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
-const result = await c.knowledge.addSource(process.env.NXF_KNOWLEDGE_BASE_ID, {"source":{"type":"text","title":"Appointments","text":"Appointments are available Monday to Friday."},"review":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
-// Keep knowledge and private results out of logs.
-```
+Read the current revision before an edit. A stale revision needs renewed review, not an automatic overwrite. Poll the returned job using bounded delays and the server’s retry guidance. HTTP 200 for a failed job still means the operation failed.
 
-```python Python
-import os
-from nixflex import Nixflex
-
-with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
-    result = c.knowledge.add_source(os.environ["NXF_KNOWLEDGE_BASE_ID"], {
-      "source": {
-        "type": "text",
-        "title": "Appointments",
-        "text": "Appointments are available Monday to Friday."
-      },
-      "review": True
-    }, idempotency_key=os.environ["NXF_IDEMPOTENCY_KEY"])
-    # Keep knowledge and private results out of logs.
-```
-
-```powershell CLI (PowerShell)
-# Save the JSON above privately as request-112.json.
-nixflex knowledge addSource "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-112.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
-```
-
-</CodeGroup>
-
-`review:true` is deliberate. The public API defaults to false, which can publish after preparation; dashboard imports always require review. Flags and review reminders can force a draft even when false was requested.
-
-For files, POST raw bytes to the same source endpoint with `Content-Type: application/octet-stream`, `X-Filename`, `X-Review: true` and the idempotency header. Do not send base64 or a local path. Supported contents are UTF-8 text, PDF with selectable text and DOCX. A preview via [source measure](/api-reference/knowledge/post-agents-target-knowledge-base-source-measure) counts privately without saving a source; it is not publication clearance.
-
-For websites, create a [discovery job](/api-reference/knowledge/post-knowledge-bases-kb-website-discoveries), read its `result.pages`, let the user choose IDs, then submit `discovery_id`, `page_ids` and `review:true` to [website imports](/api-reference/knowledge/post-knowledge-bases-kb-website-imports). A direct `source.type:url` or `qa` is refused.
-
-## 3. Poll the job and review its draft
-
-An import returns HTTP 202. Example response, with illustrative IDs:
-
-```json
-{"id":"11111111-1111-4111-8111-111111111111","kb":"22222222-2222-4222-8222-222222222222","kind":"import","state":"pending","stage":"pending","progress":{"percent":0},"result":null,"error":null}
-```
-
-Poll [GET job](/api-reference/knowledge/get-knowledge-jobs-id) using the returned `id`. Use a bounded delay, for example one second increasing to five seconds, and stop when the user leaves the screen. This is a client choice, not a required server interval. Honour `next_retry_at` and HTTP retry guidance. Resume later from the same job ID rather than submitting another import.
-
-| State | Client action |
-| --- | --- |
-| `pending`, `running` | Keep polling; show server `stage` and `progress.percent`. Progress measures completed stages, not time remaining. |
-| `needs_review` | Read `result.draft_id` and show the draft for review. |
-| `ready` | Inspect the job kind and result. An unchanged or duplicate-only import can be ready without publishing new topics. |
-| `failed` | Read the job’s safe `error`. HTTP 200 for a failed job is still a failed operation. |
-| `cancelled`, `deleted` | Stop polling and reconcile current state. |
-
-Read [the draft](/api-reference/knowledge/get-knowledge-bases-kb-drafts-id). Legacy normalization is projected without being saved, using stable draft-scoped piece IDs. An explicit save or accept persists the repair. Retain the returned `data.edit_revision`, not an earlier cached value. Show each topic’s `facts`, title and review reasons. Edit with `expected_revision`, `expected_draft_revision`, `topic_id` and `topic`; save before accepting.
-
-## 4. Accept selected topics and wait for publication
-
-POST to [accept draft](/api-reference/knowledge/post-knowledge-bases-kb-drafts-id-accept) with a new operation key. Use the current base revision, current draft edit revision and the explicit IDs the reviewer selected:
-
-```json
-{"expected_revision":1,"expected_draft_revision":0,"topic_ids":["33333333-3333-4333-8333-333333333333"]}
-```
-
-Those values are examples, not defaults to hard-code. If warnings exist, collect acknowledgement and send `acknowledge_warnings:true`. Individually approved flagged pieces go in `approved_flagged_topic_ids`; never populate that array automatically. An unticked replacement retains the existing live topic.
-
-Acceptance returns another job. Poll until its publication is confirmed, then reread the base and [live topics](/api-reference/knowledge/get-knowledge-bases-kb-topics). Lists use `items,next_cursor`, with limit 1–100. A stale topic cursor requires restarting the list. The old live answer is suppressed during a live-topic edit; a source import does not replace accepted facts merely because preparation started.
-
-## 5. Test, maintain and export
-
-Create a [test session](/api-reference/knowledge/post-agents-target-knowledge-base-test-sessions) for the agent with `{"mode":"knowledge","channel":"inbound"}` and a new key. POST `{"text":"When are appointments available?"}` with another key to [session messages](/api-reference/knowledge/post-knowledge-test-sessions-id-messages). Save the session ID and read the answer and supplied topic evidence. `selection:whole_base` means the small base was supplied whole, including for an unrelated question. Evidence is supplied context, not a claim that every topic influenced the answer.
-
-Test is knowledge-only: no full-agent mode, number context, call purpose, training or correction-note endpoints. It performs no call, booking or message action. Questions read current facts; the latest 100 messages are retained for context. A session needs live unsuppressed knowledge. Use a complete call test separately for agent behaviour.
-
-Refresh selected saved website sources explicitly. Topic deletion prevents a same-source refresh from resurrecting the piece; deleting the last topic also removes its source and retained original. A new explicit addition is a separate operation.
-
-Create an [export job](/api-reference/knowledge/post-knowledge-bases-kb-exports), poll it, then read `/v1/knowledge/exports/{id}`. Default JSON preserves developer metadata; `?format=text` returns `filename`, `content_type` and `text`. Exports last one hour and require an unchanged revision. Rebuild a stale export with bounded retries. Raw uploaded files are excluded. Whole-base deletion revokes access first and returns a cleanup job; track it to completion.
-
-## Read automatic and manual keyterms
-
-With knowledge enabled, agent list/detail reads include the read-only `knowledge_keyterms` array. Read `GET /v1/agents/{agent_id}/knowledge-keyterms` for the automatic and saved manual lists, counts and current limits:
-
-```json
-{
-  "knowledge_keyterms": ["Willow Studio"],
-  "knowledge_keyterms_count": 1,
-  "knowledge_keyterms_limit": 80,
-  "manual_keyterms": ["Willow"],
-  "manual_keyterms_count": 1,
-  "manual_keyterms_limit": 20
-}
-```
-
-This is an illustrative response; use the returned limits. Automatic candidates are ordered by importance and do not consume the manual allowance. Owner, Admin and Member logins can read owned-agent terms. The reviewed, unpublished MCP 0.5.0 candidate exposes this read as `get_agent_knowledge_keyterms` with `target` set to the agent ID.
-
-Automatic hints exclude web addresses, API paths and URL-like terms while retaining spoken names such as AC/DC and St. James. Existing hints refresh in the background; do not reimport just to refresh them. Manual keyword lists and limits are unchanged.
-
-The dashboard shows **From your knowledge** chips and **+N more** beneath the agent's Keyterms field. It filters automatic candidates against the current manual form, including unsaved changes; the API returns automatic candidates and saved manual terms separately. Do not infer the raw API array from the filtered chips.
-
-Write chosen manual terms through the existing agent `boosted_keywords` field, not `knowledge_keyterms`; attempts to write the read-only field are refused. Changed manual lists allow 20 terms, at most 50 characters per term, and a conservative 450-byte total allowance (trimmed, deduplicated UTF-8 terms plus four bytes each). Older unchanged lists can survive unrelated saves, so a saved count may exceed the current edit limit. Follow the returned validation message instead of truncating silently. Manual hints take priority over competing automatic hints; they do not guarantee recognition or pronunciation.
-
-## Errors and limits
+## Check access and limits
 
 | Status or condition | Meaning | Recovery |
 | --- | --- | --- |
@@ -185,13 +79,20 @@ Write chosen manual terms through the existing agent `boosted_keywords` field, n
 
 Read capabilities and usage instead of inferring entitlement from old training counters. Local file checks are not a comprehensive virus scan. When a scanner is configured but unavailable, PDF/DOCX jobs can wait at `safety_check` or `safety_waiting`; use the server retry time and expiry message.
 
-## Next steps
+## Continue
 
-- [Knowledge settings](/api-reference/knowledge/patch-knowledge-bases-kb-settings)
-- [Edit a live topic](/api-reference/knowledge/patch-knowledge-bases-kb-topics-id)
-- [Cancel or retry a job](/api-reference/knowledge/post-knowledge-jobs-id-cancel)
+- [Add the first source](/guides/developer/knowledge/ingest-sources)
+- [Read capabilities](/api-reference/knowledge/get-knowledge-capabilities)
 - [How knowledge reaches a call](/concepts/knowledge)
 
-## Sources, jobs and pieces
-
-A source is the submitted material. A job prepares or publishes it; poll the job until a terminal state and inspect its result. The public topic routes represent the reviewed knowledge pieces used for answers. Inspect the live topics after publication instead of treating an accepted source as live content. Keep source IDs, job IDs and topic IDs separate.
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="prerequisites"></span>
+<span id="1-read-capabilities-and-create-the-agent-base"></span>
+<span id="2-add-a-source-with-review-enabled"></span>
+<span id="3-poll-the-job-and-review-its-draft"></span>
+<span id="4-accept-selected-topics-and-wait-for-publication"></span>
+<span id="5-test-maintain-and-export"></span>
+<span id="read-automatic-and-manual-keyterms"></span>
+<span id="errors-and-limits"></span>
+<span id="next-steps"></span>
+<span id="sources-jobs-and-pieces"></span>

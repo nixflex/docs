@@ -1,15 +1,48 @@
 ---
-title: "SMS campaigns: build and track messages with the API"
+title: "Build an SMS campaign workflow"
 description: "Create Nixflex SMS campaigns with reviewed variables, consent and recipient-local hours, then track delivery, handle replies and reconcile uncertain sends."
 canonical: "https://docs.nixflex.com/sms/sms-campaigns"
+sidebarTitle: "SMS campaign workflow"
 ---
-Build a message campaign with explicit recipients and a complete template. Creating it can request immediate sending; scheduling is not a draft-only preview.
+Prepare an SMS campaign’s template, recipients and contact checks, then track acceptance, delivery and replies separately.
 
-Using the dashboard? See [the business guide](/guides/business/sms-campaigns).
+<div className="nxf-facts">
+  <div><small>Creation</small><strong>Can send immediately</strong></div>
+  <div><small>Variables</small><strong>Nested per recipient</strong></div>
+  <div><small>Results</small><strong>Separate counts</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Creating a campaign can send immediately or when scheduled.
+- SMS creation makes new work; it has no reuse_campaign_id replacement mode.
+- Keep uncertain sends visible and reconcile the saved campaign ID.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Prepare and send](/guides/developer/sms-campaigns/prepare-and-send) | Review templates, recipients and contact choices. |
+| [Delivery and controls](/guides/developer/sms-campaigns/delivery-and-controls) | Read separate outcomes and control unsent work. |
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
 
 ## 1. Inspect campaign state
 
@@ -66,7 +99,7 @@ Store `campaign_id` and read campaign state. Sent, delivered and failed counts a
 
 Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. DELETE has separate eligibility checks and does not recall messages. PATCH can edit only the fields and states allowed by the API.
 
-Keep a campaign visible until deletion is confirmed. Active work returns 409 `campaign_in_progress`; unfinished final send results or charges return 409 `campaign_settlement_pending` with `details.deleted:false`. Wait for settlement and reconcile current state before another deliberate deletion. A 503 `deletion_unavailable` leaves deletion unconfirmed. See the [deletion contract](/api-reference/sms/campaigns-delete).
+Keep a campaign visible until deletion is confirmed. The final B57 deletion contract is pending review; do not carry the older settlement-wait rule into the new release or invent a replacement response. See the marked [deletion contract](/api-reference/sms/campaigns-delete) before using this action.
 
 ## Example response
 

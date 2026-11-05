@@ -1,0 +1,91 @@
+---
+title: "Understand retention and saved copies"
+description: "Understand Nixflex call and message retention, new-agent defaults, delayed cleanup and customer storage before choosing how long your records are kept."
+canonical: "https://docs.nixflex.com/concepts/data-retention"
+sidebarTitle: "Data retention"
+---
+
+Set call and message retention while keeping policy eligibility, completed cleanup and customer-owned copies distinct.
+
+<div className="nxf-facts">
+  <div><small>Policies</small><strong>90 / 30 / 7 / 1 / 0</strong></div>
+  <div><small>Zero</small><strong>After-call eligibility</strong></div>
+  <div><small>Own copies</small><strong>Separate policy</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- New agents inherit the account default; existing agents keep their saved policy.
+- A saved policy or elapsed time does not prove cleanup completed.
+- Apply separate retention to your bucket, downloads and webhook storage.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/privacy) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Account default and agent setting
+
+Choose **90 / 30 / 7 / 1 day / Delete after each call**. The API represents the last
+option as `0`. New agents inherit the account default, with a 90-day fallback.
+Changing the account default does not rewrite existing agents. Duplicating an agent
+does not override this new-agent inheritance with the original agent's preference.
+
+`POST /v1/agents` rejects an explicit `call_retention_days` with
+`retention_inherited`. After creation, `PUT /v1/agents/:id` accepts the setting.
+GET/list expose it. `GET /v1/account/retention` returns the saved default,
+`applies_to: "new_agents"` and `processing_enabled`.
+
+## Eligibility is not proof of deletion
+
+The worker checks the applicable policy and waits for required settlement,
+post-call processing, recording writers and delivery decisions before erasing
+eligible content. A cleanup or storage failure remains pending; it is not reported
+as successful erasure. Worker configuration and deployed SQL must be ready.
+
+`0` does not delete a live call or suppress its post-call analysis. Required
+post-call data is prepared for the API/webhook workflow first. It does not promise
+indefinite delivery retries or that an unreachable recipient received the data.
+Do not rely on an expired call remaining available to an ordinary GET indefinitely.
+
+Website messages capture the applicable agent policy at insertion. Zero-day messages
+become eligible after the reply, on the next safe cleanup, without ending the chat.
+Saved visitor cards and telephone caller memory are separate from call/message
+retention. Disabling `remember_callers` does not erase either automatically.
+
+## Recordings and copies
+
+Automatic Nixflex retention cleanup handles tracked Nixflex storage, not the
+customer's own bucket. Apply your own retention policy to BYO storage, downloaded
+files, webhook receivers and other copies you control. Billing/finalization evidence
+is not the same thing as retained conversation content.
+
+For carrier recordings, collection/storage/cleanup may be pending or fail. Do not
+assume that every carrier copy was already deleted or that an absent URL proves
+there was never a recording. Independent carrier recording is outside a Nixflex toggle.
+
+## Manual actions are separate
+
+Switching recording off affects new work, not old audio. Number `true` still wins
+over agent `false`; see [recording](/advanced/call-recording).
+`DELETE /v1/agents/:id` switches the agent off; it does not erase its history.
+Call deletion and account erasure have their own safety checks and pending outcomes.
+A timeout or an HTTP request alone is not proof that all copies are gone.
+
+This page does not promise that all service/provider data stays in one region or
+certify regulatory compliance. Confirm your configured destinations, provider terms,
+consent and retention obligations for your deployment.
+
+See [privacy/action inheritance](/concepts/agent-inheritance) and
+[the agent contract](/api-reference/agents/contract).
+
+## Related guides
+
+- [Set up an agent](/business)
+- [Privacy settings](/guides/business/privacy)
+- [Manage number settings with code](/guides/developer/phone-numbers)

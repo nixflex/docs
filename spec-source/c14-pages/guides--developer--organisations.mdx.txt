@@ -1,0 +1,108 @@
+---
+title: "Build team administration in code"
+description: "Read Nixflex organisation context, manage team invitations and permitted roles, and separate shared-key authority from personal login and ownership actions."
+canonical: "https://docs.nixflex.com/guides/developer/organisations"
+sidebarTitle: "Team administration"
+---
+
+Build team administration from the current organisation context, role rules and invitation state.
+
+<div className="nxf-facts">
+  <div><small>Roles</small><strong>Owner / Admin / Member</strong></div>
+  <div><small>Invites</small><strong>24-hour links</strong></div>
+  <div><small>Personal actions</small><strong>Dashboard flow</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- People use personal logins; a shared API key has account authority.
+- Admins manage Members, while ownership and Admin changes require the Owner.
+- Ownership acceptance and account closure use the person’s dashboard flow.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Invitations and roles](/guides/developer/team/invitations-and-roles) | Manage permitted membership changes. |
+| [Ownership and closure](/guides/developer/team/ownership-and-closure) | Keep high-impact personal decisions in their authenticated flow. |
+
+## Prerequisites
+
+Use the owning organisation credential server-side. Personal dashboard sessions receive role checks. Do not put the shared key in a browser or distribute it as a substitute for an invitation.
+
+## 1. Read the current organisation
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/organisation" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.organisation.get();
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.organisation.get()
+```
+
+```powershell CLI (PowerShell)
+nixflex organisation get --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Apply the role policy
+
+Owner can manage all shared work, Admins, the key, ownership offers and closure. Admin can manage business work, Billing, Activity and Members. Member can read shared work and use eligible Listen/takeover, but cannot mutate shared work or see Nixflex amounts. Server checks apply beyond the UI.
+
+## 3. Invite or manage membership
+
+Use the documented invitation and membership routes. Admins manage Members only. Default limits are 50 seats including unexpired pending invitations and 20 new/resent invitations per UTC day. Links last 24 hours. Resend replaces the prior link; an uncertain email result is not confirmed delivery.
+
+## 4. Read Activity
+
+List Activity with the returned paging information and supported filters. The dashboard appends 50 rows and can export matching events within twelve months; the old 500-row CSV cap is obsolete. Unknown completion must remain unknown, and an accepted End request is not terminal call proof.
+
+## 5. Keep personal actions personal
+
+Invitation acceptance, Leave, ownership acceptance/transfer and organisation closure require the person’s authenticated dashboard flow. Only the Owner reveals the shared key in the dashboard. Signing-secret retrieval allows the organisation server key; among personal browser roles, only Owner can retrieve it. Removing a person does not rotate an externally shared key; committed human takeover may finish its one call.
+
+## Example response
+
+The organisation context response describes the account and current permissions. Keep identifiers opaque and use the [context schema](/api-reference/organisation/get-organisation). Do not derive authority from a role string supplied by a client.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Role or membership refusal | Refresh the personal session; do not substitute a shared key in the browser. |
+| Invitation limit or conflict | Inspect members and pending invites before sending again. |
+| `live_disconnect_pending` | Retain pending status until disconnection is confirmed. |
+| Unknown mutation response | Reconcile current membership/invitation before repeating. |
+| Signing-secret retrieval | Organisation server key or Owner personal flow; keep it out of client logs. |
+
+## Next steps
+
+- [Role matrix](/api-reference/organisation/roles)
+- [Invitations](/api-reference/organisation/post-organisation-invites)
+- [Activity](/api-reference/organisation/get-organisation-activity)

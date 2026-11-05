@@ -1,0 +1,76 @@
+---
+title: "Prepare and send an SMS campaign"
+sidebarTitle: "Prepare and send"
+description: "Build SMS campaign templates and recipient variables, review consent and hours, and create one campaign while preserving uncertain outcomes."
+canonical: "https://docs.nixflex.com/guides/developer/sms-campaigns/prepare-and-send"
+---
+Prepare a complete SMS template and recipient set, then create the campaign once with explicit contact choices.
+
+<div className="nxf-facts">
+  <div><small>Content</small><strong>Message template</strong></div>
+  <div><small>Recipients</small><strong>Nested variables</strong></div>
+  <div><small>Creation</small><strong>Can send messages</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Creating a campaign can send immediately or automatically when scheduled.
+- Every template placeholder needs a value in each recipient’s nested variables.
+- SMS creation always creates new work; reuse_campaign_id is not supported.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prepare the message and recipients
+
+Choose an active owned agent and explicit eligible sender. Put personalised values in each recipient’s `variables` object, and validate every placeholder in `message_template`. Keep recipient `phone`, known country and IANA time zone alongside those variables.
+
+Preview the recipient-local contact window and confirm permission to send. A campaign clock cannot replace an unknown recipient location. Choose duplicate handling deliberately: `warn` retains rows and does not block sending; `reject` refuses duplicate accepted numbers.
+
+## Decide how replies should work
+
+Set `reply_context_prompt` for instructions specific to replies associated with this campaign. The number also needs SMS auto-reply enabled and suitable SMS instructions. The reviewed default reply association window is 168 hours; this is association context, not a promise that a reply will arrive.
+
+## Review the complete request
+
+This illustrates the [create SMS campaign](/api-reference/sms/campaigns-create) body with fictional values. It is not a live test fixture. A scheduled campaign may send when due, and consent false is a contact hold rather than a general dry-run switch.
+
+```json
+{
+  "agent_id":"agent_example",
+  "from_number":"+12025550100",
+  "name":"Appointment follow-up",
+  "message_template":"Hello {{name}}, would you like to discuss an appointment?",
+  "recipients":[{"phone":"+12025550101","variables":{"name":"Sam"},"country":"US","timezone":"America/New_York"}],
+  "duplicate_policy":"reject",
+  "schedule_type":"schedule",
+  "scheduled_date":"2030-11-04",
+  "consent_confirmed":false
+}
+```
+
+Default `now` mode requests launch immediately; there is no public draft-only flag. `schedule` uses a calendar date and current recipient eligibility. Do not send `reuse_campaign_id`: it does not implement SMS campaign replacement.
+
+## Save once and inspect the result
+
+Disable automatic mutation retries. Save `campaign_id`, accepted and rejected rows, duplicate information and current state. Up to 100,000 accepted rows are supported, but request-size limits can be reached earlier.
+
+| Result | Recovery |
+| --- | --- |
+| Missing template value | Correct that recipient before creating again. |
+| Saved campaign with launch refusal | Read the returned ID and resolve the existing hold. |
+| `campaign_outcome_unknown` | Preserve the saved ID and reconcile; do not create another campaign. |
+| Timeout or lost response | Keep the intended work record and inspect existing state before another write. |
+
+Duplicate detection compares input rows; it does not deduplicate repeated HTTP requests.
+
+- [Read delivery and control unsent work](/guides/developer/sms-campaigns/delivery-and-controls)
+- [Configure SMS replies](/sms/sms-agent)
+- [Check contact controls](/guides/developer/contact-controls)

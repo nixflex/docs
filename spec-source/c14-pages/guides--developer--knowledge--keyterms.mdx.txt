@@ -1,0 +1,67 @@
+---
+title: "Read and manage agent keyterms"
+sidebarTitle: "Knowledge keyterms"
+description: "Read automatic knowledge hints and saved manual keyterms, respect the returned limits and update only the writable manual agent field."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge/keyterms"
+---
+
+Read the speaking hints derived from an agent’s knowledge and manage the separate manual keyterms you choose.
+
+<div className="nxf-facts">
+  <div><small>Automatic</small><strong>Derived from knowledge</strong></div>
+  <div><small>Manual</small><strong>Saved on the agent</strong></div>
+  <div><small>Purpose</small><strong>Recognition hints</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Automatic knowledge_keyterms are read-only and do not consume the manual allowance.
+- Write manual terms through boosted_keywords on the agent.
+- Use the returned limits; dashboard chips can differ from the raw saved API lists.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge/keyterms) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read the two lists
+
+With knowledge enabled, agent list/detail reads include the read-only `knowledge_keyterms` array. Read `GET /v1/agents/{agent_id}/knowledge-keyterms` for the automatic and saved manual lists, counts and current limits:
+
+```json
+{
+  "knowledge_keyterms": ["Willow Studio"],
+  "knowledge_keyterms_count": 1,
+  "knowledge_keyterms_limit": 80,
+  "manual_keyterms": ["Willow"],
+  "manual_keyterms_count": 1,
+  "manual_keyterms_limit": 20
+}
+```
+
+This is an illustrative response; use the returned limits. Automatic candidates are ordered by importance and do not consume the manual allowance. Owner, Admin and Member logins can read owned-agent terms. The reviewed, unpublished MCP 0.5.0 candidate exposes this read as `get_agent_knowledge_keyterms` with `target` set to the agent ID.
+
+Automatic hints exclude web addresses, API paths and URL-like terms while retaining spoken names such as AC/DC and St. James. Existing hints refresh in the background; do not reimport just to refresh them. Manual keyword lists and limits are unchanged.
+
+The dashboard shows **From your knowledge** chips and **+N more** beneath the agent's Keyterms field. It filters automatic candidates against the current manual form, including unsaved changes; the API returns automatic candidates and saved manual terms separately. Do not infer the raw API array from the filtered chips.
+
+Write chosen manual terms through the existing agent `boosted_keywords` field, not `knowledge_keyterms`; attempts to write the read-only field are refused. Changed manual lists allow 20 terms, at most 50 characters per term, and a conservative 450-byte total allowance (trimmed, deduplicated UTF-8 terms plus four bytes each). Older unchanged lists can survive unrelated saves, so a saved count may exceed the current edit limit. Follow the returned validation message instead of truncating silently. Manual hints take priority over competing automatic hints; they do not guarantee recognition or pronunciation.
+
+## Validate a manual change
+
+Trim terms, remove duplicates and validate the complete proposed list before saving it. If the server rejects a term or total allowance, show the specific validation message and let the person edit. Never silently truncate a business name to fit.
+
+Keep the existing manual list when changing unrelated agent settings. A historical list can exceed the current edit allowance without making unrelated saves invalid; this is not permission to add new over-limit terms.
+
+## Check the outcome
+
+Read the dedicated keyterms endpoint again after an accepted manual change. Test important names in the actual channel. Hints improve recognition opportunities but do not guarantee pronunciation or override the agent’s instructions.
+
+- [Read the keyterms response schema](/api-reference/knowledge/get-agents-target-knowledge-keyterms)
+- [Update manual agent settings](/api-reference/agents/update)
+- [Test published knowledge](/guides/developer/knowledge/test-and-troubleshoot)

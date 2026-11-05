@@ -1,15 +1,36 @@
 ---
-title: "Send one SMS: use an owned sender and track the outcome"
+title: "Send one SMS with the API"
 description: "Send one text through the Nixflex API with an explicit owned sender, respect recipient contact checks and distinguish accepted messages from confirmed delivery."
 canonical: "https://docs.nixflex.com/sms/send-sms"
+sidebarTitle: "Send one SMS"
 ---
-Send a requested update from the correct business number. This endpoint has no dry-run mode and can contact a real recipient.
+Send one requested message from an explicit owned sender and retain the acceptance result without assuming delivery.
 
-Using the dashboard? See [the business guide](/guides/business/sms-campaigns).
+<div className="nxf-facts">
+  <div><small>Effect</small><strong>One message</strong></div>
+  <div><small>Sender</small><strong>Explicit owned number</strong></div>
+  <div><small>Acceptance</small><strong>Not delivery proof</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This request can contact a real recipient; it has no dry-run mode.
+- Use to for the recipient and from_number for the owned sender.
+- Do not resend an unknown outcome or bypass a do_not_contact refusal.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the active agent, owned sender and approved recipient.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the active agent, owned sender and approved recipient.
 
 ## 1. Prepare the message
 

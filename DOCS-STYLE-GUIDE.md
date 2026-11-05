@@ -115,11 +115,11 @@ Mintlify generates page metadata, social images and structured data from configu
 2. Edit authoritative source data/builders for generated pages, then regenerate; do not rely on hand edits that the next build overwrites.
 3. Check contract accuracy, examples, code syntax, unique bounded metadata, links, glossary wording, all expanded groups and a phone view.
 4. Run the full local gate. Preserve failed and pending evidence. Existing locked tests need explicit approval for any further change; adding a feature does not silently waive this rule.
-5. Open a reviewed private preview through the operator workflow. A preview URL is public unless authentication or password protection is actually enabled; never call an unlisted URL private. No main merge or production publication is part of C13.
+5. Open a reviewed private preview through the operator workflow. A preview URL is public unless authentication or password protection is actually enabled; never call an unlisted URL private. No main merge or production publication is part of this authoring workflow.
 
-C13 applies this standard to the whole API tab and exactly five Developer samples: `/quickstart`, `/actions/booking-confirmation`, `/actions/google-calendar`, `/guides/developer/call-history`, `/advanced/webhooks`. Those four booking-related guides demonstrate a feature across overview/approval, setup, result reads and webhook processing. Other Developer pages are round 2. Chat D applies the same guide to its owned pages; Chat C does not overwrite their content.
+C14 applies this standard to all 162 API pages, all 87 Developer pages and all eight SDK/CLI/MCP pages. The five accepted C13 samples remain part of the complete Developer set. Twenty-one new Developer task pages and one MCP developer page implement the feature plan without changing existing URLs. Chat D applies the same guide to its owned pages; Chat C preserves the accepted D6 content unchanged.
 
-## Where to edit the C13 sources
+## Where to edit the authoritative sources
 
 | Change | Authoritative source |
 | --- | --- |
@@ -128,7 +128,11 @@ C13 applies this standard to the whole API tab and exactly five Developer sample
 | B56 schema and request-state semantics | `scripts/c13-contracts.mjs`, checked against the pinned engine commit |
 | API concept/event prose | The matching `.mdx.txt` file in `spec-source/c13-concepts/`; `scripts/build-c13-pages.mjs` supplies the shared layout and B56 cross-links |
 | Hand-authored agent-creation endpoint | `spec-source/c13-standalone/agents--create.mdx.txt` holds its contract tables and examples; the C13 plan supplies its lead and layout. Never use the generated page as its own input. |
-| One of the five Developer samples | The matching `.mdx.txt` file in `spec-source/c13-developer/` |
+| Any Developer or SDK/CLI/MCP page | The matching `.mdx.txt` file named by `spec-source/c14-pages.json`, under `spec-source/c14-pages/`. This includes the five earlier samples; C14 is now their final authoring layer. |
+| New feature route, page pairing or review state | `spec-source/c14-pages.json`, `docs.json` and `FEATURE-PAGES-PLAN.md`; publish only after the complete page exists. |
+| Pending call/campaign deletion release | The explicit list in `spec-source/c14-pages.json` and the warning in `scripts/build-c14-pages.mjs`. Keep the reviewed B56 API contract until the final B57 result is supplied and checked. |
 | Shared visual style | `styles.css`; check both light and dark themes and a phone viewport |
 
-Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, then the C13 editorial layer and the whole-site manifest. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified legacy client examples when adding a newer HTTP capability; label their actual support and version clearly. The permanent source check is `scripts/check-c13-source.mjs`; the old locked gates still run separately and their failures remain visible.
+Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, the C13 API layer, the complete C14 Developer/client layer and finally the whole-site manifest. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified client examples when adding a newer HTTP capability; label the exact candidate and release status clearly. Remove old command examples when the reviewed client no longer exposes them.
+
+The current complete source check is `scripts/check-c14-source.mjs`. Existing tests and validators remain locked at the accepted C13 baseline, including the C13 scope snapshot that intentionally describes only 279 pages and five Developer samples. Run historical checks separately and preserve their exact results; a new scope check does not silently rewrite or waive an old assertion. Any proposed locked-check change belongs in BEFORE-AFTER.md for approval.

@@ -1,0 +1,72 @@
+---
+title: "Install and verify website chat and voice"
+sidebarTitle: "Install and verify"
+description: "Install the dashboard-generated website agent snippet, verify effective channel switches and test the real site without exposing account credentials."
+canonical: "https://docs.nixflex.com/guides/developer/website/install-and-verify"
+---
+
+Install the current generated website snippet and verify chat, voice and inbox results on the actual site.
+
+<div className="nxf-facts">
+  <div><small>Install</small><strong>Generated snippet</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+  <div><small>Verification</small><strong>Actual website</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The browser must never receive the account API credential.
+- Use the current dashboard-generated snippet; do not invent a script URL or permanent token.
+- A dashboard preview does not prove the final website’s microphone, storage or embedding behaviour.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prepare the owned number
+
+Choose the number whose website conversations should appear in the inbox. Read its current [website settings](/web-assistant/overview) server-side. Website instructions are separate from telephone and SMS instructions, and knowledge has independent website-chat and website-voice channels.
+
+Effective voice requires both `web_agent_enabled` and `web_calls_enabled`, plus current account, agent, balance and admission checks. Turning the Web agent off does not erase the saved voice preference; it prevents effective access.
+
+## Save settings with the current revision
+
+Keep the returned decimal `revision` as a string. Send only intended settings through [PATCH website settings](/api-reference/web-agent/patch-agent-web-number). A focused illustrative body is:
+
+```json
+{"revision":"12","settings":{"web_name":"Appointment assistant","web_calls_enabled":true}}
+```
+
+Replace `12` with the observed revision; never hard-code it. On `widget_settings_changed`, read again and review the competing changes. Omitted top-level settings remain unchanged, but `web_appearance` is a complete replacement, not a nested merge.
+
+## Copy the current installation
+
+Use the dashboard’s Install snippet for this number and environment. If installation is not ready, resolve that environment configuration first. Do not substitute an older SDK script, manufacture a browser token or embed a server credential.
+
+Place the supplied snippet in the intended site using its actual installation instructions. Keep account-management calls on your server. Test the resulting deployed page, including any embedding and browser security restrictions that differ from the dashboard preview.
+
+## Verify the visitor journey
+
+| Check | Expected decision |
+| --- | --- |
+| Open and send a chat | The intended number’s website conversation appears in its inbox. |
+| Start voice with permission | The browser can request microphone access and show the actual connection result. |
+| Deny microphone permission | The page gives a recoverable state without claiming a connected call. |
+| Supply fictional contact details | The inbox retains them as visitor-supplied, unverified information. |
+| Reopen after browser storage changes | Do not assume the same visitor identity will be recognised. |
+
+Only test approved actions. Built-in telephone booking, SMS, transfers, keypad and menu navigation remain unavailable in the website channel.
+
+## Review public custom functions
+
+`web_functions_enabled` defaults off. Enabling it allows the number’s enabled custom functions after current checks; every such function must be suitable for an unverified public visitor. Do not grant account access based only on a visitor’s self-reported email or phone number.
+
+- [Troubleshoot website behaviour](/guides/developer/website/troubleshooting)
+- [Read and manage inbox conversations](/guides/developer/agent-inbox)
+- [Understand website channel limits](/concepts/web-calls)

@@ -1,362 +1,170 @@
 ---
-title: "Node.js SDK"
-description: "The official Nixflex client for JavaScript and TypeScript"
-icon: "js"
+title: "Use the Node SDK in a server application"
+sidebarTitle: "Node SDK"
+description: "Install the reviewed Node SDK candidate, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries."
 canonical: "https://docs.nixflex.com/sdks/node"
 ---
-The official SDK provides typed methods for supported Nixflex operations, bounded GET retries, pagination and typed errors. It has no runtime dependencies and works on Node 18 or newer.
+Use the Node SDK for server-side reads and deliberate writes, with durable outbound request records for uncertain call outcomes.
 
-<Note>
-  The same package ships the [CLI](/cli/overview) (`npx nixflex`), and the [MCP server](/ai-tools/overview) lets an AI assistant use your account. Both call this SDK underneath.
-</Note>
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Node 18+</strong></div>
+  <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
+  <div><small>Write retries</small><strong>Disabled by the client</strong></div>
+</div>
 
-<CardGroup cols={2}>
-  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/nixflex">
-    `nixflex` on the npm registry
-  </Card>
-  <Card title="Source" icon="github" href="https://github.com/nixflex/nixflex-node">
-    Read the code, open an issue
-  </Card>
-</CardGroup>
+<div className="nxf-important">
 
-## Install
+**The important part**
 
-Local unpublished Group 2 adds `phoneNumbers.get(number)`, optional cursor/filter
-arguments on list, safe key/source read-back and seven typed switches. See the
-[shared kit examples](/api-reference/phone-numbers/switches); registry releases
-do not include these additions yet.
+- Keep the complete account credential on the server and supply the intended base URL.
+- Install the exact reviewed 0.11.0 candidate; the version alone is not its identity.
+- Prepare and save a call locally before a separately approved send.
 
-```bash
-npm install nixflex
-```
+</div>
 
-## Reviewed 0.11.0 candidate
+<div className="nxf-audience">
 
-The supplied K6 package adds four Google Calendar methods, in-place number credentials,
-SMS 409 error classes and booking webhook types. It is a locally built release candidate;
-the registry install above does not establish that you have it. Verify the supplied
-archive hash, then install that exact archive in your server project:
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed package
+
+Compare the supplied archive with the [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your application:
 
 ```bash
 npm install ./nixflex-0.11.0.tgz
 ```
 
-Use the matching private API key and base URL. These examples use a fictional number;
-replace it only with an owned test fixture. Each write is a separate deliberate action.
+This is a local candidate installation, not a promise that a registry install resolves to the reviewed code. The SDK uses native fetch and has no runtime dependencies. The CLI ships in the same package.
+
+## Make one safe read
+
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately for the intended account and environment. The base URL is the origin without `/v1`; the client adds that prefix. Save this as an ES module, for example `read-usage.mjs`:
 
 ```javascript
-import Nixflex from 'nixflex';
-const client = new Nixflex({
-  apiKey: process.env.NIXFLEX_API_KEY,
-  baseUrl: process.env.NIXFLEX_BASE_URL,
-});
-const number = '+12025550123';
-const status = await client.integrations.getGoogleCalendar(number);
-```
+import Nixflex, { NixflexError } from 'nixflex';
 
-| Method | Purpose |
-| --- | --- |
-| `integrations.connectGoogleCalendar(number, returnUrl)` | Return a ten-minute consent link for a human to open privately. |
-| `integrations.getGoogleCalendar(number)` | Read connection status, including `needs_reconnect` and `send_invites`. |
-| `integrations.updateGoogleCalendarSettings(number, settings)` | Change supplied settings only; `false` is preserved. |
-| `integrations.disconnectGoogleCalendar(number)` | Remove saved access; already dispatched work cannot be recalled. |
-| `phoneNumbers.updateCredentials(number, pair)` | Update this number's carrier details and routing while retaining its settings/history. |
-
-```javascript
-// Only after the user approves this exact settings change:
-await client.integrations.updateGoogleCalendarSettings('+12025550123', { send_invites: false });
-```
-
-Settings are `timezone`, `hours`, `slot_minutes`, `calendar_id` and `send_invites`.
-If supplied, `hours` replaces all seven days; use `null` for a closed day.
-Slots are 15, 30, 45 or 60 minutes. Google controls invitation delivery.
-`connected: true` with `needs_reconnect: true` needs fresh human consent.
-The status GET can refresh/check the existing connection internally.
-
-```javascript
-// Separate sensitive change; inject the pair privately and never log it.
-await client.phoneNumbers.updateCredentials('+12025550123', {
-  twilio_sid: process.env.NIXFLEX_TWILIO_SID,
-  twilio_token: process.env.NIXFLEX_TWILIO_TOKEN,
-});
-```
-
-For Telnyx, supply only `telnyx_api_key` and `telnyx_connection_id` from the private
-`NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID` environment variables.
-Do not mix pairs or pass `provider` in the SDK body. Missing/invalid pairs fail before HTTP.
-Writes never retry automatically. Stop on `carrier_outcome_unknown`; only a deliberate
-identical-input completion is allowed for `credential_save_pending`.
-See [number credentials](/api-reference/phone-numbers/credentials) before changing routing.
-
-`NixflexDoNotContactError` covers HTTP 409 `do_not_contact`; `NixflexConflictError`
-covers other 409 conflicts. Retain `NixflexInvalidRequestError` handling for old 400
-replies. A known opt-out means nothing was sent: stop without retrying or bypassing it.
-
-Exported types `Booking`, `CallCompletedBookingEvent` and `SmsBookingEvent` describe
-`call.completed.bookings[]` and `sms.booking.booking`. A booking has `action`,
-`booking_uid`, `start`, `end`, `attendee_name`, `attendee_email`, `service` and `timezone`.
-Preserve nullable values; `service` may also be a number. Types do not authenticate a
-webhook: [verify the original raw body first](/advanced/webhooks).
-
-## Authenticate
-
-Pass your full credential - both halves joined by a colon, exactly as the dashboard shows it. The SDK sets the header for you.
-
-```javascript
-import Nixflex from 'nixflex';
-
-const client = new Nixflex({ apiKey: process.env.NIXFLEX_API_KEY });   // "nxf_xxx:nxfs_xxx"
-```
-
-CommonJS works too:
-
-```javascript
-const { Nixflex } = require('nixflex');
-```
-
-| Option | Default | Notes |
-|---|---|---|
-| `apiKey` | required | `KEY_ID:KEY_SECRET`. Keep it server-side. |
-| `baseUrl` | `https://api.nixflex.com` | Override for testing against a mock server. |
-| `timeout` | `30000` | Per-request timeout in milliseconds. |
-| `maxRetries` | `1` | Bounded GET retries only; changes never repeat automatically. |
-
-<Warning>
-  Never use the SDK in browser or mobile client code - it needs your API secret. Call it from your own backend and expose only what your app needs.
-</Warning>
-
-## Agents
-
-```javascript
-const agent = await client.agents.create({
-  name: 'Acme Dental Receptionist',
-  system_prompt: 'You are the front-desk assistant at Acme Dental...',
-  welcome_message: 'Hello, Acme Dental, how can I help?',
-});
-
-await client.agents.list();
-await client.agents.get(agent.agent_id);
-await client.agents.update(agent.agent_id, { voice_id: 'some-voice' });
-await client.agents.update(agent.agent_id, { incall_sms_enabled: true }); // texting during calls + booking confirmation texts
-await client.agents.delete(agent.agent_id);
-```
-
-## Calls
-
-```javascript
-// Outbound - returns as soon as the call is queued
-const call = await client.calls.create({
-  agent_id: agent.agent_id,
-  to_number: '+447386172392',
-  prompt: 'Remind {{name}} about their appointment at {{time}}.',
-  dynamic_vars: { name: 'Sarah', time: 'Tuesday 2pm' },
-});
-
-// History
-const recent = await client.calls.list({ limit: 20 });
-const one = await client.calls.get(call.call_id);
-
-// Guarded deletion requests: safety holds can refuse cleanup
-await client.calls.delete(call.call_id);
-await client.calls.deleteAll();
-```
-
-<Note>
-  Outbound calls use `to_number`. A single SMS uses `to`. The SDK's types enforce the difference, so an editor with TypeScript will catch it before you run the code.
-</Note>
-
-Area 3 batch 1 fixes `calls.iter(pageSize)` for histories above 200: pageSize must
-be a whole number 1–200; invalid values fail before HTTP. Offset pages are not a
-snapshot. See [client safety](/api-reference/calls/client-safety) for variables,
-uncertain replies and publication limits.
-
-## Phone numbers
-
-```javascript
-await client.phoneNumbers.import({
-  phone_number: '+447446466847',
-  agent_id: agent.agent_id,
-  twilio_sid: process.env.TWILIO_SID,
-  twilio_token: process.env.TWILIO_TOKEN,
-});
-
-const { phone_numbers, count } = await client.phoneNumbers.list();
-
-await client.phoneNumbers.update('+447446466847', {
-  custom_prompt: 'You are the receptionist for the Camden branch...',
-  sms_reply_enabled: true,
-});
-
-await client.phoneNumbers.setMonitor('+447446466847', true);
-await client.phoneNumbers.setWebCalls('+447446466847', true);
-await client.phoneNumbers.delete('+447446466847');
-```
-
-Telnyx numbers use `telnyx_api_key` and `telnyx_connection_id` instead of the Twilio pair - the carrier is inferred from which credentials you send. `null` on an update field means *inherit the agent's setting*; see [Update phone number](/api-reference/phone-numbers/update).
-
-## Caller context
-
-What the agent knows about a caller on one of your numbers - used instead of asking again, and confirmed before any booking. One record per (your number, caller number). See [Caller context](/concepts/caller-context).
-
-```typescript
-await client.callers.set('+447446466847', '+447700900123', {
-  name: 'Sam Carter',
-  email: 'sam.carter@example.com',
-  reference_id: '4827',
-});
-const { caller } = await client.callers.get('+447446466847', '+447700900123');
-// caller.context -> { name, email, reference_id, last_call?, open_item? }
-
-await client.callers.import('+447446466847', [
-  { caller_number: '+447700900123', name: 'Sam Carter', email: 'sam.carter@example.com' },
-  { caller_number: '+447700900124', name: 'Priya Shah', preference: 'prefers afternoon appointments' },
-]);                                       // up to 1,000 rows, validated before any write
-await client.callers.delete('+447446466847', '+447700900123');   // erases yours and the engine's
-```
-
-A field you leave out of `set()` keeps its value; `null` removes it. `last_call` and `open_item` are written by the engine and cannot be set.
-## SMS
-
-```javascript
-await client.sms.send({
-  agent_id: agent.agent_id,
-  from_number: '+12025550123', // Replace with an owned sender assigned to this agent.
-  to: '+447386172392',
-  message: 'Your appointment is confirmed for Tuesday at 2pm.',
-});
-
-const campaign = await client.sms.campaigns.create({
-  agent_id: agent.agent_id,
-  from_number: '+447446466847',        // Twilio number
-  name: 'March reminders',
-  message_template: 'Hi {{name}}, your check-up is due.',
-  recipients: [{ phone: '+447386172392', variables: { name: 'Sarah' } }],
-  schedule_type: 'now',
-});
-
-await client.sms.campaigns.launch(campaign.campaign_id);
-await client.sms.campaigns.get(campaign.campaign_id);
-await client.sms.campaigns.list({ status: 'done' });
-await client.sms.campaigns.delete(campaign.campaign_id);
-```
-
-These are separate operation examples. Launch only after reviewing recipients and consent; delete only after active work and settlement finish. Deletion returns 409 `campaign_in_progress` or `campaign_settlement_pending` while those checks are unresolved. The latter includes `details.deleted:false`. Keep the campaign visible until confirmed success; 503 `deletion_unavailable` is not deletion proof. See [SMS campaign deletion](/api-reference/sms/campaigns-delete).
-
-## Campaigns (voice)
-
-```javascript
-const batch = await client.campaigns.create({ /* see Batch create */ });
-await client.campaigns.launch(batch.campaign_id);
-```
-
-## Usage and keys
-
-```javascript
-const usage = await client.usage.get();
-console.log(usage.total_calls, usage.total_minutes, usage.total_cost);
-console.log(usage.peak_concurrent_this_month, 'of', usage.max_concurrent);
-
-const rotated = await client.keys.rotate();   // new secret shown once
-```
-
-## Webhooks
-
-Configure a number's post-call webhook, and verify deliveries:
-
-```javascript
-await client.webhooks.set('+447446466847', 'https://api.yourapp.com/nixflex');
-await client.webhooks.get('+447446466847');
-await client.webhooks.delete('+447446466847');
-```
-
-Verification works standalone or from the client. Pass the **raw** body - a re-serialized object will not match the signature:
-
-```javascript
-import express from 'express';
-import { verifyWebhookSignature } from 'nixflex';
-
-app.post('/nixflex', express.raw({ type: 'application/json' }), (req, res) => {
-  const ok = verifyWebhookSignature(
-    req.body,
-    req.get('x-nixflex-signature'),
-    process.env.NIXFLEX_KEY_SECRET,     // the nxfs_ half of your key
-  );
-  if (!ok) return res.sendStatus(400);
-
-  const event = JSON.parse(req.body.toString('utf8'));
-  res.sendStatus(200);
-});
-```
-
-It returns `false` for a tampered body, wrong secret, malformed header, or a signature older than 300 seconds (override with `{ toleranceSeconds }`). It never throws. Full details: [Webhooks](/advanced/webhooks#3-verify-exact-request-bytes).
-
-## Pagination
-
-Every list endpoint has an iterator that fetches pages as you consume them:
-
-```javascript
-for await (const call of client.calls.iter({ limit: 100 })) {
-  console.log(call.call_id, call.duration_ms);
-}
-```
-
-`client.agents.iter()` works the same way. Or page manually with `limit` and `offset`.
-
-## Errors
-
-Failed requests throw a typed error you can branch on. Every one carries `status`, `code`, `type`, `message`, `docUrl`, `details`, and `requestId` for support.
-
-```javascript
-import { NixflexRateLimitError, NixflexPaymentRequiredError, NixflexError } from 'nixflex';
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+if (!apiKey || !baseUrl) throw new Error('Configure the account and API host privately.');
+const client = new Nixflex({apiKey, baseUrl, timeoutMs: 30_000, maxRetries: 0});
 
 try {
-  await client.calls.create({ /* ... */ });
-} catch (err) {
-  if (err instanceof NixflexRateLimitError) {
-    console.log(`Slow down - retry in ${err.retryAfterSeconds}s`);
-  } else if (err instanceof NixflexPaymentRequiredError) {
-    console.log('Top up your balance');
-  } else if (err instanceof NixflexError) {
-    console.error(err.status, err.code, err.message, err.requestId);
+  const usage = await client.usage.get();
+  if (!usage || typeof usage !== 'object') throw new Error('Unexpected usage response.');
+  console.log('Usage read succeeded.');
+} catch (error) {
+  if (error instanceof NixflexError) {
+    console.error({status: error.status, code: error.code, requestId: error.requestId});
+    process.exitCode = 1;
+  } else {
+    throw error;
   }
 }
 ```
 
-| Class | Status | Meaning |
-|---|---|---|
-| `NixflexInvalidRequestError` | 400 | Missing or invalid parameters. |
-| `NixflexAuthenticationError` | 401 | Bad or missing credential. |
-| `NixflexPaymentRequiredError` | 402 | Out of credit. |
-| `NixflexNotFoundError` | 404 | No such resource on your account. |
-| `NixflexRateLimitError` | 429 | Too many requests. Carries `retryAfterSeconds`. |
-| `NixflexServerError` | 5xx | Something failed on our side. |
-| `NixflexOutcomeUnknownError` | 0 / response status | A change may have happened. `outcome='unknown'`, `safe_to_retry=false`; check before retrying. Also a `NixflexServerError` for compatible catches. |
-| `NixflexConnectionError` | - | Network failure or timeout before a response. |
-| `NixflexError` | - | Base class - catch this to handle any SDK error. |
+Keep the returned usage object private. Avoid logging complete error objects because details or upstream messages can contain request data.
 
-## Retries
+## Prepare a call without sending it
 
-Draft Part 1a behaviour (not yet published to npm):
+The following local script reads a private `intent.json` containing the reviewed call fields. It generates the UUID and saves an exclusive file; it sends no request. Store the file in an application-owned private directory and retain its account/environment binding.
 
-- **GET** - bounded retries for 429, network failure/timeout and 5xx; `Retry-After` is honoured.
-- **POST/PUT/PATCH/DELETE** - never automatically repeated, including after 429. A network failure does not prove the request never reached the server.
-- **Lost/malformed change reply or unproved 5xx** - `NixflexOutcomeUnknownError`: check whether the change happened before retrying. Original error details and request ID remain available. Explicit whole-operation not-sent proof stays distinct.
-- **CLI** - uses this same policy. JSON errors include `outcome` and `safe_to_retry` for unknown results. Do not put an automatic retry loop around the command.
+```javascript
+import { readFileSync, writeFileSync } from 'node:fs';
+import { prepareOutboundCall } from 'nixflex';
 
-## TypeScript
-
-Types ship with the package - no `@types` install. Request and response shapes are typed for every endpoint, and each method carries the field-level notes from this reference as editor tooltips.
-
-Draft Part 1a adds the existing six number-switch PATCH fields, `telnyx_public_key` and `require_booking_confirmation`. The shared `PhoneNumber.provider` is optional because current Twilio-import and PATCH responses can omit it; check it before using it as a string. This is a type correction, not an engine response change.
-
-```typescript
-import Nixflex, { type Call, type PhoneNumber } from 'nixflex';
+const intent = JSON.parse(readFileSync('intent.json', 'utf8'));
+const prepared = prepareOutboundCall(intent);
+writeFileSync('prepared-call.json', JSON.stringify(prepared, null, 2) + '\n', {
+  encoding: 'utf8', flag: 'wx', mode: 0o600,
+});
+console.log('Prepared locally; no call sent.');
 ```
 
-## Versioning
+Use the [outbound workflow](/guides/developer/call-requests) for the complete input shape. POSIX file mode does not establish Windows ACL protection; apply your platform’s private-directory permissions. Never run preparation again as a retry.
 
-The SDK follows [semantic versioning](https://semver.org). Published methods are never removed or renamed within a major version, so upgrades within a major are safe. See the [changelog](https://github.com/nixflex/nixflex-node/blob/main/CHANGELOG.md) before upgrading.
+## Send the saved intention once
 
-<Note>
-  Building in another language? Every endpoint is a plain HTTPS request with a Bearer header - see the [API reference](/api-reference/introduction). The SDK is a convenience, never a requirement.
-</Note>
+This separate script places a paid call. Run it only after approval of the saved recipient, sender and purpose. Do not wrap it in an automatic retry loop.
+
+```javascript
+import Nixflex, { NixflexError } from 'nixflex';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+if (!apiKey || !baseUrl) throw new Error('Configure the original account and API host.');
+const saved = JSON.parse(readFileSync('prepared-call.json', 'utf8'));
+const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
+try {
+  const receipt = await client.calls.create(saved);
+  writeFileSync('call-receipt.json', JSON.stringify(receipt, null, 2) + '\n', {
+    encoding: 'utf8', flag: 'wx', mode: 0o600,
+  });
+  console.log('Receipt saved; inspect the call separately.');
+} catch (error) {
+  if (error instanceof NixflexError) {
+    console.error({status: error.status, code: error.code, requestId: saved.request_id});
+    process.exitCode = 1;
+  } else {
+    throw error;
+  }
+}
+```
+
+A local receipt-write failure can occur after a call was accepted. Reconcile the saved UUID rather than running the send again. Typed calls with `request_id` return `OutboundRequestReceipt`, where to/from are optional; no-ID calls retain the older response type.
+
+## Reconcile with reads
+
+Read `client.calls.outboundRequest(saved.request_id)` separately. For `accepted`, retain `call_id` and use `calls.read(call_id)` for current detail and `calls.bookings(call_id)` for booking evidence. `pending` and `unknown` require reconciliation, never a replacement UUID. A 404 is not permission to redial.
+
+Booking states are `ready`, `none`, `processing`, `deleted` and `unavailable`. Only ready carries the result. Count active rows in `result.final`; do not count every action in `timeline` or turn unavailable into an empty list.
+
+## Choose the resource and paging method
+
+| Task | Method |
+| --- | --- |
+| Agent reads | `client.agents.list()` and `client.agents.get(id)` |
+| Filtered call history | `client.calls.history({agent: id, limit: 50})` |
+| Private playback access | `client.calls.recording(callId)`; honour returned expiry. |
+| Owned number settings | `client.phoneNumbers.get(number)` and focused `update`. |
+| Knowledge | `client.knowledge`; use saved idempotency keys and revisions. |
+| Calendar and integrations | `client.integrations`; use exact documented methods and private inputs. |
+
+`calls.iter(100)` takes a numeric page size from 1 to 200, not a query object. It uses offset pages and is not a frozen snapshot. For filtered reads use `calls.history`; legacy `calls.list` does not accept an agent filter. See [pagination](/guides/developer/pagination).
+
+## Handle errors and webhooks
+
+The default timeout is 30 seconds. `maxRetries` defaults to one eligible GET retry, with a supported range of 0–3; writes are never automatically retried. `NixflexOutcomeUnknownError` means a mutation may already have happened. The outbound request family also exposes `NixflexOutboundRequestError` and its pending, unknown, conflict and unavailable variants.
+
+| Failure | Recovery |
+| --- | --- |
+| Authentication or permission refusal | Correct the account/environment or authorised role. |
+| Read rate limit | Honour retry guidance with a bound. |
+| Unknown write | Read saved state before another deliberate operation. |
+| SMS `do_not_contact` | Stop; do not resend around the refusal. |
+
+For webhooks, use the strict raw-byte verifier and durable receiver in the [webhook guide](/advanced/webhooks). Provision the separate organisation signing secret where organisations are enabled; the full API authentication string is not the signing secret.
+
+- [Read the Python equivalent](/sdks/python)
+- [Prepare calls with the CLI](/cli/quickstart)
+- [Read the exact HTTP contract](/api-reference/introduction)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="install"></span>
+<span id="reviewed-0110-candidate"></span>
+<span id="authenticate"></span>
+<span id="agents"></span>
+<span id="calls"></span>
+<span id="phone-numbers"></span>
+<span id="caller-context"></span>
+<span id="sms"></span>
+<span id="campaigns-voice"></span>
+<span id="usage-and-keys"></span>
+<span id="webhooks"></span>
+<span id="pagination"></span>
+<span id="errors"></span>
+<span id="retries"></span>
+<span id="typescript"></span>
+<span id="versioning"></span>

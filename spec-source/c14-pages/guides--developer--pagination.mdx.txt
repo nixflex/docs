@@ -1,0 +1,99 @@
+---
+title: "Build reliable paginated API reads"
+sidebarTitle: "Pagination"
+description: "Read Nixflex cursor and offset lists without changing their filters, losing message ties or treating an offset scan as a stable snapshot."
+canonical: "https://docs.nixflex.com/guides/developer/pagination"
+---
+
+Build a list adapter for each endpoint’s paging shape, preserving its account, filters and progress until the scan finishes.
+
+<div className="nxf-facts">
+  <div><small>Cursor</small><strong>Opaque server value</strong></div>
+  <div><small>Offsets</small><strong>Not a snapshot</strong></div>
+  <div><small>Progress</small><strong>After processing</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- There is no universal page parameter or list envelope.
+- Reject repeated cursors and bound long scans.
+- Store progress after processing a page; concurrent changes can shift offset rows.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose the correct list adapter
+
+| List | Next request | Stop condition |
+| --- | --- | --- |
+| Phone numbers | Returned `next_cursor` as `cursor`, with unchanged filters and limit | `has_more:false` and no next cursor |
+| Agents | Increase offset by returned array length | Empty array or fewer than the requested limit |
+| Organisation Activity | Returned `next_cursor` as `before` | No next cursor; a final empty read can be needed |
+| Voice catalog | Returned cursor | No next page; restart an expired cursor |
+| Inbox messages | Returned `before` and `before_id` together | No next message cursor |
+
+Numbers opt into paging with `limit` from 1–100. Without limit or cursor the legacy response has no cursor fields. Agents return a bare array and accept limit 1–200. Read the route's exact [paging contract](/api-reference/pagination) before choosing an adapter.
+
+## Read number pages with a bounded loop
+
+This Node example makes safe reads only. Configure the server credential and an approved API base URL privately. The 100-page cap is an application choice, not a server limit.
+
+```javascript
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+const apiKey = process.env.NIXFLEX_API_KEY;
+if (!baseUrl || !apiKey) throw new Error('Configure the API connection privately');
+const seen = new Set();
+let cursor;
+const numbers = new Map();
+for (let pageIndex = 0; pageIndex < 100; pageIndex++) {
+  const url = new URL('/v1/phone-numbers', baseUrl);
+  url.searchParams.set('limit', '50');
+  if (cursor) url.searchParams.set('cursor', cursor);
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(10000),
+    redirect: 'error',
+  });
+  if (!response.ok) throw new Error(`List read failed: HTTP ${response.status}`);
+  const page = await response.json();
+  if (!Array.isArray(page.phone_numbers)) throw new Error('Unexpected list response');
+  for (const number of page.phone_numbers) numbers.set(number.phone_number, number);
+  if (page.has_more === false && page.next_cursor == null) break;
+  if (typeof page.next_cursor !== 'string' || seen.has(page.next_cursor)) {
+    throw new Error('Missing or repeated cursor; stop the scan');
+  }
+  seen.add(page.next_cursor);
+  cursor = page.next_cursor;
+  if (pageIndex === 99) throw new Error('Application scan limit reached');
+}
+// Use the private map; do not log number configuration or credentials.
+```
+
+## Preserve progress and stable filters
+
+Keep the account, base URL, filters and order unchanged. URL-encode an opaque cursor without decoding its contents. In a durable worker, save the next cursor only after processing that page successfully; make processing tolerant of repeated resource IDs.
+
+Offset pages are not a database snapshot. New or removed rows can shift offsets. If a task requires a complete auditable export, use its documented export workflow instead of assuming a long list scan is a frozen report.
+
+## Recover from paging errors
+
+| Result | What to do |
+| --- | --- |
+| Empty successful page | Treat it as valid according to that endpoint's stop rule. |
+| Expired/stale cursor | Restart with the same intended filters and deduplicate processed IDs. |
+| Repeated cursor | Stop and investigate; never spin indefinitely. |
+| 429 or temporary read failure | Honour the returned delay and an overall deadline. |
+| Message timestamp tie | Supply both cursor fields so equal-time messages are not skipped. |
+
+## Next steps
+
+- [Control request pacing](/guides/developer/rate-limits)
+- [Read inbox conversations](/guides/developer/agent-inbox)
+- [Choose an SDK iterator](/sdks/node#pagination)

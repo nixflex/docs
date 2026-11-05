@@ -1,0 +1,41 @@
+---
+title: "Pace API requests and polling"
+description: "Use Nixflex rate-limit headers to pace reads and polling. Keep HTTP request quotas separate from call concurrency, balance and knowledge limits."
+canonical: "https://docs.nixflex.com/guides/developer/rate-limits"
+sidebarTitle: "Request pacing"
+---
+
+Use response headers and a bounded polling policy to stay within the account’s current API request allowance.
+
+<div className="nxf-facts">
+  <div><small>HTTP quota</small><strong>Read headers</strong></div>
+  <div><small>Polling</small><strong>Bounded duration</strong></div>
+  <div><small>Call capacity</small><strong>Separate limit</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Honour Retry-After for a safe read and stop at an application deadline.
+- HTTP request quotas, call capacity and feature limits are different.
+- A throttle does not grant permission to repeat an uncertain write.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+For a safe read, wait at least that long, add jitter and stop at an application deadline. Cache stable catalog results, share polling work between clients and stop polling terminal jobs. Avoid multiple workers retrying together.
+
+| Limit | What it controls |
+| --- | --- |
+| API request allowance | HTTP requests for the authenticated key |
+| `max_concurrent` | Organisation concurrent calls; not calls started per second |
+| Balance and feature allowances | Whether the requested work can be admitted |
+| Knowledge limits | Resource counts, job capacity and training allowances |
+
+More HTTP capacity does not remove the other limits. A throttle is not general permission to repeat a write. Reconcile any uncertain call, message or credential update using its operation contract. See [rate limits](/api-reference/rate-limits), [errors](/guides/developer/errors) and [idempotency](/guides/developer/idempotency).

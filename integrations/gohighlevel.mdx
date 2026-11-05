@@ -1,15 +1,36 @@
 ---
-title: "GoHighLevel: connect Nixflex call results to your workspace"
+title: "Connect call results to GoHighLevel"
 description: "Configure Nixflex GoHighLevel for the correct business number, protect credentials and verify external records before treating an automation as complete."
 canonical: "https://docs.nixflex.com/integrations/gohighlevel"
+sidebarTitle: "GoHighLevel"
 ---
-Connect the intended number to a business destination and verify the result end to end.
+Connect the intended GoHighLevel workspace to an owned number and check the resulting contact or call update.
 
-Using the dashboard? See [the business guide](/guides/business/integrations).
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Target</small><strong>Selected workspace</strong></div>
+  <div><small>Recovery</small><strong>Read before repeating</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the exact workspace and permissions required by the saved connection.
+- Connection success and a later business update are separate results.
+- Keep uncertain outcomes visible instead of creating duplicate records.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Use an authorised test destination with fictional business data.
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an authorised test destination with fictional business data.
 
 ## 1. Read the saved connection
 
@@ -43,7 +64,10 @@ nixflex integrations get gohighlevel '+12025550123' --json --base-url "https://a
 
 ## 2. Save the intended destination
 
-Use the documented GoHighLevel integration PUT route with the authorised workspace configuration. Confirm the destination business and number before enabling updates; never place the connection secret in a prompt.
+
+Use the [GoHighLevel PUT route](/api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber) with the private integration token in `pit` and the intended `location_id`. Keep both in the authorised server configuration flow; GET never returns the full token.
+
+Optional tags are trimmed, blank entries removed and duplicates collapsed. `is_active` defaults to true; only literal false disables it. Optional `agent_id` is a fallback when the number has no assigned agent and does not move the number. Confirm the destination business before enabling updates.
 
 ## 3. Define what success means
 

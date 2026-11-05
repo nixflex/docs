@@ -1,9 +1,36 @@
 ---
-title: "Handle API errors in your application"
+title: "Handle API errors in code"
 description: "Handle Nixflex error codes, keep unknown write outcomes visible and reconcile calls, messages and number changes before retrying work."
 canonical: "https://docs.nixflex.com/guides/developer/errors"
+sidebarTitle: "Handle errors"
 ---
-Treat an error as a decision for the workflow. Read the HTTP status and `error.code`; do not match the wording of `error.message`.
+Use the HTTP status and machine error code to choose between correcting input, retrying a read and reconciling a write.
+
+<div className="nxf-facts">
+  <div><small>Decision</small><strong>Status and code</strong></div>
+  <div><small>Write failure</small><strong>Reconcile first</strong></div>
+  <div><small>Logs</small><strong>Safe fields only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Branch on error.code, not the wording of error.message.
+- An error or lost connection can leave a write outcome unknown.
+- Keep a non-JSON error fallback and log only safe diagnostic fields.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<Warning>
+**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
+</Warning>
 
 ```json
 {"error":{"type":"conflict","code":"do_not_contact","message":"This recipient is on your do-not-contact list. The message was not sent.","doc_url":"https://docs.nixflex.com/errors/do_not_contact","details":{}}}
@@ -25,7 +52,7 @@ Single `POST /v1/sms` suppression now returns **409 `do_not_contact`**, with typ
 
 ## Preserve uncertainty
 
-SMS campaign deletion returns **409 `campaign_settlement_pending`** while final send results or charges are unsettled, with `error.details.deleted:false`. It previously surfaced as a generic server error. Keep the campaign row until deletion succeeds; zero sent does not prove settlement. An active campaign now returns **409 `campaign_in_progress`**, replacing the old 400 `invalid_request`. Cancel or wait for it to finish, then read its state before deleting. A 503 `deletion_unavailable` means no deletion was confirmed.
+Call and campaign deletion are awaiting the reviewed B57 contract. Follow the DOCS-PENDING note on the [deletion reference](/api-reference/sms/campaigns-delete); do not implement the old settlement-wait rules as a claim about the next release. A missing response still does not prove any operation completed.
 
 An accepted call or SMS request is not delivery proof. Save returned identifiers and read the resulting record. For number credentials, `carrier_outcome_unknown` needs support investigation; `credential_save_pending` permits a deliberate retry with identical details to finish the local save. Never delete and re-import to recover.
 

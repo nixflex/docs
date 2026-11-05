@@ -1,0 +1,55 @@
+---
+title: "Choose voices and speaking settings"
+description: "Choose a Nixflex voice from the current catalog and understand how saved voice settings affect conversations, without assuming every channel sounds alike."
+canonical: "https://docs.nixflex.com/concepts/voices"
+sidebarTitle: "Voice selection"
+---
+
+Choose an eligible catalog voice and verify the actual spoken result for the intended channel and language.
+
+<div className="nxf-facts">
+  <div><small>Selection</small><strong>Current voice_key</strong></div>
+  <div><small>Speed</small><strong>speaking_rate</strong></div>
+  <div><small>Verification</small><strong>Actual speech</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the current catalog key instead of a hard-coded display-name list.
+- speaking_rate affects speed; legacy voice_speed does not.
+- Fallback can change the voice heard even when configuration was saved.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Catalog voices and legacy aliases
+
+The agent's `voice_key` selects a catalog entry. Its `voice_id` is a legacy alias and can be null for a catalog-only voice. A conflicting key and alias are refused. Use the current [voice catalog](/api-reference/voices/get-voices) and its supported languages rather than copying a fixed list of display names.
+
+On a legacy selection path, the number's voice alias can override the agent alias. In catalog mode, a non-null agent catalog key takes priority over that alias. A number alias is not automatically converted into a catalog override. Custom voice and fallback paths can also change what is actually heard.
+
+## Speaking rate
+
+Use `speaking_rate` for speed. An explicit number value wins over the agent; null inherits. Setting a number to 1 explicitly requests normal speed, while null under a faster agent still inherits that faster value. The older `voice_speed` field is accepted for compatibility but does not control current speech output.
+
+The ordinary rate range is 0.5–1.5 and runtime clamps apply. The audible effect depends on the selected route. Test a small adjustment with names, dates and a full conversation instead of assuming identical speed across every voice.
+
+## Language and fallback
+
+A display name does not prove language coverage. Use the eligible catalog entry and intended agent language. Unsupported combinations or dependency failures can use a different supported path, so the same voice identity is not guaranteed in every fallback situation.
+
+Changes apply to new work. A saved selection proves configuration, not that every future call will use it successfully. Listen to a real approved test call, including a permitted action and an interruption, before relying on the setting with customers.
+
+- [Choose your agent settings](/business)
+- [Update agent configuration](/api-reference/agents/update)
+- [Manage number overrides](/guides/developer/phone-numbers)
+- [Language and recognition](/concepts/languages)
+
+- [Settings by channel](/concepts/agent-channels)

@@ -1,0 +1,177 @@
+---
+title: "Use the Python SDK with sync or async code"
+sidebarTitle: "Python SDK"
+description: "Install the reviewed Python candidate, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states."
+canonical: "https://docs.nixflex.com/sdks/python"
+---
+
+Use the Python SDK with a managed synchronous or asynchronous client, keeping reads, approved writes and recovery separate.
+
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Python 3.9+</strong></div>
+  <div><small>Clients</small><strong>Sync and async</strong></div>
+  <div><small>Recovery</small><strong>Saved UUID and current reads</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The reviewed 0.4.0 package requires Python 3.9 or later and httpx.
+- Automatic retries are GET-only; a failed mutation can still have happened.
+- Local call preparation stays synchronous even on AsyncNixflex.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed wheel
+
+Compare the supplied wheel with its [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your virtual environment:
+
+```bash
+python -m pip install ./nixflex-0.4.0-py3-none-any.whl
+```
+
+A registry installation alone does not establish this candidate’s availability. Use the exact reviewed archive when testing its newer call and calendar methods.
+
+## Read usage with a synchronous client
+
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately. Use the API origin without `/v1`; the client adds that path prefix. The context manager closes the underlying HTTP client.
+
+```python
+import os
+from nixflex import Nixflex, NixflexError
+
+connection = {
+    "api_key": os.environ["NIXFLEX_API_KEY"],
+    "base_url": os.environ["NIXFLEX_BASE_URL"],
+    "timeout": 30.0,
+    "max_retries": 0,
+}
+try:
+    with Nixflex(**connection) as client:
+        usage = client.usage.get()
+        if not isinstance(usage, dict):
+            raise ValueError("Unexpected usage response")
+        print("Usage read succeeded.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": error.request_id})
+    raise SystemExit(1)
+```
+
+Keep the returned object and complete exception details out of routine logs. Log only safe status, code and request identifiers.
+
+## Use an asynchronous client
+
+JSON methods are awaitable. This read-only function opens and closes its own client:
+
+```python
+import asyncio
+import os
+from nixflex import AsyncNixflex
+
+async def inspect_request(request_id):
+    async with AsyncNixflex(
+        api_key=os.environ["NIXFLEX_API_KEY"],
+        base_url=os.environ["NIXFLEX_BASE_URL"],
+        max_retries=0,
+    ) as client:
+        state = await client.calls.outbound_request(request_id)
+        if state["state"] == "accepted" and state["call_id"]:
+            return await client.calls.bookings(state["call_id"])
+        return state
+
+if __name__ == "__main__":
+    result = asyncio.run(inspect_request(os.environ["NXF_REQUEST_ID"]))
+    print("Saved request inspected; no call sent.")
+```
+
+Keep the result private and preserve its state. Streaming methods such as Activity CSV return an async iterator rather than an ordinary JSON value.
+
+## Prepare locally and persist first
+
+Create a private `intent.json` using the [outbound request fields](/guides/developer/call-requests). Run this once for a new intention; it sends nothing and refuses to overwrite an existing prepared file.
+
+```python
+import json
+from pathlib import Path
+from nixflex import prepare_outbound_call
+
+intent = json.loads(Path("intent.json").read_text(encoding="utf-8"))
+prepared = prepare_outbound_call(intent)
+with open("prepared-call.json", "x", encoding="utf-8") as handle:
+    json.dump(prepared, handle, indent=2)
+    handle.write("\n")
+print("Prepared locally; no call sent.")
+```
+
+Use private directory permissions on your platform and store the account/base-URL association with the intention. Do not regenerate the UUID when reopening your process. `client.calls.prepare(**params)` is also local and synchronous, including on `AsyncNixflex`.
+
+## Send only the approved saved intention
+
+The following separate script places a paid call once. Run it only after approval of the saved inputs, never as an automatic retry.
+
+```python
+import json
+import os
+from pathlib import Path
+from nixflex import Nixflex, NixflexError
+
+saved = json.loads(Path("prepared-call.json").read_text(encoding="utf-8"))
+try:
+    with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
+                 base_url=os.environ["NIXFLEX_BASE_URL"],
+                 max_retries=0) as client:
+        receipt = client.calls.create(**saved)
+    with open("call-receipt.json", "x", encoding="utf-8") as handle:
+        json.dump(receipt, handle, indent=2)
+        handle.write("\n")
+    print("Receipt saved; inspect the call separately.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": saved["request_id"]})
+    raise SystemExit(1)
+```
+
+A local file failure after dispatch does not mean the call failed. Read `calls.outbound_request(saved["request_id"])` with the original account and environment. Preserve a known call ID even if journal confirmation is unconfirmed. A 404 or unavailable read is not permission for a new UUID.
+
+## Read results and use the right method
+
+| Task | Python method |
+| --- | --- |
+| Filtered call history | `calls.history(agent=agent_id, limit=50)` |
+| Current detail | `calls.read(call_id)` |
+| Booking evidence | `calls.bookings(call_id)` |
+| Recording access | `calls.recording(call_id)` |
+| Owned number | `phone_numbers.get(number)` |
+| Website settings | `web_agent.get(number)` |
+| Knowledge workflow | `knowledge` methods with saved keys and revisions. |
+
+Legacy `calls.list` uses limit/offset and refuses an agent filter; use history for filtering. Continue cursor endpoints using their returned cursor and documented parameters. Lists are not frozen snapshots.
+
+`variables` is a Python convenience alias for wire field `dynamic_vars`. Supply one alias only. A no-ID create uses the older call response; saved UUID requests use the durable receipt contract.
+
+## Preserve failure and booking states
+
+The default timeout is 30 seconds and the default is one eligible GET retry. `max_retries=0` disables those retries; the supported range is 0–3. `NixflexOutcomeUnknownError` and the `NixflexOutboundRequestError` family require reconciliation rather than an automatic replacement write.
+
+For bookings, only `ready` carries `result`. `none` means confirmed no successful changes; `processing`, `deleted` and `unavailable` must remain distinct. Count active `final` rows, not the number of timeline actions.
+
+| Error | Action |
+| --- | --- |
+| 401 or role refusal | Resolve the account, host or authorised role. |
+| GET rate limit | Follow the server retry guidance within a bound. |
+| Unknown mutation | Read current state with the saved operation identity. |
+| `do_not_contact` | Stop the send, including older 400 and current 409 forms. |
+
+Use the [strict raw-byte webhook verifier](/advanced/webhooks#3-verify-exact-request-bytes) before parsing an event. The signing secret is separate from the full API authentication string, and durable deduplication is still required.
+
+- [Read the Node equivalent](/sdks/node)
+- [Use paging safely](/guides/developer/pagination)
+- [Reconcile a saved outbound request](/guides/developer/call-requests)

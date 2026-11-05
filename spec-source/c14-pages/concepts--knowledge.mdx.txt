@@ -1,0 +1,54 @@
+---
+title: "Understand how agent knowledge is used"
+description: "Understand how agent knowledge supplies business facts across calls, messages and website conversations, and what topics, sources and test evidence mean."
+canonical: "https://docs.nixflex.com/concepts/knowledge"
+sidebarTitle: "Knowledge concepts"
+---
+
+Agent knowledge supplies reviewed facts to enabled channels without granting permission to take actions.
+
+<div className="nxf-facts">
+  <div><small>Owner</small><strong>Agent</strong></div>
+  <div><small>Channels</small><strong>Individually enabled</strong></div>
+  <div><small>Publication</small><strong>Confirm live topics</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- One agent owns the base shared by its attached numbers.
+- Small bases can supply all topics; Test evidence is supplied context, not an accuracy score.
+- A source, draft, publication job and live topic represent different stages.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Which agent owns the knowledge?
+
+Each agent has one knowledge base. Attached phone numbers use the current agent’s knowledge, including numbers managed through code. A number has no separate knowledge base or independent knowledge-off setting. Use separate agents when branches need different answers.
+
+Phone instructions describe behaviour and the facts needed almost every time. Knowledge supplies longer details. Outbound calls still need their own purpose; website and SMS instructions remain separate. Knowledge does not grant permission to book, transfer or send messages.
+
+## How does the agent find an answer?
+
+A small base supplies all valid topics together. A large base searches for relevant information and can keep relevant context from earlier turns. Current ownership, channel, validity and revision are checked before facts are supplied. A slow or unavailable lookup can leave no new match. The system does not wait indefinitely for facts.
+
+Inbound knowledge starts on. Outbound phone calls and campaigns share one switch. Website voice, website chat and SMS have separate switches, initially off. **Strict** asks for a closer match; **Normal** allows more similar wording. The not-found sentence explains what to say when information is missing.
+
+## What does Test prove?
+
+Test uses the knowledge selector and current facts. It excludes the agent’s full instructions and performs no actions. The topics shown are supplied context, not proof that every topic influenced the answer. A small base can show every topic even when the question is unrelated. Live speech and timing can differ from typed questions.
+
+## What happens after an edit?
+
+Saving a live topic suppresses the old answer while a fresh index is prepared. Deleting a topic prevents a refresh of that source from restoring it. Adding the information explicitly as a new source is a separate choice. Deleting the last topic also removes its source and retained original.
+
+Knowledge statistics and missed questions are review signals. They are not accuracy scores or complete call counts. Tests do not count as customer answers. Missing-question text is retained for seven days; a failed background write can leave a gap.
+
+See [teach your agent](/guides/business/knowledge) or [manage knowledge with the API](/guides/developer/knowledge).

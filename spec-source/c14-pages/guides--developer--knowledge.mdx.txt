@@ -1,0 +1,87 @@
+---
+title: "Build an agent knowledge workflow"
+sidebarTitle: "Knowledge workflow"
+description: "Choose the right knowledge task: ingest sources, review facts, test answers, maintain exports or manage agent keyterms."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge"
+---
+
+Build an agent knowledge workflow from source preparation through reviewed publication and tested answers.
+
+<div className="nxf-facts">
+  <div><small>Owner</small><strong>One agent</strong></div>
+  <div><small>Publication</small><strong>Reviewed job result</strong></div>
+  <div><small>Recovery</small><strong>Saved operation and revision</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Each agent owns one base shared by its attached numbers.
+- Request review explicitly; accepted preparation is not confirmed publication.
+- Keep base, source, draft, topic and job IDs distinct.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose the task
+
+| Task | Guide | Done when |
+| --- | --- | --- |
+| Add text, files or website pages | [Add sources](/guides/developer/knowledge/ingest-sources) | The preparation job has a known result. |
+| Approve facts for use | [Review and publish](/guides/developer/knowledge/review-and-publish) | The publication job and live topics confirm the change. |
+| Check answers and missing facts | [Test and troubleshoot](/guides/developer/knowledge/test-and-troubleshoot) | The answer and supplied evidence match the published facts. |
+| Refresh material or save a copy | [Refresh and export](/guides/developer/knowledge/refresh-and-export) | The requested revision is published or exported. |
+| Improve recognition of names | [Keyterms](/guides/developer/knowledge/keyterms) | The saved manual list and automatic hints are understood. |
+
+## Understand the objects
+
+A source is submitted material. A job prepares, publishes, exports or cleans up that material. A draft holds facts for review; live topics are the pieces available for answers. An accepted source is not automatically a live answer.
+
+Use the agent’s current knowledge scope. Retired number-level knowledge routes return 410; old number rows are not automatically converted into live agent facts. Re-add intended content to the current agent and review it explicitly.
+
+## Keep each operation recoverable
+
+Knowledge writes require an `Idempotency-Key` of 8–128 letters, digits, dots, underscores, colons or hyphens; `prompt:` is reserved. Save the key before submitting, retain it across an uncertain response and use a new key only for a new intention.
+
+Read the current revision before an edit. A stale revision needs renewed review, not an automatic overwrite. Poll the returned job using bounded delays and the server’s retry guidance. HTTP 200 for a failed job still means the operation failed.
+
+## Check access and limits
+
+| Status or condition | Meaning | Recovery |
+| --- | --- | --- |
+| 400 `invalid_input` | Invalid source, test mode or field | Correct the request. |
+| 409 `stale_revision` | The base, source, draft or cursor changed | Read current state, review again and use the correct revision for that resource. |
+| 409 `idempotency_conflict` | Same key used for different input | Preserve the original operation; use a new key only for a new intention. |
+| 409 `review_required`, `suspicious_review_required` | Review is incomplete | Collect explicit choices; do not auto-approve warnings. |
+| 409 `knowledge_missing` | No live usable knowledge for Test | Publish a topic first. |
+| 410 `number_knowledge_removed` | Number-level knowledge is retired | Use the current attached agent. |
+| 413 file/source/knowledge limits | Input or saved inventory is too large | Reduce input or remove unneeded sources. |
+| 415/422 file validation | Unsupported, unsafe or unreadable content | Fix the source; image-only PDFs need selectable text or pasted text. |
+| 429 `busy` or an allowance limit | Work or account limit reached | Wait for current work or the stated reset; do not create duplicates. |
+| 503 `knowledge_loading` | Test could not load/check current knowledge in time | Retry that completed refusal with a fresh key; retain the old key for an unknown network outcome. |
+| Other 503 or network failure | Dependency unavailable or outcome uncertain | Retry bounded reads; reconcile writes with their original key and job before repeating. |
+
+| Limit | Value |
+| --- | --- |
+| Source / saved base | 20,000 / 100,000 tokens |
+| Packed topic | 800 tokens |
+| File / PDF | 10 MiB / 200 pages |
+| Sources / topics per base | 50 / 1,000 |
+| Bases / private storage per account | 20 / 100 MiB |
+| Active jobs | 8 per account |
+| Test question | 4,000 characters |
+| Test sessions | 100 starts per day; no question-count gate within an active session |
+
+Read capabilities and usage instead of inferring entitlement from old training counters. Local file checks are not a comprehensive virus scan. When a scanner is configured but unavailable, PDF/DOCX jobs can wait at `safety_check` or `safety_waiting`; use the server retry time and expiry message.
+
+## Continue
+
+- [Add the first source](/guides/developer/knowledge/ingest-sources)
+- [Read capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [How knowledge reaches a call](/concepts/knowledge)

@@ -1,0 +1,72 @@
+---
+title: "Test and troubleshoot knowledge answers"
+sidebarTitle: "Test knowledge answers"
+description: "Run an agent knowledge-only test, inspect supplied topic evidence and resolve missing, stale or loading answers without placing calls or sending messages."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge/test-and-troubleshoot"
+---
+
+Test whether an agent can answer from its published knowledge, then use the returned evidence to fix missing or stale facts.
+
+<div className="nxf-facts">
+  <div><small>Mode</small><strong>Knowledge only</strong></div>
+  <div><small>Channel</small><strong>Choose explicitly</strong></div>
+  <div><small>Evidence</small><strong>Supplied live topics</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Knowledge tests use live unsuppressed facts and perform no call, booking or message action.
+- Evidence shows supplied context; it does not prove every listed topic shaped the answer.
+- A full call test is a separate step for agent instructions, speech and actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge/test-and-fix) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Start a knowledge session
+
+Read the agent’s knowledge scope and confirm that it has live unsuppressed topics. Create a [test session](/api-reference/knowledge/post-agents-target-knowledge-base-test-sessions) with a fresh idempotency key:
+
+```json
+{"mode":"knowledge","channel":"inbound"}
+```
+
+Save the returned session ID. The supported mode is `knowledge`; do not send number context, a call purpose or a made-up full-agent mode. Choose the actual channel you want to test, since channels control where knowledge is used.
+
+## Ask and inspect the result
+
+POST to [session messages](/api-reference/knowledge/post-knowledge-test-sessions-id-messages), with another operation key:
+
+```json
+{"text":"When are appointments available?"}
+```
+
+Inspect the answer and supplied topic evidence together. For a small base, `selection:whole_base` means the whole base was supplied, even for an unrelated question. Evidence describes available context, not a statement that the answer relied on every topic.
+
+Ask one known question, a paraphrase, a question outside the published facts and a question whose answer recently changed. Check the fallback for missing information as carefully as the successful answer. Do not paste private customer records into a test unless your account policy permits them.
+
+## Recover from a failed test
+
+| Result | Action |
+| --- | --- |
+| 409 `knowledge_missing` | Publish at least one usable topic, then start the test again. |
+| 503 `knowledge_loading` | This is a completed refusal; retry it with a fresh key after waiting. |
+| Network response lost | Keep the original key and reconcile that message before submitting another. |
+| Old facts appear | Check the agent, channel, live revision and publication job. |
+| Correct facts but poor call behaviour | Review the full agent instructions and run a separate controlled call test. |
+
+Test questions read current facts. The latest 100 messages are retained as context. A question is limited to 4,000 characters; the reviewed limit is 100 session starts per day, with no separate question-count gate in an active session. Read capabilities and usage for the current account instead of inferring access from old training counters.
+
+## Fix the source of a wrong answer
+
+Edit the relevant topic or refresh its saved source, review the resulting draft and confirm publication. There is no training, correction-note or full-agent test endpoint in this workflow. Adding a correction to a conversation is not a replacement for updating the live facts.
+
+- [Review and publish changes](/guides/developer/knowledge/review-and-publish)
+- [Refresh saved sources](/guides/developer/knowledge/refresh-and-export)
+- [Understand channel inheritance](/concepts/agent-channels)

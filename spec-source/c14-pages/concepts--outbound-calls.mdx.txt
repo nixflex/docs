@@ -1,0 +1,50 @@
+---
+title: "Understand outbound requests and call outcomes"
+description: "Understand Nixflex outbound call purposes, source numbers, recipient contact checks and campaign results before sending or retrying an external call request."
+canonical: "https://docs.nixflex.com/concepts/outbound-calls"
+sidebarTitle: "Outbound call concepts"
+---
+
+Treat an outbound call as an authorised request with a specific purpose, a saved identity and results that arrive in separate stages.
+
+<div className="nxf-facts">
+  <div><small>Create</small><strong>POST /calls/outbound</strong></div>
+  <div><small>Intent</small><strong>Saved UUID</strong></div>
+  <div><small>Read</small><strong>Request then call</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A purpose is required and is not permission to contact a recipient.
+- Save request_id before sending and keep its original account and base URL.
+- Acceptance, completion and a booking result are different states.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Single calls and campaigns
+
+`POST /v1/calls/outbound` creates a single call. `agent_id`, `to_number` and `prompt` identify the assistant, recipient and purpose. An optional `from_number` chooses an eligible number; it is not a substitute for attaching one to the agent. Dynamic variables use `dynamic_vars`.
+
+Campaigns prepare a set of recipients. Creation requests immediate launch by default; scheduled work can run automatically when due. Separate launch controls do not make creation a draft-only operation. Voice recipient rows use `phone` and a nested `variables` object. Campaign schedules and consent are distinct from creation. Previewing a contact window sends nothing and cannot authorise dispatch.
+
+## Admission is checked at dispatch
+
+Current contact restrictions, recipient-local hours, time-zone confidence, balance, active-state checks and capacity can refuse or hold work. Campaigns can hold affected rows while a single request returns a refusal. Read the reason rather than silently widening hours.
+
+## A timeout is not proof of failure
+
+Acceptance, ringing, connection and completion are different states. If a response is lost, reconcile the existing request or call before sending another one. A client wait timeout does not hang up the call. Retry only with the endpoint's documented duplicate-prevention rules.
+
+Knowledge for outbound calls and campaigns uses the same agent-level channel switch. Inbound pre-call context is not an outbound-purpose mechanism.
+
+- [Create a voice campaign](/guides/business/voice-campaigns)
+- [Build outbound calls](/guides/lead-qualification)
+- [Client safety and retries](/api-reference/calls/client-safety)

@@ -1,0 +1,113 @@
+---
+title: "Configure outbound voicemail behaviour"
+description: "Configure Nixflex voicemail detection and messages, understand number origin rules and test timing without assuming every answering system is recognised."
+canonical: "https://docs.nixflex.com/advanced/voicemail-detection"
+sidebarTitle: "Voicemail behaviour"
+---
+
+Configure machine detection and a brief voicemail message for outbound calls without assuming a message will always be left.
+
+<div className="nxf-facts">
+  <div><small>Channel</small><strong>Outbound phone</strong></div>
+  <div><small>Message</small><strong>Nonblank when enabled</strong></div>
+  <div><small>Detection</small><strong>Can end before message</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- API-origin and dashboard-origin numbers select message settings differently.
+- Carrier machine detection can end the call before the leave-message path.
+- Detected voicemail skips automatic post-call SMS.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Review whether the sending number is dashboard-origin or API-origin.
+
+## 1. Read current configuration
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/agents/agent_example" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
+```
+
+```python Python
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request(
+    'https://api.nixflex.com/v1/agents/agent_example',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+    # Handle the private result without logging it.
+```
+
+```powershell CLI (PowerShell)
+nixflex agents get agent_example --json --base-url https://api.nixflex.com
+```
+
+</CodeGroup>
+
+## 2. Choose detection deliberately
+
+`amd_enabled` controls the optional early answering-machine detection path. Recognition and timing vary. Enabling this can terminate a machine-answered call before a later leave-message path has a chance to run.
+
+## 3. Set a short message
+
+When leave-message is enabled, supply nonblank `voicemail_message`. Dashboard-origin numbers use the agent policy. API-origin numbers use their own enable/message without fallback to the agent. A valid message is not proof it will be delivered to every answering system.
+
+## 4. Test the actual destination behaviour
+
+Use an approved test mailbox and listen to the saved message. Test a long greeting, no tone, human answer and early detection. Do not promise fixed detection times or perfect human/machine classification.
+
+## 5. Read the call outcome
+
+Check the recorded end reason and available events. Automatic post-call SMS skips detected voicemail. Do not use an uncertain voicemail result as an instruction to repeatedly call or text the recipient.
+
+## Example response
+
+Read the saved `amd_enabled`, `voicemail_leave_enabled` and `voicemail_message` fields at their applicable scope. Actual call outcomes are separate from these configuration values.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Leave-message on with blank text | Supply a valid message. |
+| Early detection ends call | Do not assume leave-message also ran. |
+| API-origin number | Configure its own voicemail fields. |
+| Unknown classification | Review the result before another contact. |
+
+## Next steps
+
+- [Number update](/api-reference/phone-numbers/update)
+- [Agent update](/api-reference/agents/update)
+- [Origin-specific inheritance](/concepts/agent-inheritance)

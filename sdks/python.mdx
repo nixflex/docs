@@ -1,258 +1,191 @@
 ---
-title: "Python SDK"
-description: "The official Nixflex client for Python 3.9+"
-icon: "python"
+title: "Use the Python SDK with sync or async code"
+sidebarTitle: "Python SDK"
+description: "Install the reviewed Python candidate, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states."
 canonical: "https://docs.nixflex.com/sdks/python"
 ---
-The Python SDK provides snake_case methods with sync and async clients and one
-dependency, `httpx`. Local unpublished Group 2 adds `phone_numbers.get(number)`,
-cursor/filter list arguments and seven typed update keywords. See
-[number kit examples](/api-reference/phone-numbers/switches). These additions
-are local only; PyPI publication is separate.
+Use the Python SDK with a managed synchronous or asynchronous client, keeping reads, approved writes and recovery separate.
 
-```bash
-pip install nixflex
-```
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Python 3.9+</strong></div>
+  <div><small>Clients</small><strong>Sync and async</strong></div>
+  <div><small>Recovery</small><strong>Saved UUID and current reads</strong></div>
+</div>
 
-## Reviewed 0.4.0 candidate
+<div className="nxf-important">
 
-The supplied K6 wheel adds Google Calendar, number credentials, SMS 409 error classes
-and booking models to both sync and async clients. It is a locally built release
-candidate; the registry command above does not establish that you have it.
-Verify the supplied archive hash, then install that exact wheel:
+**The important part**
+
+- The reviewed 0.4.0 package requires Python 3.9 or later and httpx.
+- Automatic retries are GET-only; a failed mutation can still have happened.
+- Local call preparation stays synchronous even on AsyncNixflex.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed wheel
+
+Compare the supplied wheel with its [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your virtual environment:
 
 ```bash
 python -m pip install ./nixflex-0.4.0-py3-none-any.whl
 ```
 
+A registry installation alone does not establish this candidate’s availability. Use the exact reviewed archive when testing its newer call and calendar methods.
+
+## Read usage with a synchronous client
+
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately. Use the API origin without `/v1`; the client adds that path prefix. The context manager closes the underlying HTTP client.
+
 ```python
 import os
-from nixflex import Nixflex, AsyncNixflex
-config = dict(api_key=os.environ['NIXFLEX_API_KEY'], base_url=os.environ['NIXFLEX_BASE_URL'])
-with Nixflex(**config) as client:
-    status = client.integrations.get_google_calendar('+12025550123')
+from nixflex import Nixflex, NixflexError
 
-async def read_calendar_status():
-    async with AsyncNixflex(**config) as client:
-        return await client.integrations.get_google_calendar('+12025550123')
+connection = {
+    "api_key": os.environ["NIXFLEX_API_KEY"],
+    "base_url": os.environ["NIXFLEX_BASE_URL"],
+    "timeout": 30.0,
+    "max_retries": 0,
+}
+try:
+    with Nixflex(**connection) as client:
+        usage = client.usage.get()
+        if not isinstance(usage, dict):
+            raise ValueError("Unexpected usage response")
+        print("Usage read succeeded.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": error.request_id})
+    raise SystemExit(1)
 ```
 
-Replace the fictional number with an owned fixture. The status GET may refresh/check
-the existing connection internally. Each write below is a separate deliberate action.
+Keep the returned object and complete exception details out of routine logs. Log only safe status, code and request identifiers.
 
-| Sync method | Purpose |
-| --- | --- |
-| `integrations.connect_google_calendar(number, return_url)` | Return a ten-minute consent link for a human; do not log or auto-open it. |
-| `integrations.get_google_calendar(number)` | Read all six status fields, including `needs_reconnect` and `send_invites`. |
-| `integrations.update_google_calendar_settings(number, **settings)` | Change supplied settings, preserving `False` and omitted values. |
-| `integrations.disconnect_google_calendar(number)` | Remove saved access without claiming remote revocation. |
-| `phone_numbers.update_credentials(number, **credentials)` | Update one carrier pair for the existing number; retains settings/history. |
+## Use an asynchronous client
 
-The async methods have the same arguments and are awaited. Settings are `timezone`,
-`hours`, `slot_minutes`, `calendar_id` and `send_invites`. Supplied hours replace all
-seven days, with `None` for closed days; slot values are 15, 30, 45 or 60.
+JSON methods are awaitable. This read-only function opens and closes its own client:
 
 ```python
-# Only after approval of this exact change:
-client.integrations.update_google_calendar_settings('+12025550123', send_invites=False)
-```
-
-```python
-# Separate sensitive routing change, with privately injected values:
-client.phone_numbers.update_credentials(
-    '+12025550123',
-    telnyx_api_key=os.environ['NIXFLEX_TELNYX_API_KEY'],
-    telnyx_connection_id=os.environ['NIXFLEX_TELNYX_CONNECTION_ID'],
-)
-```
-
-The alternate pair is `twilio_sid` and `twilio_token` from private
-`NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN`. Never mix pairs, log them, or add
-`provider` to the SDK body. Missing/invalid pairs send no request. Writes do not retry
-automatically. Stop on `carrier_outcome_unknown`; `credential_save_pending` permits
-only a manual completion with identical input. Read [the routing limits](/api-reference/phone-numbers/credentials).
-
-`NixflexDoNotContactError` represents HTTP 409 `do_not_contact`, and
-`NixflexConflictError` covers other 409 conflicts. Keep old 400
-`NixflexInvalidRequestError` handling. Stop on known suppression; do not resend.
-
-Exported `Booking`, `CallCompletedBookingEvent` and `SmsBookingEvent` TypedDict models
-cover `call.completed.bookings[]` and `sms.booking.booking`: `action`, `booking_uid`,
-`start`, `end`, `attendee_name`, `attendee_email`, `service`, `timezone`. Preserve
-nullable fields and numeric service values. These types do not validate or authenticate
-incoming requests. [Verify the original raw webhook body first](/advanced/webhooks).
-
-## Authenticate
-
-```python
-from nixflex import Nixflex
-
-client = Nixflex(api_key="nxf_xxx:nxfs_xxx")   # both halves, joined by a colon
-```
-
-Options: `base_url` (staging), `timeout` (seconds, default 30), `max_retries` (default 1). Use it as a context manager or call `client.close()`.
-
-## Async
-
-Every method is available on `AsyncNixflex` as an awaitable - same names, same arguments.
-
-```python
+import asyncio
+import os
 from nixflex import AsyncNixflex
 
-async with AsyncNixflex(api_key="nxf_xxx:nxfs_xxx") as client:
-    agents = await client.agents.list()
+async def inspect_request(request_id):
+    async with AsyncNixflex(
+        api_key=os.environ["NIXFLEX_API_KEY"],
+        base_url=os.environ["NIXFLEX_BASE_URL"],
+        max_retries=0,
+    ) as client:
+        state = await client.calls.outbound_request(request_id)
+        if state["state"] == "accepted" and state["call_id"]:
+            return await client.calls.bookings(state["call_id"])
+        return state
+
+if __name__ == "__main__":
+    result = asyncio.run(inspect_request(os.environ["NXF_REQUEST_ID"]))
+    print("Saved request inspected; no call sent.")
 ```
 
-## Agents
+Keep the result private and preserve its state. Streaming methods such as Activity CSV return an async iterator rather than an ordinary JSON value.
+
+## Prepare locally and persist first
+
+Create a private `intent.json` using the [outbound request fields](/guides/developer/call-requests). Run this once for a new intention; it sends nothing and refuses to overwrite an existing prepared file.
 
 ```python
-agent = client.agents.create(name="Reception", system_prompt=open("prompt.txt").read(), voice_id="Ashley")
-client.agents.list(limit=20)
-client.agents.get(agent["agent_id"])
-client.agents.update(agent["agent_id"], incall_sms_enabled=True, silence_hangup_seconds=12)
-client.agents.delete(agent["agent_id"])
+import json
+from pathlib import Path
+from nixflex import prepare_outbound_call
+
+intent = json.loads(Path("intent.json").read_text(encoding="utf-8"))
+prepared = prepare_outbound_call(intent)
+with open("prepared-call.json", "x", encoding="utf-8") as handle:
+    json.dump(prepared, handle, indent=2)
+    handle.write("\n")
+print("Prepared locally; no call sent.")
 ```
 
-`create` and `update` take any field the API accepts as keyword arguments - see [Create agent](/api-reference/agents/create).
+Use private directory permissions on your platform and store the account/base-URL association with the intention. Do not regenerate the UUID when reopening your process. `client.calls.prepare(**params)` is also local and synchronous, including on `AsyncNixflex`.
 
-## Calls
+## Send only the approved saved intention
 
-```python
-call = client.calls.create(
-    agent_id=agent["agent_id"],
-    to_number="+447453573770",
-    prompt="Call {{name}} to confirm their appointment on Tuesday at 11.",
-    variables={"name": "Sam"},
-)
-client.calls.list(limit=20)
-client.calls.get(call["call_id"])          # transcript, analysis, bookings, recording_url
-client.calls.delete(call["call_id"])       # guarded request; may refuse cleanup
-```
-
-Voice campaigns: `client.campaigns.create(agent_id=..., from_number=..., prompt=..., recipients=[{"phone": "+44...", "variables": {...}}])` dials immediately unless you pass `schedule_type="schedule"`; `client.campaigns.launch(campaign_id)` starts a scheduled one.
-
-Area 3 batch 1 maps single-call `variables` to `dynamic_vars` on the wire; the
-canonical keyword also works, but do not pass both. See [client safety](/api-reference/calls/client-safety).
-
-## Phone numbers
+The following separate script places a paid call once. Run it only after approval of the saved inputs, never as an automatic retry.
 
 ```python
-client.phone_numbers.import_(phone_number="+447446466847", agent_id=agent["agent_id"], twilio_sid="AC...", twilio_token="...")
-client.phone_numbers.list()
-client.phone_numbers.update("+447446466847", sms_reply_enabled=True, sms_prompt="You are the text assistant for Smile Dental...")
-client.phone_numbers.set_monitor("+447446466847", True)
-client.phone_numbers.set_web_calls("+447446466847", True)
-client.phone_numbers.delete("+447446466847")
-```
+import json
+import os
+from pathlib import Path
+from nixflex import Nixflex, NixflexError
 
-`import_` has a trailing underscore because `import` is a Python keyword. Telnyx numbers use `telnyx_api_key` and `telnyx_connection_id`.
-
-## Caller context
-
-What the agent knows about a caller on one of your numbers. First number is yours, second is the caller's. See [Caller context](/concepts/caller-context).
-
-```python
-client.callers.set("+447446466847", "+447700900123", name="Sam Carter", email="sam.carter@example.com", reference_id="4827")
-record = client.callers.get("+447446466847", "+447700900123")
-record["caller"]["context"]        # {"name": ..., "email": ..., "last_call": ..., "open_item": ...}
-
-client.callers.import_("+447446466847", [
-    {"caller_number": "+447700900123", "name": "Sam Carter", "email": "sam.carter@example.com"},
-    {"caller_number": "+447700900124", "name": "Priya Shah", "preference": "prefers afternoon appointments"},
-])                                  # up to 1,000 rows, validated before any write
-client.callers.delete("+447446466847", "+447700900123")
-```
-
-A field you leave out of `set()` is kept; pass `None` to remove it. `last_call` and `open_item` are written by the engine and cannot be set.
-
-## SMS
-
-```python
-client.sms.send(agent_id=agent["agent_id"], from_number="+447446466847", to="+447700900123", message="Reminder: your appointment is tomorrow at 2pm.")
-
-campaign = client.sms.campaigns.create(agent_id=..., from_number="+447446466847", message="Hi {{name}}, ...", recipients=[{"phone": "+447700900123", "variables": {"name": "Sam"}}])
-client.sms.campaigns.launch(campaign["campaign_id"])
-client.sms.campaigns.list(status="done")
-client.sms.campaigns.get(campaign["campaign_id"])
-client.sms.campaigns.delete(campaign["campaign_id"])
-```
-
-These are separate operation examples. Launch only after reviewing recipients and consent; delete only after active work and settlement finish. Deletion returns 409 `campaign_in_progress` or `campaign_settlement_pending` while those checks are unresolved. The latter includes `details.deleted:false`. Keep the campaign visible until confirmed success; 503 `deletion_unavailable` is not deletion proof. See [SMS campaign deletion](/api-reference/sms/campaigns-delete).
-
-## Webhooks
-
-```python
-client.webhooks.set("+447446466847", "https://api.yourapp.com/nixflex", slot=1)
-client.webhooks.get("+447446466847")
-client.webhooks.delete("+447446466847", slot=2)
-```
-
-Verify a delivery with the **raw** request body:
-
-```python
-from nixflex import verify_webhook_signature
-
-@app.post("/nixflex")
-async def hook(request):
-    raw = await request.body()
-    if not verify_webhook_signature(raw, request.headers.get("X-Nixflex-Signature"), KEY_SECRET):
-        return Response(status_code=401)
-    ...
-```
-
-## Account and bring your own
-
-```python
-client.usage.get()
-client.keys.rotate()                       # the old secret stops working immediately
-
-client.storage.set(**config); client.storage.get(); client.storage.delete()
-client.llm.set(**config);     client.llm.get();     client.llm.delete()
-client.tts.set(**config);     client.tts.get();     client.tts.delete()
-```
-
-`set()` is verified by the API with a real probe before saving; `get()` never returns secrets. Fields on [Your own storage](/advanced/your-own-storage), [Your own LLM](/advanced/your-own-llm), [Your own TTS](/advanced/your-own-tts).
-
-## Errors
-
-Every non-2xx response raises a typed exception. Catch by class:
-
-```python
-from nixflex import NixflexRateLimitError, NixflexNotFoundError, NixflexError
-
+saved = json.loads(Path("prepared-call.json").read_text(encoding="utf-8"))
 try:
-    client.agents.get("agent_missing")
-except NixflexNotFoundError as e:
-    print(e.code, e.status, e.request_id)   # not_found 404 <id to quote to support>
-except NixflexRateLimitError as e:
-    time.sleep(e.retry_after_seconds)
-except NixflexError as e:
-    print(e.code, e.doc_url)
+    with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
+                 base_url=os.environ["NIXFLEX_BASE_URL"],
+                 max_retries=0) as client:
+        receipt = client.calls.create(**saved)
+    with open("call-receipt.json", "x", encoding="utf-8") as handle:
+        json.dump(receipt, handle, indent=2)
+        handle.write("\n")
+    print("Receipt saved; inspect the call separately.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": saved["request_id"]})
+    raise SystemExit(1)
 ```
 
-| Class | When |
-|---|---|
-| `NixflexAuthenticationError` | 401 - bad or missing key |
-| `NixflexPaymentRequiredError` | 402 - balance exhausted |
-| `NixflexNotFoundError` | 404 |
-| `NixflexInvalidRequestError` | 400 / 422 |
-| `NixflexRateLimitError` | 429 - `retry_after_seconds` is set |
-| `NixflexServerError` | 5xx |
-| `NixflexOutcomeUnknownError` | A change may have happened; check before retrying. Also a `NixflexServerError`. |
-| `NixflexConnectionError` | Read failure or timeout; no mutation retry implied |
+A local file failure after dispatch does not mean the call failed. Read `calls.outbound_request(saved["request_id"])` with the original account and environment. Preserve a known call ID even if journal confirmation is unconfirmed. A 404 or unavailable read is not permission for a new UUID.
 
-## Retries
+## Read results and use the right method
 
-Area 3 batch 1 implements GET-only bounded retries for sync and async clients.
-POST/PUT/PATCH/DELETE never repeat automatically, including after 429. Lost or
-malformed change replies and unproved 5xx raise `NixflexOutcomeUnknownError`, with
-`outcome='unknown'`, `safe_to_retry=False`, status, request ID and original details
-when available. Catch this type before `NixflexServerError`; check before retrying.
-Explicit whole-operation not-sent proof stays distinct, without an automatic retry.
-Set `max_retries=0` to disable GET retries. This remains an unpublished candidate,
-not a claim about the package currently installed from PyPI.
+| Task | Python method |
+| --- | --- |
+| Filtered call history | `calls.history(agent=agent_id, limit=50)` |
+| Current detail | `calls.read(call_id)` |
+| Booking evidence | `calls.bookings(call_id)` |
+| Recording access | `calls.recording(call_id)` |
+| Owned number | `phone_numbers.get(number)` |
+| Website settings | `web_agent.get(number)` |
+| Knowledge workflow | `knowledge` methods with saved keys and revisions. |
 
-## Related
+Legacy `calls.list` uses limit/offset and refuses an agent filter; use history for filtering. Continue cursor endpoints using their returned cursor and documented parameters. Lists are not frozen snapshots.
 
-- [Node.js SDK](/sdks/node) · [Other languages](/sdks/other-languages) · [CLI](/cli/overview) · [MCP server](/ai-tools/overview)
-- [PyPI](https://pypi.org/project/nixflex/) · [GitHub](https://github.com/nixflex/nixflex-python)
+`variables` is a Python convenience alias for wire field `dynamic_vars`. Supply one alias only. A no-ID create uses the older call response; saved UUID requests use the durable receipt contract.
+
+## Preserve failure and booking states
+
+The default timeout is 30 seconds and the default is one eligible GET retry. `max_retries=0` disables those retries; the supported range is 0–3. `NixflexOutcomeUnknownError` and the `NixflexOutboundRequestError` family require reconciliation rather than an automatic replacement write.
+
+For bookings, only `ready` carries `result`. `none` means confirmed no successful changes; `processing`, `deleted` and `unavailable` must remain distinct. Count active `final` rows, not the number of timeline actions.
+
+| Error | Action |
+| --- | --- |
+| 401 or role refusal | Resolve the account, host or authorised role. |
+| GET rate limit | Follow the server retry guidance within a bound. |
+| Unknown mutation | Read current state with the saved operation identity. |
+| `do_not_contact` | Stop the send, including older 400 and current 409 forms. |
+
+Use the [strict raw-byte webhook verifier](/advanced/webhooks#3-verify-exact-request-bytes) before parsing an event. The signing secret is separate from the full API authentication string, and durable deduplication is still required.
+
+- [Read the Node equivalent](/sdks/node)
+- [Use paging safely](/guides/developer/pagination)
+- [Reconcile a saved outbound request](/guides/developer/call-requests)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="reviewed-040-candidate"></span>
+<span id="authenticate"></span>
+<span id="async"></span>
+<span id="agents"></span>
+<span id="calls"></span>
+<span id="phone-numbers"></span>
+<span id="caller-context"></span>
+<span id="sms"></span>
+<span id="webhooks"></span>
+<span id="account-and-bring-your-own"></span>
+<span id="errors"></span>
+<span id="retries"></span>
+<span id="related"></span>

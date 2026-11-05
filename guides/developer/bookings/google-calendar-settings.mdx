@@ -1,0 +1,82 @@
+---
+title: "Set Google Calendar hours and invitations"
+sidebarTitle: "Calendar hours and invitations"
+description: "Save Google Calendar time zone, seven-day hours, slot length and invitation preferences with explicit replacement and delivery rules."
+canonical: "https://docs.nixflex.com/guides/developer/bookings/google-calendar-settings"
+---
+Set the availability and invitation rules for a connected Google Calendar number, then read back the saved configuration.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Connected owned number</strong></div>
+  <div><small>Hours</small><strong>Complete seven-day map</strong></div>
+  <div><small>Invitations</small><strong>Boolean preference</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A supplied hours object replaces all seven days; overnight intervals are refused.
+- Omitted fields retain their saved values.
+- send_invites requests Google notifications; it does not prove inbox delivery or notify the owner separately.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/google-calendar) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read connection status
+
+Complete the [Google Calendar connection](/actions/google-calendar) first and read its current status. `needs_reconnect:true` requires renewed consent; reconnect preserves business settings. A failed status check leaves connection state unknown rather than proving disconnection.
+
+An explicit per-number IANA time zone wins; older saved settings can inherit the agent’s time zone. Use the intended calendar zone before interpreting local opening times.
+
+## Prepare a focused settings change
+
+Use [PATCH Google Calendar settings](/api-reference/integration-settings/google-calendar-settings). Send one or more documented fields. This complete example shows a seven-day map and an explicit invitation choice:
+
+```json
+{
+  "timezone":"Europe/London",
+  "hours":{
+    "monday":["09:00","17:00"],
+    "tuesday":["09:00","17:00"],
+    "wednesday":["09:00","17:00"],
+    "thursday":["09:00","17:00"],
+    "friday":["09:00","17:00"],
+    "saturday":null,
+    "sunday":null
+  },
+  "slot_minutes":30,
+  "calendar_id":"primary",
+  "send_invites":true
+}
+```
+
+Each day is null when closed or exactly an opening/closing pair in `HH:MM` form. Closing must be later on the same day. Valid slot lengths are 15, 30, 45 and 60 minutes. Omitting `hours` keeps the saved map; supplying it replaces the entire map.
+
+## Choose notification behaviour
+
+`send_invites` is a JSON boolean. Existing connections without a stored value default to true. Omit the field to preserve its current value; strings such as `"false"`, null and numbers are refused.
+
+When enabled, Google is asked to email the caller an invitation, update or cancellation. Google controls delivery. The engine does not add the owner as an attendee or send a separate owner email. When false, no Google notification is requested.
+
+Calendar notification and an in-call text are separate outcomes. A successful booking does not prove that an SMS was accepted or an email reached an inbox.
+
+## Save and verify
+
+Submit once, then read the returned safe settings. On a lost response, read the current configuration before repeating. Test a permitted slot and a closed period in a controlled booking flow, including the required separate name and email approvals.
+
+| Result | Recovery |
+| --- | --- |
+| `invalid_hours` | Supply all seven days with valid same-day intervals. |
+| `invalid_timezone` | Use the intended valid IANA zone. |
+| Invalid invitation value | Send true or false as a JSON boolean. |
+| Calendar access expired | Reconnect deliberately and retain the business settings. |
+
+- [Confirm the person and booking action](/actions/booking-confirmation)
+- [Troubleshoot booking outcomes](/guides/developer/bookings/troubleshooting)
+- [Read post-call booking results](/guides/developer/call-history)

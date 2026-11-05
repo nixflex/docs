@@ -1,0 +1,58 @@
+---
+title: "Write reliable phone-menu instructions"
+description: "Write Nixflex phone-menu instructions for an approved destination, allow bounded waiting and handle changed options or unanswered calls without looping."
+canonical: "https://docs.nixflex.com/best-practices/ivr-navigation"
+sidebarTitle: "Phone-menu instructions"
+---
+
+Describe the intended department and exit conditions so an outbound agent can navigate and test a real phone menu.
+
+<div className="nxf-facts">
+  <div><small>Target</small><strong>Specific department</strong></div>
+  <div><small>Wait</small><strong>Bounded</strong></div>
+  <div><small>Success</small><strong>Human reached</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Test the current menu rather than relying on an old digit sequence.
+- Keep menu waiting bounded and explain what to do when the route fails.
+- An answered menu is not a completed human handoff.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Describe the destination, not just a digit
+
+Explain the department and task before listing an expected option. For example, a fictional supplier may use option 2 for appointments today and change it later. Ask the agent to follow the current menu wording and stop navigating when a person answers.
+
+```text
+Call the approved supplier to confirm our requested appointment.
+Reach the appointments team. Listen to the current menu before choosing.
+If the menu offers appointments, choose that option.
+Do not select emergency, payment or unrelated services.
+When a person answers, leave menu mode and explain the purpose.
+If no suitable path is available, finish politely and record that outcome.
+```
+
+## Give waiting a limit
+
+The menu wait defaults to 240 seconds and is capped by the applicable maximum call duration. A short overall duration can end the attempt before the menu wait expires. Choose limits based on the task, not an assumption that hold music suspends every timer.
+
+Use [phone-menu controls](/actions/ivr-navigation) for the supported tags and settings. Receiving a customer's keypad entry is a different feature from sending menu digits. A website conversation cannot navigate a telephone switchboard.
+
+## Test the current menu
+
+Use an approved destination and test the real route. Include a changed option, a request to repeat, hold music, a person answering and no answer. Check the call result rather than assuming an emitted keypad tag reached its destination.
+
+Avoid repeated automatic attempts when the route fails. A timed-out client can leave the original call active, and another call could duplicate work. Save the original call identity and reconcile its state before trying again.
+
+
+Record the intended destination, the test date and the outcome in your own rollout notes. Recheck the route when the destination changes its greeting or menu. Keep an alternative human process for cases the agent cannot complete.

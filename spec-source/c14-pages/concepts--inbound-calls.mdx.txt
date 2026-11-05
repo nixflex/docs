@@ -1,0 +1,48 @@
+---
+title: "Understand inbound call admission and results"
+description: "Understand how Nixflex admits calls, selects number and agent settings, applies knowledge and actions, and prepares history after the conversation."
+canonical: "https://docs.nixflex.com/concepts/inbound-calls"
+sidebarTitle: "Inbound calls"
+---
+
+Follow an inbound call from account and number admission checks through conversation actions and later results.
+
+<div className="nxf-facts">
+  <div><small>Admission</small><strong>Current checks</strong></div>
+  <div><small>Conversation</small><strong>Effective settings</strong></div>
+  <div><small>Results</small><strong>Separate processing</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A connected number does not guarantee every call will be answered.
+- The pre-call hook is fail-open and cannot be the only security boundary.
+- Call completion does not prove recording, messages or event delivery succeeded.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/inbound-support) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## What shapes the conversation?
+
+The agent's call instructions are combined with supported number overrides and current call context. Caller memory and name greeting are separate controls. Inbound knowledge is enabled by default for a new base; saved facts are supplied according to the current agent, settings and available lookup time.
+
+A configured [pre-call hook](/advanced/precall-gate) can provide temporary context or explicitly reject the call. Its failure policy is fail-open, so it cannot serve as the sole security boundary for a protected action.
+
+## Which actions can happen?
+
+Calendar, text, transfer, keypad and custom-function actions require their own connections and permissions. A prompt alone cannot enable a disabled action. Recording is resolved from number and agent settings and depends on the actual recording path succeeding.
+
+## What remains afterwards?
+
+History and post-call analysis can arrive at different times. A completed call is not proof that its recording, summary, text or webhook delivery succeeded. Use the result's current status and recording access endpoint, then apply the configured retention policy.
+
+- [Set up inbound support](/guides/inbound-support)
+- [Add knowledge](/guides/business/knowledge)
+- [Read call results with code](/guides/developer/call-history)

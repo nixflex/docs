@@ -1,0 +1,50 @@
+---
+title: "Understand website voice permissions"
+description: "Understand Nixflex website voice, the Web agent switches, public visitor context and restricted actions before enabling browser calls on your website."
+canonical: "https://docs.nixflex.com/concepts/web-calls"
+sidebarTitle: "Website voice"
+---
+
+Enable website voice through the installed widget while preserving the number’s website settings and public-visitor boundaries.
+
+<div className="nxf-facts">
+  <div><small>Channel</small><strong>Browser voice</strong></div>
+  <div><small>Install</small><strong>Generated widget</strong></div>
+  <div><small>Visitor</small><strong>Public and unverified</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Both web_agent_enabled and web_calls_enabled must permit voice.
+- Visitor contact details are self-reported, not verified identity.
+- Website functions do not unlock built-in telephone booking, SMS or transfer actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Saved switches and effective voice
+
+Website voice requires both `web_agent_enabled` and `web_calls_enabled`. Turning the Web agent off leaves the saved voice preference unchanged but prevents effective voice access. Account, agent, balance and current admission checks also apply.
+
+Website instructions are separate from phone and SMS instructions. Knowledge belongs to the agent; website voice and website chat have independent knowledge switches. Visitor contact fields are self-reported, not verified identity. Recognition can end when browser storage changes.
+
+## Public visitors and actions
+
+The number's `web_functions_enabled` switch defaults off. Enabling it permits that number's enabled custom functions after current checks. Every enabled function must therefore be suitable for a public visitor. This does not enable built-in calendar booking, SMS, transfers, keypad or telephone-menu navigation.
+
+## Installation and testing
+
+Use the dashboard's generated Install snippet and current environment configuration. Do not copy an old SDK script or expose an account key in the browser. An install-not-ready message means the snippet cannot yet be supplied for that environment.
+
+A successful preview does not test the final website's microphone permissions, browser storage, embedding restrictions or contact collection. Test the installed site with fictional contact details and approved test actions.
+
+- [Install the website widget](/guides/voice-widget)
+- [Manage website settings with code](/web-assistant/overview)
+- [Agent inbox](/guides/business/agent-inbox)

@@ -1,0 +1,119 @@
+---
+title: "Build an SMS campaign workflow"
+description: "Create Nixflex SMS campaigns with reviewed variables, consent and recipient-local hours, then track delivery, handle replies and reconcile uncertain sends."
+canonical: "https://docs.nixflex.com/sms/sms-campaigns"
+sidebarTitle: "SMS campaign workflow"
+---
+
+Prepare an SMS campaign’s template, recipients and contact checks, then track acceptance, delivery and replies separately.
+
+<div className="nxf-facts">
+  <div><small>Creation</small><strong>Can send immediately</strong></div>
+  <div><small>Variables</small><strong>Nested per recipient</strong></div>
+  <div><small>Results</small><strong>Separate counts</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Creating a campaign can send immediately or when scheduled.
+- SMS creation makes new work; it has no reuse_campaign_id replacement mode.
+- Keep uncertain sends visible and reconcile the saved campaign ID.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Prepare and send](/guides/developer/sms-campaigns/prepare-and-send) | Review templates, recipients and contact choices. |
+| [Delivery and controls](/guides/developer/sms-campaigns/delivery-and-controls) | Read separate outcomes and control unsent work. |
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an active owned agent and explicit sender. Set `NXF_AGENT_ID` and other example identifiers before using candidate examples.
+
+## 1. Inspect campaign state
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/sms/campaigns?status=running&limit=2" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
+  maxRetries: 0,
+});
+const result = await c.sms.campaigns.list({"status": "running", "limit": 2});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
+    max_retries=0,
+) as c:
+    result = c.sms.campaigns.list(status='running', limit=2)
+```
+
+```powershell CLI (PowerShell)
+nixflex sms campaigns list --status running --limit 2 --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Prepare the template and replies
+
+Use `message_template` with values in each recipient’s nested `variables`. Every required placeholder needs a value. Set `reply_context_prompt` for campaign-specific reply context; the number still needs SMS auto-reply enabled and appropriate instructions. The default association window is 168 hours.
+
+## 3. Review and create
+
+POST `/v1/sms/campaigns` with agent, sender, template and recipients. Choose duplicate handling, confirm permission and preview contact hours. `now` requests launch immediately. `schedule` uses `scheduled_date` and may send when due. Do not send `reuse_campaign_id`; SMS creation always creates new work.
+
+## 4. Handle delivery separately
+
+Store `campaign_id` and read campaign state. Sent, delivered and failed counts are distinct. A recipient response can arrive later; message acceptance is not delivery. Unknown transport outcomes must remain unknown rather than being silently resent.
+
+## 5. Control unsent work
+
+Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. DELETE has separate eligibility checks and does not recall messages. PATCH can edit only the fields and states allowed by the API.
+
+Keep a campaign visible until deletion is confirmed. The final B57 deletion contract is pending review; do not carry the older settlement-wait rule into the new release or invent a replacement response. See the marked [deletion contract](/api-reference/sms/campaigns-delete) before using this action.
+
+## Example response
+
+The creation result includes `campaign_id`, accepted and rejected row counts, duplicates and state. Campaign reads expose separate `sent_count`, `delivered_count`, `failed_count` and `reply_count`; do not compute one by subtracting unrelated totals.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Missing template value | Correct the recipient data before creation. |
+| Duplicate policy warn | It does not stop launch; choose reject if needed. |
+| Contact or consent hold | Resolve the reason on existing work. |
+| Unknown send result | Reconcile; do not create a replacement campaign automatically. |
+| Size | At most 100,000 accepted rows; body limits can apply earlier. |
+
+## Next steps
+
+- [Create SMS campaign](/api-reference/sms/campaigns-create)
+- [Cancel dispatch](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel)
+- [SMS reply setup](/sms/sms-agent)

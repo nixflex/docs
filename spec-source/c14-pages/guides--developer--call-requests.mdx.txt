@@ -1,0 +1,87 @@
+---
+title: "Prepare and reconcile one outbound call"
+sidebarTitle: "Outbound request recovery"
+description: "Save an outbound request UUID before dispatch, send one approved call and read its durable state without turning a timeout into a duplicate call."
+canonical: "https://docs.nixflex.com/guides/developer/call-requests"
+---
+
+Save a call intention before sending it, then reconcile that same request until you know whether a call was accepted.
+
+<div className="nxf-facts">
+  <div><small>Before dispatch</small><strong>Durable UUID and inputs</strong></div>
+  <div><small>Send</small><strong>One approved attempt</strong></div>
+  <div><small>Recovery</small><strong>Read request state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Generate and persist request_id before the first dispatch.
+- Keep the same account, base URL, UUID and inputs during reconciliation.
+- Pending, unknown, 404 or an unavailable read never authorise an automatic redial.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prepare the intention locally
+
+Choose an active owned agent, an eligible sender and a recipient you are permitted to contact. Review the call instructions and variables before dispatch. The reviewed [Node, Python, CLI and MCP candidates](/sdks/ecosystem) have local preparation helpers; preparation itself does not place a call.
+
+Persist the complete prepared payload, including its UUID, in a durable application record before sending. Bind that record to the intended account and base URL. Protect phone numbers and instructions as private data. A newly generated UUID after a timeout represents a new call intention and can create another call.
+
+This illustrative body belongs to [POST /calls/outbound](/api-reference/calls/create-outbound). It uses fictional resources and must not be treated as a live fixture:
+
+```json
+{
+  "request_id":"9f9aa2b2-4b77-4fa1-9071-9cf6747a9082",
+  "agent_id":"agent_example",
+  "from_number":"+12025550100",
+  "to_number":"+12025550101",
+  "prompt":"Ask {{name}} whether they want to discuss an appointment.",
+  "dynamic_vars":{"name":"Sam"}
+}
+```
+
+The optional UUID belongs in `request_id`. A Knowledge `Idempotency-Key` is a different mechanism and is not a substitute for this field.
+
+## Send one approved request
+
+Submit the saved payload once after approval, with automatic write retries disabled. Save any returned `call_id` immediately. HTTP 201 accepts work; it does not prove the call connected or completed. A replay can return the same saved call with HTTP 200.
+
+An accepted call can include `request_status:unconfirmed` and `safe_to_retry:false` if journal confirmation is uncertain. Keep the known call ID and reconcile it; do not discard that evidence because a later status field is incomplete.
+
+## Read the saved UUID
+
+Use [GET outbound request](/api-reference/calls/get-outbound-request) with the same account and UUID. The read never dispatches, reserves capacity or charges.
+
+| State | Next action |
+| --- | --- |
+| `pending` | Keep the UUID and poll with a bounded delay. |
+| `accepted` | Save and read the returned call ID. |
+| `rejected` | Review the recorded reason before a new deliberate intention. |
+| `unknown` | Keep the UUID and seek reconciliation; do not redial automatically. |
+
+Pending records display unknown after 15 minutes and are never recycled into another dispatch. Invalid, absent and foreign UUIDs share one 404. A 404 therefore does not prove that a new call is safe.
+
+## Handle conflicts and lost responses
+
+| Observation | Decision |
+| --- | --- |
+| Same UUID with different input | Preserve the original intention; do not overwrite it to bypass a conflict. |
+| Timeout, network loss or 503 | Read the saved request; retain `safe_to_retry:false` where returned. |
+| Known call ID but status read fails | Read that call later with bounded retries; never create a replacement automatically. |
+| Confirmed rejection | Correct the cause and obtain a new deliberate call decision. |
+
+## Read the business outcome
+
+Once accepted, use the call ID to read [call and booking results](/guides/developer/call-history). Call completion, recording availability and booking evidence have separate states. Late webhooks can be reconciled through those reads without another call.
+
+- [Node local preparation example](/sdks/node)
+- [CLI preparation and status reads](/cli/quickstart)
+- [Exact outbound request contract](/api-reference/calls/get-outbound-request)

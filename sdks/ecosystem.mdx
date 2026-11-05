@@ -1,48 +1,88 @@
 ---
-title: "Nixflex API tools, SDKs and supported client ecosystem"
-description: "Explore Nixflex SDKs, the CLI, MCP tools, public OpenAPI, web calls, and webhook guides to choose a supported path for building your integration."
-icon: "layer-group"
+title: "Choose an API client or developer tool"
+sidebarTitle: "Choose a client"
+description: "Compare the reviewed Node, Python, CLI and MCP candidates, check exact package identity and choose HTTP when a client method is not verified."
 canonical: "https://docs.nixflex.com/sdks/ecosystem"
 ---
-| | What it is | Where |
-|---|---|---|
-| **Node.js SDK** | Typed client for supported operations, zero dependencies, Node 18+ | [Docs](/sdks/node) · [npm](https://www.npmjs.com/package/nixflex) · [GitHub](https://github.com/nixflex/nixflex-node) |
-| **Python SDK** | Sync and async clients, Python 3.9+ | [Docs](/sdks/python) · [PyPI](https://pypi.org/project/nixflex/) |
-| **CLI** | `npx nixflex` - supported operations from a terminal, `--json` for scripts | [Docs](/cli/overview) · ships in the `nixflex` package |
-| **MCP server** | Your account as tools for Claude Desktop, Claude Code, Codex and Cursor | [Docs](/ai-tools/overview) · [npm](https://www.npmjs.com/package/nixflex-mcp) |
-| **OpenAPI spec** | OpenAPI 3.1 - import into Postman, or generate a client for any language | [public.openapi.json](https://docs.nixflex.com/api-reference/public.openapi.json) · [Other languages](/sdks/other-languages) |
-| **API reference** | Public operations, examples, and error guidance | [Reference](/api-reference/introduction) |
-| **Web call widget** | One script tag that adds a "call us" button to a website | [Web calls](/concepts/web-calls) |
-| **Webhooks** | Signed post-call events, up to five queue attempts | [Webhooks](/advanced/webhooks) |
+Choose a client for your application, then verify the exact reviewed package before relying on its methods.
 
-These tools use the public API. Some dashboard workflows use separate internal or signed-in interfaces. Check operation coverage before choosing a client.
+<div className="nxf-facts">
+  <div><small>Node and CLI</small><strong>0.11.0 candidate</strong></div>
+  <div><small>Python</small><strong>0.4.0 candidate</strong></div>
+  <div><small>MCP</small><strong>0.5.0 candidate, 96 tools</strong></div>
+</div>
 
-## Reviewed kit versions
+<div className="nxf-important">
 
-K6 supplies locally built candidates: **Node/CLI 0.11.0**, **Python 0.4.0** and
-**MCP 0.5.0 with 94 tools**. Its offline checks pass; registry publication and real
-staging writes remain separate. Install the supplied, hash-verified archives when
-testing these versions. A plain registry install does not prove candidate availability.
+**The important part**
 
-Node and Python now include four Google Calendar methods and an in-place number
-credential update. See the [Node examples](/sdks/node#reviewed-0-11-0-candidate),
-[Python examples](/sdks/python#reviewed-0-4-0-candidate) and [CLI commands](/cli/commands#google-calendar-and-number-credentials).
+- The reviewed packages are unpublished candidates; a registry install does not prove that they are available.
+- The same version number can identify different candidate archives, so check the release hash.
+- Use the public HTTP contract when a client method is not verified.
 
-MCP adds `connect_google_calendar`, `get_google_calendar`,
-`disconnect_google_calendar`, `update_google_calendar_settings` and
-`update_phone_number_credentials`. Each new write requires `confirm: true`; carrier
-credentials come only from the privately configured server process. The previous 89
-tool contracts remain unchanged. There is still no direct booking or knowledge
-publication tool. The [AI setup guides](/ai-tools/overview) cover the supplied
-0.5.0 candidate, its 94 registered tools and private credential setup limits.
+</div>
 
-Single-SMS suppression uses HTTP 409 `do_not_contact`. Node and Python expose
-`NixflexDoNotContactError` and `NixflexConflictError`; preserve old 400 handling too.
-Do not retry an opt-out. Booking models cover call and SMS events, but do not replace
-raw-body signature verification or add a webhook receiver tool.
+<div className="nxf-audience">
 
-The new [`call.bookings` event](/api-reference/call-bookings) is documented from the
-later engine change. The supplied K6 candidates do not establish typed support for
-its separate `timeline` and `final` payload. Use the documented JSON contract and
-verify signatures before processing; check a later client release before relying
-on new event-specific types or helpers.
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose by task
+
+| Tool | Use it for | Runtime and guide |
+| --- | --- | --- |
+| Node SDK | Typed server integrations and local outbound preparation | Node 18+; [Node guide](/sdks/node). |
+| Python SDK | Synchronous or asynchronous server applications | Python 3.9+, httpx; [Python guide](/sdks/python). |
+| CLI | Reviewed terminal operations and scripts | Ships in the Node package; [CLI quickstart](/cli/quickstart). |
+| MCP server | Approved AI-client tool operations | Node 22+ for the server; [MCP developer guide](/sdks/mcp). |
+| Direct HTTP | Another language or a method not exposed by your installed client | [Other languages](/sdks/other-languages) and [API reference](/api-reference/introduction). |
+
+The website widget uses its generated installation flow, not a server SDK in the browser. Webhook processing is an HTTPS receiver you build; installing a client does not create one.
+
+## Verify the reviewed candidate
+
+These are the exact reviewed candidate archives. They are not a claim of public registry publication or completed live-write acceptance. Obtain the approved archive and compare its SHA-256 before installation. A version check alone cannot distinguish an earlier candidate with the same version.
+
+| Archive | SHA-256 |
+| --- | --- |
+| `nixflex-0.11.0.tgz` | `0155f64c3fa28305cda95328b2f89959121d3dc07eef4af6723214ee45a6e3b3` |
+| `nixflex-0.4.0-py3-none-any.whl` | `8465c4e04fbedbb5262ae8f1c7fdc47c5c3d814377764c3316476903e64f47eb` |
+| `nixflex-0.4.0.tar.gz` | `b66f40717d8875a758831e01b7cec604ab3b2df18f1e14e83c73949474fbabd7` |
+| `nixflex-mcp-0.5.0.tgz` | `21404fa3130b771e4b710c4aba08f0f60a7caca1398587812a6b52129a804c69` |
+
+For example, inspect a supplied archive locally in PowerShell:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\nixflex-0.11.0.tgz'
+```
+
+Stop if the supplied release manifest and file disagree. Do not install an unknown archive merely because its filename matches.
+
+## Understand the added call workflow
+
+The reviewed clients support local outbound preparation, a saved request UUID, a read-only request-state lookup and a read-only post-call booking result. Preserve the same account, base URL, UUID and inputs across reconciliation. The request-state lookup cannot place a call.
+
+Node uses `prepareOutboundCall`, `calls.outboundRequest` and `calls.bookings`. Python uses `prepare_outbound_call`, `calls.outbound_request` and `calls.bookings`. The CLI exposes `calls prepare`, `calls outboundRequest` and `calls bookings`. MCP adds `get_outbound_call_request` and `get_call_bookings`, bringing this exact candidate to 96 tools.
+
+Earlier installation guides may describe a 94-tool candidate with the same package version. Confirm the package hash and actual tool inventory before using the two new reads. The 19 approved Knowledge tools remain; no direct calendar-booking or knowledge-publication tool is implied.
+
+## Keep safety and coverage explicit
+
+Node and Python automatically retry eligible GET reads only. Mutations are not automatically retried, including after network loss or a malformed response. The SDK’s behaviour does not make an application-level retry loop safe.
+
+Google Calendar connection/settings and in-place number credential updates are included in these candidates. Sensitive credential operations use private input and safe result projections. Compatibility account model, voice and storage routes are outside the supported public client inventory; use the dashboard for new setup.
+
+| Failure | Decision |
+| --- | --- |
+| Installed method missing | Verify the exact candidate; use documented HTTP rather than inventing a method. |
+| Unknown call launch | Read the saved UUID and call ID; do not allocate a replacement automatically. |
+| SMS `do_not_contact` | Stop without resending; retain older 400 handling as well as current 409. |
+| Booking result incomplete | Keep its actual state instead of reporting zero bookings. |
+
+- [Make the first safe read](/quickstart)
+- [Prepare and reconcile one call](/guides/developer/call-requests)
+- [Build a signed webhook receiver](/advanced/webhooks)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="reviewed-kit-versions"></span>

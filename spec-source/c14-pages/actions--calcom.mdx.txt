@@ -1,0 +1,110 @@
+---
+title: "Connect Cal.com bookings in code"
+description: "Connect a Nixflex number to Cal.com, use the agent time zone and confirmation controls, and check real calendar outcomes before promising a booking."
+canonical: "https://docs.nixflex.com/actions/calcom"
+sidebarTitle: "Cal.com bookings"
+---
+
+Connect Cal.com to an owned number, choose the intended event settings and verify booking results before confirming an appointment.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Provider</small><strong>One active connection</strong></div>
+  <div><small>Result</small><strong>Confirmed appointment</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Calendar access and the agent’s permission to act are separate.
+- Confirm the spoken name and email independently before booking.
+- Use returned booking results; an accepted action is not proof of notification delivery.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/calcom) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+
+## Choose the task
+
+| Task | Outcome |
+| --- | --- |
+| [Troubleshoot bookings](/guides/developer/bookings/troubleshooting) | Check access, approvals, local time and final evidence. |
+| [Read booking results](/guides/developer/call-history) | Keep active bookings separate from action history. |
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Use an owned number and authorised calendar connection credentials. Keep those credentials out of public examples.
+
+## 1. Read the saved connection
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("calcom", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('calcom', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get calcom '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Save the connection
+
+Use the documented PUT integration route with the calendar credentials and event configuration. Treat secrets as write-only. Set the agent’s intended IANA time zone; the current booking path applies that agent zone over a legacy integration default.
+
+## 3. Describe permitted booking
+
+State the service, required customer information and how to handle multiple existing appointments. Enable `require_booking_confirmation` where a read-back is required. Current availability still needs checking at the actual booking step.
+
+## 4. Test the calendar result
+
+Use a disposable test appointment. Verify create, reschedule and cancel in the actual calendar, including ambiguous dates and a slot that becomes unavailable. A pending or failed action must not become spoken confirmation.
+
+## 5. Handle follow-up separately
+
+Booking texts during calls depend on `incall_sms_enabled`, an eligible number and current sending checks. Calendar success does not prove SMS success. Disconnecting the integration stops new use; it does not remove existing appointments.
+
+After a call, use the signed [`call.bookings` event](/api-reference/call-bookings) to reconcile confirmed changes. Its `timeline` records actions and `final` gives the resulting bookings, including Cal.com UID replacements. Create then cancel means zero active results; count active final rows instead of actions.
+
+## Example response
+
+The settings GET returns a safe configuration view without the full secret. Booking tools return structured outcomes such as created, rescheduled, cancelled, needs_info or an error; use the actual result rather than a fixed success sentence.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid connection | Correct and test credentials; do not save guessed values. |
+| Ambiguous/nonexistent local time | Ask for a valid time in the intended zone. |
+| Slot taken | Offer another current slot. |
+| Call ended before write | Do not start a new mutation. |
+| Confirmation text unavailable | Keep the successful appointment separate from the text failure. |
+
+## Next steps
+
+- [Read connection](/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber)
+- [Save connection](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber)
+- [Confirmation rules](/actions/booking-confirmation)

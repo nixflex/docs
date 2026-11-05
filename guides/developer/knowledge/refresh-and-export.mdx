@@ -1,0 +1,69 @@
+---
+title: "Refresh and export agent knowledge"
+sidebarTitle: "Refresh and export"
+description: "Maintain saved knowledge sources, preserve reviewed changes and download a revision-bound export while handling stale jobs and cleanup safely."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge/refresh-and-export"
+---
+Refresh saved source material deliberately and export a known knowledge revision without losing reviewed changes.
+
+<div className="nxf-facts">
+  <div><small>Refresh</small><strong>Selected saved sources</strong></div>
+  <div><small>Export</small><strong>Revision-bound result</strong></div>
+  <div><small>Cleanup</small><strong>Track the returned job</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A website source changes only when you request and review the appropriate refresh.
+- Deleting a topic prevents that same saved source from recreating it on refresh.
+- Exports expire after one hour and become stale when the base revision changes.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge/test-and-fix) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose the saved source
+
+Read the base, its current revision and the source list. Keep source IDs separate from topic and job IDs. Review which live topics came from the source before refreshing it. A new explicit source addition is a separate operation from refreshing the existing one.
+
+Submit the documented [source refresh](/api-reference/knowledge/post-knowledge-bases-kb-sources-refresh) request with a saved idempotency key, the selected `source_ids` and `review:true`. Poll the returned job and review any resulting draft before treating changed material as published.
+
+## Preserve review decisions
+
+Deleting a topic prevents refresh of the same saved source from resurrecting that piece. Deleting the last topic also removes its source and retained original. If you intentionally want the material back, add it as a new explicit operation and review it again.
+
+A stale base, source or draft revision requires a fresh read and review. Do not automatically replace the revision number in an older destructive request. During a live-topic edit, the old live answer is suppressed; inspect the resulting publication before declaring the edit finished.
+
+## Create and read an export
+
+Create an [export job](/api-reference/knowledge/post-knowledge-bases-kb-exports), save its ID and poll the job. When ready, use the export ID returned by the job to [read the export](/api-reference/knowledge/get-knowledge-exports-id).
+
+| Format | Result |
+| --- | --- |
+| Default JSON | Knowledge content with developer metadata. |
+| `?format=text` | An envelope containing `filename`, `content_type` and `text`. |
+
+An export excludes raw uploaded files. It lasts one hour and requires an unchanged base revision. If it expires or becomes stale, create another export from the current revision with bounded retries. Do not present an expired link as a durable backup.
+
+Store exports in private application storage with your own access and retention controls. Their facts may contain customer information even when uploaded originals are absent.
+
+## Reconcile cleanup
+
+Whole-base deletion revokes access first and returns a cleanup job. Save and monitor that job to completion; an accepted deletion is not proof that every cleanup step has finished. Treat a lost deletion response as unknown until you read the current state and job.
+
+| Condition | Recovery |
+| --- | --- |
+| Stale revision or cursor | Read the current base; restart that list or review. |
+| Refresh returns unchanged | Retain the existing facts; no new publication is implied. |
+| Export expired or stale | Create a fresh export from the current revision. |
+| Cleanup pending | Keep the job visible and continue bounded reads. |
+
+- [Read source state](/api-reference/knowledge/get-knowledge-bases-kb-sources)
+- [Review a prepared draft](/guides/developer/knowledge/review-and-publish)
+- [Test the current answers](/guides/developer/knowledge/test-and-troubleshoot)

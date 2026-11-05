@@ -1,0 +1,76 @@
+---
+title: "Write clear agent instructions"
+description: "Write Nixflex agent instructions with a clear purpose, essential facts and action rules, then test ordinary questions, missing facts and failed actions."
+canonical: "https://docs.nixflex.com/best-practices/prompting-guide"
+sidebarTitle: "Agent instructions"
+---
+
+Write instructions that state the task, essential facts and action boundaries, then test both normal and uncertain conversations.
+
+<div className="nxf-facts">
+  <div><small>Prompt</small><strong>Purpose and rules</strong></div>
+  <div><small>Knowledge</small><strong>Longer facts</strong></div>
+  <div><small>Testing</small><strong>Success and uncertainty</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use one question at a time and confirm consequential names, dates and contact details.
+- Put longer business facts in knowledge instead of repeating them in every prompt.
+- Instructions do not bypass disabled actions or grant permissions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+Using the dashboard? Start with [set up your business agent](/business). Developers can save the same intended behaviour through the [agent contract](/api-reference/agents/contract).
+
+## Give each section a job
+
+| Section | Include |
+| --- | --- |
+| Identity | Business name, role and intended customers |
+| Purpose | What this conversation should achieve |
+| Essential facts | Facts needed on almost every call |
+| Conversation | Questions to ask, one at a time |
+| Actions | When to use each permitted connection or tool |
+| Uncertainty | What to do when a fact or outcome is unknown |
+| Finish | A polite completion or human-handoff rule |
+
+Example instructions for a fictional studio:
+
+```text
+You are Willow Studio's appointment assistant.
+Help the caller understand a service and request an appointment.
+Ask which service they want, then their preferred date and time.
+Use approved knowledge for service details. Do not invent prices.
+Check the connected calendar before offering a specific slot.
+Ask for the customer’s name, read it back and wait for approval.
+Ask for the email address, read it back and wait for separate approval.
+Read back the service, date, time and time zone when final action confirmation is required.
+Say the appointment is booked only after the calendar confirms success.
+If an answer is missing, explain that and offer the business's follow-up option.
+Ask one question at a time and keep replies short.
+```
+
+## Put detailed facts in knowledge
+
+Keep rules and frequent facts in the main call instructions. Use [knowledge](/concepts/knowledge) for detailed policies, menus and exceptions. When knowledge is active, the main-prompt admission budget is 3,000 tokens; the separate field character limit is not permission to exceed that combined workflow's prompt budget. A token is a piece of text, not one word.
+
+SMS and website instructions are separate from the main call prompt. An outbound call also needs its own purpose. Moving a number changes the agent and its knowledge, so review the resulting conversation before using it with customers.
+
+## Check facts and outcomes
+
+Confirm important names, dates and numbers instead of filling gaps from a weak transcript. Explain the intended time zone explicitly when a customer could be elsewhere. A prompt does not grant calendar, text, transfer or custom-function permissions.
+
+Test an ordinary question, an unknown fact, an interruption, a changed appointment and a failed action. Check the actual calendar or message result. Typed knowledge Test validates facts; it does not replace a full call test with real speech and timing.
+
+- [Knowledge setup](/guides/business/knowledge)
+- [Conversation controls](/concepts/conversation-control)
+- [Call actions](/actions/overview)

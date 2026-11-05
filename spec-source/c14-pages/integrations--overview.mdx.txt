@@ -1,0 +1,56 @@
+---
+title: "Choose an integration workflow"
+description: "Choose Nixflex calendar, notification, custom-function and pre-call integrations, understand their scope and verify outcomes across calls and business systems."
+canonical: "https://docs.nixflex.com/integrations/overview"
+sidebarTitle: "Choose an integration"
+---
+
+Choose the connection or event workflow that matches the business task, its permissions and its recovery requirements.
+
+<div className="nxf-facts">
+  <div><small>Choose by</small><strong>Task and scope</strong></div>
+  <div><small>Setup</small><strong>Current permissions</strong></div>
+  <div><small>Success</small><strong>Destination result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use a calendar connection for booking and signed events for downstream processing.
+- Number connections and account-wide services have different scopes.
+- Confirm the result in the destination before presenting work as complete.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+| Task | Developer guide | Dashboard guide |
+| --- | --- | --- |
+| Book appointments | [Cal.com](/actions/calcom) · [Google Calendar](/actions/google-calendar) | [Cal.com setup](/guides/business/calcom) · [Google Calendar setup](/guides/business/google-calendar) |
+| Receive signed events | [Webhooks](/advanced/webhooks) | [Business integrations](/guides/business/integrations) |
+| Run an action in your service | [Custom functions](/advanced/custom-functions) | [Business integrations](/guides/business/integrations) |
+| Supply inbound context | [Pre-call hook](/advanced/precall-gate) | [Business integrations](/guides/business/integrations) |
+| Send team notifications | [Slack](/integrations/slack) | [Business integrations](/guides/business/integrations) |
+| Connect a business workspace | [GoHighLevel](/integrations/gohighlevel) | [Business integrations](/guides/business/integrations) |
+| Trigger an automation | [Zapier and Make](/integrations/zapier-make) | [Business integrations](/guides/business/integrations) |
+
+## Scope and permissions
+
+Many integrations belong to a phone number. Pre-call hooks also support an agent default with number precedence. Moving a number preserves number-owned connections, while the inherited agent behaviour and knowledge change. Read the specific integration's rule rather than assuming all settings copy together.
+
+Calendar and custom-function actions need actual permission and valid arguments. Website visitors have restricted built-in actions; enabling their custom functions requires every enabled function on that number to be safe for public visitors.
+
+## Configuration is not completion
+
+A successful save means the configuration was accepted. It does not prove a future calendar write, notification or external automation succeeded. Test an ordinary result and a failure, preserve uncertain states and reconcile before repeating side effects.
+
+Incoming event receivers should verify signatures and deduplicate durable work. External copies have their own retention. Disconnecting a connection or deleting a Nixflex call does not automatically erase a record already sent to another system.
+
+- [Phone number settings](/guides/developer/phone-numbers)
+- [Call action boundaries](/actions/overview)
+- [Business integration setup](/guides/business/integrations)

@@ -1,0 +1,96 @@
+---
+title: "Debug failed requests safely"
+sidebarTitle: "Debugging reference"
+description: "Investigate Nixflex API failures using safe request identifiers and machine codes, while preserving unknown write outcomes and non-JSON errors."
+canonical: "https://docs.nixflex.com/reference/errors"
+---
+
+Investigate a failed request using its status, machine code and safe diagnostic identifier before deciding whether any action should be repeated.
+
+<div className="nxf-facts">
+  <div><small>Branch on</small><strong>HTTP status and code</strong></div>
+  <div><small>Diagnostics</small><strong>Safe identifiers</strong></div>
+  <div><small>Write recovery</small><strong>Read current state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A response can be missing, incomplete or non-JSON; keep a fallback parser.
+- A 2xx response can accept background work without completing it.
+- Never replay a copied write merely to reproduce an error.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## The error object
+
+Documented API errors use this envelope. Treat `message` as explanatory text, not a stable program interface. Infrastructure failures can return a different body, so parsing must have a fallback.
+
+```json
+{"error":{"type":"conflict","code":"do_not_contact","message":"This recipient is on your do-not-contact list. The message was not sent.","doc_url":"https://docs.nixflex.com/errors/do_not_contact","details":{}}}
+```
+
+| Field | Use it for | Keep in mind |
+| --- | --- | --- |
+| `type` | Broad grouping | The machine code carries the specific decision. |
+| `code` | Application branches | Preserve the exact value. |
+| `message` | A useful explanation | Review before displaying; do not log private bodies indiscriminately. |
+| `doc_url` | The documented recovery path | Do not automatically fetch arbitrary response URLs with credentials. |
+| `details` | Operation-specific evidence | Missing fields are not proof that work was never sent. |
+
+## Error types
+
+| HTTP result | Typical decision |
+| --- | --- |
+| 400 / 422 | Correct the named input before another deliberate attempt. |
+| 401 | Check the full credential and API environment privately. |
+| 402 / 403 | Resolve the account or permission restriction; do not bypass it in the browser. |
+| 404 | Check the exact owned identifier. Missing data can also be retained, removed or inaccessible according to the route. |
+| 409 | Read the code: suppression, stale revision, an existing request and other conflicts require different actions. |
+| 429 | Honour returned wait guidance; the endpoint still determines whether a write can be repeated. |
+| 5xx / network failure | Retry bounded safe reads; preserve uncertain writes and reconcile. |
+
+## Status codes
+
+Treat transport success and business completion separately. A Knowledge job can return HTTP 200 with `state:failed`. HTTP 202 means work was accepted. A call's 201 response proves acceptance, not that someone answered. The exact operation page defines each result.
+
+## Common errors
+
+| Code or state | Next action |
+| --- | --- |
+| `unauthorized` | Stop retries and correct private authentication. |
+| `do_not_contact` | Respect the refusal; do not remove an opt-out to make the request pass. |
+| `stale_revision` | Read current state and review the newer changes. |
+| `outbound_request_pending` / `outbound_request_unknown` | Keep the saved UUID and use the request-state read. |
+| `request_id_conflict` | Reconcile the original account, environment and payload. |
+| `carrier_outcome_unknown` | Investigate the existing number change; do not remove and re-import the number. |
+
+## The Web agent endpoint is different
+
+The installed widget has its own visitor-facing response contract. Do not apply a blanket “every widget response is HTTP 200” rule or invent a public widget endpoint from a dashboard URL. Use the current generated installation and preserve its unavailable state. The supported account settings API is documented under [Web agent settings](/web-assistant/overview).
+
+## Debugging with request IDs
+
+When a response supplies a request identifier, retain it with the time, method, route template, status and machine code. An outbound `request_id`, a call ID and a diagnostic request header are different identifiers.
+
+Do not record the full Bearer header, contact details, booking payload, recording URL or private connection credentials in a general log. A safe support report should describe the expected and observed result and include only the relevant identifiers through an authorised support channel.
+
+## Handling errors well
+
+1. Preserve the original operation record before investigating.
+2. Classify the response using the endpoint's documented result and refusal rules.
+3. Read the existing resource, job or request journal when a write is uncertain.
+4. Make another write only after a deliberate decision that follows that operation's contract.
+
+## Next steps
+
+- [Implement error handling](/guides/developer/errors)
+- [Prevent duplicate work](/guides/developer/idempotency)
+- [Look up exact error codes](/api-reference/errors)

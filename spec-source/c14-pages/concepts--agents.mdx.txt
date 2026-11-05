@@ -1,0 +1,60 @@
+---
+title: "Understand agents and number ownership"
+description: "Learn what a Nixflex agent owns, what belongs to a phone number and how separate channel instructions, knowledge and permissions shape conversations."
+canonical: "https://docs.nixflex.com/concepts/agents"
+sidebarTitle: "Agent ownership"
+---
+
+Use an agent for shared conversation behaviour and knowledge, with phone numbers carrying their own channels and connections.
+
+<div className="nxf-facts">
+  <div><small>Agent</small><strong>Behaviour and knowledge</strong></div>
+  <div><small>Number</small><strong>Channels and connections</strong></div>
+  <div><small>Delete</small><strong>Soft disable</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Separate agents when branches need different knowledge.
+- Moving a number changes inherited behaviour while number-owned settings remain.
+- Deleting an agent switches it off; it does not erase history or detach numbers.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## What belongs where?
+
+| Setting | Where it belongs |
+| --- | --- |
+| Main call instructions, language, voice and time zone | Agent, with documented number overrides |
+| Knowledge topics and sources | Agent; shared by every attached number |
+| SMS and website instructions | Separate channel fields on the number |
+| Calendars, notifications and custom functions | Their configured number or documented agent scope |
+| Call retention | Each agent; initial policy comes from the account |
+
+Use separate agents when businesses or branches need different knowledge. Sharing an agent does not isolate facts by number. Moving a number changes its inherited agent behaviour while number-owned settings and history remain with it.
+
+## Instructions are not permission switches
+
+A prompt can ask an agent to book or send a text, but the connection and action switch must permit that action. Outbound calls need a purpose for that call. Website visitors have a smaller set of available actions than telephone callers. Knowledge supplies facts without granting any action permission.
+
+## Language, voices and recognition
+
+Choose from the current voice catalog and set the intended language. A saved catalog voice selection can take precedence over a legacy voice override. Speaking rate and language support depend on the selected route; test a real conversation.
+
+Optional manually chosen recognition words are limited to 20 entries, 50 Unicode characters per entry and a combined 450-byte request budget including per-entry overhead. Older unchanged saved lists may be preserved, but a new edit must meet current limits. Names from live knowledge can also help recognition. Neither feature guarantees pronunciation or correct hearing.
+
+## Privacy and history
+
+Caller memory, name greetings, recordings and retention have separate controls. Turning one off does not erase other saved records. Number recording overrides can explicitly enable recording even when the agent default is off. Read [setting inheritance](/concepts/agent-inheritance) before applying a shared policy.
+
+- [Set up an agent in the dashboard](/business)
+- [Add business knowledge](/guides/business/knowledge)
+- [Manage number settings with the API](/guides/developer/phone-numbers)
