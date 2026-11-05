@@ -251,6 +251,8 @@ returns `400 invalid_agent_field` with `details.field: "max_call_duration_second
 | Status | Code | Meaning | What to do |
 | --- | --- | --- | --- |
 | 400 | `invalid_agent_field` | A field has an invalid type, value or length. | Correct `error.details.field`; use JSON booleans/numbers and the limits above. |
+| 400 | `keyterms_term_too_long` | A trimmed keyterm exceeds 50 Unicode characters. | Shorten the named term before saving; the separate 20-term limit still applies. |
+| 400 | `keyterms_list_too_large` | The calculated keyterm list exceeds its 450-byte safety budget. | Shorten or remove terms; use `actual_bytes` and `over_bytes` in the error details. |
 | 400 | `empty_agent_update` | A nonempty body contains no supported fields. | Correct the field names. `{}` is valid for creation. |
 | 400 | `retention_inherited` | Retention was supplied during creation. | Remove it; change retention after creation with PUT. |
 | 400 | `prompt_too_long` | The prompt fails the applicable size check. | Shorten the prompt. Do not equate characters with tokens. |
@@ -261,7 +263,9 @@ returns `400 invalid_agent_field` with `details.field: "max_call_duration_second
 | 400 | `invalid_voice_key`, `voice_not_found`, `voice_selection_conflict` | Invalid, missing or conflicting catalog selection. | Select a valid voice; supply one identifier or a matching pair. |
 | 400 | `voice_unavailable`, `voice_temporarily_unavailable`, `voice_not_available`, `voice_incompatible_language`, `no_approved_languages` | The selected voice cannot serve this request. | Select an available voice compatible with the language. |
 | 401 | `unauthorized` | Credential is missing or invalid. | Check the credential and environment before resending. |
+| 403 | `permission_denied` | Organisation policy refuses this action. | Resolve the account or role restriction through an authorised person. |
 | 429 | `rate_limit_exceeded` | The account request limit was reached before creation. | Wait for `Retry-After` before resending. |
+| 500 | `server_error` | The creation outcome could not be confirmed. | Keep the outcome uncertain and check for the intended agent before another deliberate create. |
 | 503 | `catalog_unavailable` | Voice lookup is unavailable. | Wait and retry after service recovery; selection failed before creation. |
 | 503 | `prompt_check_unavailable` | The prompt check could not finish. | Wait before retrying; this check occurs before creation. |
 | 503 | `agent_store_unavailable` | Saving or reading the result failed. | Treat the result as uncertain. Check for the agent before creating another. |

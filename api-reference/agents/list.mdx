@@ -225,8 +225,8 @@ Branch on `error.code`, not the wording of `error.message`. The envelope include
 
 | Status / code | What it means | What to do |
 | --- | --- | --- |
-| 400 | Invalid agent list query. | Correct the named field or query using the request table before trying again. |
-| 401 | Invalid or missing API key | Check the full account credential and API host privately; stop the retry loop. |
+| 400 · `invalid_agent_list` | Invalid agent list query. | Correct the named field or query using the request table before trying again. |
+| 401 · `unauthorized` | The credential is missing or invalid. | Check the full account credential and API host privately; stop the retry loop. |
 | 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
 | 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
 | 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |

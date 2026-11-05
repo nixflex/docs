@@ -134,19 +134,15 @@ Branch on `error.code`, not the wording of `error.message`. The envelope include
 | --- | --- | --- |
 | 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
 | 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
-| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
-| 409 | Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request. | Read current state and resolve the named conflict before another deliberate action. |
+| 404 · `not_found` | The call is absent, already deleted or belongs to another account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 409 · `call_in_progress` | The call is still in progress. | Wait for the call to end, then read its current state before a deliberate deletion. |
+| 409 · `deletion_unsettled` | The call outcome or charge is not settled. | Keep deletion pending until the outcome and charge are settled; do not repeat the delete automatically. |
+| 409 · `recording_cleanup_pending` | Recording or transfer-audio cleanup is unfinished. | Keep deletion pending and ask support to confirm storage cleanup before another action. |
+| 409 · `cleanup_pending_confirmation` | Cleanup evidence still needs confirmation. | Ask support to reconcile the cleanup evidence; a missing file alone is not confirmation. |
+| 409 · `deletion_cleanup_failed` | Required cleanup failed. | Contact support about the failed cleanup before trying deletion again. |
 | 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
-| 503 | Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
+| 503 · `deletion_unavailable` | Deletion safety could not be checked. | Keep deletion unconfirmed and reconcile the safety check through support before another deliberate action. |
 
-| Status | Code | Meaning |
-|---|---|---|
-| 404 | `not_found` | No call with that ID on your account. Also returned for a call you have already deleted. |
-| 409 | `call_in_progress` | The call is still in progress; wait for it to end. |
-| 409 | `deletion_unsettled` | Outcome/charge is not confirmed; do not claim deletion. |
-| 409 | `recording_cleanup_pending`, `cleanup_pending_confirmation` | Storage/transfer-audio cleanup needs confirmation; contact support. |
-| 409 | `deletion_cleanup_failed` | Cleanup did not finish; contact support before retrying. |
-| 503 | `deletion_unavailable` | Safety could not be checked; deletion is not confirmed. |
 
 Only calls made with your own API key can be deleted; another account's call ID returns the same `404`.
 

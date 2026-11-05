@@ -141,14 +141,11 @@ Branch on `error.code`, not the wording of `error.message`. The envelope include
 | --- | --- | --- |
 | 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
 | 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
-| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 404 · `caller_not_found` | No context exists for this caller on the selected number. | Check the exact caller and owned-number pair; do not substitute another caller’s record. |
+| 404 · `phone_number_not_found` | The selected number is not on this account. | Choose a number belonging to this account before reading caller context. |
 | 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
 | 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
 
-| Code | Cause |
-|---|---|
-| `phone_number_not_found` | The number is not on this account |
-| `caller_not_found` | No record for that caller on that number |
 
 ## Retry and idempotency
 

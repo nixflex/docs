@@ -49,6 +49,12 @@ for(const row of site.pages){
     bindings.push(editorial.method.toLowerCase()+' '+editorial.path);
     check((s.match(/^## /gm)||[]).length===8,row.slug+' preserves eight endpoint sections');
     check(/What to do|Recovery|Handling/.test(s),row.slug+' recovery guidance beside errors');
+    const errorSection=s.match(/^## Errors\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1]||'';
+    for(const [status,response]of Object.entries(spec.paths[editorial.path][editorial.method.toLowerCase()].responses).filter(([status])=>Number(status)>=400)){
+     const media=response.content?.['application/json'];
+     const codes=[...(media?.schema?.properties?.error?.properties?.code?.enum||[]),...[media?.example,...Object.values(media?.examples||{}).map(e=>e.value)].map(e=>e?.error?.code).filter(Boolean)];
+     check(new RegExp('(?<!\\d)'+status+'(?!\\d)').test(errorSection)&&codes.every(code=>errorSection.includes(code)),row.slug+' error '+status+' and explicit codes have page guidance');
+    }
    }
   }
  }
