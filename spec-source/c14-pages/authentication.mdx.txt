@@ -53,7 +53,7 @@ Inventory applications using the key, prepare their secret configuration, rotate
 
 ## Signed requests are separate
 
-Organisation signing can use a separate signing secret. Retrieve it only through the authorised Owner flow and use it to verify incoming request bytes. Do not assume API-key rotation changes a separate signing secret. See [webhook verification](/advanced/webhooks).
+Organisation signing uses a separate signing secret. Retrieve it through the documented organisation-server-key operation or an Owner personal session; other personal roles cannot retrieve it. Use it to verify incoming request bytes, and keep it out of logs and automatic tool output. API-key rotation does not change that separate signing secret. See [webhook verification](/advanced/webhooks).
 
 ## Handle refusals
 
