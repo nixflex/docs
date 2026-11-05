@@ -47,7 +47,7 @@ for(const slug of nav){
 report.counts.endpointPages=endpoints;report.carrierContractPages=carrier;
 check(endpoints===147,'All 147 operations have text endpoint pages');
 check(links.length===0,'Internal page and asset links resolve');report.brokenLinks=links;
-const apiPath=u=>{try{const p=new URL(u,'https://docs.nixflex.com').pathname.replace(/\.(md|html)$/,'').replace(/\/$/,'');return p==='/'?'index':p&&!/\.[a-z0-9]+$/i.test(p)?p.slice(1):null;}catch{return null;}};
+const apiPath=u=>{try{const p=new URL(u,'https://docs.nixflex.com').pathname.replace(/\.(md|html)$/,'').replace(/\/$/,'');return p===''?'index':p&&!/\.[a-z0-9]+$/i.test(p)?p.slice(1):null;}catch{return null;}};
 async function fetchText(u){const r=await fetch(u,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('HTTP '+r.status+' '+u);return await r.text();}
 if(args.includes('--site')){
  const origin=arg('--site').replace(/\/$/,'');report.site=origin;

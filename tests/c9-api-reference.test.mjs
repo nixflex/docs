@@ -5,9 +5,9 @@ import path from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
 const root=path.resolve(import.meta.dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8'),json=p=>JSON.parse(read(p));
 const spec=json('api-reference/public.openapi.json'),plan=json('spec-source/c9-pages.json');
-test('C9 preserves 159 reachable pages, bounded unique metadata, five tabs and old URLs',()=>{
+test('C9 preserves 160 reachable pages, bounded unique metadata, five tabs and old URLs',()=>{
  const out=JSON.parse(execFileSync(process.execPath,['scripts/check-c9-seo.mjs'],{cwd:root,encoding:'utf8'}));
- assert.equal(out.failures.length,0);assert.equal(out.counts.navigation,159);assert.equal(out.counts.endpointPages,147);
+ assert.equal(out.failures.length,0);assert.equal(out.counts.navigation,160);assert.equal(out.counts.endpointPages,147);
  assert.equal(out.status,'SOURCE_PASS_GENERATED_PENDING'); // Source evidence must not masquerade as generated-site proof.
  const strict=spawnSync(process.execPath,['scripts/check-c9-seo.mjs','--require-generated'],{cwd:root,encoding:'utf8'});
  assert.equal(strict.status,1,'A release gate must fail when generated artifacts are unavailable');
@@ -37,5 +37,5 @@ test('C10 replaces the Google Calendar slot with supported public routes',()=>{
  assert.ok(plan.pages.some(p=>p.slug==='api-reference/integration-settings/google-calendar'));
  assert.ok(spec.paths['/integrations/google-calendar/number/{phoneNumber}/connect'].post);assert.ok(spec.paths['/integrations/google-calendar/number/{phoneNumber}'].get);
  assert.match(read('api-reference/introduction.mdx'),/production base URL is.*https:\/\/api.nixflex.com/);
- assert.match(read('api-reference/introduction.mdx'),/89 registered tools/);
+ assert.match(read('api-reference/introduction.mdx'),/94 registered tools/);
 });
