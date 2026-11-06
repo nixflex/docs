@@ -32,6 +32,7 @@ for(const row of site.pages){
  check(description.length>0&&description.length<=160&&!descriptions.has(description.toLowerCase()),row.slug+' unique description <=160');descriptions.add(description.toLowerCase());
  check(meta(s,'canonical')==='https://docs.nixflex.com/'+row.slug,row.slug+' production canonical');
  check(!supplierLeak(row.slug,s),row.slug+' white-label model/speech copy');
+ check(!/\bclon(?:e|es|ed|ing)\b/i.test(s),row.slug+' no removed voice-feature wording in public copy');
  const flagProse=s.replace(/```[^\n]*\n[\s\S]*?```/g,'').replace(/`[^`\n]+`/g,'').replace(/<code\b[^>]*>[\s\S]*?<\/code>/g,'');
  check(!/(?<!-)--[a-z][a-z0-9-]*/.test(flagProse),row.slug+' keeps CLI flags in code so typography cannot change their spelling');
  if(row.owner==='D'){

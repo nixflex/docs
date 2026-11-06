@@ -101,10 +101,12 @@ Catalog lookup outage: 503 catalog_unavailable. No blind write retries.
 
 ## Kits
 
-See the feature-branch examples/agent-contract.md in Node+CLI, Python and MCP.
-The CLI passes write fields via repeated `--set` or `--body`. Agent list adds `--offset`,
-`--status` and `--search`; mutation-retry behavior is unchanged. MCP publishes named settings while retaining
-unknown keys so the engine can issue its warning. No package publication in this run.
+Use the [reviewed client candidates](/sdks/ecosystem#verify-the-reviewed-candidate)
+for Node, Python, CLI and MCP. These candidate versions are not yet published.
+The CLI passes write fields via repeated `--set` or `--body`. Agent list supports
+`--offset`, `--status` and `--search`. Do not automatically replay a mutation after
+an uncertain response. MCP exposes named settings while retaining unknown keys
+so the engine can return its warning.
 
 DELETE soft-disables only and retains the legacy response `{"message":"Agent deleted"}`.
 It does not detach numbers, erase history or make GET of an owned disabled agent return 404.
