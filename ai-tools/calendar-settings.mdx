@@ -1,0 +1,102 @@
+---
+title: "Manage Google Calendar with your AI assistant"
+sidebarTitle: "Manage calendar settings"
+description: "Use the MCP candidate’s calendar tools for human consent, status, settings and disconnection while keeping booking and email-delivery limits clear."
+canonical: "https://docs.nixflex.com/ai-tools/calendar-settings"
+---
+
+Use the Nixflex MCP candidate to prepare Google consent and manage one number’s calendar settings after reviewing the exact change.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/bookings/google-calendar-settings).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Package</small><strong>MCP 0.5.0 candidate</strong></div>
+  <div><small>Calendar tools</small><strong>Four</strong></div>
+  <div><small>Consent</small><strong>Completed by a person</strong></div>
+  <div><small>Direct booking tool</small><strong>Not available</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The assistant creates a short-lived consent link; you open it and approve the intended Google account.
+- The three calendar writes require `confirm: true` after approval of the number and change. Missing confirmation sends no request.
+- The status read may refresh or check the existing connection. `needs_reconnect: true` still needs renewed consent.
+- Disconnect cannot recall dispatched work or guarantee remote revocation; invitation settings do not prove email delivery.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Check the calendar on the number I chose.</p>
+  <p><strong>Assistant</strong><br />The status says it needs reconnection. I can prepare a consent link after you approve the number and return URL.</p>
+  <p><strong>Owner</strong><br />Show those details first. I will open the link myself, then you can check status again.</p>
+</div>
+
+## Before you start
+
+Connect the reviewed, unpublished MCP 0.5.0 candidate with 96 tools using your [client setup guide](/ai-tools/overview#choose-your-assistant). Verify one permitted read first. The organisation key gives account authority; it does not inherit a person’s Member restrictions.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Read the selected number’s status">
+
+Use `get_google_calendar` with the exact `phone_number`. Read both `connected` and `needs_reconnect`. A saved connection that needs reconnection is not ready merely because `connected` is true.
+
+</Step>
+
+<Step title="Prepare consent only when needed">
+
+Review the number and server-accepted `return_url`, with no secrets in the URL. After approval, call `connect_google_calendar` with `confirm: true`. Keep the returned ten-minute link private and open it yourself. The assistant must not open it automatically.
+
+</Step>
+
+<Step title="Check after human consent">
+
+Sign in to the intended Google account and approve access, then have the assistant read status again. Returning from the consent page alone is not proof that the selected number is ready.
+
+</Step>
+
+<Step title="Review and save settings">
+
+Use `update_google_calendar_settings` only after reviewing the exact changes. Omitted settings stay saved. Replacing `hours` requires all seven days; a null day is closed. `slot_minutes` accepts 15, 30, 45 or 60. `send_invites: false` remains off. Confirm the write with `confirm: true`, then read the saved state.
+
+</Step>
+
+<Step title="Test or disconnect deliberately">
+
+There is no direct booking tool. Test through the configured phone or SMS flow and inspect the calendar result. To stop future use for this number, approve `disconnect_google_calendar` with `confirm: true`. Existing appointments remain; work already sent to Google may finish.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| `confirmation_required`, `sent: false` | That write was not sent. | Review the action before supplying confirmation. |
+| `needs_reconnect: true` | Renewed Google consent is needed. | Prepare the link after approval and let the human complete consent. |
+| Status could not be read | Current connection state is unknown. | Retry the read before changing or disconnecting anything. |
+| Settings confirmed | The supplied changes were saved. | Check the full saved state and test the intended flow. |
+| Invitation requested | Google was asked to send a notice. | Do not claim inbox delivery. |
+
+
+
+## Next
+
+- [Choose and connect your AI client](/ai-tools/overview)
+- [Check call and booking results](/ai-tools/call-results)
+- [Use calendar settings in the dashboard](/guides/business/google-calendar/change-settings)
+
+Reviewed 5 November 2026.

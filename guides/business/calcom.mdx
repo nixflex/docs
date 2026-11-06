@@ -1,10 +1,45 @@
 ---
-title: "Cal.com: connect appointments to your Nixflex number"
+title: "Connect Cal.com for customer appointments"
+sidebarTitle: "Connect Cal.com"
 description: "Connect Cal.com to a Nixflex business number, check the calendar setup and test appointment availability and booking results before serving customers."
 canonical: "https://docs.nixflex.com/guides/business/calcom"
 ---
 
 Connect Cal.com so your phone agent can check and manage appointments for the selected number. Use one intended booking connection per number and test the result in the calendar itself.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/actions/calcom).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Setup access</small><strong>Owner, Admin</strong></div>
+  <div><small>Connection scope</small><strong>Selected number</strong></div>
+  <div><small>Stored key</small><strong>Never displayed</strong></div>
+  <div><small>Success check</small><strong>Actual calendar</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Check the selected number, event type and real calendar time zone before saving.
+- Leave a saved key field blank to keep it. Enter a new key only when replacing it.
+- A saved connection needs a booking test; conversation text alone does not prove a booking.
+- Disconnecting removes the connection, not appointments already in Cal.com.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Admin</strong><br />The Cal.com card says the connection is saved.</p>
+  <p><strong>Owner</strong><br />Test a booking, approve the name and email when asked, then inspect the actual calendar.</p>
+  <p><strong>Admin</strong><br />I will check the appointment before reporting success and remove the test booking afterwards.</p>
+</div>
 
 ## Before you start
 
@@ -13,49 +48,93 @@ Connect Cal.com so your phone agent can check and manage appointments for the se
 
 ## Steps
 
-### 1. Choose the business number
+<Steps>
+
+<Step title="Choose the business number">
+
+<span id="1-choose-the-business-number" />
 
 Open **Integrations**, select the agent and the phone number that should book appointments. Calendar settings belong to that number, so check your selection before entering any connection details.
 
-### 2. Open Cal.com
+</Step>
+
+<Step title="Open Cal.com">
+
+<span id="2-open-calcom" />
 
 Open the **Cal.com** card. Have the intended account’s connection key, username and event slug ready. Use a test calendar while setting up and keep connection details private.
 
-### 3. Set the appointment details
+</Step>
+
+<Step title="Set the appointment details">
+
+<span id="3-set-the-appointment-details" />
 
 Enter the requested fields and select the calendar’s actual time zone. Check the event type exists and represents the service callers should book. Do not use a default time zone simply because it appeared in an example.
 
-### 4. Save the connection
+</Step>
+
+<Step title="Save the connection">
+
+<span id="4-save-the-connection" />
 
 Choose **Save** and check the saved state. Once a key is stored, its field stays empty and says **Saved — leave blank to keep**. Leave it blank for ordinary settings changes; enter a new key only when replacing it. Stored keys are not displayed. If the result cannot be checked, refresh the card before entering another change. A saved connection still needs a real booking test.
 
-<Note>Screenshot placeholder: **calcom-connected** — Integrations Cal.com, connected account or event details for selected number. Use staging test data.</Note>
+</Step>
 
-### 5. Test a booking
+<Step title="Test a booking">
+
+<span id="5-test-a-booking" />
 
 Call from your test phone. Approve the name read-back, then the email separately. The agent spells the part before @; familiar domains use words and unusual domains are spelled too. A correction repeats that field's check. After approval, booking messages omit the address. Verify the appointment in Cal.com, and test an unavailable time and a correction. Then remove the test booking. Cal.com handles its own emails; the agent must not claim an unconfirmed send or promise inbox delivery.
+
+</Step>
+
+</Steps>
 
 ## What happens next
 
 Describe the booking task in the phone and SMS instructions you use. Knowledge can explain services and policies, but a live calendar action confirms the appointment.
 
+## Check the booking setup
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Connection saved | The selected number has saved settings. | Make a controlled booking test. |
+| Saved key field empty | The stored secret is hidden. | Leave it blank to keep the existing key. |
+| Save outcome unknown | You do not know whether the new settings took effect. | Refresh the card before making another change. |
+| Conversation promises a booking | The spoken answer is not the final record. | Check Cal.com and the available booking result. |
+
 ## Common questions
 
-### Does connecting send text confirmations?
+<AccordionGroup>
+
+<Accordion title="Does connecting send text confirmations?">
 
 Text confirmation also depends on In-Call SMS and recipient eligibility. Check actual delivery separately.
 
-### Can I disconnect later?
+</Accordion>
+
+<Accordion title="Can I disconnect later?">
 
 Use **Disconnect** on the selected number’s calendar card. This removes the Nixflex connection; it does not delete appointments already in your calendar.
 
-### Does this enable website booking?
+</Accordion>
+
+<Accordion title="Does this enable website booking?">
 
 No. Built-in website calendar actions are unavailable.
 
-## Related guides
+</Accordion>
 
-- [Booking receptionist](/guides/booking-receptionist)
-- [SMS booking](/guides/sms-booking)
+</AccordionGroup>
 
-Prefer code? See [Cal.com developer guide](/actions/calcom).
+<span id="related-guides" />
+
+## Next
+
+- [Fix a Cal.com booking problem](/guides/business/calcom/fix-bookings)
+- [Check booking results](/guides/business/booking-results)
+- [Set up SMS booking](/guides/sms-booking)
+
+Reviewed 5 November 2026.

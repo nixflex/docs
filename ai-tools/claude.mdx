@@ -1,10 +1,45 @@
 ---
 title: "Connect Claude Desktop or Claude Code to Nixflex"
+sidebarTitle: "Connect Claude"
 description: "Set up the Nixflex MCP candidate in Claude Desktop or Code, verify a safe read and try five prompts for agents, knowledge, calls, calendars and usage."
 canonical: "https://docs.nixflex.com/ai-tools/claude"
 ---
 
-Connect Claude to the supplied Nixflex MCP 0.5.0 candidate to use its 94 tools. Choose the Desktop bundle or a local Claude Code connection. Both use your organisation's authority; keep the key out of every chat.
+Use the supplied Desktop bundle or a local Claude Code process to connect to Nixflex.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sdks/mcp).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Desktop</small><strong>Supplied private bundle</strong></div>
+  <div><small>Claude Code</small><strong>Local Node process</strong></div>
+  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Verification</small><strong>get_usage read</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 96 tools.
+- Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
+- Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
+- Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Read our latest completed calls, without contacting anyone.</p>
+  <p><strong>Claude</strong><br />I will read the call records and keep missing outcomes visible.</p>
+  <p><strong>Owner</strong><br />For a call with booking activity, use its booking-result read; do not create another appointment.</p>
+</div>
 
 ## Claude Desktop
 
@@ -16,11 +51,9 @@ Connect Claude to the supplied Nixflex MCP 0.5.0 candidate to use its 94 tools. 
 
 See the current [Claude Desktop installation guide](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) if its settings layout differs. Removing the extension does not revoke the Nixflex API key. Its only private setup field is the Nixflex API key; it does not add carrier-secret fields. Number-credential updates need the selected pair privately supplied to the server process by its host. If that is unavailable, use the dashboard, CLI or SDK.
 
-<Note>Screenshot placeholder: **ai-claude-desktop** — Claude Desktop extensions, Nixflex candidate version and intended environment visible; private key field concealed. Use staging test data; hide all secrets.</Note>
-
 ## Claude Code
 
-First [install the supplied package and prepare the private environment](/ai-tools/overview#install-the-supplied-local-package). Start Claude Code from that environment. Register the local server with no secret on the command line:
+First [install the supplied package](/ai-tools/overview#install-the-supplied-local-package). Have your private launcher supply `NIXFLEX_API_KEY`, the matching `NIXFLEX_BASE_URL` and `NIXFLEX_CREDENTIAL_SOURCE=environment`, then start Claude Code from that environment. Register the local server with no secret on the command line:
 
 <CodeGroup>
 
@@ -36,13 +69,11 @@ claude mcp add --transport stdio --scope user nixflex -- node "$HOME/.local/shar
 
 Use your actual install path. Reopen Claude Code and inspect `/mcp`. Keep tool approvals enabled. The [Claude Code MCP guide](https://code.claude.com/docs/en/mcp) describes local server setup and configuration scope.
 
-<Note>Screenshot placeholder: **ai-claude-code** — Claude Code MCP status, Nixflex connected with the expected candidate tools; no environment values shown. Use staging test data; hide all secrets.</Note>
-
 ## Verify with one read
 
 > Use Nixflex get_usage only. Summarise usage without making changes, sending messages or starting calls. Never print credentials.
 
-A working connection should expose **94 tools**. If it does not, check the installed version before using the prompts. The four new writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; without it, no request is sent. Never automatically retry a write whose result is unknown. See [the K6 controls and private credential limits](/ai-tools/overview#google-calendar-and-number-credentials).
+A working connection should expose **96 tools**. If it does not, check the installed version before using the prompts. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; without it, no request is sent. Never automatically retry a write whose result is unknown. See [the calendar controls and private credential limits](/ai-tools/overview#google-calendar-and-number-credentials).
 
 ## Five prompts to try
 
@@ -66,8 +97,20 @@ A working connection should expose **94 tools**. If it does not, check the insta
 
 > Use Nixflex get_usage to explain my current usage and balance. Label the period actually returned and say when a figure is missing. Do not estimate an invoice, add credit, change billing or reveal any key.
 
+## Read bookings and saved call requests
+
+Use `get_call_bookings` with a known call ID to read that call’s retained result. Use `get_outbound_call_request` with the original saved request ID to investigate an uncertain launch. These reads do not book or dial. Keep unknown outcomes separate from failure and never allocate a replacement ID as an automatic retry. See [the result states and call preparation workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests).
+
 ## Limits and documentation
 
 Claude can prepare human calendar consent, check status, update settings and disconnect the selected number. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not delivery proof. Number credentials come only from the server's private environment, never tool input. Claude cannot publish knowledge, accept personal ownership offers or book directly with this tool set. Calls and messages need explicit approval and can spend credit. See [all capabilities and limits](/ai-tools/overview#what-the-tools-can-do).
 
 For documentation-only work, give Claude [llms.txt](https://docs.nixflex.com/llms.txt) or [this page as Markdown](https://docs.nixflex.com/ai-tools/claude.md). Documentation access does not connect your account.
+
+## Next
+
+- [Manage calendar settings](/ai-tools/calendar-settings)
+- [Check call and booking results](/ai-tools/call-results)
+- [Prepare private number credentials](/ai-tools/number-credentials)
+
+Reviewed 5 November 2026.

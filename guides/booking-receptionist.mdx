@@ -1,10 +1,51 @@
 ---
-title: "Booking receptionist: connect and test appointments"
+title: "Set up a receptionist that takes bookings"
+sidebarTitle: "Take bookings by phone"
 description: "Set up a Nixflex booking receptionist, connect a calendar to your number, confirm appointment details and test the real calendar result before going live."
 canonical: "https://docs.nixflex.com/guides/booking-receptionist"
 ---
 
 Help callers book appointments during a phone conversation. The calendar connection supplies live availability and booking results. Your instructions explain when to use it, which details to collect and what to do if booking cannot be confirmed.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/actions/booking-confirmation).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Calendar scope</small><strong>Selected phone number</strong></div>
+  <div><small>Setup access</small><strong>Owner, Admin</strong></div>
+  <div><small>Contact details</small><strong>Confirm before booking</strong></div>
+  <div><small>Proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Connect the calendar to the intended number. A prompt alone cannot enable booking.
+- Confirm the name and email before creating a booking; corrections need a fresh check.
+- The calendar result confirms the appointment. A transcript or spoken promise does not.
+- An invitation or text request is separate from inbox or handset delivery.
+
+</div>
+
+## See how it works
+
+Illustrative contact check. The agent must still confirm the appointment details and receive a successful calendar result before claiming a booking.
+
+<div className="nxf-conversation">
+  <p><strong>Caller</strong><br />Could I book the Tuesday appointment?</p>
+  <p><strong>Agent</strong><br />What name should I use?</p>
+  <p><strong>Caller</strong><br />Alex Morgan.</p>
+  <p><strong>Agent</strong><br />Alex Morgan. Is that correct?</p>
+  <p><strong>Caller</strong><br />Yes.</p>
+  <p><strong>Agent</strong><br />What is your email address?</p>
+  <p><strong>Caller</strong><br />alex@example.com.</p>
+  <p><strong>Agent</strong><br />a-l-e-x at e-x-a-m-p-l-e dot c-o-m. Is that correct?</p>
+  <p><strong>Caller</strong><br />Yes.</p>
+</div>
 
 ## Before you start
 
@@ -13,31 +54,51 @@ Help callers book appointments during a phone conversation. The calendar connect
 
 ## Steps
 
-### 1. Select the number
+<Steps>
+
+<Step title="Select the number">
+
+<span id="1-select-the-number" />
 
 Open **Integrations** and choose the agent and business number. Calendar setup belongs to that number. Check the selection carefully if you manage several locations or use one agent for multiple numbers.
 
-### 2. Connect the calendar
+</Step>
+
+<Step title="Connect the calendar">
+
+<span id="2-connect-the-calendar" />
 
 Open **Cal.com** or **Google Calendar** and complete its connection. For Cal.com, supply the requested account and event details. For Google Calendar, use **Connect Google Calendar** and approve the intended account.
 
-<Note>Screenshot placeholder: **booking-receptionist-calendar** — Integrations, selected number and connected calendar card. Use staging test data.</Note>
+</Step>
 
-### 3. Describe the booking task
+<Step title="Describe the booking task">
+
+<span id="3-describe-the-booking-task" />
 
 Tell the agent which appointment the caller can book, what information to confirm and what to say if there is no suitable time. Put detailed services and conditions in knowledge. Use your real calendar time zone, without assuming the caller shares it.
 
-### 4. Choose confirmation settings
+</Step>
+
+<Step title="Choose confirmation settings">
+
+<span id="4-choose-confirmation-settings" />
 
 For a new booking, the agent asks for the name, reads it back and waits for yes. It then asks for the email, spells the part before @ once for approval and asks for a separate yes. Familiar domains are said as words: “s-a-m at gmail dot com”. An unusual domain is spelled too. Saved addresses get the same check. A correction repeats only that field; after approval, booking messages do not repeat the address. The optional final confirmation setting controls approval of the action and time, not these contact checks.
 
 With Google Calendar, review **Email the caller a Google invite** on the number's calendar card. It starts on. After a confirmed booking and invitation request, the agent says “Google will email you an invite.” Updates and cancellations use matching wording. This is not an inbox-delivery promise. Cal.com handles its own emails. **In-Call SMS** is separate: the agent can say it texted the details only after a matching send is accepted; that is not proof of handset delivery.
 
-### 5. Test a complete booking
+</Step>
+
+<Step title="Test a complete booking">
+
+<span id="5-test-a-complete-booking" />
 
 Call from an owned test phone and ask for a slot. Give a name and email, including a deliberate correction, and check that each corrected field gets its own read-back and yes. Confirm the event actually appears in the calendar. Try an unavailable time and a move or cancellation; existing appointment changes need email approval without asking for a new name. Remove the test appointment through your normal calendar process.
 
-<Note>Screenshot placeholder: **booking-receptionist-result** — Call History, test call with booking result. Use staging test data.</Note>
+</Step>
+
+</Steps>
 
 ## What happens next
 
@@ -45,27 +106,50 @@ Review early bookings against the calendar. A spoken promise or generated summar
 
 Your developer can receive the confirmed changes and final booking result after a call; see [post-call booking results](/api-reference/call-bookings).
 
+## Check the result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Calendar connected | Setup is saved for this number. | Test a complete booking. |
+| Contact detail corrected | The earlier approval no longer covers that field. | Let the agent repeat its check. |
+| Booking confirmed | The connected calendar returned a successful result. | Check the appointment and any notification request separately. |
+| Booking result unavailable | The outcome is not established. | Check the calendar before creating another appointment. |
+
 ## Common questions
 
-### Is a prompt enough to enable booking?
+<AccordionGroup>
+
+<Accordion title="Is a prompt enough to enable booking?">
 
 No. The number needs a working calendar connection.
 
-### Does this work in website chat?
+</Accordion>
+
+<Accordion title="Does this work in website chat?">
 
 Built-in website calendar actions are unavailable. Phone and SMS booking have separate channel rules.
 
-### Can each branch use its own calendar?
+</Accordion>
+
+<Accordion title="Can each branch use its own calendar?">
 
 Yes, calendars are connected per number. Shared agent knowledge is still shared across those numbers.
 
-### Will every booking send a text?
+</Accordion>
+
+<Accordion title="Will every booking send a text?">
 
 No. In-Call SMS and message eligibility must allow it; check delivery separately.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Connect Cal.com](/guides/business/calcom)
 - [Connect Google Calendar](/guides/business/google-calendar)
 
-Prefer code? See [Calendar booking API guide](/actions/calcom).
+Reviewed 5 November 2026.

@@ -1,0 +1,101 @@
+---
+title: "Fix a number that reaches the wrong agent"
+sidebarTitle: "Fix number routing"
+description: "Check number assignment, channel switches and inherited settings before moving a business number or repeating an uncertain routing change."
+canonical: "https://docs.nixflex.com/guides/business/phone-numbers/fix-routing"
+---
+
+Check which agent and channel settings your business number currently uses before changing its routing again.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/phone-numbers/routing-and-overrides).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Assignment</small><strong>One agent per number</strong></div>
+  <div><small>Moves</small><strong>Require an eligible agent</strong></div>
+  <div><small>Busy work</small><strong>Can block a move</strong></div>
+  <div><small>Unknown save</small><strong>Read current state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A number move keeps its own settings and integrations; inherited voice and knowledge follow the destination agent.
+- Channel switches do not write instructions or connect calendars.
+- A missing number in a dashboard list may be managed through code.
+- Do not remove and reimport to clear a pending or unknown routing result.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />The number now answers with the right voice but the wrong branch policy.</p>
+  <p><strong>Admin</strong><br />Check the destination agent’s shared knowledge and the channel’s instructions.</p>
+  <p><strong>Owner</strong><br />I will correct the factual source and test again instead of changing routing repeatedly.</p>
+</div>
+
+## Before you start
+
+Have the affected number, an example call or message and the intended destination agent. Use Owner or Admin access to save changes. Confirm the telephone number is active for the calls or texts you expect.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Read the current assignment">
+
+Open **Phone Numbers** and select the number. Confirm its attached agent and connection state. If the number is absent, check whether it was added through code instead of the dashboard.
+
+</Step>
+
+<Step title="Check the channel">
+
+For a phone call, check the appropriate inbound or outbound switch. For texts, check SMS auto-reply and SMS instructions. Website voice needs both Web agent and website voice enabled. A switch alone does not supply instructions.
+
+</Step>
+
+<Step title="Check inherited and number-owned settings">
+
+Review the attached agent’s voice and knowledge, then the number’s calendar and other integrations. Moving between agents can change inherited behaviour while leaving the number’s existing calendar in place.
+
+</Step>
+
+<Step title="Move only when needed">
+
+Choose **Move number**, select the existing number and intended active agent, then confirm. If the number is busy, let current work finish. If a save is unconfirmed, inspect the current assignment before trying again.
+
+</Step>
+
+<Step title="Test the repaired path">
+
+Test one incoming call and each outgoing or text feature you use. Ask a branch-specific question and verify any booking or message result at its destination. Keep the affected call time and redacted error for support if the problem continues.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Correct assignment, wrong answer | The routing may be right but the instructions or facts wrong. | Review the intended channel and attached agent’s knowledge. |
+| Move refused as busy | Live work or another number operation prevents the move. | Wait, then read the current state. |
+| Save not confirmed | The routing outcome is uncertain. | Inspect the number before repeating a change. |
+| Channel unavailable | A required switch, instruction or telephone capability may be missing. | Check that channel’s setup and run a controlled test. |
+
+
+
+## Next
+
+- [Update carrier details](/guides/business/phone-numbers/update-carrier-details)
+- [Teach your agent](/guides/business/knowledge)
+- [Connect a number](/guides/business/phone-numbers)
+
+Reviewed 5 November 2026.

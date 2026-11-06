@@ -1,10 +1,45 @@
 ---
-title: "SMS booking: help customers arrange appointments by text"
+title: "Take customer bookings by text"
+sidebarTitle: "Take bookings by text"
 description: "Connect a calendar and set up Nixflex SMS instructions so customers can ask about appointments, confirm their details and receive a checked booking result."
 canonical: "https://docs.nixflex.com/guides/sms-booking"
 ---
 
 Let customers ask about appointments by text and use a connected calendar to complete the booking. SMS instructions are separate from your phone-call prompt. Keep the conversation short, and check the calendar before treating an appointment as confirmed.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sms/sms-agent).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Instructions</small><strong>SMS-specific</strong></div>
+  <div><small>Calendar</small><strong>Connected per number</strong></div>
+  <div><small>Reply switch</small><strong>Must be enabled</strong></div>
+  <div><small>Booking proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the number’s SMS instructions; the phone prompt does not control replies.
+- Confirm customer details before a new booking and repeat the relevant check after a correction.
+- Knowledge explains the service. The connected calendar performs the booking.
+- Check the event before repeating an uncertain request; a sent reply is not proof of handset delivery.
+
+</div>
+
+## See how it works
+
+Illustrative start of an appointment-change conversation; it does not show a completed change.
+
+<div className="nxf-conversation">
+  <p><strong>Customer</strong><br />Can I move my appointment to Friday?</p>
+  <p><strong>Agent</strong><br />I will first check the email for the appointment, then look for an available time.</p>
+  <p><strong>Owner reviewing the test</strong><br />The agent must obtain email approval and a confirmed calendar result before saying the appointment moved.</p>
+</div>
 
 ## Before you start
 
@@ -14,57 +49,100 @@ Let customers ask about appointments by text and use a connected calendar to com
 
 ## Steps
 
-### 1. Check the calendar connection
+<Steps>
+
+<Step title="Check the calendar connection">
+
+<span id="1-check-the-calendar-connection" />
 
 Open **Integrations**, select the business number and confirm the intended calendar is connected. Check which appointment type and time zone it uses. A calendar attached to a different number is not automatically shared.
 
-### 2. Write SMS instructions
+</Step>
+
+<Step title="Write SMS instructions">
+
+<span id="2-write-sms-instructions" />
 
 Open **SMS agent**, select the number and choose **Set up agent** or **Edit agent**. Explain the booking task, required customer details and what to do when the calendar cannot confirm a result.
 
-### 3. Add service information
+</Step>
+
+<Step title="Add service information">
+
+<span id="3-add-service-information" />
 
 Add the main appointment facts to the SMS instructions. For detailed service information, use the attached agent’s knowledge and enable its SMS switch. Knowledge supplies facts; the connected calendar performs the appointment action.
 
-<Note>Screenshot placeholder: **sms-booking-instructions** — SMS agent setup, booking instructions and separate number selection. Use staging test data.</Note>
+</Step>
 
-### 4. Enable automatic replies
+<Step title="Enable automatic replies">
+
+<span id="4-enable-automatic-replies" />
 
 Save the instructions and turn on auto-reply. State the business time zone where a time could be ambiguous. For a new booking, the agent asks for the name, reads it back and waits for yes. It then checks the email separately: the part before @ is spelled, familiar domains use words and unusual domains are spelled too. Saved addresses need the same check. Correcting one field repeats only its check. A single yes must not approve both fields; later booking messages do not repeat an approved address.
 
-### 5. Test the booking result
+</Step>
+
+<Step title="Test the booking result">
+
+<span id="5-test-the-booking-result" />
 
 Text from your test phone, ask for a slot and approve the name and spelled email separately. Check the new calendar event, then test a change or cancellation; those use email approval without collecting a new name. If confirmation cannot be checked, the agent must not claim a booking succeeded.
 
 For Google Calendar, **Email the caller a Google invite** controls the email request and starts on. After the booking and request are confirmed, the reply says “Google will email you an invite.” Google controls delivery. Turning the switch off does not cancel the appointment. Cal.com handles its own emails. A reply must not claim an email or text was sent without the matching result.
 
-<Note>Screenshot placeholder: **sms-booking-conversation** — SMS conversation, test appointment request and confirmed result. Use staging test data.</Note>
+</Step>
+
+</Steps>
 
 ## What happens next
 
 Customers can continue in the same SMS channel. If safe conversation state cannot be checked, automatic replies on a calendar-connected number may pause instead of guessing whether a contact detail was approved. Review incomplete requests and the actual calendar before a person follows up. Do not assume a reply marked sent was delivered to the handset.
 
+## Check the result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Auto-reply off | Incoming messages can be saved without an automatic answer. | Review the number’s SMS switch. |
+| Conversation state cannot be checked | A safe contact approval may not be available. | Review the incomplete request and calendar before following up. |
+| Booking confirmed | The calendar returned the appointment result. | Check the event and any invitation request. |
+| Reply sent | The text progressed through sending. | Check delivery information separately. |
+
 ## Common questions
 
-### Does the phone prompt control these replies?
+<AccordionGroup>
+
+<Accordion title="Does the phone prompt control these replies?">
 
 No. Use the number’s SMS instructions.
 
-### Can the website agent use the same booking tools?
+</Accordion>
+
+<Accordion title="Can the website agent use the same booking tools?">
 
 Built-in website booking is unavailable. Website custom functions are a separate, explicitly enabled feature.
 
-### Does a campaign teach the SMS agent its offer?
+</Accordion>
+
+<Accordion title="Does a campaign teach the SMS agent its offer?">
 
 No. Add the offer or reminder information before launching a campaign that expects replies.
 
-### Is a booking summary enough proof?
+</Accordion>
+
+<Accordion title="Is a booking summary enough proof?">
 
 No. Confirm the actual calendar event or returned booking result.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Set up SMS replies](/guides/business/sms-agent)
 - [Booking receptionist](/guides/booking-receptionist)
 
-Prefer code? See [SMS booking and settings API](/sms/sms-agent).
+Reviewed 5 November 2026.

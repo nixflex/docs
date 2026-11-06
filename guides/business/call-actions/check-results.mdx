@@ -1,0 +1,102 @@
+---
+title: "Check call actions and test their fallbacks"
+sidebarTitle: "Check call action results"
+description: "Verify transfers, texts and voicemail at their real destinations, then test unavailable paths without mistaking a spoken promise for completion."
+canonical: "https://docs.nixflex.com/guides/business/call-actions/check-results"
+---
+
+Check the actual destination of a call action and confirm that the agent’s fallback works when the action cannot finish.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/actions/overview).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Transfer proof</small><strong>Receiving call result</strong></div>
+  <div><small>Text proof</small><strong>Message and delivery state</strong></div>
+  <div><small>Voicemail proof</small><strong>Actual recording</strong></div>
+  <div><small>Booking proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The agent’s spoken claim is conversation evidence, not proof that the action completed.
+- Settings enable an action; instructions explain when to use it and how to handle failure.
+- A sending request accepted by the message service does not prove handset delivery.
+- Test unavailable destinations and unsuccessful paths before relying on a fallback.
+
+</div>
+
+## See how it works
+
+Illustrative wording before a message result is confirmed. The agent should describe the actual result after the action.
+
+<div className="nxf-conversation">
+  <p><strong>Caller</strong><br />Please text me the address.</p>
+  <p><strong>Agent</strong><br />I can try sending it. If it cannot be sent, I can read it out.</p>
+  <p><strong>Owner reviewing the test</strong><br />We will check the message result and handset, then test the fallback when sending is unavailable.</p>
+</div>
+
+## Before you start
+
+Use an approved test number and authorised receiving phone. Have Owner or Admin access for settings changes and someone available to answer a transfer test. Prepare the intended fallback for each action.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Match the instruction to its setting">
+
+Review the agent’s transfer destination, In-Call SMS, post-call SMS and voicemail configuration as relevant. These have separate controls. Knowledge facts alone cannot enable an action.
+
+</Step>
+
+<Step title="Test a transfer with and without an answer">
+
+Call from the test phone and ask for a person. Check the receiving number and, for a warm transfer, its briefing. Repeat with an unanswered destination so you can confirm what the caller hears and how your team receives any follow-up.
+
+</Step>
+
+<Step title="Check the actual text">
+
+Trigger an approved message and inspect the recipient, content and delivery information. Check whether it was an in-call or post-call message. If the result is uncertain, read the saved message state before another send.
+
+</Step>
+
+<Step title="Check voicemail handling">
+
+Verify **Leave a Voicemail Message** and the saved wording for the relevant setup. Listen to the actual voicemail. An earlier answering-machine decision can end a call before any message is spoken.
+
+</Step>
+
+<Step title="Review and improve the fallback">
+
+Open **Call History** and compare the conversation with the recorded action outcome. Correct the handling rule if it promised more than the result established. For appointments, use **Booking result** and the calendar. Retest the corrected path before customer use.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Transfer attempted, no person reached | The destination did not complete the handoff. | Check the fallback and real receiving number. |
+| Text accepted or sent | Sending progressed, but delivery may remain unconfirmed. | Read delivery information before promising arrival. |
+| No voicemail spoken | An earlier decision may have ended the call. | Review the call and number’s voicemail settings. |
+| Action outcome unknown | The operation may have happened. | Check the destination and saved state before repeating it. |
+| Booking mentioned | A conversation discussed an appointment. | Read the confirmed booking result and actual calendar. |
+
+
+
+## Next
+
+- [Configure call actions](/guides/business/call-actions)
+- [Review call history](/guides/business/call-history)
+- [Check booking results](/guides/business/booking-results)
+
+Reviewed 5 November 2026.

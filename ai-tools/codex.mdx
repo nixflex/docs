@@ -1,10 +1,45 @@
 ---
 title: "Connect Codex to Nixflex with MCP"
+sidebarTitle: "Connect Codex"
 description: "Configure the Nixflex MCP candidate in Codex without saving a key in TOML. Verify a read and try five prompts for agents, knowledge, calls, booking and usage."
 canonical: "https://docs.nixflex.com/ai-tools/codex"
 ---
 
-Use Codex with the supplied Nixflex MCP 0.5.0 candidate's **94 tools**. The kit runs as a local process and uses your organisation API key. The key does not inherit a Member's dashboard restrictions.
+Connect Codex to a local Nixflex MCP process using a privately supplied organisation key.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sdks/mcp).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>Local Node process</strong></div>
+  <div><small>Configuration</small><strong>Your MCP settings</strong></div>
+  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Secrets</small><strong>Private environment</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 96 tools.
+- Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
+- Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
+- Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Draft a new reception agent and show its settings first.</p>
+  <p><strong>Codex</strong><br />I will read the existing agent list, then prepare the proposed instructions.</p>
+  <p><strong>Owner</strong><br />Wait for approval before create_agent, and do not attach a number or make a call.</p>
+</div>
 
 ## Connect
 
@@ -33,11 +68,11 @@ For `update_phone_number_credentials`, privately provide the pair for the number
 
 <CodeGroup>
 
-```toml Current provider is twilio
+```toml Twilio
 env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TWILIO_SID", "NIXFLEX_TWILIO_TOKEN"]
 ```
 
-```toml Current provider is telnyx
+```toml Telnyx
 env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NIXFLEX_TELNYX_CONNECTION_ID"]
 ```
 
@@ -45,13 +80,11 @@ env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NI
 
 Restart from that prepared environment. The tool accepts only `phone_number`, `provider` and `confirm`, then reads the selected pair privately after confirmation. Missing configuration sends nothing. Keep the original two-name list if you do not need credential updates. See [the credential and uncertain-outcome limits](/ai-tools/overview#google-calendar-and-number-credentials).
 
-<Note>Screenshot placeholder: **ai-codex-connected** — Codex MCP status, Nixflex connected with the expected candidate tools; environment contents hidden. Use staging test data; hide all secrets.</Note>
-
 ## Verify with a read
 
 > Use Nixflex get_usage only. Explain the usage returned without changing anything or printing credentials. Do not use shell commands to inspect my secret environment.
 
-Expect **94 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four new writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
+Expect **96 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
 
 ## Five prompts to try
 
@@ -75,8 +108,20 @@ Expect **94 tools** for the candidate. Keep approvals enabled, including when a 
 
 > Use Nixflex get_usage to make a small usage and balance table with the actual returned period. Say when a value is unavailable. Do not change billing, rotate credentials, inspect local secret files or invent an invoice.
 
+## Check a call without repeating it
+
+The candidate’s `get_outbound_call_request` reads the original saved request ID without dialling. `get_call_bookings` reads the retained booking result for a known call ID. Keep `ready`, `none`, `processing`, `deleted` and `unavailable` distinct. Follow [the saved-request workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests) before any new approved outbound call; never prepare a replacement ID for an uncertain launch.
+
 ## Limits and documentation
 
-Use the dashboard for knowledge publication and personal ownership actions. K6 supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
+Use the dashboard for knowledge publication and personal ownership actions. The candidate supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
 
 Give Codex [llms.txt](https://docs.nixflex.com/llms.txt) and [this page as Markdown](https://docs.nixflex.com/ai-tools/codex.md). Ask it to read the relevant page and inspect the available tool schema before proposing an action. Documentation is context, not account permission.
+
+## Next
+
+- [Manage calendar settings](/ai-tools/calendar-settings)
+- [Check call and booking results](/ai-tools/call-results)
+- [Prepare private number credentials](/ai-tools/number-credentials)
+
+Reviewed 5 November 2026.
