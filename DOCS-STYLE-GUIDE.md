@@ -77,6 +77,8 @@ Examples must match the merged contract and actual client version. Prefer comple
 
 Every error row must answer “what should my app or user do next?” Match status and machine code to source. Differentiate read retry, correcting input, permission changes, reconciliation, waiting, and contacting support. Do not suggest an account-key workaround for a role restriction. Do not document voice cloning while it is being removed.
 
+Put literal command flags and complete commands in inline code, including inside key points and fact cards. Otherwise Markdown typography can turn `--output` into a different dash. Check the actual rendered code text, not only the source Markdown.
+
 ## Feature-size rule
 
 Start with one useful overview per audience. Split a feature when **two or more** of these are true:
@@ -131,6 +133,7 @@ C14 applies this standard to all 162 API pages, all 87 Developer pages and all e
 | Any Developer or SDK/CLI/MCP page | The matching `.mdx.txt` file named by `spec-source/c14-pages.json`, under `spec-source/c14-pages/`. This includes the five earlier samples; C14 is now their final authoring layer. |
 | New feature route, page pairing or review state | `spec-source/c14-pages.json`, `docs.json` and `FEATURE-PAGES-PLAN.md`; publish only after the complete page exists. |
 | Pending call/campaign deletion release | The explicit list in `spec-source/c14-pages.json` and the warning in `scripts/build-c14-pages.mjs`. Keep the reviewed B56 API contract until the final B57 result is supplied and checked. |
+| Literal CLI formatting in the generated organisation CSV note | `scripts/build-c14-pages.mjs` applies the code spans after the established contract builders. Keep the reviewed OpenAPI description unchanged. |
 | Shared visual style | `styles.css`; check both light and dark themes and a phone viewport |
 
 Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, the C13 API layer, the complete C14 Developer/client layer and finally the whole-site manifest. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified client examples when adding a newer HTTP capability; label the exact candidate and release status clearly. Remove old command examples when the reviewed client no longer exposes them.

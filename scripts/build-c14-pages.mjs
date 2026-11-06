@@ -29,4 +29,11 @@ for(const p of plan.pendingDeletionPages.filter(p=>p.startsWith('api-reference/'
  const at=s.indexOf('\n## ');if(at<0)throw Error('Missing API section: '+p);
  s=s.slice(0,at)+'\n\n'+pending+'\n'+s.slice(at);write(p+'.mdx',s);
 }
+// Keep CLI flags literal in the rendered C6 note without changing its reviewed OpenAPI description.
+const activityPage='api-reference/organisation/get-organisation-activity.mdx';
+const plainCsv='For CSV, Node uses organisation.activityCsv and Python uses organisation.activity_csv as byte iterators; the CLI uses organisation activityCsv --set from=2026-10-01 --set to=2026-10-31 --output activity.csv.';
+const formattedCsv='For CSV, Node uses `organisation.activityCsv` and Python uses `organisation.activity_csv` as byte iterators; the CLI uses `organisation activityCsv --set from=2026-10-01 --set to=2026-10-31 --output activity.csv`.';
+const activity=read(activityPage);
+if(!activity.includes(plainCsv))throw Error('Review the changed CSV note before applying C14 code formatting.');
+write(activityPage,activity.replace(plainCsv,formattedCsv));
 console.log('C14: rebuilt '+plan.pages.length+' Developer/client pages; '+plan.pendingDeletionPages.length+' deletion pages explicitly pending B57.');

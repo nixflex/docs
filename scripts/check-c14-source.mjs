@@ -32,6 +32,8 @@ for(const row of site.pages){
  check(description.length>0&&description.length<=160&&!descriptions.has(description.toLowerCase()),row.slug+' unique description <=160');descriptions.add(description.toLowerCase());
  check(meta(s,'canonical')==='https://docs.nixflex.com/'+row.slug,row.slug+' production canonical');
  check(!supplierLeak(row.slug,s),row.slug+' white-label model/speech copy');
+ const flagProse=s.replace(/```[^\n]*\n[\s\S]*?```/g,'').replace(/`[^`\n]+`/g,'').replace(/<code\b[^>]*>[\s\S]*?<\/code>/g,'');
+ check(!/(?<!-)--[a-z][a-z0-9-]*/.test(flagProse),row.slug+' keeps CLI flags in code so typography cannot change their spelling');
  if(row.owner==='D'){
   check(s.replace(/\r\n/g,'\n')===git(site.ownershipBaseline,row.slug+'.mdx'),row.slug+' accepted D6 content unchanged');
   check(!unreviewedCarrierCopy(row.slug,s),row.slug+' approved carrier wording');
