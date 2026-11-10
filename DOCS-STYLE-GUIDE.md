@@ -77,7 +77,7 @@ Examples must match the merged contract and actual client version. Prefer comple
 
 Every error row must answer “what should my app or user do next?” Match status and machine code to source. Differentiate read retry, correcting input, permission changes, reconciliation, waiting, and contacting support. Do not suggest an account-key workaround for a role restriction. Do not document voice cloning while it is being removed.
 
-Put literal command flags and complete commands in inline code, including inside key points and fact cards. Otherwise Markdown typography can turn `--output` into a different dash. Check the actual rendered code text, not only the source Markdown.
+Put literal command flags and complete commands in Markdown code spans. Otherwise Markdown typography can turn `--output` into a different dash. Raw HTML code tags do not reliably protect their text in Mintlify. Use plain-language facts such as “JSON for scripts”, and give the literal flag in a Markdown code span in the instructions. Check the actual rendered code text, not only the source Markdown.
 
 ## Feature-size rule
 
