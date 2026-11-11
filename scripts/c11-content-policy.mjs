@@ -7,14 +7,13 @@ const clientDocs = new Map([
 ]);
 const carrierSetup = new Map([
  ['reference/faq', ['Twilio and Telnyx have supported setup paths. Use the instructions for your chosen carrier and number; do not assume every number has identical calling, messaging or verification requirements. See [phone number concepts](/concepts/phone-numbers).']],
- // D4: exact wire values/private variable names reviewed against K6 k6-private.js.
- ['ai-tools/overview', [
-  '| `twilio` | `NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN` |',
-  '| `telnyx` | `NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID` |',
+ // D7: same exact private names, now in the dedicated credential task.
+ ['ai-tools/number-credentials', [
+  "For `provider: twilio`, the process needs `NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN`. For `provider: telnyx`, it needs `NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID`. These are variable names, not values to paste. Use the private launcher or secret manager for your client.",
  ]],
  ['ai-tools/codex', [
-  '```toml Current provider is twilio\nenv_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TWILIO_SID", "NIXFLEX_TWILIO_TOKEN"]\n```',
-  '```toml Current provider is telnyx\nenv_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NIXFLEX_TELNYX_CONNECTION_ID"]\n```',
+  '```toml Twilio\nenv_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TWILIO_SID", "NIXFLEX_TWILIO_TOKEN"]\n```',
+  '```toml Telnyx\nenv_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NIXFLEX_TELNYX_CONNECTION_ID"]\n```',
  ]],
 ]);
 export function supplierLeak(slug, text) {
