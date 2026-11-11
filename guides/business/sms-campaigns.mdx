@@ -1,10 +1,45 @@
 ---
-title: "SMS campaigns: prepare, send and track customer texts"
+title: "Prepare and send a customer text campaign"
+sidebarTitle: "Send an SMS campaign"
 description: "Build a Nixflex SMS campaign with reviewed messages and recipients, check permission and local sending hours, then track delivery and manage incoming replies."
 canonical: "https://docs.nixflex.com/guides/business/sms-campaigns"
 ---
 
 Send a one-time text to a reviewed customer list and follow the result for each recipient. The campaign sends the message; the number’s SMS agent handles replies when auto-reply is enabled. Prepare both before starting.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sms/sms-campaigns).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who can launch</small><strong>Owner, Admin</strong></div>
+  <div><small>Sending</small><strong>Reviewed recipients</strong></div>
+  <div><small>Replies</small><strong>Number’s SMS agent</strong></div>
+  <div><small>Delivery</small><strong>Check each recipient</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Review the actual message for each recipient, including missing details and estimated segments.
+- Confirm permission again after changing the recipient input. Opt-outs and local hours still apply.
+- Launch once. An unknown result needs checking before another send.
+- Accepted or sent does not mean delivered. Texts already handed off cannot be recalled.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />The reminder template looks right. Can I start it now?</p>
+  <p><strong>Colleague</strong><br />Open each recipient preview first. One row is missing its appointment time.</p>
+  <p><strong>Owner</strong><br />I will correct that row, review permission again and launch once.</p>
+</div>
 
 ## Before you start
 
@@ -13,59 +48,106 @@ Send a one-time text to a reviewed customer list and follow the result for each 
 
 ## Steps
 
-### 1. Create an SMS campaign
+<Steps>
+
+<Step title="Create an SMS campaign">
+
+<span id="1-create-an-sms-campaign" />
 
 Open the SMS campaign area under **Outbound**, start a new campaign and choose the agent and sending number. Give it a name that explains its purpose, such as Appointment reminders.
 
-### 2. Write and preview the text
+</Step>
+
+<Step title="Write and preview the text">
+
+<span id="2-write-and-preview-the-text" />
 
 Write a short message and add any recipient details. Review the actual text for each person, not only the template. A missing detail can block sending. Segment counts are estimates; characters and languages affect message length.
 
-### 3. Review recipients and timing
+</Step>
+
+<Step title="Review recipients and timing">
+
+<span id="3-review-recipients-and-timing" />
 
 Paste or upload recipients. Check duplicates, invalid numbers, contact restrictions and each recipient’s local sending hours. Choose the date, days and window. Any change to recipient input requires a fresh permission review.
 
-<Note>Screenshot placeholder: **sms-campaigns-preview** — New SMS campaign, expanded recipient message and estimated segments beside timing status. Use staging test data.</Note>
+</Step>
 
-### 4. Prepare replies and launch
+<Step title="Prepare replies and launch">
+
+<span id="4-prepare-replies-and-launch" />
 
 Set up the sending number’s SMS agent with the offer or reminder details. Confirm permission for the reviewed recipients and launch once. Include a clear way to opt out where appropriate. Existing opt-outs remain blocked.
 
-### 5. Check delivery
+</Step>
+
+<Step title="Check delivery">
+
+<span id="5-check-delivery" />
 
 Open the campaign to review results. Accepted or sent is not the same as delivered. An unknown result needs checking before another send. Cancel stops future sends; messages already handed off cannot be recalled.
 
-<Note>Screenshot placeholder: **sms-campaigns-delivery** — SMS campaign details, delivered, awaiting confirmation and failed rows. Use staging test data.</Note>
+</Step>
+
+</Steps>
 
 ## What happens next
 
 Incoming replies appear in the number’s SMS conversations. Auto-reply uses its own instructions and enabled knowledge. It does not learn the campaign wording just because the campaign sent it.
 
+## Read the campaign result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Held recipient | A required recipient check has not passed. | Read its reason and correct the input or wait. |
+| Accepted or sent | The message has progressed through sending. | Wait for delivery information; do not mark it delivered yet. |
+| Delivered | A delivery result was reported. | Review any customer reply separately in the SMS inbox. |
+| Failed | Sending or delivery did not complete successfully. | Read the reason before deciding on a new contact attempt. |
+| Unknown | The final outcome is not confirmed. | Check the saved campaign and message state before resending. |
+
 ## Common questions
 
-### Can I remove a STOP opt-out?
+<AccordionGroup>
+
+<Accordion title="Can I remove a STOP opt-out?">
 
 The business cannot remove a person’s locked opt-out. Contact support for a genuine correction request.
 
-### Does Resume resend delivered texts?
+</Accordion>
+
+<Accordion title="Does Resume resend delivered texts?">
 
 No. It continues eligible unsent work.
 
-### Is sending free?
+</Accordion>
+
+<Accordion title="Is sending free?">
 
 Message transport is billed through your telephone account. Keep texts concise and check your current rates.
 
-### Can I delete an active campaign?
+</Accordion>
 
-No. Cancel it or wait for it to finish first. Cancel stops new work, but a send already in progress may finish. It does not recall messages already handed off or complete deletion.
+<Accordion title="What should I check before removing a campaign?" id="can-i-delete-an-active-campaign">
 
-### Why is deletion still waiting after sending stops?
+Review the current dashboard confirmation before removing a campaign. Messages already handed off cannot be recalled; use the delivery records to check what happened.
 
-Nixflex must finish checking the final send results and charges. The message says: “This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes.” Keep the campaign until deletion is confirmed and try again after that work finishes. A zero-sent count alone does not prove it is ready to delete; required billing records can remain.
+</Accordion>
 
-## Related guides
+<Accordion title="What if a removal result is unclear?" id="why-is-deletion-still-waiting-after-sending-stops">
 
+Check the current campaign state and the message shown by the dashboard. If the result is unclear, contact support before repeating a destructive action.
+
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
+
+- [Review SMS recipients](/guides/business/sms-campaigns/review-recipients)
+- [Check SMS delivery](/guides/business/sms-campaigns/check-delivery)
 - [Set up SMS replies](/guides/business/sms-agent)
-- [Manage contact controls](/guides/business/contact-controls)
 
-Prefer code? See [SMS campaigns with the API](/sms/sms-campaigns).
+Reviewed 5 November 2026.

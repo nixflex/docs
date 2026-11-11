@@ -1,10 +1,45 @@
 ---
-title: "Support calls: answer questions and hand off to people"
+title: "Answer support calls and hand off to your team"
+sidebarTitle: "Handle support calls"
 description: "Build a Nixflex support phone agent with reviewed business knowledge, useful text replies and a tested transfer path when a customer needs a person."
 canonical: "https://docs.nixflex.com/guides/inbound-support"
 ---
 
 Answer common customer questions and give callers a clear route to a person. Start with a narrow support task and current business facts. Test the unknown-answer path as carefully as the answers you expect the agent to know.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/concepts/inbound-calls).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Setup access</small><strong>Owner, Admin</strong></div>
+  <div><small>Facts</small><strong>Reviewed knowledge</strong></div>
+  <div><small>Handoff</small><strong>Tested team number</strong></div>
+  <div><small>Unknown answers</small><strong>Clear fallback</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Start with a narrow support task and test questions the source cannot answer.
+- Knowledge provides facts; connected actions perform changes, transfers or messages.
+- Test a busy or unanswered transfer as well as a successful one.
+- Promise a callback only when your team has a real process to review and assign it.
+
+</div>
+
+## See how it works
+
+Illustrative conversation for a support agent without a refund action.
+
+<div className="nxf-conversation">
+  <p><strong>Caller</strong><br />Can you approve a refund for my order?</p>
+  <p><strong>Agent</strong><br />I cannot approve that here. I can try the support team or take a message for their review.</p>
+  <p><strong>Owner reviewing the test</strong><br />The agent stays within its authority and offers our actual follow-up process.</p>
+</div>
 
 ## Before you start
 
@@ -13,55 +48,98 @@ Answer common customer questions and give callers a clear route to a person. Sta
 
 ## Steps
 
-### 1. Write the support role
+<Steps>
+
+<Step title="Write the support role">
+
+<span id="1-write-the-support-role" />
 
 Open the agent and describe the business, tone and support boundaries. Say which requests need a person and what the agent should do when it cannot help. Avoid promising refunds, changes or appointments without a connected action.
 
-### 2. Add reviewed facts
+</Step>
+
+<Step title="Add reviewed facts">
+
+<span id="2-add-reviewed-facts" />
 
 Keep common facts in the instructions and add detailed policies in **Knowledge base**. Review topics and enable inbound knowledge. Use the knowledge test for factual questions, including a question your source deliberately does not answer.
 
-<Note>Screenshot placeholder: **inbound-support-knowledge** — Knowledge base, support topics approved for the selected agent. Use staging test data.</Note>
+</Step>
 
-### 3. Configure the handoff
+<Step title="Configure the handoff">
+
+<span id="3-configure-the-handoff" />
 
 Set the transfer destination and choose the desired transfer style. Use a team number that will actually be answered. Write a fallback such as taking a message if the transfer does not connect; do not promise guaranteed reconnection.
 
-### 4. Choose useful text replies
+</Step>
+
+<Step title="Choose useful text replies">
+
+<span id="4-choose-useful-text-replies" />
 
 If you want addresses or links sent during a call, enable **In-Call SMS** and describe when to offer the text. Use short, accurate wording. Sending a text depends on the number, recipient and contact checks.
 
-### 5. Test the three paths
+</Step>
+
+<Step title="Test the three paths">
+
+<span id="5-test-the-three-paths" />
 
 Call your test number and ask a known question, request a text and ask for a person. Check the answer, actual message and receiving phone. Try an unknown question and an unanswered transfer too, then correct the setup.
 
-<Note>Screenshot placeholder: **inbound-support-history** — Call History, test support call with summary and transfer outcome. Use staging test data.</Note>
+</Step>
+
+</Steps>
 
 ## What happens next
 
 Review early calls for repeated gaps. Update the factual topic when a policy changes and the instructions when the handling rule changes. Knowledge supplies facts; it does not make a missing action available.
 
+## Check the result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Known fact answered correctly | The intended source was useful. | Keep it current and test related questions. |
+| Unknown question | No reviewed answer is available. | Use the handoff or message-taking rule; add a fact only after review. |
+| Transfer unanswered | The receiving person did not connect. | Check that the promised fallback happened. |
+| Text requested | The agent attempted a permitted message. | Check the actual message and delivery result. |
+
 ## Common questions
 
-### Should all information go in the prompt?
+<AccordionGroup>
+
+<Accordion title="Should all information go in the prompt?">
 
 No. Keep rules and frequently used facts there; use knowledge for detailed information.
 
-### Can the agent promise a callback?
+</Accordion>
+
+<Accordion title="Can the agent promise a callback?">
 
 Only describe a follow-up process your team actually operates. Review the captured request and assign it to someone.
 
-### Does a transfer always reach a person?
+</Accordion>
+
+<Accordion title="Does a transfer always reach a person?">
 
 No. Busy, unanswered or failed destinations need a tested fallback.
 
-### Can Members improve the instructions?
+</Accordion>
+
+<Accordion title="Can Members improve the instructions?">
 
 Members can review shared work. Ask an Owner or Admin to save changes.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Teach your agent](/guides/business/knowledge)
 - [Configure call actions](/guides/business/call-actions)
 
-Prefer code? See [Inbound call behaviour](/concepts/inbound-calls).
+Reviewed 5 November 2026.

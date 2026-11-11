@@ -1,10 +1,45 @@
 ---
-title: "Nixflex pricing: usage, credit and recording storage"
+title: "Check standard rates and separate service charges"
+sidebarTitle: "Check standard rates"
 description: "Understand standard Nixflex rates, separate telephone charges, shared credit and recording storage without assuming delivery or deletion is guaranteed."
 canonical: "https://docs.nixflex.com/reference/pricing"
 ---
 
 Nixflex uses a shared credit balance. Check **Billing** for your account's applicable rates, balance and payment status. Standard rates are shown below; custom account pricing and eligible bring-your-own discounts can change what you pay.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/billing).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Standard phone rate</small><strong>$0.08 per minute</strong></div>
+  <div><small>Website chat</small><strong>$0.01 per message</strong></div>
+  <div><small>Minimum top-up</small><strong>$5</strong></div>
+  <div><small>Account pricing</small><strong>Check Billing</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Your account pricing and eligible discounts can differ from the standard rates below.
+- Telephone transport, number rental and your own connected services have separate charges.
+- Actual Live Monitor listening affects the rate; enabling its switch alone does not.
+- Check an uncertain payment in Billing before creating another one.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Admin</strong><br />Live Monitor is enabled, but nobody listened to this call.</p>
+  <p><strong>Owner</strong><br />The switch alone does not add the listening premium. Review the call’s recorded billing result.</p>
+  <p><strong>Admin</strong><br />I will keep that separate from our telephone provider’s bill.</p>
+</div>
 
 ## Standard usage rates
 
@@ -27,7 +62,7 @@ Your telephone account bills you directly for number rental, telephone minutes a
 
 When recording is enabled and the carrier produces the audio, Nixflex verifies and imports it into managed storage or your configured customer bucket. Only after storage and linking are confirmed does the pipeline **request deletion of the carrier copy**. A deletion request is not proof that every external copy is gone. Do not assume Nixflex holds the only copy or that further carrier storage charges are impossible.
 
-For managed recordings, call lists and webhooks provide recording status and an authenticated recording endpoint. The `recording_url` field is not a public MP3 download link. An authorised recording request can return a short-lived signed link when audio is available. Customer-bucket recordings use your own storage access; the managed endpoint does not return a download URL for them.
+Managed recordings require authorised access. Their links can expire; a recording status or notification does not make the audio public. Customer-bucket recordings use your own storage access. See [find and download recordings](/guides/business/call-history/recordings) for the dashboard task and the Developer version for the exact recording fields.
 
 Retention limits apply. If you need a longer-lived copy, download it through an authorised flow and keep it in your own storage. Copies you retain, customer buckets and external carrier records have their own cleanup responsibilities. See [recording access](/guides/business/call-history) and [data retention](/concepts/data-retention).
 
@@ -39,6 +74,22 @@ Optional auto-top-up attempts a payment when the balance reaches your chosen thr
 
 A usage total, a payment receipt and a completed invoice are different records. Use the same period and time zone when comparing them. See [billing guidance](/guides/business/billing), [pricing basics](/guides/pricing-basics) or [usage through the API](/guides/developer/billing).
 
+## Read the amount before acting
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| An applicable account rate | Your account may differ from the standard table. | Use Billing and the recorded work when checking a charge. |
+| A pending or unavailable amount | The final amount is not established. | Keep it unresolved rather than counting it as zero. |
+| A payment still being checked | The payment outcome is uncertain. | Read the existing payment before starting another top-up. |
+
 ## Questions about pricing
 
 For high-volume pricing, contact [sales@nixflex.com](mailto:sales@nixflex.com). For a payment or charge question, contact [support@nixflex.com](mailto:support@nixflex.com). Do not send card details or API keys.
+
+## Next
+
+- [Check charges and download documents](/guides/business/billing/check-charges)
+- [Add credit and review auto-recharge](/guides/business/billing/add-credit)
+- [Resolve a payment problem](/guides/business/billing/fix-payments)
+
+Reviewed 5 November 2026.

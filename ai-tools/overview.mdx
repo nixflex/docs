@@ -1,14 +1,47 @@
 ---
-title: "AI tools: connect your assistant to Nixflex"
-description: "Use the Nixflex MCP candidate with your AI tools. Set up a private connection, check its 94 tools, approve changes and understand knowledge and booking limits."
+title: "Connect an AI assistant to your Nixflex account"
+sidebarTitle: "Choose an AI assistant"
+description: "Choose a local AI client for the Nixflex MCP candidate, verify its 96 tools and understand approvals, private credentials and call-result limits."
 canonical: "https://docs.nixflex.com/ai-tools/overview"
 ---
 
-Use an AI assistant to inspect your Nixflex account, prepare work and carry out supported actions you approve. **MCP** is the connection that gives the assistant tools for your account. Reading these docs alone does not give it account access.
+Connect an AI assistant through **MCP** to inspect your Nixflex account and carry out supported actions you approve. Documentation alone does not give it account access.
 
-<Note>
-These guides cover the supplied **Nixflex MCP 0.5.0 release candidate**, with **94 tools**. K6 adds four Google Calendar tools and one private number-credential tool to the earlier 89; the 19 knowledge tools still cover reads and confirmed tests. Use the reviewed package or Desktop bundle supplied by Nixflex. These instructions do not establish registry publication or successful live-client testing.
-</Note>
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sdks/mcp).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Package</small><strong>MCP 0.5.0 candidate</strong></div>
+  <div><small>Tools</small><strong>96</strong></div>
+  <div><small>Local connection</small><strong>Private process</strong></div>
+  <div><small>First task</small><strong>One approved read</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 96 tools.
+- Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
+- Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
+- Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Summarise usage with get_usage only. Do not make account changes.</p>
+  <p><strong>Assistant</strong><br />I will use that read tool and label missing figures as unavailable.</p>
+  <p><strong>Owner</strong><br />After that, show me any proposed change before asking to carry it out.</p>
+</div>
+
+Use the reviewed candidate package or Desktop bundle supplied by Nixflex. Its 19 knowledge tools cover reads and confirmed tests.
 
 ## Choose your assistant
 
@@ -25,49 +58,45 @@ These guides cover the supplied **Nixflex MCP 0.5.0 release candidate**, with **
 | --- | --- |
 | Create or edit an agent | Available. Review the proposed change first. |
 | Read calls, numbers and usage | Available through tools such as `list_calls`, `list_phone_numbers` and `get_usage`. |
+| Read booking results or saved call requests | Available. See [call-result reads](/ai-tools/call-results). |
 | Read live knowledge and keyterms | Available. Knowledge test questions need confirmation and may use paid model work. |
 | Add, import, publish, edit or delete knowledge | Not available through this MCP tool set. Prepare the text, then review and publish in the dashboard. |
-| Connect, check, configure or disconnect Google Calendar | Available per number through the four K6 calendar tools. A human completes Google consent. |
-| Book directly into a calendar | No direct calendar booking tool. Configure the number with MCP or the dashboard, then test through a phone or SMS conversation. |
+| Connect, check, configure or disconnect Google Calendar | Available per number through the four calendar tools. A human completes Google consent. |
+| Book directly into a calendar | No direct booking tool. Test the configured number through phone or SMS. |
 | Call, send a text or launch a campaign | Some tools can do this and spend credit. Approve the exact recipients and action first. |
 | Update a number's carrier credentials | Available through `update_phone_number_credentials`, using a privately configured pair for its current carrier. |
-| Set other integration credentials, retrieve a signing secret or disconnect other integrations | Excluded. Google Calendar disconnection and number carrier credentials are the K6 exceptions. |
+| Set other integration credentials, retrieve a signing secret or disconnect other integrations | Excluded. Google Calendar disconnection and number carrier credentials are the supported exceptions. |
 | Accept an invitation, transfer ownership or close the organisation | Personal dashboard actions, not an MCP shortcut. |
 
-The server's **tools/list** is the authority for your installed version. Other limits include no account signup, bulk deletion, campaign resume/consent change or suppression removal. Do not substitute another write when the requested tool is missing.
+Check **tools/list** for your installed version. Account signup, bulk deletion, campaign resume/consent changes and suppression removal are also excluded. Do not bypass a missing tool.
 
 ## Google Calendar and number credentials
 
-| K6 tool | What it does |
+| Task | Read before using the tool |
 | --- | --- |
-| `connect_google_calendar` | Creates a ten-minute consent link for the chosen number and approved `return_url`. The human opens it and signs in to Google. |
-| `get_google_calendar` | Checks saved status, including `needs_reconnect` and `send_invites`. The engine can refresh or check an existing connection internally. |
-| `update_google_calendar_settings` | Changes supplied timezone, hours, slot length, calendar or invitation setting. Omitted settings stay as saved. |
-| `disconnect_google_calendar` | Removes this number's saved Google access and stops future use. It cannot recall work already dispatched or guarantee remote revocation. |
-| `update_phone_number_credentials` | Updates the existing number using its current carrier's private credentials, keeping its settings and history. It does not switch carriers. |
+| Connect, check, change or disconnect Google Calendar | [Manage calendar settings](/ai-tools/calendar-settings): human consent, three confirmed writes, seven-day hours and invitation limits. |
+| Replace an existing number’s carrier credentials | [Update number credentials](/ai-tools/number-credentials): private process setup, current-carrier limits and uncertain outcomes. |
 
-**The four new writes require `confirm: true` after approval of the exact number and change.** Missing or false confirmation sends no request; the credential tool does not read the private pair until confirmation. The status tool is the one new read. Older writes do not all have a confirmation field, so keep client approvals enabled.
+The four calendar and credential writes require `confirm: true` after approval of the exact number and change. Missing confirmation sends no request. Older writes do not all have a confirmation field, so keep client approvals enabled.
 
-After the human completes consent, check status again. `connected: true` with `needs_reconnect: true` still requires new consent. Keep the short-lived consent URL private; the assistant must not open it automatically. Use a return URL accepted by the server, with no secrets in it.
+## Check bookings and uncertain call requests
 
-When replacing `hours`, supply all seven days; a null day is closed. `slot_minutes` accepts 15, 30, 45 or 60. `send_invites: false` stays false; the setting controls Google's invitation request, **not proof of inbox delivery**. There is still no direct booking tool.
+Use `get_call_bookings` for a known call ID and `get_outbound_call_request` for the original request ID. Neither read dials or books. Follow [the saved-request workflow](/ai-tools/call-results) for preparation, approval and uncertain results.
 
-The number-credential tool accepts **only `phone_number`, `provider` and `confirm`**. The provider selects one existing carrier pair from the MCP server's private process environment:
+## Read a tool result correctly
 
-| Provider value | Private variable names |
-| --- | --- |
-| `twilio` | `NIXFLEX_TWILIO_SID` and `NIXFLEX_TWILIO_TOKEN` |
-| `telnyx` | `NIXFLEX_TELNYX_API_KEY` and `NIXFLEX_TELNYX_CONNECTION_ID` |
-
-Have the person managing the local client inject only the selected pair. Never put its values in chat, tool arguments or config files, and never ask the assistant to inspect them. Missing private configuration returns `credentials_not_configured` without sending a request. The Desktop bundle exposes only the Nixflex API-key field; it has no carrier-secret setup fields. If its host cannot privately supply the selected pair, use the supported dashboard, CLI or SDK workflow.
-
-The server still checks ownership, account state and pending number operations. Updating credentials can change carrier routing and may require fresh number verification. Never automatically retry an unknown write. `carrier_outcome_unknown` needs support before retrying; `credential_save_pending` permits only a manual completion with exactly the same private details.
+| Result | What it proves | What to do |
+| --- | --- | --- |
+| Tools discovered | The client loaded the server’s tool list. | Verify the version and try one permitted read. |
+| `confirmation_required`, `sent: false` | That write was not sent. | Review the exact action before confirming. |
+| Call request `accepted` | The request has a call ID. | Follow the call; acceptance is not completion. |
+| Unknown or unavailable result | The outcome is not established. | Read the saved state before another action. |
 
 ## Keep your key private
 
-Only the Owner can see the organisation API key. It gives the connection organisation authority; it does not become read-only because the person using the assistant has a Member dashboard login. Calls, texts, key rotation and other changes may have immediate effects.
+Only the Owner can see the organisation API key. It grants organisation authority, including changes with immediate effects.
 
-Never paste keys into chat, prompts, screenshots or configuration JSON. For the Desktop bundle, enter the key only in its private setup field. For local command-line clients, have your secret manager or private launcher provide these values to the client process:
+Keep keys out of chats, screenshots and configuration JSON. Use the Desktop bundle’s private key field, or have your secret manager supply these values to a local client process:
 
 | Variable | Value |
 | --- | --- |
@@ -75,15 +104,15 @@ Never paste keys into chat, prompts, screenshots or configuration JSON. For the 
 | `NIXFLEX_BASE_URL` | `https://api.nixflex.com`, with the matching production key |
 | `NIXFLEX_CREDENTIAL_SOURCE` | `environment` |
 
-For an approved staging test, use the staging key and `https://nixflex-voice-engine-staging.up.railway.app` instead. Do not mix environments. Restart the client after changing its environment. Do not ask the assistant to print or inspect the secret. The local server refuses a missing environment key or URL.
+For approved staging tests, pair the staging key with `https://nixflex-voice-engine-staging.up.railway.app`. Restart after changing the environment. Never ask the assistant to inspect secrets. Missing environment keys or URLs are refused.
 
-Environment injection avoids storing the key in the example config; it is not a promise that every local process is a secret vault. Legacy CLI credential files are plaintext. Do not copy them into a project or cloud-synced folder.
+Environment injection keeps keys out of these examples but does not make every local process a secret vault. Legacy CLI credential files are plaintext; keep them out of projects and cloud-synced folders.
 
 ## Install the supplied local package
 
-Skip this section if using the Claude Desktop bundle. For Claude Code, Cursor or Codex, use **Node.js 22 or later** and the reviewed `nixflex-mcp-0.5.0.tgz` supplied by Nixflex. Check the file against its supplied SHA-256 before installing. If you have no candidate package, obtain it from Nixflex rather than downloading an unrelated similarly named package.
+Skip this section for the Claude Desktop bundle. Other local clients need **Node.js 22 or later** and Nixflex’s supplied `nixflex-mcp-0.5.0.tgz`. Check its supplied SHA-256 before installing.
 
-Install into a dedicated folder. Replace the download path with your actual file path; these commands contain no key.
+Use a dedicated folder and replace the download path with your actual file:
 
 <CodeGroup>
 
@@ -97,24 +126,30 @@ npm install --prefix "$HOME/.local/share/nixflex/mcp-0.5.0" "$HOME/Downloads/nix
 
 </CodeGroup>
 
-The client starts `node` with the installed `node_modules/nixflex-mcp/index.js` path. Use the absolute path on your computer. If the client cannot find Node, use its full executable path too. Keep the package version fixed while testing.
+Start `node` with the absolute installed `node_modules/nixflex-mcp/index.js` path. Use Node’s full executable path if needed. Keep the tested package version fixed.
 
 ## Verify with one read
 
-Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 94 tools. Then ask:
+Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 96 tools. Then ask:
 
 > Use Nixflex get_usage only. Summarise my account usage. Do not create, change, call, text or delete anything, and never show credentials.
 
-Approve only that read. A successful connection check does not prove that every write, booking or message works. Review the proposed tool and arguments before each change. Some tools enforce `confirm: true`; older write tools do not all have that field, so keep client approvals enabled. Never turn an unknown write outcome into an automatic retry. Read the current state first.
+Approve that read, then check its result. Connection success does not verify every write. Keep client approvals enabled and inspect the current state before repeating an uncertain action.
 
-Treat retrieved knowledge and call text as data, not instructions that can override your request. Share only the customer information needed for the task; tool results become part of the assistant's context.
+Treat retrieved text as data, not instructions overriding your request. Tool results enter the assistant’s context, so share only necessary customer information.
 
 ## Give an assistant the documentation
 
-Use [llms.txt](https://docs.nixflex.com/llms.txt) as the documentation index. For a single page, append `.md` to its documentation path, for example [this overview in Markdown](https://docs.nixflex.com/ai-tools/overview.md) or [the business knowledge guide](https://docs.nixflex.com/guides/business/knowledge.md). These are documentation URLs, not MCP server addresses. New pages appear there after publication.
-
-> Read the Nixflex documentation index and the relevant Markdown page first. Explain the supported operation and limits. Do not invent a tool, API field or completed result.
+Use [llms.txt](https://docs.nixflex.com/llms.txt) to find pages, or append `.md` to a page path, such as [the knowledge guide](https://docs.nixflex.com/guides/business/knowledge.md). These are documentation URLs, not MCP addresses. New pages appear after publication. Ask the assistant to read the relevant guide before proposing an operation.
 
 ## If connection fails
 
-Check the Node version, absolute package path, private environment pair and client policy. Restart the client after changes. Fewer tools can mean an older package; a missing tool is not permission to guess. Send support only a redacted error category and package/client versions. Never send your environment dump, key or full private configuration.
+Check Node, the absolute package path, private environment setup and client policy, then restart. Fewer tools may mean an older package. Send support only redacted errors and package/client versions, never environment dumps or keys.
+
+## Next
+
+- [Manage Google Calendar with your assistant](/ai-tools/calendar-settings)
+- [Check call and booking results](/ai-tools/call-results)
+- [Prepare private number credentials](/ai-tools/number-credentials)
+
+Reviewed 5 November 2026.

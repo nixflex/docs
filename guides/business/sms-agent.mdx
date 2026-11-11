@@ -1,10 +1,45 @@
 ---
-title: "SMS agent: answer customer texts from your business"
+title: "Set up automatic replies to customer texts"
+sidebarTitle: "Set up SMS replies"
 description: "Set up the Nixflex SMS agent in the dashboard, write separate text instructions, enable replies and test questions and bookings on your business number."
 canonical: "https://docs.nixflex.com/guides/business/sms-agent"
 ---
 
 Let your agent answer customer texts from your business number. SMS has its own instructions and switch. Changing the phone-call prompt does not change text replies, so prepare the texting experience separately.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sms/sms-agent).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Setup access</small><strong>Owner, Admin</strong></div>
+  <div><small>Instructions</small><strong>Separate from calls</strong></div>
+  <div><small>Auto-reply default</small><strong>Off</strong></div>
+  <div><small>Knowledge</small><strong>Enable for SMS</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save SMS-specific instructions. The phone-call prompt does not control text replies.
+- Enable SMS knowledge on the attached agent for the facts you want texts to use.
+- Prepare the number’s SMS instructions for a campaign; sending a campaign does not teach its offer to the agent.
+- Check the calendar for a booking result and the message record for delivery. A reply alone is not confirmation.
+
+</div>
+
+## See how it works
+
+Illustrative test conversation for a business whose saved Saturday hours are 9 am to 1 pm.
+
+<div className="nxf-conversation">
+  <p><strong>Customer</strong><br />Are you open on Saturday?</p>
+  <p><strong>Agent</strong><br />Our Saturday hours are 9 am to 1 pm.</p>
+  <p><strong>Owner reviewing the test</strong><br />That matches the saved SMS facts. Next I will test a question the agent should not guess.</p>
+</div>
 
 ## Before you start
 
@@ -14,55 +49,98 @@ Let your agent answer customer texts from your business number. SMS has its own 
 
 ## Steps
 
-### 1. Choose the number
+<Steps>
+
+<Step title="Choose the number">
+
+<span id="1-choose-the-number" />
 
 Open **SMS agent** and select your business number. Check the attached agent. This screen shows dashboard-managed numbers; a number managed through code may need its settings changed there.
 
-### 2. Set up the instructions
+</Step>
+
+<Step title="Set up the instructions">
+
+<span id="2-set-up-the-instructions" />
 
 Choose **Set up agent**, or **Edit agent** for an existing setup. Say who the business is, what customers can ask and what to do when unsure. Keep replies short and specify the intended language behaviour.
 
-<Note>Screenshot placeholder: **sms-agent-setup** — SMS agent setup, instructions editor with save control. Use staging test data.</Note>
+</Step>
 
-### 3. Add the right facts
+<Step title="Add the right facts">
+
+<span id="3-add-the-right-facts" />
 
 Include the most-used facts in the SMS instructions. For detailed information, add knowledge to the attached agent and enable its SMS knowledge switch. If a campaign will prompt replies, include that campaign’s current offer or purpose.
 
-### 4. Enable replies
+</Step>
+
+<Step title="Enable replies">
+
+<span id="4-enable-replies" />
 
 Save the instructions and turn on SMS auto-reply for this number. The switch starts off. Connected calendar tools can support booking by text; website chat has different action rules.
 
-### 5. Test a conversation
+</Step>
+
+<Step title="Test a conversation">
+
+<span id="5-test-a-conversation" />
 
 Text the business number from an owned test phone. Ask a known and an unknown question. If booking is enabled, make a test booking and check the actual calendar. Review the saved conversation and correct anything unclear.
 
-<Note>Screenshot placeholder: **sms-agent-thread** — SMS conversations, test thread with customer question and agent answer. Use staging test data.</Note>
+</Step>
+
+</Steps>
 
 ## What happens next
 
 New eligible messages receive replies using the saved SMS instructions. Review the inbox for failed or unclear conversations. Message delivery and final booking confirmation should be checked in their respective records.
 
+## Review the test result
+
+| Result | What to check | Next step |
+| --- | --- | --- |
+| Message saved, no automatic reply | Number, SMS instructions and auto-reply switch. | Correct the setup and run one new test. |
+| Reply uses the wrong facts | SMS instructions, attached agent and SMS knowledge switch. | Correct the source of the answer. |
+| Booking discussed | The actual connected calendar. | Treat the booking as complete only after its confirmed result. |
+| Delivery uncertain | The message’s available delivery information. | Check before sending another text. |
+
 ## Common questions
 
-### Can I read messages with replies switched off?
+<AccordionGroup>
+
+<Accordion title="Can I read messages with replies switched off?">
 
 Incoming messages can still be saved; the switch controls automatic replies.
 
-### Does archiving stop replies?
+</Accordion>
+
+<Accordion title="Does archiving stop replies?">
 
 No. Archive changes the inbox view. Use the auto-reply switch to change answering behaviour.
 
-### Is there a manual reply box?
+</Accordion>
+
+<Accordion title="Is there a manual reply box?">
 
 The current inbox is for reading and managing conversations; it does not provide a manual reply composer.
 
-### What does it cost?
+</Accordion>
+
+<Accordion title="What does it cost?">
 
 Your telephone account bills message transport. This version does not add an SMS AI-reply fee; check Billing and current pricing for your account.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Read your inbox](/guides/business/agent-inbox)
 - [Teach your agent](/guides/business/knowledge)
 
-Prefer code? See [Configure SMS with the API](/sms/sms-agent).
+Reviewed 5 November 2026.

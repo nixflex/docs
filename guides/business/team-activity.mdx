@@ -1,59 +1,128 @@
 ---
-title: "Team Activity: review actions and download a CSV"
+title: "Review team activity and export a CSV"
+sidebarTitle: "Activity and CSV"
 description: "Filter Nixflex team actions by person and date, understand Done, Not allowed and Not confirmed results, and export matching Activity records as CSV."
 canonical: "https://docs.nixflex.com/guides/business/team-activity"
 ---
 
-Use **Team → Activity** to review work in the organisation. Owners and Admins can open it. Members cannot. The separate **Logs** page contains API logs, not this team record.
+Use Team Activity to review recorded organisation actions and download the matching records.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/organisations).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who can review</small><strong>Owner or Admin</strong></div>
+  <div><small>Date filters</small><strong>UTC</strong></div>
+  <div><small>Load more</small><strong>50 at a time</strong></div>
+  <div><small>Export range</small><strong>Up to 12 months</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- **Not confirmed does not mean Done.** Read the recorded outcome before repeating an action.
+- Activity describes actions; it is not a conversation transcript or an inbox-delivery receipt.
+- The CSV includes every matching event in the selected range, with no 500-row export cap.
+- Keep the downloaded file private. Customers cannot edit or remove Activity entries.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />The activity row says someone asked to end a call. Has it ended?</p>
+  <p><strong>Admin</strong><br />That records the request. We should check the call’s actual result.</p>
+  <p><strong>Owner</strong><br />I will use the UTC date filter and keep the exported record with the people reviewing it.</p>
+</div>
 
 ## Steps
 
-### 1. Open Activity
+<Steps>
+
+<Step title="Open Activity">
+
+<span id="1-open-activity" />
 
 Open **Team**, then **Activity**. Each entry describes an action in plain words with the person and result where known. Older records can have generic labels when the original person or item is no longer available.
 
-### 2. Filter the list
+</Step>
+
+<Step title="Filter the list">
+
+<span id="2-filter-the-list" />
 
 Choose a **Person** and optional **From** and **To** dates. Dates use **UTC**. If the day differs from your local time, adjust the range accordingly. The view refreshes when opened, when the window gets focus and after your own team action.
 
-### 3. Read the result
+</Step>
 
-| Result or wording | Meaning |
-| --- | --- |
-| **Done** | The recorded action completed. |
-| **Not allowed** | The action was refused. |
-| **Not confirmed** | Completion could not be established. Do not treat it as success. |
-| Asked to end a call | Ending was requested; confirmed call completion has not yet been recorded. |
+<Step title="Read the result">
 
-<Note>Screenshot placeholder: **team-activity-results** — Team → Activity, fictional completed action and an honest Not confirmed or asked-to-end result with UTC filters. Use staging test data.</Note>
+<span id="3-read-the-result" />
 
-### 4. Read more or export
+On a phone, swipe the table sideways if you cannot see every column.
+
+| Result or wording | What it means | What to do |
+| --- | --- | --- |
+| **Done** | The recorded action completed. | Read the person and action to confirm it is the event you need. |
+| **Not allowed** | The action was refused. | Check the person’s role and the action’s permission requirements. |
+| **Not confirmed** | Completion could not be established. | Check the affected item before assuming success or repeating the action. |
+| Asked to end a call | Ending was requested; completion is not yet confirmed. | Read the call’s current result. |
+
+</Step>
+
+<Step title="Read more or export">
+
+<span id="4-read-more-or-export" />
 
 **Load 50 more** adds another page. For a complete filtered record, choose the CSV download. It streams every matching event in the chosen range, up to **12 months**. There is no 500-row export cap. The **When** column uses a readable UTC date and time.
 
-<Note>Screenshot placeholder: **team-activity-csv** — Downloaded Activity CSV, fictional When, action and result columns; UTC date-time visible, no private identifiers. Use staging test data.</Note>
+</Step>
 
-### 5. Keep the file private
+<Step title="Keep the file private">
+
+<span id="5-keep-the-file-private" />
 
 Store the export with the people who need to review it. The export fixes its upper boundary when it starts, so new actions do not move later pages. Download again for newer events. Customers cannot edit or delete Activity entries.
 
+</Step>
+
+</Steps>
+
 ## Common questions
 
-### Why does listening show one entry?
+<AccordionGroup>
+
+<Accordion title="Why does listening show one entry?">
 
 One displayed listening session includes its duration after playback starts. A takeover records actual human activation. Internal access checks are not extra customer actions.
 
-### When does adding knowledge appear?
+</Accordion>
+
+<Accordion title="When does adding knowledge appear?">
 
 The named addition appears after publication succeeds. A draft, failed import or review-only job must not say knowledge was added.
 
-### Does Activity show secrets or conversation text?
+</Accordion>
+
+<Accordion title="Does Activity show secrets or conversation text?">
 
 No. It describes actions without showing credentials, message contents or raw item identifiers. It is not a transcript or an email inbox-delivery report.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Team access](/guides/business/team)
 - [Call History](/guides/business/call-history)
 
-Prefer code? See [Organisation Activity through the API](/guides/developer/organisations).
+Reviewed 5 November 2026.

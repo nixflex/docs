@@ -1,10 +1,45 @@
 ---
-title: "Recording storage: connect your business recording bucket"
+title: "Store recordings in your business bucket"
+sidebarTitle: "Use your recording storage"
 description: "Connect a recording bucket in Nixflex, test the saved settings and understand playback, fallback and your responsibility for files retained in your own storage."
 canonical: "https://docs.nixflex.com/guides/byo-storage-r2"
 ---
 
 Store call recordings in a bucket your business manages. Use your own storage rules and check what happens if the connection fails.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/advanced/your-own-storage).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who can configure</small><strong>Owner, Admin</strong></div>
+  <div><small>Connection scope</small><strong>Account</strong></div>
+  <div><small>Fallback</small><strong>May use Nixflex storage</strong></div>
+  <div><small>Bucket retention</small><strong>Managed by you</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A successful connection test does not guarantee every upload.
+- Fallback may use standard storage, so this setting does not guarantee one storage region.
+- Your bucket may need its own authorised player or download path.
+- Disconnecting storage or removing a call does not remove files already in your bucket.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Our test call finished. Is the recording definitely in our bucket?</p>
+  <p><strong>Storage administrator</strong><br />Check the actual storage result and the bucket using authorised access.</p>
+  <p><strong>Owner</strong><br />I will also confirm our bucket retention rules; the Nixflex call setting does not remove those files.</p>
+</div>
 
 ## Before you start
 
@@ -13,49 +48,92 @@ Store call recordings in a bucket your business manages. Use your own storage ru
 
 ## Steps
 
-### 1. Open recording storage
+<Steps>
+
+<Step title="Open recording storage">
+
+<span id="1-open-recording-storage" />
 
 Open **Settings**, then **Data and privacy**, and find **Recording storage**. This is an account connection, so review the effect on all affected agents before changing it.
 
-### 2. Enter the connection details
+</Step>
+
+<Step title="Enter the connection details">
+
+<span id="2-enter-the-connection-details" />
 
 Enter the bucket, its region, the appropriate secure endpoint and its access details. Get these from your storage administrator. Never paste private access details into agent instructions or a screenshot.
 
-### 3. Test and save
+</Step>
+
+<Step title="Test and save">
+
+<span id="3-test-and-save" />
 
 Choose **Test & save**. Wait for the result. A successful test checks the connection now; it does not guarantee every later upload will succeed.
 
-<Note>Screenshot placeholder: **byo-storage-r2-saved** — Settings → Data and privacy → Recording storage, verified saved connection, all credentials masked. Use staging test data.</Note>
+</Step>
 
-### 4. Check a test recording
+<Step title="Check a test recording">
+
+<span id="4-check-a-test-recording" />
 
 Make an approved test call with recording enabled. Open its history and check the storage result. A recording stored in your bucket is managed through that bucket’s authorised access; it may not have an ordinary dashboard player.
 
-### 5. Manage failures and retention
+</Step>
+
+<Step title="Manage failures and retention">
+
+<span id="5-manage-failures-and-retention" />
 
 If your bucket rejects an upload, standard Nixflex storage may be attempted. Review the call result and fix the connection. Set your own bucket retention; removing a call or disconnecting storage does not remove files already kept there.
+
+</Step>
+
+</Steps>
 
 ## What happens next
 
 New recordings follow the saved connection and actual upload outcome. Keep the storage administrator involved when credentials, access rules or retention change.
 
+## Read the storage outcome
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Stored in your bucket | The recording used your configured storage. | Access it through your authorised bucket tools. |
+| Fallback used | The chosen bucket upload did not provide the saved result. | Check the standard storage result and fix the bucket connection. |
+| No saved recording | Both the intended upload and fallback can fail. | Inspect the call result; do not assume audio exists. |
+| Connection removed | Future storage follows the remaining configuration. | Retain or remove existing bucket files under your own policy. |
+
 ## Common questions
 
-### Does this guarantee one storage region?
+<AccordionGroup>
+
+<Accordion title="Does this guarantee one storage region?">
 
 No. Fallback can use standard storage, so this switch alone is not a regional exclusivity guarantee.
 
-### Are recordings guaranteed to be saved?
+</Accordion>
+
+<Accordion title="Are recordings guaranteed to be saved?">
 
 No. Both the chosen bucket and fallback can fail; inspect the actual result.
 
-### What happens when I disconnect?
+</Accordion>
+
+<Accordion title="What happens when I disconnect?">
 
 Future work uses the remaining recording configuration. Existing bucket files stay under your control.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Recording and privacy](/guides/business/privacy)
 - [Review call history](/guides/business/call-history)
 
-Prefer code? See [Manage recording storage with code](/advanced/your-own-storage).
+Reviewed 5 November 2026.

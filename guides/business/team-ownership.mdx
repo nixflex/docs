@@ -1,10 +1,45 @@
 ---
-title: "Transfer ownership with an offer your teammate accepts"
-description: "Offer Nixflex ownership to an existing teammate, accept or decline securely, cancel a pending offer and understand the roles and email notices afterwards."
+title: "Transfer ownership to a teammate"
+sidebarTitle: "Transfer ownership"
+description: "Offer ownership to a joined teammate, let them accept with their own login and confirm both saved roles afterwards."
 canonical: "https://docs.nixflex.com/guides/business/team-ownership"
 ---
 
-Ownership changes only when the intended person accepts an active offer. The organisation keeps its balance, billing, API key and work. The previous Owner becomes an Admin.
+Transfer ownership by sending an offer that the intended teammate accepts with their own login.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/team/ownership-and-closure).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who sends the offer</small><strong>Current Owner</strong></div>
+  <div><small>Recipient</small><strong>Joined Admin or Member</strong></div>
+  <div><small>Pending offers</small><strong>One at a time</strong></div>
+  <div><small>Former Owner</small><strong>Becomes Admin</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- **Sending an offer does not transfer ownership.** The intended recipient must accept an active offer.
+- The organisation keeps its balance, billing, API key and shared work.
+- Both people must complete any requested recent sign-in and two-factor checks.
+- Check both saved roles after acceptance; email arrival is not the confirmation.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />I have offered ownership to you in Team.</p>
+  <p><strong>Teammate</strong><br />I will open my own offer, check the organisation and complete the requested sign-in check.</p>
+  <p><strong>Owner</strong><br />After you accept, we will check that you are Owner and I am Admin.</p>
+</div>
 
 ## Before you start
 
@@ -13,49 +48,92 @@ Ownership changes only when the intended person accepts an active offer. The org
 
 ## Steps
 
-### 1. Offer ownership
+<Steps>
+
+<Step title="Offer ownership">
+
+<span id="1-offer-ownership" />
 
 As Owner, open **Team**, find the intended person and choose **Make owner**. Check their identity and complete the sign-in confirmation. An offer email asks them to review it; sending this email does not transfer ownership.
 
-### 2. Check the waiting state
+</Step>
+
+<Step title="Check the waiting state">
+
+<span id="2-check-the-waiting-state" />
 
 Only one outstanding offer is allowed. Team names the person you are waiting for and shows **Cancel offer** on their row. Cancel it if you chose the wrong person or no longer want to transfer.
 
-<Note>Screenshot placeholder: **team-ownership-waiting** — Team as Owner, Ownership offered waiting state and Cancel offer for one fictional person. Use staging test data.</Note>
+</Step>
 
-### 3. Open the personal offer
+<Step title="Open the personal offer">
+
+<span id="3-open-the-personal-offer" />
 
 The recipient opens the review link or **Team** with their own login. Only they see the **Accept** or **Decline** banner. A Member can use this banner without receiving other team-management permissions. If another email is signed in, use **Sign out and continue**.
 
-<Note>Screenshot placeholder: **team-ownership-banner** — Team as intended recipient, one personal Accept or Decline banner; Member view if practical. Use staging test data.</Note>
+</Step>
 
-### 4. Accept or decline
+<Step title="Accept or decline">
+
+<span id="4-accept-or-decline" />
 
 Choose **Accept** to take ownership, then complete any requested recent sign-in and two-factor check. Choose **Decline** to leave ownership unchanged. Opening the email alone does neither. A cancelled, expired or wrong-person sign-in cannot complete the transfer.
 
-### 5. Check both roles
+</Step>
+
+<Step title="Check both roles">
+
+<span id="5-check-both-roles" />
 
 After confirmed acceptance, the recipient is Owner and the former Owner is Admin. Nixflex sends a notice to each person explaining the change. A delayed or failed email does not reverse it; check Team for the saved roles.
 
-<Note>Screenshot placeholder: **team-ownership-notices** — Ownership notice emails, new Owner and previous Owner notices using fictional names; no links with private fragments. Use staging test data.</Note>
+</Step>
+
+</Steps>
+
+## Read the offer state
+
+On a phone, swipe the table sideways if you cannot see every column.
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Waiting for the recipient | Ownership has not changed. | Check the named person; cancel the offer if it is no longer intended. |
+| Acceptance confirmed | The recipient is Owner and the former Owner is Admin. | Read both roles in Team before relying on the new access. |
+| Cancelled, declined or expired | That offer cannot complete a transfer. | Keep the current ownership record; make a new deliberate offer only if needed. |
+| Sign-in not completed | The requested personal check did not approve acceptance. | Return to Team with the intended login and check the offer state. |
 
 ## Common questions
 
-### Does the balance or API key move to a new business?
+<AccordionGroup>
+
+<Accordion title="Does the balance or API key move to a new business?">
 
 No. They stay with the same organisation. Its new Owner controls the key and Admins.
 
-### Can the previous Owner leave?
+</Accordion>
+
+<Accordion title="Can the previous Owner leave?">
 
 After acceptance they are Admin and can [leave the organisation](/guides/business/team-leave). Before acceptance, they are still Owner and must complete a transfer first.
 
-### What if sign-in opens a separate window?
+</Accordion>
+
+<Accordion title="What if sign-in opens a separate window?">
 
 Complete sign-in as the same intended person. Keep Team open. A blocked, cancelled or wrong-account sign-in does not approve the transfer; return and check the offer state.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Compare roles](/guides/business/team-roles)
 - [Activity and CSV](/guides/business/team-activity)
 
-Prefer code? See [Organisation API boundaries](/guides/developer/organisations); personal ownership acceptance stays in the dashboard.
+Personal ownership acceptance stays in the dashboard.
+
+Reviewed 5 November 2026.

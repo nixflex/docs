@@ -1,10 +1,45 @@
 ---
-title: "Live calls: listen and take over in the Nixflex dashboard"
+title: "Listen to a live call and take over"
+sidebarTitle: "Listen and take over"
 description: "Use Nixflex Live Monitor to listen to eligible calls, follow the conversation and take over when needed, with clear team access and call-ending rules."
 canonical: "https://docs.nixflex.com/guides/live-monitoring"
 ---
 
 Follow an eligible live call and take over when a person should continue the conversation. Listening lets you hear the caller and agent. Takeover replaces the AI with you for the remainder of that call.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/concepts/live-listen).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Eligible roles</small><strong>Owner, Admin, Member</strong></div>
+  <div><small>Listen</small><strong>Hear caller and agent</strong></div>
+  <div><small>Takeover</small><strong>You replace the AI</strong></div>
+  <div><small>End call</small><strong>Wait for confirmation</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Listen does not add your microphone to the call or guarantee a saved recording.
+- A prepared microphone is not a committed takeover. Wait for the connected result.
+- After human takeover is committed, the AI does not return to that call.
+- An end request is not proof that the call ended; check the confirmed state.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Member</strong><br />I can hear the call, and the customer needs a person.</p>
+  <p><strong>Admin</strong><br />Read the conversation, choose Take over and wait until you are connected.</p>
+  <p><strong>Member</strong><br />Once connected, I will finish the conversation myself and use Hang up when done.</p>
+</div>
 
 ## Before you start
 
@@ -14,55 +49,98 @@ Follow an eligible live call and take over when a person should continue the con
 
 ## Steps
 
-### 1. Choose a live call
+<Steps>
+
+<Step title="Choose a live call">
+
+<span id="1-choose-a-live-call" />
 
 Open **Live Monitor** and select the number and active call. The list depends on current call state and your access. A call that has ended will no longer be available to join.
 
-### 2. Listen
+</Step>
+
+<Step title="Listen">
+
+<span id="2-listen" />
 
 Choose **Listen** and allow the browser to play audio. Check you hear the caller and agent. Listening alone does not put your microphone into the call or promise that a recording will be saved.
 
-<Note>Screenshot placeholder: **live-monitoring-listen** — Live Monitor, eligible test call with Listen and transcript. Use staging test data.</Note>
+</Step>
 
-### 3. Decide whether to take over
+<Step title="Decide whether to take over">
+
+<span id="3-decide-whether-to-take-over" />
 
 Read the conversation before joining. If someone else already has the takeover, their name is shown and the other controls are unavailable. Do not treat a prepared microphone as a completed takeover.
 
-### 4. Take over
+</Step>
+
+<Step title="Take over">
+
+<span id="4-take-over" />
 
 Choose **Take over** and follow the microphone controls. Wait for confirmation that you are connected. Once human takeover is committed, the AI does not return. Continue the conversation yourself and avoid closing the tab accidentally.
 
-<Note>Screenshot placeholder: **live-monitoring-takeover** — Live Monitor takeover, human connected with Mute and Hang up controls. Use staging test data.</Note>
+</Step>
 
-### 5. End and review
+<Step title="End and review">
+
+<span id="5-end-and-review" />
 
 Use **Hang up** when finished. An Owner or Admin can also end a call held by someone else. Wait for confirmed call completion, then review the retained Call History record. A request to end is not itself proof the call ended.
+
+</Step>
+
+</Steps>
 
 ## What happens next
 
 The call completes through its normal recording, analysis and billing process. Human takeover has its own recorded billing split; use the confirmed result rather than subtracting transcript lengths yourself.
 
+## Check the result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Listening | You can hear the live audio. | Decide whether takeover is needed. |
+| Another person has takeover | The call is already held by a teammate. | Coordinate with that person; do not try to bypass the unavailable controls. |
+| Human connected | Takeover has committed. | Continue the call; the AI will not return. |
+| End requested | Hang-up was requested but completion is not yet confirmed. | Wait for the ended state, then review Call History. |
+
 ## Common questions
 
-### Can I return the call to the AI?
+<AccordionGroup>
+
+<Accordion title="Can I return the call to the AI?">
 
 No. The AI does not return after a committed takeover.
 
-### What if my team access is removed?
+</Accordion>
+
+<Accordion title="What if my team access is removed?">
 
 New access ends. An already committed human takeover may finish that one call with limited call controls; other shared work is no longer available.
 
-### Does switching Monitor on cost money?
+</Accordion>
+
+<Accordion title="Does switching Monitor on cost money?">
 
 The switch alone is not a charge. Actual listening can affect the call rate; check current pricing and the call’s billing result.
 
-### Are only incoming calls visible?
+</Accordion>
+
+<Accordion title="Are only incoming calls visible?">
 
 Eligible incoming and outgoing calls can be monitored. Availability depends on the number, call state and enabled controls.
 
-## Related guides
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
 
 - [Invite your team](/guides/business/team)
 - [Review call history](/guides/business/call-history)
 
-Prefer code? See [Live monitoring for developers](/concepts/live-listen).
+Reviewed 5 November 2026.
