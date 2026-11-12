@@ -7,7 +7,8 @@ import {execFileSync} from 'node:child_process';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const args=process.argv.slice(2),arg=n=>args[args.indexOf(n)+1];
 const read=p=>fs.readFileSync(path.join(root,p),'utf8'),json=p=>JSON.parse(read(p));
-const config=json('docs.json'),plan=json('spec-source/c9-pages.json');
+const config=json('docs.json'),historicalPlan=json('spec-source/c9-pages.json'),finalPlan=json('spec-source/c15-pages.json');
+const plan={...historicalPlan,pages:Object.entries(finalPlan.metadata).filter(([slug])=>slug.startsWith('api-reference/')).map(([slug,metadata])=>({slug,...metadata}))};
 const report={source:[],generated:[],counts:{},pending:[],failures:[]};
 function check(ok,message,group='source'){report[group].push({status:ok?'PASS':'FAIL',message});if(!ok)report.failures.push(message);}
 function flatten(v){if(typeof v==='string')return [v];if(Array.isArray(v))return v.flatMap(flatten);return ['pages','groups'].flatMap(k=>v?.[k]?flatten(v[k]):[]);}
@@ -44,7 +45,7 @@ for(const slug of nav){
  for(const m of s.matchAll(/(?:\]\(|href=["'])(\/[^\s)"']+)/g))if(!resolves(m[1]))links.push({slug,url:m[1]});
 }
 report.counts.endpointPages=endpoints;report.carrierContractPages=carrier;
-check(endpoints===149,'All 149 operations have text endpoint pages');
+check(endpoints===151,'All 151 operations have text endpoint pages');
 check(links.length===0,'Internal page and asset links resolve');report.brokenLinks=links;
 const apiPath=u=>{try{const p=new URL(u,'https://docs.nixflex.com').pathname.replace(/\.(md|html)$/,'').replace(/\/$/,'');return p.startsWith('/api-reference/')&&!p.endsWith('.json')?p.slice(1):null;}catch{return null;}};
 async function fetchText(u){const r=await fetch(u,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('HTTP '+r.status+' '+u);return await r.text();}

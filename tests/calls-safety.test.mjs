@@ -10,11 +10,11 @@ test('calls safety draft aligns four client variables and one-attempt policy',()
   a.match(safety,/not an exactly-once/);a.match(safety,/not a claim/);
   a.match(read('sdks/python.mdx'),/GET-only/);a.doesNotMatch(read('sdks/python.mdx'),/GET\/HEAD/);
 });
-test('delete drafts show pending holds, truthful counters and no SMS erasure promise',()=>{
+test('single deletion resumes queued hang-up while bulk deletion keeps its guarded contract',()=>{
   const one=read('api-reference/calls/delete.mdx'),all=read('api-reference/calls/delete-all.mdx');
-  for(const term of ['cleanup_pending_confirmation','deletion_unsettled','deletion_unavailable'])a.ok(one.includes(term));
+  for(const term of ['hangup_pending','retry_pending','deletion_unavailable','recording_cleanup','carrier_best_effort'])a.ok(one.includes(term));
   a.match(all,/does \*\*not\*\* delete SMS/);a.match(all,/safe_to_retry=false/);
-  a.match(one,/not proof/);a.match(all,/not proof/);
+  a.match(one,/does not certify carrier erasure/);a.match(all,/not proof/);
   a.doesNotMatch(one,/removed immediately/);a.doesNotMatch(all,/once everything is gone/);
 });
 test('OpenAPI only describes canonical variables and guarded deletion; safety page is navigable',()=>{

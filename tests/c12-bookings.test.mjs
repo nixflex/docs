@@ -11,7 +11,7 @@ const page=read('api-reference/call-bookings.mdx');
 const helper=vm.runInNewContext(page.match(/```javascript\s*\n([\s\S]*?)```/)[1]+'\nbookingResult;');
 
 test('C12 exposes booking events separately from callable operations and keeps the page example in sync',()=>{
- assert.equal(Object.values(spec.paths).flatMap(Object.keys).filter(x=>['get','post','put','patch','delete'].includes(x)).length,149);
+ assert.equal(Object.values(spec.paths).flatMap(Object.keys).filter(x=>['get','post','put','patch','delete'].includes(x)).length,151);
  assert.ok(!Object.keys(spec.paths).some(x=>x.includes('call.bookings')));
  const event=spec.webhooks['call.bookings'].post;
  assert.deepEqual(event.security,[]);
@@ -41,30 +41,36 @@ test('C12 receiver separates accounts and calls and refuses missing dedupe ident
  assert.throws(()=>helper(value,null));
 });
 
-test('C12 SMS deletion preserves its success receipt and distinguishes settlement from an unknown result',()=>{
- const responses=spec.paths['/sms/campaigns/{id}'].delete.responses;
- assert.equal(responses['200'].content['application/json'].example.message,'Campaign deleted');
- assert.ok(!responses['400']);assert.ok(!responses['500']);
- const errors=responses['409'].content['application/json'].examples;
- assert.equal(errors.settlement.value.error.code,'campaign_settlement_pending');
- assert.equal(errors.settlement.value.error.details.deleted,false);
- assert.equal(errors.running.value.error.code,'campaign_in_progress');
- assert.equal(responses['503'].content['application/json'].example.error.code,'deletion_unavailable');
+test('B57 campaign deletion preserves history and separates queued from unconfirmed outcomes',()=>{
+ for(const path of ['/sms/campaigns/{id}','/calls/batch/{id}']){
+  const responses=spec.paths[path].delete.responses;
+  const success=responses['200'].content['application/json'];
+  assert.deepEqual(success.schema.required,['campaign_id','deleted','message']);
+  assert.deepEqual(success.examples.deleted.value,{campaign_id:'campaign_example',deleted:true,message:'Campaign deleted'});
+  assert.ok(responses['400']);assert.ok(responses['403']);assert.ok(responses['404']);
+  assert.ok(!responses['409']);assert.ok(!responses['500']);
+  const errors=responses['503'].content['application/json'].examples;
+  assert.deepEqual(errors.hangup_pending.value.error.details,{deleted:false,retry_pending:true});
+  assert.equal(errors.hangup_pending.value.error.code,'hangup_pending');
+  assert.equal(errors.deletion_unavailable.value.error.code,'deletion_unavailable');
+  assert.deepEqual(errors.deletion_unavailable.value.error.details,{deleted:false});
+ }
 });
 
-test('C12 single-call deletion describes guarded refusals and the empty-recording success receipt',()=>{
+test('B57 single-call deletion tracks recording cleanup separately from completed content deletion',()=>{
  const responses=spec.paths['/calls/{id}'].delete.responses;
  const success=responses['200'].content['application/json'];
- assert.deepEqual(success.schema.required,['call_id','deleted','recording_deleted']);
- assert.equal(success.examples.empty_recording.value.recording_deleted,false);
- assert.equal(success.examples.empty_recording.value.deleted,true);
+ assert.deepEqual(success.schema.required,['call_id','deleted','recording_deleted','recording_cleanup']);
+ assert.deepEqual(success.schema.properties.recording_cleanup.enum,['carrier_best_effort','queued']);
+ assert.equal(success.examples.cleaned.value.recording_deleted,true);
+ assert.equal(success.examples.cleaned.value.recording_cleanup,'carrier_best_effort');
+ assert.equal(success.examples.cleanup_queued.value.recording_deleted,false);
+ assert.equal(success.examples.cleanup_queued.value.recording_cleanup,'queued');
+ for(const item of Object.values(success.examples))assert.equal(item.value.deleted,true);
  assert.match(success.schema.properties.recording_deleted.description,/not proof/);
- const conflicts=responses['409'].content['application/json'];
- assert.deepEqual(Object.keys(conflicts.examples).sort(),['call_in_progress','cleanup_pending_confirmation','deletion_cleanup_failed','deletion_unsettled','recording_cleanup_pending']);
- for(const item of Object.values(conflicts.examples)){
-  assert.equal(item.value.error.details.deleted,false);
-  assert.equal(item.value.error.details.safe_to_retry,false);
- }
- assert.equal(responses['503'].content['application/json'].examples.deletion_unavailable.value.error.code,'deletion_unavailable');
- assert.ok(!responses['500']);
+ assert.ok(!responses['409']);assert.ok(!responses['500']);
+ const errors=responses['503'].content['application/json'].examples;
+ assert.deepEqual(errors.hangup_pending.value.error.details,{deleted:false,retry_pending:true});
+ assert.deepEqual(errors.deletion_unavailable.value.error.details,{deleted:false});
+ assert.equal(errors.deletion_unavailable.value.error.code,'deletion_unavailable');
 });
