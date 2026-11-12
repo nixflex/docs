@@ -190,22 +190,22 @@ More than 20 changed terms returns 400 invalid_agent_field with message "Keep up
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_AGENT_ID` to the intended account-owned identifiers or approved recipient before running.
+These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_AGENT_ID` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
 ```bash cURL
 curl --request PUT \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents/$NXF_AGENT_ID" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/agents/$NXF_AGENT_ID" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data '{"name":"Support","call_retention_days":30,"boosted_keywords":"Nixflex, Sam, appointment"}'
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.agents.update(process.env.NXF_AGENT_ID, {name:"Support",call_retention_days:30,boosted_keywords:"Nixflex, Sam, appointment"});
 // Handle result privately; do not log secrets or call content.
 ```
@@ -214,14 +214,14 @@ const result = await client.agents.update(process.env.NXF_AGENT_ID, {name:"Suppo
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.agents.update(os.environ["NXF_AGENT_ID"], name="Support",call_retention_days=30,boosted_keywords="Nixflex, Sam, appointment")
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents update "$NXF_AGENT_ID" --name Support --set call_retention_days=30 --set 'boosted_keywords=Nixflex, Sam, appointment' --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex agents update "$NXF_AGENT_ID" --name Support --set call_retention_days=30 --set 'boosted_keywords=Nixflex, Sam, appointment' --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -276,7 +276,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`no_approved_languages`](/api-reference/errors#no_approved_languages) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
 | 400 | [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long) | Keep each word or phrase within 50 characters to save | Shorten the term. details.field is boosted_keywords; details.limit is 50. |
 | 400 | [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large) | This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. | Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

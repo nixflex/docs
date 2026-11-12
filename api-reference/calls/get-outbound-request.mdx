@@ -59,20 +59,20 @@ Pending records display unknown after 15 minutes. They are never recycled into a
 
 ## Example request
 
-Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
 
 <RequestExample>
 
 ```bash cURL (Bash)
 curl --request GET \
   --url 'https://api.nixflex.com/v1/calls/outbound/requests/9f9aa2b2-4b77-4fa1-9071-9cf6747a9082' \
-  --header "Authorization: Bearer $NXF_API_KEY"
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node (HTTP)
 const response = await fetch('https://api.nixflex.com/v1/calls/outbound/requests/9f9aa2b2-4b77-4fa1-9071-9cf6747a9082', {
   method: 'GET',
-  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
 });
 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 const result = await response.json();
@@ -84,14 +84,14 @@ import os, json
 from urllib.request import Request, urlopen
 
 request = Request('https://api.nixflex.com/v1/calls/outbound/requests/9f9aa2b2-4b77-4fa1-9071-9cf6747a9082', method='GET',
-    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY']})
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
 with urlopen(request, timeout=30) as response:
     result = json.load(response)
 # Handle the private result without logging it.
 ```
 
 ```powershell PowerShell (HTTP)
-$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
 $result = Invoke-RestMethod -Method GET -Uri 'https://api.nixflex.com/v1/calls/outbound/requests/9f9aa2b2-4b77-4fa1-9071-9cf6747a9082' -Headers $headers -DisableKeepAlive
 # Handle $result privately.
 ```

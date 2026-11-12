@@ -123,20 +123,20 @@ Nullable fields remain null; a retained stub may omit fields. Detail mode masks 
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_CALL_ID` to the intended account-owned identifiers or approved recipient before running.
+These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_CALL_ID` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
 ```bash cURL
 curl --request GET \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/$NXF_CALL_ID?view=detail" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/calls/$NXF_CALL_ID?view=detail" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.calls.read(process.env.NXF_CALL_ID);
 // Handle result privately; do not log secrets or call content.
 ```
@@ -145,14 +145,14 @@ const result = await client.calls.read(process.env.NXF_CALL_ID);
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.calls.read(os.environ["NXF_CALL_ID"])
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls read "$NXF_CALL_ID" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex calls read "$NXF_CALL_ID" --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -190,7 +190,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`invalid_call_id`](/api-reference/errors#invalid_call_id) | The detail-mode ID is empty or exceeds 200 characters. | Use the exact ID returned by a list. |
 | 404 | [`not_found`](/api-reference/errors#not_found) | The call is absent, explicitly deleted or owned by another account. | Check the account and call ID; do not infer another account’s data. |
 | 503 | [`call_data_unavailable`](/api-reference/errors#call_data_unavailable) | Call data could not be read safely. | Retry the read after recovery; absence has not been proved. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

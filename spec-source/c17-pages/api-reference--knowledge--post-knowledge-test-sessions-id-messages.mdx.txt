@@ -1,0 +1,197 @@
+---
+title: "Ask a knowledge test question"
+sidebarTitle: "Ask a test question"
+description: "Ask a simulated knowledge question and inspect its supplied-piece evidence. Keep one operation identity for the intended message."
+openapi: "/api-reference/public.openapi.json POST /knowledge/test-sessions/{id}/messages"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/post-knowledge-test-sessions-id-messages"
+---
+
+Ask a simulated question using current knowledge and return supplied-piece evidence.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save one operation identity for the intended test message.
+- Check the answer and cited knowledge; replay does not authorise duplicate paid work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. Personal Owner and Admin may perform this action; Member is refused. Personal dashboard visibility can hide API-origin agents. Never send owner fields to select another account.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `Idempotency-Key` (header) | string | Yes | None | Unique 8–128-character operation key: letters, numbers, dot, underscore, colon or hyphen. The prompt: prefix is reserved. Reuse only with the identical operation and payload. Maximum 128 characters. Minimum 8 characters. Pattern: `^[A-Za-z0-9_.:-]{8,128}$`. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `text` | string | Yes | None | Nonblank question text. Maximum 4000 characters. Minimum 1 characters. |
+
+Every question reads current knowledge. A durable Idempotency-Key reservation prevents duplicate model work. If the result is pending, read the session before retrying. No tool, call, SMS, booking or integration action runs. Questions are unlimited; the latest 100 messages remain. Small bases supply all valid pieces, so evidence is context supplied rather than proof of relevance.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `kb` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `role` | string | Allowed: `"user"`, `"assistant"`. |
+| `text` | string | Test conversation text. |
+| `evidence` | array of object | Saved value. |
+| `evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `evidence[].segment` | integer | Source segment index. |
+| `evidence[].quote` | string | Original evidence text. |
+| `evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `evidence[].title` | string | Title snapshot at answer time. |
+| `selection` | string | Allowed: `"whole_base"`, `"search"`. |
+| `preview` | boolean | Saved value. |
+| `simulated` | boolean | No call, text, booking or integration action runs. |
+| `diagnostics` | object | API diagnostics only; these scores are not answer-correctness measurements. |
+| `diagnostics.mode` | string | Saved value. |
+| `diagnostics.method` | string or null | Saved value. |
+| `diagnostics.best_score` | number or null | Saved value. |
+| `diagnostics.reason` | string | Saved value. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
+
+```json request-135.json
+{
+  "text": "When are appointments available?"
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request POST \
+  --url "https://api.nixflex.com/v1/knowledge/test-sessions/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')/messages" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"text":"When are appointments available?"}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.ask(process.env.NXF_RESOURCE_ID, {"text":"When are appointments available?"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.ask(os.environ["NXF_RESOURCE_ID"], {
+      "text": "When are appointments available?"
+    }, idempotency_key=os.environ["NXF_IDEMPOTENCY_KEY"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+# Save the JSON below privately as request-135.json.
+nixflex knowledge ask "$env:NXF_RESOURCE_ID" --body '@request-135.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
+```
+
+```json MCP
+{
+  "name": "ask_knowledge_test",
+  "arguments": {
+    "id": "id/example",
+    "text": "Example question?",
+    "confirm": true,
+    "idempotency_key": "example-k5-operation"
+  }
+}
+```
+
+</RequestExample>
+
+MCP has 97 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "role": "user",
+  "text": "example"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 409 | [`target_changed`](/api-reference/errors#target_changed) | The selected knowledge changed. Start a new test. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`session_closed`](/api-reference/errors#session_closed) | Start a new knowledge test. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`message_busy`](/api-reference/errors#message_busy) | Wait for the current test reply. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`message_in_progress`](/api-reference/errors#message_in_progress) | This test reply is still pending. Read the session before retrying. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`draft_changed`](/api-reference/errors#draft_changed) | The preview changed. Reopen the review to test it. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`knowledge_updating`](/api-reference/errors#knowledge_updating) | Knowledge is still changing. Your test is saved; ask again in a moment. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`knowledge_loading`](/api-reference/errors#knowledge_loading) | Knowledge is still loading — try again | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`test_unavailable`](/api-reference/errors#test_unavailable) | The test could not reply. Please try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 409 | [`idempotency_conflict`](/api-reference/errors#idempotency_conflict) | Use a new Idempotency-Key for different information. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`stale_revision`](/api-reference/errors#stale_revision) | The list changed. Reload it to see the latest pieces. | Read current state, review the changes and use the fresh revision. |
+| 413 | [`storage_limit`](/api-reference/errors#storage_limit) | Your account has reached its private storage limit. Remove old sources first. | Correct the named fields or reduce the input before retrying. |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body could not be read. | Correct the named fields or reduce the input before retrying. |
+| 413 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body is too large. | Keep the transport body within 10 MiB. |
+
+</div>
+
+## Retry and idempotency
+
+Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

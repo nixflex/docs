@@ -1,0 +1,218 @@
+---
+title: "List phone numbers"
+description: "List phone numbers owned by the Nixflex account. Read assigned agents and saved number settings before routing or configuration changes."
+openapi: "/api-reference/public.openapi.json GET /phone-numbers"
+playground: "simple"
+sidebarTitle: "List phone numbers"
+canonical: "https://docs.nixflex.com/api-reference/phone-numbers/list"
+---
+
+List the public phone numbers owned by the authenticated account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use E.164 phone numbers as returned by the API.
+- Check assignment and channel switches before choosing a number for work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
+
+Pending imports and internal browser identities are hidden. Without limit/cursor the legacy envelope stays unchanged. count is returned rows, not total. Paged reads order by created_at DESC NULLS LAST, then phone_number DESC; this is live traversal, not a snapshot.
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `limit` (query) | integer | No | Opts into cursor paging; 1–100. Omitted with a cursor defaults to 50. Maximum 100 Minimum 1 |
+| `cursor` (query) | string | No | Opaque next_cursor from the preceding page; keep the same account and filters. At most 1024 characters |
+| `agent_id` (query) | string | No | Only numbers assigned to this agent. At most 200 characters |
+
+Do not send a request body.
+
+Returns public numbers owned by your API key. Pending imports and internal
+browser-test identities are hidden. Both API-added and dashboard-added numbers
+are included. The dashboard Phone numbers page is unchanged.
+
+### Query parameters
+
+| Parameter | Type | Notes |
+|---|---|---|
+| `agent_id` | string | Optional exact agent filter |
+| `provider` | `twilio` or `telnyx` | Optional exact carrier filter |
+| `limit` | integer 1–100 | Opt into cursor paging |
+| `cursor` | string | Opaque `next_cursor` from the previous page. With cursor alone limit defaults to 50 |
+
+Without pagination parameters the existing `{ phone_numbers, count }` envelope
+stays unchanged. The configured database row cap still applies; there is no
+guaranteed 1,000-row contract. Use paging to traverse large accounts.
+`count` ALWAYS means rows in this response, never the account total.
+
+
+
+Paged responses add `next_cursor` (string or null) and `has_more` (boolean).
+Keep the account and filters unchanged; pass the cursor unchanged and URL-encoded.
+Invalid limit, provider or cursor returns `400 invalid_number_query`.
+
+
+
+Numbers are newest first. Paged reads break equal timestamps by phone number
+descending and put missing timestamps last. Follow `next_cursor` until null,
+even if fewer than `limit` rows arrive. This is a live list, not a snapshot:
+new imports appear on a fresh traversal; removed rows can disappear between pages.
+
+Empty lists return 200 with count 0, not 404. The existing Twilio number SID stays
+for compatibility. Credentials and internal row/account IDs never appear.
+`source` is descriptive api/dashboard (null for unknown legacy origin),
+not writable and never a permission. See [Get phone number](/api-reference/phone-numbers/get)
+for full saved settings and [seven switches](/api-reference/phone-numbers/switches).
+
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_numbers` | array | Always returned. |
+| `phone_numbers[].source` | string or null | Descriptive origin, never a permission or writable setting. Allowed: api, dashboard,  |
+| `phone_numbers[].created_at` | string or null | Optional saved value. |
+| `phone_numbers[].web_agent_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].web_calls_enabled` | boolean | Saved switch; website voice also needs Web agent ON. |
+| `phone_numbers[].web_functions_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].monitor_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].phone_number` | string | Optional saved value. |
+| `phone_numbers[].agent_id` | string | Optional saved value. |
+| `phone_numbers[].inbound_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].outbound_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].custom_prompt` | string or null | Optional saved value. |
+| `phone_numbers[].voice_id` | string or null | Optional saved value. |
+| `phone_numbers[].sms_reply_enabled` | boolean | Optional saved value. |
+| `phone_numbers[].voicemail_leave_enabled` | boolean or null | This number's own voicemail setting - the ONLY one that applies to API-imported numbers. null = not set = silent hangup on voicemail. |
+| `phone_numbers[].voicemail_message` | string or null | Optional saved value. |
+| `phone_numbers[].sms_prompt` | string or null | Optional saved value. |
+| `phone_numbers[].web_prompt` | string or null | Optional saved value. |
+| `phone_numbers[].speaking_rate` | number or null | Optional saved value. |
+| `phone_numbers[].dtmf_enabled` | boolean or null | Optional saved value. |
+| `phone_numbers[].require_booking_confirmation` | boolean or null | Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent. |
+| `phone_numbers[].record_call` | boolean or null | Optional saved value. |
+| `phone_numbers[].recording_source` | string or null | Who records on this number. null = inherit the agent. Allowed: provider, nixflex |
+| `count` | integer | Minimum 0 |
+| `next_cursor` | string or null | Optional saved value. |
+| `has_more` | boolean | Optional saved value. |
+
+
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url 'https://api.nixflex.com/v1/phone-numbers' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/phone-numbers', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/phone-numbers', method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
+$result = Invoke-RestMethod -Method GET -Uri 'https://api.nixflex.com/v1/phone-numbers' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_numbers": [
+    {
+      "phone_number": "+12025550100",
+      "agent_id": "agent_example",
+      "provider": "telnyx",
+      "twilio_number_sid": null,
+      "inbound_enabled": true,
+      "outbound_enabled": true,
+      "sms_reply_enabled": false,
+      "web_agent_enabled": true,
+      "web_calls_enabled": false,
+      "web_functions_enabled": false,
+      "monitor_enabled": false,
+      "custom_prompt": null,
+      "created_at": "2026-10-25T10:00:00.123456+00:00",
+      "source": "api"
+    }
+  ],
+  "count": 1,
+  "next_cursor": null,
+  "has_more": false
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 · `invalid_number_query` | Invalid phone-number paging or filter query. | Correct the named field or query using the request table before trying again. |
+| 401 · `unauthorized` | The credential is missing or invalid. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
+| 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
+
+
+
+## Retry and idempotency
+
+Use bounded retries only for temporary read failures. Keep the same filters while paging. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Import a phone number](/api-reference/phone-numbers/import)
+- [Errors and recovery](/api-reference/errors#error-envelope)

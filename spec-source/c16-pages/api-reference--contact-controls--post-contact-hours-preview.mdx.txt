@@ -111,14 +111,14 @@ next_allowed is a bounded estimate: computation can stop for budget, horizon or 
 
 ## Example request
 
-These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same account at `https://api.nixflex.com` before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/contact-hours/preview" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/contact-hours/preview" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data '{"agent_id":"agent_fixture","recipients":[{"phone":"+12025550101","country":"US","timezone":"America/New_York"}]}'
 ```
@@ -127,8 +127,8 @@ curl --request POST \
 import { Nixflex } from 'nixflex';
 
 const c = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
 const result = await c.contacts.preview({"agent_id": "agent_fixture", "recipients": [{"phone": "+12025550101", "country": "US", "timezone": "America/New_York"}]});
@@ -139,15 +139,14 @@ import os
 from nixflex import Nixflex
 
 with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
     max_retries=0,
 ) as c:
     result = c.contacts.preview(agent_id='agent_fixture', recipients=[{'phone': '+12025550101', 'country': 'US', 'timezone': 'America/New_York'}])
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 $body = @'
 {
   "agent_id": "agent_fixture",
@@ -161,7 +160,7 @@ $body = @'
 }
 '@
 [IO.File]::WriteAllText('request-98.json', $body, (New-Object Text.UTF8Encoding $false))
-nixflex contacts preview --body '@request-98.json' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex contacts preview --body '@request-98.json' --json --base-url "https://api.nixflex.com"
 ```
 
 ```json MCP
@@ -241,7 +240,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 503 | [`contact_preview_unavailable`](/api-reference/errors#contact_preview_unavailable) | Policy or preview data could not be confirmed. | Retry later; do not treat failure as permission to contact. |
 | 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
 | 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

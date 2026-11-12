@@ -32,7 +32,7 @@ Change a non-Owner member to Admin or Member. Only Owner authority may change ro
 
 ## Authentication
 
-Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods. Send `Content-Type: application/json`.
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods. Send `Content-Type: application/json`.
 
 ## Request fields
 
@@ -60,7 +60,7 @@ A 200 response has live_disconnect_pending=false. A 202 response means the membe
 
 ## Example request
 
-Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Save the request JSON fields from the example below in request-154.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` in your private process environment. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account at `https://api.nixflex.com`. Save the request JSON fields from the example below in request-154.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
 
 ```json request-154.json
 {
@@ -72,15 +72,15 @@ Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 o
 
 ```bash cURL
 curl --request PATCH \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/members/11111111-1111-4111-8111-111111111111" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/organisation/members/11111111-1111-4111-8111-111111111111" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @request-154.json
 ```
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
 const result = await c.organisation.setRole("11111111-1111-4111-8111-111111111111", "admin");
 // Keep private responses out of logs and AI conversations.
 ```
@@ -88,14 +88,13 @@ const result = await c.organisation.setRole("11111111-1111-4111-8111-11111111111
 ```python Python
 import os
 from nixflex import Nixflex
-with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
     result = c.organisation.set_role('11111111-1111-4111-8111-111111111111', 'admin')
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 # Save the documented JSON fields privately as request-154.json first.
-nixflex organisation setRole 11111111-1111-4111-8111-111111111111 --body '@request-154.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex organisation setRole 11111111-1111-4111-8111-111111111111 --body '@request-154.json' --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 ```json MCP
@@ -135,7 +134,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 
 | Status | Code | Meaning | What to do |
 | --- | --- | --- | --- |
-| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled in this environment. | Check deployment availability; do not retry unchanged. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled on this service. | Check deployment availability; do not retry unchanged. |
 | 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The organisation action could not be confirmed. | Refresh the current state before trying again. |
 | 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The current personal role does not allow this action. | Use an authorised personal session; do not share the organisation key. |
 | 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal membership has ended. | Sign in again or contact the Owner. |
@@ -147,7 +146,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`invalid_role`](/api-reference/errors#invalid_role) | Choose admin or member. | Correct the request before retrying. |
 | 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
 | 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

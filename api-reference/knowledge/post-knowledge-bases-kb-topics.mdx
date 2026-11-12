@@ -102,7 +102,7 @@ An oversized packed piece returns needs_review and a draft instead of publishing
 
 ## Example request
 
-These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-119.json
 {
@@ -118,8 +118,8 @@ These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed ve
 
 ```bash cURL (Bash)
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/topics" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/topics" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
   --header "Content-Type: application/json" \
   --data '{"expected_revision":1,"topic":{"title":"Appointments","facts":"Appointments are available Monday to Friday."}}'
@@ -127,7 +127,7 @@ curl --request POST \
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
 const result = await c.knowledge.createTopic(process.env.NXF_KNOWLEDGE_BASE_ID, {"expected_revision":1,"topic":{"title":"Appointments","facts":"Appointments are available Monday to Friday."}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
 // Keep knowledge and private results out of logs.
 ```
@@ -136,7 +136,7 @@ const result = await c.knowledge.createTopic(process.env.NXF_KNOWLEDGE_BASE_ID, 
 import os
 from nixflex import Nixflex
 
-with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
     result = c.knowledge.create_topic(os.environ["NXF_KNOWLEDGE_BASE_ID"], {
       "expected_revision": 1,
       "topic": {
@@ -148,9 +148,8 @@ with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-vo
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 # Save the JSON below privately as request-119.json.
-nixflex knowledge createTopic "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-119.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex knowledge createTopic "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-119.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 </RequestExample>
@@ -199,7 +198,7 @@ Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and op
 | 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
 | 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
 | 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
 | 413 | [`topic_limit`](/api-reference/errors#topic_limit) | There are too many topics. | Correct the named fields or reduce the input before retrying. |
 | 413 | [`knowledge_limit`](/api-reference/errors#knowledge_limit) | This knowledge base has too much original text. Remove a source or use a separate knowledge base. | Correct the named fields or reduce the input before retrying. |

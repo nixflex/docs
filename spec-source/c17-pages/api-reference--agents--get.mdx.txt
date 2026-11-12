@@ -1,0 +1,219 @@
+---
+title: "Get an agent"
+description: "Read one Nixflex agent and its saved settings. Check whether it is active before assigning numbers or starting calls."
+openapi: "/api-reference/public.openapi.json GET /agents/{id}"
+playground: "simple"
+sidebarTitle: "Get agent"
+canonical: "https://docs.nixflex.com/api-reference/agents/get"
+---
+
+Get an agent in the authenticated account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the saved agent before changing shared behaviour.
+- A number override may change the effective value for a particular call.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agents) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `id` (path) | string | Yes |  |
+
+Do not send a request body.
+
+Fetch an owned agent using its `agent_id`.
+Returns the same reviewed safe settings as create/update/list, including response delay,
+STT controls, timezone, SMS settings, extraction, voicemail and retention.
+No carrier auth token or unreviewed future column is returned.
+
+GET still returns an owned soft-disabled agent; `is_active` is false.
+
+| HTTP/code | Meaning |
+|---|---|
+| 200 | Owned agent and its settings |
+| 404 not_found | Missing or belongs to another account (same response) |
+| 503 agent_store_unavailable | Storage could not be checked; do not interpret as missing |
+
+### Read automatic knowledge terms
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms). The optional `knowledge_keyterms` array appears when knowledge is enabled and filters against the saved customer terms.
+
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `is_active` | boolean | Optional saved value. |
+| `ai_speaks_first` | boolean | Optional saved value. |
+| `dynamic_greeting` | boolean | Optional saved value. |
+| `func_end_call` | boolean | Optional saved value. |
+| `func_cold_transfer` | boolean | Optional saved value. |
+| `func_send_sms` | boolean | Optional saved value. |
+| `record_call` | boolean | Optional saved value. |
+| `post_call_sms_enabled` | boolean | Optional saved value. |
+| `incall_sms_enabled` | boolean | Optional saved value. |
+| `amd_enabled` | boolean | Optional saved value. |
+| `greet_by_name` | boolean | Optional saved value. |
+| `remember_callers` | boolean | Optional saved value. |
+| `require_booking_confirmation` | boolean | Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent. |
+| `voicemail_leave_enabled` | boolean | Optional saved value. |
+| `name` | string | Optional saved value. |
+| `system_prompt` | string | Optional saved value. |
+| `welcome_message` | string | Optional saved value. |
+| `voice_id` | string or null | Optional saved value. |
+| `voice_key` | string or null | Optional saved value. |
+| `language` | string | Optional saved value. |
+| `webhook_url` | string or null | Optional saved value. |
+| `phone_number` | string or null | Optional saved value. |
+| `llm_model` | string | Optional saved value. |
+| `fallback_message` | string | Optional saved value. |
+| `post_call_sms_template` | string | Optional saved value. |
+| `transfer_number` | string or null | Optional saved value. |
+| `transfer_whisper` | string or null | Optional saved value. |
+| `timezone` | string | Optional saved value. |
+| `boosted_keywords` | string or null | Optional saved value. |
+| `voicemail_message` | string or null | Optional saved value. |
+| `temperature` | number | Optional saved value. |
+| `response_eagerness` | integer | Optional saved value. |
+| `stt_confidence` | number | Optional saved value. |
+| `stt_max_silence_ms` | integer | Optional saved value. |
+| `interruption_sensitivity` | integer | Optional saved value. |
+| `max_call_duration_seconds` | integer or null | Optional saved value. |
+| `silence_hangup_seconds` | integer or null | Optional saved value. |
+| `wait_tag_seconds` | integer or null | Optional saved value. |
+| `ivr_timeout_seconds` | integer | Optional saved value. |
+| `voice_speed` | number | Optional saved value. |
+| `dtmf_enabled` | boolean or null | Optional saved value. |
+| `response_length` | string | Allowed: short, medium, long |
+| `transfer_type` | string | Allowed: cold, warm |
+| `recording_source` | string or null | Allowed: provider, nixflex,  |
+| `data_extraction_fields` | array | Optional saved value. |
+| `data_extraction_fields[].name` | string | Unique; __proto__, constructor and prototype forbidden. |
+| `data_extraction_fields[].type` | string | Allowed: text, selector, boolean, number |
+| `data_extraction_fields[].description` | string | At most 2000 characters |
+| `data_extraction_fields[].optional` | boolean | Optional saved value. |
+| `data_extraction_fields[].format_example` | string | At most 2000 characters |
+| `data_extraction_fields[].choices` | array | Required non-empty for selector; whitespace-only choices rejected. |
+| `pickup_delay` | integer or null | Optional saved value. |
+| `speaking_rate` | number or null | Optional saved value. |
+| `id` | string | Optional saved value. |
+| `agent_id` | string | Optional saved value. |
+| `api_key_id` | string | Optional saved value. |
+| `created_at` | string | Optional saved value. |
+| `updated_at` | string | Optional saved value. |
+| `greeting_language` | string or null | Optional saved value. |
+| `precall_webhook_url` | string or null | Optional saved value. |
+| `tester_scenarios` | array | Optional saved value. |
+| `outbound_transfer_numbers` | array | Optional saved value. |
+| `outbound_warm_transfer_numbers` | array | Optional saved value. |
+| `outbound_post_call_sms_templates` | array | Optional saved value. |
+| `outbound_max_duration_seconds` | integer or null | Optional saved value. |
+| `outbound_silence_hangup_seconds` | integer or null | Optional saved value. |
+| `call_retention_days` | integer | Allowed: 90, 30, 7, 1, 0 |
+| `warnings` | array | Optional saved value. |
+| `warnings[].code` | string | Allowed: unknown_fields |
+| `warnings[].fields` | array | Optional saved value. |
+| `warnings[].message` | string | Optional saved value. |
+| `knowledge_keyterms` | array | Optional when knowledge is enabled. Ranked live automatic terms, filtered against saved customer terms; default cap 80, platform-configurable. Read-only. |
+
+
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url 'https://api.nixflex.com/v1/agents/agent_example' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/agents/agent_example', method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
+$result = Invoke-RestMethod -Method GET -Uri 'https://api.nixflex.com/v1/agents/agent_example' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
+| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Wait at least Retry-After and use a bounded read retry. |
+| 500 | Server error. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
+| 503 | Agent storage or catalog unavailable; check before retrying a write. | Keep the last result unknown and use bounded read retries; do not replace it with empty data. |
+
+
+
+## Retry and idempotency
+
+Use bounded retries only for temporary read failures. Keep the same filters while paging. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [Create an agent](/api-reference/agents/create)
+- [List agents](/api-reference/agents/list)
+- [Errors and recovery](/api-reference/errors#error-envelope)

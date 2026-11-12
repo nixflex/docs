@@ -44,7 +44,7 @@ Illustrative conversation between colleagues.
 ## Connect
 
 1. [Set up the MCP server](/ai-tools/overview#install-the-mcp-server) with Node 22 or later.
-2. Provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` privately in the environment used to launch Codex. Never ask Codex to read the key or put its value in a chat, command argument or TOML file.
+2. Provide `NIXFLEX_API_KEY` privately in the environment used to launch Codex. Never ask Codex to read the key or put its value in a chat, command argument or TOML file.
 3. Add this server to `~/.codex/config.toml`, preserving existing settings. The example below uses npx; on Windows, use the command and arguments shown after it.
 4. Restart Codex from the prepared environment. Use `codex mcp list` or `/mcp` to inspect the connection and tools.
 5. Run the read-only prompt below and approve only that action.
@@ -57,12 +57,13 @@ startup_timeout_sec = 30
 env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
 
 [mcp_servers.nixflex.env]
+NIXFLEX_BASE_URL = "https://api.nixflex.com"
 NIXFLEX_CREDENTIAL_SOURCE = "environment"
 ```
 
 On Windows, replace `command` with `"cmd.exe"` and `args` with `["/c", "npx", "-y", "nixflex-mcp"]`.
 
-The `env_vars` names forward values from the launching environment; they are not the values themselves. Ensure npx is available to the client process; use its full executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
+The API address is fixed in the `env` table. The `env_vars` names forward available values from the launching environment; they are not the values themselves. Ensure npx is available to the client process; use its full executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
 
 ### Optional private number-credential updates
 

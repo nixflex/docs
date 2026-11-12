@@ -248,7 +248,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -258,10 +258,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-12.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"calcom\", \"+12025550123\", {\"api_key\": \"fixture_calendar_credential\", \"username\": \"team\", \"event_slug\": \"consultation\", \"default_timezone\": \"Europe/London\", \"is_active\": false, \"agent_id\": \"agent/example\"});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('calcom', '+12025550123', api_key='fixture_calendar_credential', username='team', event_slug='consultation', default_timezone='Europe/London', is_active=False, agent_id='agent/example')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-12.json first.\nnixflex integrations set calcom '+12025550123' --body '@request-12.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-12.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"calcom\", \"+12025550123\", {\"api_key\": \"fixture_calendar_credential\", \"username\": \"team\", \"event_slug\": \"consultation\", \"default_timezone\": \"Europe/London\", \"is_active\": false, \"agent_id\": \"agent/example\"});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('calcom', '+12025550123', api_key='fixture_calendar_credential', username='team', event_slug='consultation', default_timezone='Europe/London', is_active=False, agent_id='agent/example')",
+        "cli": "# Save the documented JSON fields privately as request-12.json first.\nnixflex integrations set calcom '+12025550123' --body '@request-12.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -380,7 +380,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -391,10 +391,10 @@
       ],
       "notes": " Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('calcom', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get calcom '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('calcom', '+12025550123')",
+        "cli": "nixflex integrations get calcom '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_calcom\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -485,7 +485,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -496,10 +496,10 @@
       ],
       "notes": " Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('calcom', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete calcom '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('calcom', '+12025550123')",
+        "cli": "nixflex integrations delete calcom '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -719,7 +719,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -729,10 +729,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-15.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"slack\", \"+12025550123\", {\"webhook_url\": \"https://hooks.slack.com/services/FIXTURE\", \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('slack', '+12025550123', webhook_url='https://hooks.slack.com/services/FIXTURE', is_active=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-15.json first.\nnixflex integrations set slack '+12025550123' --body '@request-15.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-15.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"slack\", \"+12025550123\", {\"webhook_url\": \"https://hooks.slack.com/services/FIXTURE\", \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('slack', '+12025550123', webhook_url='https://hooks.slack.com/services/FIXTURE', is_active=False)",
+        "cli": "# Save the documented JSON fields privately as request-15.json first.\nnixflex integrations set slack '+12025550123' --body '@request-15.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -833,7 +833,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -843,10 +843,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"slack\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('slack', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get slack '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"slack\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('slack', '+12025550123')",
+        "cli": "nixflex integrations get slack '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_slack\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -937,7 +937,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -947,10 +947,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"slack\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('slack', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete slack '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/slack/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"slack\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('slack', '+12025550123')",
+        "cli": "nixflex integrations delete slack '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -1170,7 +1170,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1180,10 +1180,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-18.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"zapier\", \"+12025550123\", {\"post_call_url\": \"https://example.invalid/private\", \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('zapier', '+12025550123', post_call_url='https://example.invalid/private', is_active=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-18.json first.\nnixflex integrations set zapier '+12025550123' --body '@request-18.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-18.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"zapier\", \"+12025550123\", {\"post_call_url\": \"https://example.invalid/private\", \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('zapier', '+12025550123', post_call_url='https://example.invalid/private', is_active=False)",
+        "cli": "# Save the documented JSON fields privately as request-18.json first.\nnixflex integrations set zapier '+12025550123' --body '@request-18.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -1284,7 +1284,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1294,10 +1294,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"zapier\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('zapier', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get zapier '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"zapier\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('zapier', '+12025550123')",
+        "cli": "nixflex integrations get zapier '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_zapier\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -1388,7 +1388,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1398,10 +1398,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"zapier\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('zapier', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete zapier '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/zapier/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"zapier\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('zapier', '+12025550123')",
+        "cli": "nixflex integrations delete zapier '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -1689,7 +1689,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1699,10 +1699,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-21.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"make\", \"+12025550123\", {\"post_call_url\": \"https://example.invalid/after\", \"in_call_url\": \"https://example.invalid/action\", \"tool_name\": \"lookup\", \"tool_description\": \"Fixture\", \"parameters\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}}}, \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('make', '+12025550123', post_call_url='https://example.invalid/after', in_call_url='https://example.invalid/action', tool_name='lookup', tool_description='Fixture', parameters={'type': 'object', 'properties': {'id': {'type': 'string'}}}, is_active=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-21.json first.\nnixflex integrations set make '+12025550123' --body '@request-21.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-21.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"make\", \"+12025550123\", {\"post_call_url\": \"https://example.invalid/after\", \"in_call_url\": \"https://example.invalid/action\", \"tool_name\": \"lookup\", \"tool_description\": \"Fixture\", \"parameters\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}}}, \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('make', '+12025550123', post_call_url='https://example.invalid/after', in_call_url='https://example.invalid/action', tool_name='lookup', tool_description='Fixture', parameters={'type': 'object', 'properties': {'id': {'type': 'string'}}}, is_active=False)",
+        "cli": "# Save the documented JSON fields privately as request-21.json first.\nnixflex integrations set make '+12025550123' --body '@request-21.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -1837,7 +1837,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1847,10 +1847,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"make\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('make', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get make '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"make\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('make', '+12025550123')",
+        "cli": "nixflex integrations get make '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_make\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -1941,7 +1941,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1951,10 +1951,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"make\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('make', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete make '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/make/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"make\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('make', '+12025550123')",
+        "cli": "nixflex integrations delete make '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -2213,7 +2213,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2223,10 +2223,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-24.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"gohighlevel\", \"+12025550123\", {\"pit\": \"fixture_private_token\", \"location_id\": \"location_fixture\", \"tags\": [\"one\", \"two\"], \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('gohighlevel', '+12025550123', pit='fixture_private_token', location_id='location_fixture', tags=['one', 'two'], is_active=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-24.json first.\nnixflex integrations set gohighlevel '+12025550123' --body '@request-24.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-24.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"gohighlevel\", \"+12025550123\", {\"pit\": \"fixture_private_token\", \"location_id\": \"location_fixture\", \"tags\": [\"one\", \"two\"], \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('gohighlevel', '+12025550123', pit='fixture_private_token', location_id='location_fixture', tags=['one', 'two'], is_active=False)",
+        "cli": "# Save the documented JSON fields privately as request-24.json first.\nnixflex integrations set gohighlevel '+12025550123' --body '@request-24.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -2345,7 +2345,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2355,10 +2355,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"gohighlevel\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('gohighlevel', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get gohighlevel '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"gohighlevel\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('gohighlevel', '+12025550123')",
+        "cli": "nixflex integrations get gohighlevel '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_gohighlevel\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -2449,7 +2449,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2459,10 +2459,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"gohighlevel\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('gohighlevel', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete gohighlevel '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/gohighlevel/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"gohighlevel\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('gohighlevel', '+12025550123')",
+        "cli": "nixflex integrations delete gohighlevel '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -2642,7 +2642,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2652,10 +2652,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-27.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"webhook\", \"+12025550123\", {\"url\": \"https://example.invalid/events\"});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('webhook', '+12025550123', url='https://example.invalid/events')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-27.json first.\nnixflex integrations set webhook '+12025550123' --body '@request-27.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-27.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"webhook\", \"+12025550123\", {\"url\": \"https://example.invalid/events\"});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('webhook', '+12025550123', url='https://example.invalid/events')",
+        "cli": "# Save the documented JSON fields privately as request-27.json first.\nnixflex integrations set webhook '+12025550123' --body '@request-27.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"set_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 1,\n    \"url\": \"https://example.invalid/events\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -2760,7 +2760,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2770,10 +2770,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"webhook\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('webhook', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get webhook '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"webhook\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('webhook', '+12025550123')",
+        "cli": "nixflex integrations get webhook '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 1\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -2877,7 +2877,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2887,10 +2887,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"webhook\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('webhook', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete webhook '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"webhook\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('webhook', '+12025550123')",
+        "cli": "nixflex integrations delete webhook '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"delete_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 1,\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3070,7 +3070,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3080,10 +3080,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-30.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"webhook2\", \"+12025550123\", {\"url\": \"https://example.invalid/events2\"});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('webhook2', '+12025550123', url='https://example.invalid/events2')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-30.json first.\nnixflex integrations set webhook2 '+12025550123' --body '@request-30.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-30.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"webhook2\", \"+12025550123\", {\"url\": \"https://example.invalid/events2\"});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('webhook2', '+12025550123', url='https://example.invalid/events2')",
+        "cli": "# Save the documented JSON fields privately as request-30.json first.\nnixflex integrations set webhook2 '+12025550123' --body '@request-30.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"set_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 2,\n    \"url\": \"https://example.invalid/events2\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3188,7 +3188,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3198,10 +3198,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"webhook2\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('webhook2', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get webhook2 '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"webhook2\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('webhook2', '+12025550123')",
+        "cli": "nixflex integrations get webhook2 '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 2\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3318,7 +3318,7 @@
         "web_calls_enabled": false
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
-      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
+      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and service availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
       "title": "Set web calls",
       "description": "Set web calls with the Nixflex API. Set the web calls setting for an owned number. This controls the saved number switch for website voice calls. Reading or.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
@@ -3357,7 +3357,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3367,10 +3367,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-36.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"web-calls\", \"+12025550123\", {\"enabled\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('web-calls', '+12025550123', enabled=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-36.json first.\nnixflex integrations set web-calls '+12025550123' --body '@request-36.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-36.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"web-calls\", \"+12025550123\", {\"enabled\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('web-calls', '+12025550123', enabled=False)",
+        "cli": "# Save the documented JSON fields privately as request-36.json first.\nnixflex integrations set web-calls '+12025550123' --body '@request-36.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"set_number_web_calls\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"enabled\": false,\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3446,7 +3446,7 @@
         "phone_number": "+12025550100",
         "web_calls_enabled": false
       },
-      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
+      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and service availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
       "title": "Get web calls",
       "description": "Get web calls with the Nixflex API. Read the saved web calls setting for an owned number. This controls the saved number switch for website voice calls.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
@@ -3467,7 +3467,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3477,10 +3477,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"web-calls\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('web-calls', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get web-calls '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"web-calls\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('web-calls', '+12025550123')",
+        "cli": "nixflex integrations get web-calls '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_number_web_calls\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3564,7 +3564,7 @@
         "web_calls_enabled": false
       },
       "retry": "The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.",
-      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and environment availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
+      "notes": "The GET response reports the saved number flag, not the full effective website availability. Agent settings and service availability can still prevent a website call. The website Web agent must also be on. Read phone-number details for web_calls_effective; account, agent and billing checks still apply.",
       "title": "Clear web calls",
       "description": "Clear web calls with the Nixflex API. Clear the saved web calls setting for an owned number. This controls the saved number switch for website voice calls.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.",
@@ -3585,7 +3585,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3595,10 +3595,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"web-calls\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('web-calls', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete web-calls '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/web-calls/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"web-calls\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('web-calls', '+12025550123')",
+        "cli": "nixflex integrations delete web-calls '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -3702,7 +3702,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3712,10 +3712,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"webhook2\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('webhook2', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete webhook2 '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/webhook2/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"webhook2\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('webhook2', '+12025550123')",
+        "cli": "nixflex integrations delete webhook2 '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"delete_webhook\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\",\n    \"slot\": 2,\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -3895,7 +3895,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3905,10 +3905,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-40.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.set(\"precall\", \"+12025550123\", {\"url\": \"https://example.invalid/gate\"});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set('precall', '+12025550123', url='https://example.invalid/gate')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-40.json first.\nnixflex integrations set precall '+12025550123' --body '@request-40.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-40.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.set(\"precall\", \"+12025550123\", {\"url\": \"https://example.invalid/gate\"});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set('precall', '+12025550123', url='https://example.invalid/gate')",
+        "cli": "# Save the documented JSON fields privately as request-40.json first.\nnixflex integrations set precall '+12025550123' --body '@request-40.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -4013,7 +4013,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4023,10 +4023,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.get(\"precall\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get('precall', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations get precall '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"precall\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get('precall', '+12025550123')",
+        "cli": "nixflex integrations get precall '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_number_precall\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -4130,7 +4130,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4140,10 +4140,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.delete(\"precall\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete('precall', '+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations delete precall '+12025550123' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"precall\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete('precall', '+12025550123')",
+        "cli": "nixflex integrations delete precall '+12025550123' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -4311,7 +4311,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4321,10 +4321,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PUT \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-43.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.setAgentPrecall(\"agent/example\", \"https://example.invalid/agent-gate\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.set_agent_precall('agent/example', 'https://example.invalid/agent-gate')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-43.json first.\nnixflex integrations setAgentPrecall agent/example --body '@request-43.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PUT \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-43.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.setAgentPrecall(\"agent/example\", \"https://example.invalid/agent-gate\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.set_agent_precall('agent/example', 'https://example.invalid/agent-gate')",
+        "cli": "# Save the documented JSON fields privately as request-43.json first.\nnixflex integrations setAgentPrecall agent/example --body '@request-43.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -4429,7 +4429,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4439,10 +4439,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.getAgentPrecall(\"agent/example\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.get_agent_precall('agent/example')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations getAgentPrecall agent/example --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.getAgentPrecall(\"agent/example\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.get_agent_precall('agent/example')",
+        "cli": "nixflex integrations getAgentPrecall agent/example --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_agent_precall\",\n  \"arguments\": {\n    \"agent_id\": \"agent/example\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -4546,7 +4546,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4556,10 +4556,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.deleteAgentPrecall(\"agent/example\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete_agent_precall('agent/example')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations deleteAgentPrecall agent/example --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/precall/agent/agent%2Fexample\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.deleteAgentPrecall(\"agent/example\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete_agent_precall('agent/example')",
+        "cli": "nixflex integrations deleteAgentPrecall agent/example --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -4850,7 +4850,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4860,10 +4860,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-46.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.createFunction(\"+12025550123\", {\"name\": \"lookup_fixture\", \"url\": \"https://example.invalid/tool\", \"method\": \"POST\", \"headers\": {\"X-Fixture\": \"private_fixture_value\"}, \"parameters\": {\"type\": \"object\", \"properties\": {}}, \"speak_during\": null, \"timeout_ms\": 0, \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.create_function('+12025550123', name='lookup_fixture', url='https://example.invalid/tool', method='POST', headers={'X-Fixture': 'private_fixture_value'}, parameters={'type': 'object', 'properties': {}}, speak_during=None, timeout_ms=0, is_active=False)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-46.json first.\nnixflex integrations createFunction '+12025550123' --body '@request-46.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request POST \\\n  --url \"https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-46.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.createFunction(\"+12025550123\", {\"name\": \"lookup_fixture\", \"url\": \"https://example.invalid/tool\", \"method\": \"POST\", \"headers\": {\"X-Fixture\": \"private_fixture_value\"}, \"parameters\": {\"type\": \"object\", \"properties\": {}}, \"speak_during\": null, \"timeout_ms\": 0, \"is_active\": false});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.create_function('+12025550123', name='lookup_fixture', url='https://example.invalid/tool', method='POST', headers={'X-Fixture': 'private_fixture_value'}, parameters={'type': 'object', 'properties': {}}, speak_during=None, timeout_ms=0, is_active=False)",
+        "cli": "# Save the documented JSON fields privately as request-46.json first.\nnixflex integrations createFunction '+12025550123' --body '@request-46.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -5010,7 +5010,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5020,10 +5020,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.listFunctions(\"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.list_functions('+12025550123')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations listFunctions '+12025550123' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.listFunctions(\"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.list_functions('+12025550123')",
+        "cli": "nixflex integrations listFunctions '+12025550123' --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"list_custom_functions\",\n  \"arguments\": {\n    \"phone_number\": \"+12025550123\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -5129,7 +5129,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5139,10 +5139,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.deleteFunction(\"+12025550123\", \"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.delete_function('+12025550123', '11111111-1111-4111-8111-111111111111')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex integrations deleteFunction '+12025550123' 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.deleteFunction(\"+12025550123\", \"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.delete_function('+12025550123', '11111111-1111-4111-8111-111111111111')",
+        "cli": "nixflex integrations deleteFunction '+12025550123' 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -5422,7 +5422,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5432,10 +5432,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-49.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.integrations.updateFunction(\"+12025550123\", \"11111111-1111-4111-8111-111111111111\", {\"description\": \"\", \"headers\": {}, \"speak_during\": null, \"is_active\": false, \"timeout_ms\": 45001});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.integrations.update_function('+12025550123', '11111111-1111-4111-8111-111111111111', description='', headers={}, speak_during=None, is_active=False, timeout_ms=45001)",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-49.json first.\nnixflex integrations updateFunction '+12025550123' 11111111-1111-4111-8111-111111111111 --body '@request-49.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PATCH \\\n  --url \"https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-49.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.updateFunction(\"+12025550123\", \"11111111-1111-4111-8111-111111111111\", {\"description\": \"\", \"headers\": {}, \"speak_during\": null, \"is_active\": false, \"timeout_ms\": 45001});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.integrations.update_function('+12025550123', '11111111-1111-4111-8111-111111111111', description='', headers={}, speak_during=None, is_active=False, timeout_ms=45001)",
+        "cli": "# Save the documented JSON fields privately as request-49.json first.\nnixflex integrations updateFunction '+12025550123' 11111111-1111-4111-8111-111111111111 --body '@request-49.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": null,
         "nt": "Node",
         "pt": "Python",
@@ -5457,7 +5457,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -5603,14 +5603,14 @@
           "write"
         ]
       },
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner, Admin and Member personal sessions may read their own context. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner, Admin and Member personal sessions may read their own context. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "title": "Get organisation context",
       "description": "Get organisation context with the Nixflex API. Read the organisation selected by the authenticated credential. The result includes current permissions and.",
       "allErrors": [
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -5647,7 +5647,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5657,10 +5657,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.get();\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.get()",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation get --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/organisation\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.get();\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.get()",
+        "cli": "nixflex organisation get --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"get_organisation\",\n  \"arguments\": {}\n}",
         "nt": "Node",
         "pt": "Python",
@@ -5731,7 +5731,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -5857,14 +5857,14 @@
         "next_cursor": null
       },
       "notes": "The from date must precede the exclusive day after to and cannot be in the future. Dates must be real YYYY-MM-DD dates. CSV uses 500-row chunks and streams the full matching result; 500 is not a total export limit. Permissions are checked for every chunk. An interrupted download is incomplete. CSV columns are When, Action and Result. K4 supports date filters and streamed CSV; activity IDs are strings. The filtered MCP tool accepts an 18-digit cursor; the older frozen MCP activity tool retains its 19-digit input limit.\n\nFor CSV, Node uses organisation.activityCsv and Python uses organisation.activity_csv as byte iterators; the CLI uses organisation activityCsv --set from=2026-10-01 --set to=2026-10-31 --output activity.csv. The CLI publishes only a completed new file and never overwrites. Discard partial SDK output on failure. CSV is not an MCP tool.",
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "title": "List organisation activity",
       "description": "List organisation activity with the Nixflex API. Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin.",
       "allErrors": [
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -5907,7 +5907,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5918,10 +5918,10 @@
       ],
       "query": "?from=2026-10-01&to=2026-10-31",
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/activity?from=2026-10-01&to=2026-10-31\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.activity({from:\"2026-10-01\",to:\"2026-10-31\"});\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.activity(from_='2026-10-01', to='2026-10-31')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation activity --set from=2026-10-01 --set to=2026-10-31 --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/organisation/activity?from=2026-10-01&to=2026-10-31\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.activity({from:\"2026-10-01\",to:\"2026-10-31\"});\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.activity(from_='2026-10-01', to='2026-10-31')",
+        "cli": "nixflex organisation activity --set from=2026-10-01 --set to=2026-10-31 --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"list_organisation_activity_filtered\",\n  \"arguments\": {\n    \"from\": \"2026-10-01\",\n    \"to\": \"2026-10-31\"\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -5942,7 +5942,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6123,7 +6123,7 @@
         "expires_in": 86400
       },
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. This claim route accepts the existing API key only and refuses personal sessions. The account must have no active member or linked owner. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. This claim route accepts the existing API key only and refuses personal sessions. The account must have no active member or linked owner. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Request an owner claim",
       "description": "Request an owner claim with the Nixflex API. Start an email invitation to claim this existing, unclaimed API-only account. The verified recipient must.",
@@ -6131,7 +6131,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6216,7 +6216,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6226,10 +6226,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/claim-invite\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-146.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.claimInvite(\"owner@example.invalid\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.claim_invite('owner@example.invalid')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-146.json first.\nnixflex organisation claimInvite --body '@request-146.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request POST \\\n  --url \"https://api.nixflex.com/v1/organisation/claim-invite\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-146.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.claimInvite(\"owner@example.invalid\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.claim_invite('owner@example.invalid')",
+        "cli": "# Save the documented JSON fields privately as request-146.json first.\nnixflex organisation claimInvite --body '@request-146.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"claim_organisation_owner\",\n  \"arguments\": {\n    \"email\": \"owner@example.invalid\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -6251,7 +6251,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6454,7 +6454,7 @@
         "expires_in": 86400
       },
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Invite a teammate",
       "description": "Invite a teammate with the Nixflex API. Send a 24-hour team invitation. The invited person accepts using their own verified login. Opening an email does not.",
@@ -6462,7 +6462,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6559,7 +6559,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6569,10 +6569,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/invites\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-148.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.invite(\"member@example.invalid\", \"member\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.invite('member@example.invalid', 'member')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-148.json first.\nnixflex organisation invite --body '@request-148.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request POST \\\n  --url \"https://api.nixflex.com/v1/organisation/invites\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-148.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.invite(\"member@example.invalid\", \"member\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.invite('member@example.invalid', 'member')",
+        "cli": "# Save the documented JSON fields privately as request-148.json first.\nnixflex organisation invite --body '@request-148.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"invite_organisation_member\",\n  \"arguments\": {\n    \"email\": \"member@example.invalid\",\n    \"role\": \"member\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -6605,7 +6605,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6708,7 +6708,7 @@
         "role": "member",
         "state": "revoked"
       },
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Revoke a team invitation",
       "description": "Revoke a team invitation with the Nixflex API. Revoke a pending or expired invitation before it is accepted. This invalidates its link; it does not remove.",
@@ -6716,7 +6716,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6771,7 +6771,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6781,10 +6781,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/invites/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.revoke(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.revoke('11111111-1111-4111-8111-111111111111')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation revoke 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/organisation/invites/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.revoke(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.revoke('11111111-1111-4111-8111-111111111111')",
+        "cli": "nixflex organisation revoke 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"revoke_organisation_invite\",\n  \"arguments\": {\n    \"invite_id\": \"11111111-1111-4111-8111-111111111111\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -6816,7 +6816,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -6986,7 +6986,7 @@
         "expires_in": 86400
       },
       "notes": "Delivery can be sent, failed or unknown. A sent receipt confirms email-provider acceptance only. If delivery is uncertain, read the team list before deciding whether to resend. Never accept an invitation using the shared API key.",
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. Admins can act on Member invitations only; Owner authority can act on Admin or Member invitations. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Resend a team invitation",
       "description": "Resend a team invitation with the Nixflex API. Invalidate the old invitation and send a replacement with a new ID and 24-hour link. Resending uses the daily.",
@@ -6994,7 +6994,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7085,7 +7085,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7095,10 +7095,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request POST \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/invites/11111111-1111-4111-8111-111111111111/resend\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.resend(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.resend('11111111-1111-4111-8111-111111111111')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation resend 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request POST \\\n  --url \"https://api.nixflex.com/v1/organisation/invites/11111111-1111-4111-8111-111111111111/resend\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.resend(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.resend('11111111-1111-4111-8111-111111111111')",
+        "cli": "nixflex organisation resend 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"resend_organisation_invite\",\n  \"arguments\": {\n    \"invite_id\": \"11111111-1111-4111-8111-111111111111\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -7119,7 +7119,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7328,14 +7328,14 @@
           "seats_used": 0
         }
       },
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "title": "List organisation members",
       "description": "List organisation members with the Nixflex API. Read active members, up to 100 pending or expired invitations, and current safety limits. The Owner and.",
       "allErrors": [
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7372,7 +7372,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7382,10 +7382,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request GET \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/members\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.members();\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.members()",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation members --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/organisation/members\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.members();\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.members()",
+        "cli": "nixflex organisation members --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"list_organisation_members\",\n  \"arguments\": {}\n}",
         "nt": "Node",
         "pt": "Python",
@@ -7417,7 +7417,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7513,7 +7513,7 @@
       "extraStatuses": [
         202
       ],
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. The Owner may remove non-Owners. An Admin may remove Members only. Members cannot use this route. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. The Owner may remove non-Owners. An Admin may remove Members only. Members cannot use this route. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Remove an organisation member",
       "description": "Remove an organisation member with the Nixflex API. Remove one non-Owner member from this organisation. Shared work and the shared API key remain. A.",
@@ -7521,7 +7521,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7576,7 +7576,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7586,10 +7586,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request DELETE \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/members/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\"",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.removeMember(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.remove_member('11111111-1111-4111-8111-111111111111')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex organisation removeMember 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/organisation/members/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.removeMember(\"11111111-1111-4111-8111-111111111111\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.remove_member('11111111-1111-4111-8111-111111111111')",
+        "cli": "nixflex organisation removeMember 11111111-1111-4111-8111-111111111111 --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"remove_organisation_member\",\n  \"arguments\": {\n    \"user_id\": \"11111111-1111-4111-8111-111111111111\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -7621,7 +7621,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7755,7 +7755,7 @@
       "extraStatuses": [
         202
       ],
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Change an organisation role",
       "description": "Change an organisation role with the Nixflex API. Change a non-Owner member to Admin or Member. Only Owner authority may change roles. This is not an.",
@@ -7763,7 +7763,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7836,7 +7836,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7846,10 +7846,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/members/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-154.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.setRole(\"11111111-1111-4111-8111-111111111111\", \"admin\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.set_role('11111111-1111-4111-8111-111111111111', 'admin')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-154.json first.\nnixflex organisation setRole 11111111-1111-4111-8111-111111111111 --body '@request-154.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PATCH \\\n  --url \"https://api.nixflex.com/v1/organisation/members/11111111-1111-4111-8111-111111111111\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-154.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.setRole(\"11111111-1111-4111-8111-111111111111\", \"admin\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.set_role('11111111-1111-4111-8111-111111111111', 'admin')",
+        "cli": "# Save the documented JSON fields privately as request-154.json first.\nnixflex organisation setRole 11111111-1111-4111-8111-111111111111 --body '@request-154.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"update_organisation_member_role\",\n  \"arguments\": {\n    \"user_id\": \"11111111-1111-4111-8111-111111111111\",\n    \"role\": \"admin\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -7871,7 +7871,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -7967,7 +7967,7 @@
       "exampleResponse": {
         "name": "Example team"
       },
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "retry": "No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.",
       "title": "Rename an organisation",
       "description": "Rename an organisation with the Nixflex API. Set the business name shown for this organisation. Only the Owner personal session or the organisation API key.",
@@ -7975,7 +7975,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -8030,7 +8030,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -8040,10 +8040,10 @@
         ]
       ],
       "kitExamples": {
-        "curl": "curl --request PATCH \\\n  --url \"https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/name\" \\\n  --header \"Authorization: Bearer $NXF_STAGING_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-155.json",
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.organisation.rename(\"Fixture business\");\n// Keep private responses out of logs and AI conversations.",
-        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.organisation.rename('Fixture business')",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the documented JSON fields privately as request-155.json first.\nnixflex organisation rename --body '@request-155.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "curl": "curl --request PATCH \\\n  --url \"https://api.nixflex.com/v1/organisation/name\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\" \\\n  --header \"Content-Type: application/json\" \\\n  --data-binary @request-155.json",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.organisation.rename(\"Fixture business\");\n// Keep private responses out of logs and AI conversations.",
+        "python": "import os\nfrom nixflex import Nixflex\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.organisation.rename('Fixture business')",
+        "cli": "# Save the documented JSON fields privately as request-155.json first.\nnixflex organisation rename --body '@request-155.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "mcp": "{\n  \"name\": \"rename_organisation\",\n  \"arguments\": {\n    \"name\": \"Fixture business\",\n    \"confirm\": true\n  }\n}",
         "nt": "Node",
         "pt": "Python",
@@ -8065,7 +8065,7 @@
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -8127,14 +8127,14 @@
       },
       "sensitive": true,
       "notes": "The organisation context and member list never contain this secret. Signing-secret retrieval is a private Owner action in the dashboard and is excluded from every kit. No executable request is provided. Successful retrieval is pending manual test; do not use an assistant or smoke test to retrieve it.",
-      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
+      "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "title": "Get the signing secret",
       "description": "Get the signing secret with the Nixflex API. Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a.",
       "allErrors": [
         [
           404,
           "not_found",
-          "Organisation routes are not enabled in this environment.",
+          "Organisation routes are not enabled on this service.",
           "Check deployment availability; do not retry unchanged."
         ],
         [
@@ -8171,7 +8171,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,

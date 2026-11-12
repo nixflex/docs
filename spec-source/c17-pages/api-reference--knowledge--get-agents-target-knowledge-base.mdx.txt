@@ -1,0 +1,195 @@
+---
+title: "Get agent knowledge"
+sidebarTitle: "Get agent knowledge"
+description: "Read an agent’s own knowledge base, settings and current revision. Keep a missing base distinct from an unavailable read."
+openapi: "/api-reference/public.openapi.json GET /agents/{target}/knowledge-base"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-agents-target-knowledge-base"
+---
+
+Read the agent’s own knowledge base, settings and current revision.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read this agent’s own knowledge base, settings and current revision.
+- A missing base is different from a failed read; preserve that distinction.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `target` (path) | string | Yes | None | Owned agent ID. URL-encode it as a path segment. |
+
+Do not send a request body.
+
+An agent without knowledge returns own:null and effective:null. Knowledge belongs only to agents; there is no number inheritance.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `mode` | string | Value: `"own"`. |
+| `own` | object or null | Saved value. |
+| `own.id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `own.owner` | string | Owning account identifier; it never grants access when sent by a caller. |
+| `own.kind` | string | Knowledge belongs to an agent. Value: `"agent"`. |
+| `own.target` | string | Owning agent ID. |
+| `own.rev` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `own.active` | string or null | Active published index revision, or null before publication. Format: uuid. |
+| `own.state` | string | Lifecycle state. Allowed: `"ready"`, `"deleting"`, `"deleted"`. |
+| `own.settings` | object | Only channels, match and not_found may be supplied. Omitted settings retain the saved value on update. |
+| `own.settings.channels` | array of string | Enabled knowledge channels. An empty list turns knowledge off for all channels. Allowed items: `"inbound"`, `"outbound"`, `"web_voice"`, `"web_chat"`, `"sms"`. |
+| `own.settings.match` | string | Answer matching mode. Allowed: `"Strict"`, `"Normal"`. |
+| `own.settings.not_found` | string | Nonblank response when suitable knowledge is missing. Maximum 500 characters. Minimum 1 characters. |
+| `own.tombstones` | array of object | Records that prevent refreshed sources restoring removed pieces. |
+| `own.tombstones[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `own.tombstones[].subject_hash` | string | Normalized title digest. |
+| `own.tombstones[].evidence` | array of object | Saved value. |
+| `own.tombstones[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `own.tombstones[].evidence[].segment` | integer | Source segment index. |
+| `own.tombstones[].evidence[].quote` | string | Original evidence text. |
+| `own.tombstones[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `own.tombstones[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `own.tombstones[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `own.tombstones[].evidence[].title` | string | Title snapshot at answer time. |
+| `own.created_at` | string | UTC timestamp. Format: date-time. |
+| `effective` | object or null | Saved value. |
+| `effective.id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `effective.owner` | string | Owning account identifier; it never grants access when sent by a caller. |
+| `effective.kind` | string | Knowledge belongs to an agent. Value: `"agent"`. |
+| `effective.target` | string | Owning agent ID. |
+| `effective.rev` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `effective.active` | string or null | Active published index revision, or null before publication. Format: uuid. |
+| `effective.state` | string | Lifecycle state. Allowed: `"ready"`, `"deleting"`, `"deleted"`. |
+| `effective.settings` | object | Only channels, match and not_found may be supplied. Omitted settings retain the saved value on update. |
+| `effective.settings.channels` | array of string | Enabled knowledge channels. An empty list turns knowledge off for all channels. Allowed items: `"inbound"`, `"outbound"`, `"web_voice"`, `"web_chat"`, `"sms"`. |
+| `effective.settings.match` | string | Answer matching mode. Allowed: `"Strict"`, `"Normal"`. |
+| `effective.settings.not_found` | string | Nonblank response when suitable knowledge is missing. Maximum 500 characters. Minimum 1 characters. |
+| `effective.tombstones` | array of object | Records that prevent refreshed sources restoring removed pieces. |
+| `effective.tombstones[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `effective.tombstones[].subject_hash` | string | Normalized title digest. |
+| `effective.tombstones[].evidence` | array of object | Saved value. |
+| `effective.tombstones[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `effective.tombstones[].evidence[].segment` | integer | Source segment index. |
+| `effective.tombstones[].evidence[].quote` | string | Original evidence text. |
+| `effective.tombstones[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `effective.tombstones[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `effective.tombstones[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `effective.tombstones[].evidence[].title` | string | Title snapshot at answer time. |
+| `effective.created_at` | string | UTC timestamp. Format: date-time. |
+| `policy_revision` | integer | Compatibility value; zero for agent-only knowledge. Value: `0`. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://api.nixflex.com/v1/agents/$(node -p 'encodeURIComponent(process.env.NXF_AGENT_ID)')/knowledge-base" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.getScope(process.env.NXF_AGENT_ID);
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.get_scope(os.environ["NXF_AGENT_ID"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+nixflex knowledge getScope "$env:NXF_AGENT_ID" --json --base-url "https://api.nixflex.com"
+```
+
+```json MCP
+{
+  "name": "get_agent_knowledge",
+  "arguments": {
+    "target": "target/example"
+  }
+}
+```
+
+</RequestExample>
+
+MCP has 97 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "mode": "own",
+  "own": null,
+  "effective": null,
+  "policy_revision": 0
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

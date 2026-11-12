@@ -31,15 +31,15 @@ Verify the CLI with one safe read, then prepare a recoverable call intention loc
 
 ## Check the installed candidate
 
-Install the exact [reviewed CLI package](/cli/overview) and verify its archive hash. Provision the credential and API host privately. In PowerShell:
+Install the exact [reviewed CLI package](/cli/overview) and verify its archive hash. Provision `NIXFLEX_API_KEY` privately. The API address is `https://api.nixflex.com`. In PowerShell:
 
 ```powershell
-if (-not $env:NIXFLEX_API_KEY -or -not $env:NIXFLEX_BASE_URL) {
-    throw 'Configure the intended account and API host privately.'
+if (-not $env:NIXFLEX_API_KEY) {
+    throw 'Configure NIXFLEX_API_KEY privately.'
 }
 nixflex --version
 if ($LASTEXITCODE -ne 0) { throw 'CLI version check failed.' }
-$usageText = nixflex usage --base-url $env:NIXFLEX_BASE_URL --json
+$usageText = nixflex usage --base-url 'https://api.nixflex.com' --json
 if ($LASTEXITCODE -ne 0) { throw 'Usage read failed; inspect safe diagnostics privately.' }
 $usage = $usageText | ConvertFrom-Json
 Write-Output 'Usage read succeeded.'
@@ -77,7 +77,7 @@ Use `--output` instead of `>` so Windows PowerShell 5.1 does not write UTF-16 JS
 The following separate command places a paid call using the saved payload. Run it only after approving the sender, recipient and purpose; it is not part of a read-only quickstart test.
 
 ```powershell
-$receiptText = nixflex calls create --body '@prepared-call.json' --base-url $env:NIXFLEX_BASE_URL --json
+$receiptText = nixflex calls create --body '@prepared-call.json' --base-url 'https://api.nixflex.com' --json
 if ($LASTEXITCODE -ne 0) { throw 'Send outcome needs review; do not send again automatically.' }
 $receipt = $receiptText | ConvertFrom-Json
 # Persist the returned receipt privately in your application record.
@@ -91,11 +91,11 @@ Load the existing prepared file and inspect its saved UUID. These reads cannot p
 
 ```powershell
 $saved = Get-Content -LiteralPath 'prepared-call.json' -Raw -Encoding UTF8 | ConvertFrom-Json
-$stateText = nixflex calls outboundRequest $saved.request_id --base-url $env:NIXFLEX_BASE_URL --json
+$stateText = nixflex calls outboundRequest $saved.request_id --base-url 'https://api.nixflex.com' --json
 if ($LASTEXITCODE -ne 0) { throw 'Request read failed; retain the original UUID.' }
 $state = $stateText | ConvertFrom-Json
 if ($state.state -eq 'accepted' -and $state.call_id) {
-    $bookingText = nixflex calls bookings $state.call_id --base-url $env:NIXFLEX_BASE_URL --json
+    $bookingText = nixflex calls bookings $state.call_id --base-url 'https://api.nixflex.com' --json
     if ($LASTEXITCODE -ne 0) { throw 'Booking result is unavailable; do not infer zero.' }
     $bookings = $bookingText | ConvertFrom-Json
 }

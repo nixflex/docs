@@ -56,20 +56,20 @@ No request body is required. Use the exact owned business number and URL-encode 
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
 
 <RequestExample>
 
 ```bash cURL
 curl --request DELETE \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/phone-numbers/$NXF_PHONE_NUMBER" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);
 // Handle result privately; do not log secrets or call content.
 ```
@@ -78,14 +78,14 @@ const result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.phone_numbers.delete(os.environ["NXF_PHONE_NUMBER"])
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers delete "$NXF_PHONE_NUMBER" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex numbers delete "$NXF_PHONE_NUMBER" --confirm --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -124,7 +124,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 503 | [`number_save_pending`](/api-reference/errors#number_save_pending) | Routing changed but local completion could not be confirmed. | Read current state and contact support; never replay automatically. |
 | 503 | [`number_operation_unavailable`](/api-reference/errors#number_operation_unavailable) | The operation could not be confirmed. | Reconcile the number before another write. |
 | 409 | [`number_cleanup_credentials_missing`](/api-reference/errors#number_cleanup_credentials_missing) | The existing connection lacks the credentials needed to clear routing. | Restore the existing connection through the supported account workflow before removal. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

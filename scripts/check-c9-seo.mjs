@@ -20,7 +20,7 @@ const meta=(s,k)=>{const v=s.split('---')[1]?.match(new RegExp('^'+k+':\\s*(.*)$
 check(new Set(nav).size===nav.length&&same(nav,intended)&&same(nav,plan.pages.map(p=>p.slug)),'Public files, plan and navigation are the same set');
 report.counts.navigation=nav.length;report.counts.intendedFiles=intended.length;report.counts.excluded=plan.excluded.length;
 const before=JSON.parse(execFileSync('git',['show',plan.baseline+':docs.json'],{cwd:root,encoding:'utf8'}));
-check(JSON.stringify(config.navigation.tabs.map(t=>t.tab))===JSON.stringify(['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']),'Locked five-tab order');
+check(JSON.stringify(config.navigation.tabs.map(t=>t.tab))===JSON.stringify(['Business guide','Developer guide','API reference','SDKs & CLI','Build with AI']),'Locked five-tab order');
 check(before.redirects.every(r=>config.redirects.some(n=>n.source===r.source&&n.destination===r.destination)),'Existing redirects preserved');
 check(plan.moved.every(r=>config.redirects.some(n=>n.source==='/'+r.from&&n.destination==='/'+r.to)),'Every moved URL has a redirect ('+plan.moved.length+' moves)');
 const former=flatten(before.navigation.tabs.find(t=>t.tab==='API reference'));

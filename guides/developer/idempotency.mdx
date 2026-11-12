@@ -1,7 +1,7 @@
 ---
 title: "Prevent duplicate work in code"
 sidebarTitle: "Prevent duplicates"
-description: "Save outbound call UUIDs and Knowledge operation keys correctly, keep their account and environment binding, and reconcile other uncertain writes."
+description: "Save outbound call UUIDs and Knowledge operation keys correctly, keep their account binding, and reconcile other uncertain writes."
 canonical: "https://docs.nixflex.com/guides/developer/idempotency"
 ---
 
@@ -31,11 +31,11 @@ Persist each intended operation before sending it and use the identity mechanism
 
 ## Save the operation before sending
 
-Store the intended effect, the owning account/environment association, the exact request and its identity in private durable storage. Do not include the API secret in that operation record. Record the returned resource ID and outcome separately.
+Store the intended effect, the owning account association, the exact request and its identity in private durable storage. Do not include the API secret in that operation record. Record the returned resource ID and outcome separately.
 
 | Operation | Identity | Recovery after a lost reply |
 | --- | --- | --- |
-| Single outbound call with UUID | JSON `request_id` saved before first send | Read that request in the same account and API environment. |
+| Single outbound call with UUID | JSON `request_id` saved before first send | Read that request in the same account. |
 | Documented Knowledge write | Required `Idempotency-Key` header | Keep the same key and identical input; reconcile its resource/job using the endpoint's rules. |
 | Other mutation | No universal replay guarantee | Read current state or use the documented operator recovery path. |
 
@@ -45,7 +45,7 @@ A first call acceptance returns 201. Reusing an already accepted UUID with match
 
 Use [GET request state](/api-reference/calls/get-outbound-request) and retain `pending`, `accepted`, `rejected` and `unknown` as different results. A 404 or failed read is not permission to redial. An accepted call ID remains important even if the launch reply includes `request_status:unconfirmed` and `safe_to_retry:false`.
 
-The same UUID in another account or environment is a separate scope. See the complete [saved-call workflow](/guides/developer/call-requests), including durable preparation and process restarts.
+The same UUID in another account is a separate scope. See the complete [saved-call workflow](/guides/developer/call-requests), including durable preparation and process restarts.
 
 ## Knowledge operations
 

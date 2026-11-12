@@ -141,20 +141,20 @@ Legacy mode ignores unsupported filters such as agent_id. It has no total or nex
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
+These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
 
 <RequestExample>
 
 ```bash cURL
 curl --request GET \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls?limit=25&offset=0" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/calls?limit=25&offset=0" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.calls.list({limit:25,offset:0});
 // Handle result privately; do not log secrets or call content.
 ```
@@ -163,14 +163,14 @@ const result = await client.calls.list({limit:25,offset:0});
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.calls.list(limit=25,offset=0)
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls list --limit 25 --offset 0 --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex calls list --limit 25 --offset 0 --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -198,7 +198,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`invalid_call_history`](/api-reference/errors#invalid_call_history) | A history-mode query is invalid. | Use the history filter/cursor rules when view=history. |
 | 500 | [`server_error`](/api-reference/errors#server_error) | Legacy call rows could not be read. | Retry a bounded read after recovery. |
 | 503 | [`call_data_unavailable`](/api-reference/errors#call_data_unavailable) | History data could not be confirmed. | Retry the read; do not turn the failure into an empty page. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

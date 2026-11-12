@@ -50,7 +50,7 @@ Documented API errors use this envelope. Treat `message` as explanatory text, no
 | HTTP result | Typical decision |
 | --- | --- |
 | 400 / 422 | Correct the named input before another deliberate attempt. |
-| 401 | Check the full credential and API environment privately. |
+| 401 | Check the full account credential privately. |
 | 402 / 403 | Resolve the account or permission restriction; do not bypass it in the browser. |
 | 404 | Check the exact owned identifier. Missing data can also be retained, removed or inaccessible according to the route. |
 | 409 | Read the code: suppression, stale revision, an existing request and other conflicts require different actions. |
@@ -69,7 +69,7 @@ Treat transport success and business completion separately. A Knowledge job can 
 | `do_not_contact` | Respect the refusal; do not remove an opt-out to make the request pass. |
 | `stale_revision` | Read current state and review the newer changes. |
 | `outbound_request_pending` / `outbound_request_unknown` | Keep the saved UUID and use the request-state read. |
-| `request_id_conflict` | Reconcile the original account, environment and payload. |
+| `request_id_conflict` | Reconcile the original account and payload. |
 | `carrier_outcome_unknown` | Investigate the existing number change; do not remove and re-import the number. |
 
 ## The Web agent endpoint is different

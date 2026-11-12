@@ -1,0 +1,246 @@
+---
+title: "Edit knowledge draft"
+sidebarTitle: "Edit draft"
+description: "Edit a proposed knowledge piece while preserving evidence and review requirements. Resolve revision conflicts before saving."
+openapi: "/api-reference/public.openapi.json PATCH /knowledge-bases/{kb}/drafts/{id}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/patch-knowledge-bases-kb-drafts-id"
+---
+
+Edit one proposed piece while preserving evidence and review requirements.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PATCH</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Send edits against the current draft revision.
+- On a revision conflict, reread and merge intentionally.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. Personal Owner and Admin may perform this action; Member is refused. Personal dashboard visibility can hide API-origin agents. Never send owner fields to select another account.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `kb` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `id` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `Idempotency-Key` (header) | string | Yes | None | Unique 8–128-character operation key: letters, numbers, dot, underscore, colon or hyphen. The prompt: prefix is reserved. Reuse only with the identical operation and payload. Maximum 128 characters. Minimum 8 characters. Pattern: `^[A-Za-z0-9_.:-]{8,128}$`. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `expected_revision` | integer | Yes | None | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `expected_draft_revision` | integer | Yes | None | Current data.edit_revision, default 0 only when absent. Minimum 0. |
+| `topic_id` | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `topic` | object | Yes | None | Saved value. |
+| `topic.title` | string | No | Omitted | Optional title. Blank or omitted on edit retains the existing title; on create opening words are used. Maximum 200 characters. |
+| `topic.facts` | string | Yes | None | Original or manually written piece text; nonblank. A published packed piece must fit 800 tokens. Maximum 20000 characters. Minimum 1 characters. |
+| `topic.questions` | array of string | No | Omitted | Optional compatibility labels; omitted create uses []; omitted edit retains prior labels. Maximum 5 items. |
+| `topic.valid_from` | string or null | No | Omitted | UTC timestamp. Format: date-time. |
+| `topic.valid_until` | string or null | No | Omitted | Exclusive validity end; after valid_from when both are set. Format: date-time. |
+
+Both base and draft revisions must match. Each save increments data.edit_revision. Server-owned evidence and review flags survive editing; the topic becomes manually corrected.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `owner` | string | Owning account ID. |
+| `kb` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `expected_rev` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `data` | object | Saved value. |
+| `data.format` | string | Current format is pieces-v1. |
+| `data.topics` | array of object | Saved value. |
+| `data.topics[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.topics[].title` | string | Displayed piece title. |
+| `data.topics[].facts` | string | Piece text. |
+| `data.topics[].questions` | array of string | Retained manual/legacy labels; new imports do not generate questions. |
+| `data.topics[].evidence` | array of object | Saved value. |
+| `data.topics[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.topics[].evidence[].segment` | integer | Source segment index. |
+| `data.topics[].evidence[].quote` | string | Original evidence text. |
+| `data.topics[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `data.topics[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.topics[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.topics[].evidence[].title` | string | Title snapshot at answer time. |
+| `data.topics[].manual` | boolean | True when manually written or corrected. |
+| `data.topics[].valid_from` | string or null | UTC timestamp. Format: date-time. |
+| `data.topics[].valid_until` | string or null | UTC timestamp. Format: date-time. |
+| `data.topics[].suppressed` | boolean | True while an edited old piece must not be used. |
+| `data.topics[].origin` | string | Optional legacy origin marker. |
+| `data.topics[].position` | object | Stable display-order metadata. |
+| `data.topics[].position.added_at` | string | UTC timestamp. Format: date-time. |
+| `data.topics[].position.source` | integer | Saved value. |
+| `data.topics[].position.segment` | integer | Saved value. |
+| `data.topics[].page_name` | string | Optional source page label. |
+| `data.topics[].title_page` | string | Optional label used to distinguish similar automatic titles. |
+| `data.topics[].review_flags` | array of string | Allowed items: `"agent_instructions"`, `"suspicious_link"`, `"payment_details"`, `"sensitive_data"`, `"website_junk"`, `"code_example"`. |
+| `data.topics[].check_required` | boolean | A flagged topic needs explicit individual approval. |
+| `data.topics[].check_reasons` | array of string | Saved value. |
+| `data.topics[].check_reason` | string | Compatibility joined review reasons. |
+| `data.topics[].keyterms` | object | Read-only metadata. Refresh scheduling is still being checked separately; do not send it in writes. |
+| `data.topics[].keyterms.version` | integer | Stored automatic-term format version. |
+| `data.topics[].keyterms.fingerprint` | string | Digest of the source text used to validate cached terms. |
+| `data.topics[].keyterms.terms` | array of string | Stored candidate terms. |
+| `data.topics[].keyterms.ranks` | object | Keys are normalized terms; each value records score (1–4) and essential (boolean). |
+| `data.entries` | array of object | Saved value. |
+| `data.entries[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.entries[].rev` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `data.entries[].object_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.entries[].type` | string | Allowed: `"text"`, `"file"`, `"url"`. |
+| `data.entries[].title` | string | Saved value. |
+| `data.entries[].url` | string | Saved value. |
+| `data.entries[].filename` | string | Saved value. |
+| `data.entries[].text` | string | Extracted original text, never raw uploaded file bytes. |
+| `data.entries[].tokens` | integer | Saved value. |
+| `data.entries[].parsed` | boolean | Saved value. |
+| `data.entries[].added_at` | string | UTC timestamp. Format: date-time. |
+| `data.entries[].source_order` | integer | Saved value. |
+| `data.warnings` | array of string | Saved value. |
+| `data.summary` | object | Saved value. |
+| `data.summary.pages` | integer | Website pages processed. |
+| `data.summary.pieces` | integer | Prepared pieces. |
+| `data.summary.duplicates_skipped` | integer | Duplicate pieces or repeated source skipped. |
+| `data.job_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `data.edit_revision` | integer | Draft edit revision; omitted legacy value means 0. Minimum 0. |
+| `created_at` | string | UTC timestamp. Format: date-time. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
+
+```json request-106.json
+{
+  "expected_revision": 1,
+  "expected_draft_revision": 0,
+  "topic_id": "22222222-2222-4222-8222-222222222222",
+  "topic": {
+    "title": "Appointments",
+    "facts": "Appointments are available Monday to Friday."
+  }
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request PATCH \
+  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/drafts/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"expected_revision":1,"expected_draft_revision":0,"topic_id":"22222222-2222-4222-8222-222222222222","topic":{"title":"Appointments","facts":"Appointments are available Monday to Friday."}}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.updateDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {"expected_revision":1,"expected_draft_revision":0,"topic_id":"22222222-2222-4222-8222-222222222222","topic":{"title":"Appointments","facts":"Appointments are available Monday to Friday."}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.update_draft(os.environ["NXF_KNOWLEDGE_BASE_ID"], os.environ["NXF_RESOURCE_ID"], {
+      "expected_revision": 1,
+      "expected_draft_revision": 0,
+      "topic_id": "22222222-2222-4222-8222-222222222222",
+      "topic": {
+        "title": "Appointments",
+        "facts": "Appointments are available Monday to Friday."
+      }
+    }, idempotency_key=os.environ["NXF_IDEMPOTENCY_KEY"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+# Save the JSON below privately as request-106.json.
+nixflex knowledge updateDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" --body '@request-106.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
+```
+
+</RequestExample>
+
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "owner": "owner_fixture",
+  "kb": "11111111-1111-4111-8111-111111111111",
+  "expected_rev": 1,
+  "data": {
+    "topics": [],
+    "entries": [],
+    "warnings": []
+  },
+  "created_at": "2026-11-02T12:00:00Z"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 409 | [`draft_closed`](/api-reference/errors#draft_closed) | This review has already been accepted. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`idempotency_conflict`](/api-reference/errors#idempotency_conflict) | Use a new Idempotency-Key for different information. | Read current state and resolve the conflict before sending a new request. |
+| 409 | [`stale_revision`](/api-reference/errors#stale_revision) | The list changed. Reload it to see the latest pieces. | Read current state, review the changes and use the fresh revision. |
+| 413 | [`storage_limit`](/api-reference/errors#storage_limit) | Your account has reached its private storage limit. Remove old sources first. | Correct the named fields or reduce the input before retrying. |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body could not be read. | Correct the named fields or reduce the input before retrying. |
+| 413 | [`invalid_body`](/api-reference/errors#invalid_body) | The request body is too large. | Keep the transport body within 10 MiB. |
+
+</div>
+
+## Retry and idempotency
+
+Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

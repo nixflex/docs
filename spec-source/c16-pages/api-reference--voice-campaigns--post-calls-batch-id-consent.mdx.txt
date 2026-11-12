@@ -60,14 +60,14 @@ confirmed must be true for either event. Omitted fields and false are refused. T
 
 ## Example request
 
-These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same account at `https://api.nixflex.com` before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/consent" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/calls/batch/campaign_fixture/consent" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data '{"event":"consent","confirmed":true}'
 ```
@@ -76,8 +76,8 @@ curl --request POST \
 import { Nixflex } from 'nixflex';
 
 const c = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
 const result = await c.campaigns.consent("campaign_fixture", {"event": "consent", "confirmed": true});
@@ -88,15 +88,14 @@ import os
 from nixflex import Nixflex
 
 with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
     max_retries=0,
 ) as c:
     result = c.campaigns.consent('campaign_fixture', event='consent', confirmed=True)
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 $body = @'
 {
   "event": "consent",
@@ -104,7 +103,7 @@ $body = @'
 }
 '@
 [IO.File]::WriteAllText('request-92.json', $body, (New-Object Text.UTF8Encoding $false))
-nixflex campaigns consent campaign_fixture --body '@request-92.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex campaigns consent campaign_fixture --body '@request-92.json' --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 
@@ -139,7 +138,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 503 | [`outcome_unknown`](/api-reference/errors#outcome_unknown) | The write result could not be confirmed. | Read current state; do not resend automatically. |
 | 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
 | 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

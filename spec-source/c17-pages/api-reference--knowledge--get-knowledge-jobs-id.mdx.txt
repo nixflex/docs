@@ -1,0 +1,256 @@
+---
+title: "Get knowledge job"
+sidebarTitle: "Get job"
+description: "Read knowledge job state, progress, result and safe failure details. Interpret readiness using the job kind and result."
+openapi: "/api-reference/public.openapi.json GET /knowledge/jobs/{id}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-jobs-id"
+---
+
+Poll authoritative job state, progress, result and safe failure details.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Follow state, stage and error together.
+- ready does not always mean text was published; inspect the job kind and result.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+
+Do not send a request body.
+
+Poll with bounded backoff and respect next_retry_at for scheduled safety checks. needs_review requires explicit review; ready may mean unchanged, exported or published depending on kind/result. Never invent progress from elapsed time.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `kb` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `kind` | string | Work type; includes import, discovery, publish, manual, export, delete and automatic-term maintenance. |
+| `state` | string | Allowed: `"pending"`, `"running"`, `"needs_review"`, `"ready"`, `"failed"`, `"cancelled"`, `"deleted"`. |
+| `stage` | string | Current work stage, including reading, preparing, indexing, safety_check or safety_waiting. |
+| `progress` | object | Saved value. |
+| `progress.percent` | integer | Completed-stage progress, not elapsed-time prediction. Minimum 0. Maximum 100. |
+| `progress.phase` | string | Reading or naming phase. |
+| `progress.page` | integer | Current page number. |
+| `progress.pages` | integer | Total input pages or entries. |
+| `progress.completed` | integer | Completed preparation units. |
+| `progress.total` | integer | Total preparation units. |
+| `result` | object or null | Fields depend on job kind. Poll the job until a terminal state or needs_review; ready alone is not a claim that new text was published. |
+| `result.draft_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `result.warnings` | array of string | Saved value. |
+| `result.summary` | object | Saved value. |
+| `result.summary.pages` | integer | Website pages processed. |
+| `result.summary.pieces` | integer | Prepared pieces. |
+| `result.summary.duplicates_skipped` | integer | Duplicate pieces or repeated source skipped. |
+| `result.unchanged` | boolean | No new publishable content was produced. |
+| `result.revision` | one of the shapes below | Saved value. |
+| `result.expected_revision` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `result.expires_at` | string | UTC timestamp. Format: date-time. |
+| `result.deleted` | boolean | Saved value. |
+| `result.private_objects_remaining` | integer | Saved value. |
+| `result.pages` | array of object | Saved value. |
+| `result.pages[].id` | string | Discovery page ID, use exactly as returned. |
+| `result.pages[].url` | string | Discovered public page URL. |
+| `result.pages[].title` | string | Discovered page title. |
+| `error` | object or null | Saved value. |
+| `error.code` | string | Machine-readable failure code; see the error catalog. |
+| `error.message` | string | Display as escaped text; never execute or insert as HTML. |
+| `next_retry_at` | string or null | UTC timestamp. Format: date-time. |
+| `paid_work_started` | boolean | Whether paid preparation work began; not an invoice or an additional charge. |
+| `created_at` | string | UTC timestamp. Format: date-time. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://api.nixflex.com/v1/knowledge/jobs/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.getJob(process.env.NXF_RESOURCE_ID);
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.get_job(os.environ["NXF_RESOURCE_ID"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+nixflex knowledge getJob "$env:NXF_RESOURCE_ID" --json --base-url "https://api.nixflex.com"
+```
+
+```json MCP
+{
+  "name": "get_knowledge_job",
+  "arguments": {
+    "id": "id/example"
+  }
+}
+```
+
+</RequestExample>
+
+MCP has 97 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "kb": "11111111-1111-4111-8111-111111111111",
+  "kind": "import",
+  "state": "pending",
+  "stage": "pending",
+  "progress": {
+    "percent": 0
+  },
+  "result": null,
+  "error": null,
+  "next_retry_at": null,
+  "paid_work_started": false,
+  "created_at": "2026-11-02T12:00:00Z"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 409 | [`export_expired`](/api-reference/errors#export_expired) | Request a new private export. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`stale_revision`](/api-reference/errors#stale_revision) | The list changed. Reload it to see the latest pieces. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 400 | [`invalid_operation`](/api-reference/errors#invalid_operation) | Unknown knowledge operation. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 410 | [`training_removed`](/api-reference/errors#training_removed) | Training has been removed. Edit a piece instead. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`draft_closed`](/api-reference/errors#draft_closed) | This review has already been accepted. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`review_required`](/api-reference/errors#review_required) | Review and acknowledge the warnings before accepting. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`suspicious_review_required`](/api-reference/errors#suspicious_review_required) | Check each flagged topic and tick it individually before going live. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 429 | [`base_limit`](/api-reference/errors#base_limit) | This account has reached its knowledge base limit. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`topic_limit`](/api-reference/errors#topic_limit) | There are too many topics. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`empty_topic`](/api-reference/errors#empty_topic) | Add text to the empty piece or leave it unticked before going live. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`split_topic`](/api-reference/errors#split_topic) | Split the large piece into smaller pieces before publishing. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`source_count`](/api-reference/errors#source_count) | This knowledge base can hold up to 50 sources. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`knowledge_limit`](/api-reference/errors#knowledge_limit) | This knowledge base has too much original text. Remove a source or use a separate knowledge base. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`knowledge_missing`](/api-reference/errors#knowledge_missing) | Add and approve at least one topic before testing. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 429 | [`session_limit`](/api-reference/errors#session_limit) | Too many test sessions today. Reuse an existing session. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`target_changed`](/api-reference/errors#target_changed) | The selected knowledge changed. Start a new test. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`session_closed`](/api-reference/errors#session_closed) | Start a new knowledge test. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 429 | [`busy`](/api-reference/errors#busy) | Please wait for the existing knowledge jobs to finish. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`job_cancelled`](/api-reference/errors#job_cancelled) | This job has stopped. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`delete_committed`](/api-reference/errors#delete_committed) | Deletion has already revoked access and must finish. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`retry_unavailable`](/api-reference/errors#retry_unavailable) | That file has expired. Upload it again or paste its text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 429 | [`measure_busy`](/api-reference/errors#measure_busy) | Other files are being checked. Please try again in a moment. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`source_limit`](/api-reference/errors#source_limit) | This source contains too much text. Split it into smaller documents. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`index_version`](/api-reference/errors#index_version) | This knowledge index needs updating before it can be searched. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 410 | [`number_knowledge_removed`](/api-reference/errors#number_knowledge_removed) | Knowledge belongs to an agent now. Open the attached agent’s knowledge. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`idempotency_conflict`](/api-reference/errors#idempotency_conflict) | Use a new Idempotency-Key for different information. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`deletion_pending`](/api-reference/errors#deletion_pending) | Private files are still being deleted. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`export_limit`](/api-reference/errors#export_limit) | This export is too large for one download. Export or remove sources in smaller groups. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`confirm_topics`](/api-reference/errors#confirm_topics) | Confirm the affected topics before removing this source. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`manual_choice`](/api-reference/errors#manual_choice) | Choose whether to keep or remove manually edited topics. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 429 | [`training_limit`](/api-reference/errors#training_limit) | Today’s training allowance has been used. Your notes are saved. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`invalid_keyterms`](/api-reference/errors#invalid_keyterms) | The automatic words could not be checked. Your saved knowledge is unchanged. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`message_busy`](/api-reference/errors#message_busy) | Wait for the current test reply. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`message_in_progress`](/api-reference/errors#message_in_progress) | This test reply is still pending. Read the session before retrying. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`draft_changed`](/api-reference/errors#draft_changed) | The preview changed. Reopen the review to test it. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 409 | [`knowledge_updating`](/api-reference/errors#knowledge_updating) | Knowledge is still changing. Your test is saved; ask again in a moment. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`unreadable`](/api-reference/errors#unreadable) | This file is damaged or could not be read safely. Save a new copy or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`empty_file`](/api-reference/errors#empty_file) | This file is empty. Choose a file containing text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`file_limit`](/api-reference/errors#file_limit) | This file is too big. Choose a file up to 10 MiB. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`unsafe_file`](/api-reference/errors#unsafe_file) | This file failed the virus safety check. Use a clean copy or paste clean text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`scan_unavailable`](/api-reference/errors#scan_unavailable) | Safety check in progress. We will retry automatically. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`storage_limit`](/api-reference/errors#storage_limit) | Your account has reached its private storage limit. Remove old sources first. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`sources_unreadable`](/api-reference/errors#sources_unreadable) | None of the selected pages could be read. Paste the text instead. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`page_unreadable`](/api-reference/errors#page_unreadable) | We could not read this page. Check the address, or paste its text instead. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`robots_blocked`](/api-reference/errors#robots_blocked) | This website does not allow this page to be imported. Paste permitted text instead. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`page_unavailable`](/api-reference/errors#page_unavailable) | This website is taking too long to reply. Try again later. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`provider_unavailable`](/api-reference/errors#provider_unavailable) | Knowledge preparation and embeddings need to be configured. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`model_unconfigured`](/api-reference/errors#model_unconfigured) | The knowledge preparation model and its context limit need to be configured. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`provider_limit`](/api-reference/errors#provider_limit) | The prepared answer was too large. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`context_limit`](/api-reference/errors#context_limit) | All originals and notes do not fit this preparation model. Use a larger configured model or smaller knowledge base; nothing was cut off. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`invalid_topics`](/api-reference/errors#invalid_topics) | The prepared topics could not be checked. Try again. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`provider_unconfigured`](/api-reference/errors#provider_unconfigured) | Knowledge preparation is not configured. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 413 | [`embedding_limit`](/api-reference/errors#embedding_limit) | Split this topic into smaller complete topics. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`index_unavailable`](/api-reference/errors#index_unavailable) | The search index could not be prepared. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`test_unavailable`](/api-reference/errors#test_unavailable) | The test could not reply. Please try again. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`knowledge_loading`](/api-reference/errors#knowledge_loading) | Knowledge is still loading — try again | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 415 | [`wrong_type`](/api-reference/errors#wrong_type) | The file contents do not match its type. Use a genuine PDF, DOCX or plain UTF-8 text file. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 415 | [`unsupported_file`](/api-reference/errors#unsupported_file) | Use PDF, DOCX or plain UTF-8 text. Rich text and executable files are not accepted. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`unclean_text`](/api-reference/errors#unclean_text) | This file is not clean UTF-8 text. Save it as UTF-8 without binary data or hidden control characters. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`unsafe_pdf`](/api-reference/errors#unsafe_pdf) | This PDF contains scripts, actions or embedded files. Export a clean text-only PDF or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`unsafe_word`](/api-reference/errors#unsafe_word) | This Word file contains macros, embedded files or active content. Save a clean DOCX or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`password_pdf`](/api-reference/errors#password_pdf) | This PDF is password protected. Remove the password from a copy or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`scanned_pdf`](/api-reference/errors#scanned_pdf) | This PDF has a page with no readable text. Use a text PDF, convert the scanned pages to text, or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`page_limit`](/api-reference/errors#page_limit) | This PDF has more than 200 pages. Split it into smaller documents. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`archive_limit`](/api-reference/errors#archive_limit) | This Word document expands beyond the safe size limit. Save a smaller DOCX or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 422 | [`parse_timeout`](/api-reference/errors#parse_timeout) | Reading this file took too long. Try a smaller document or paste the text. | Inspect the job state and current revision before a deliberate corrected attempt. |
+| 503 | [`measure_unavailable`](/api-reference/errors#measure_unavailable) | Counting took too long. Try a smaller source or try again. | Inspect the job state and current revision before a deliberate corrected attempt. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -57,13 +57,13 @@ Send a JSON object. Unknown fields are not a supported way to configure an accou
 
 ## Example request
 
-This creates a separate API-only account. Run it only as an intentional signup. The examples use staging and need no existing credential. SDK and CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later. Account signup is intentionally absent from MCP; do not emulate it with another tool. Set `NXF_SECRET_RESPONSE_FILE` to a new file in a private, access-restricted location before using cURL or CLI. Save the returned secret in your secret store; do not log or commit the response.
+This creates a separate API-only account. Run it only as an intentional signup. The examples use https://api.nixflex.com and need no existing credential. SDK and CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later. Account signup is intentionally absent from MCP; do not emulate it with another tool. Set `NXF_SECRET_RESPONSE_FILE` to a new file in a private, access-restricted location before using cURL or CLI. Save the returned secret in your secret store; do not log or commit the response.
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/keys" \
+  --url "https://api.nixflex.com/v1/keys" \
   --header "Content-Type: application/json" \
   --data '{"name":"Example API account"}' \
   --output "$NXF_SECRET_RESPONSE_FILE"
@@ -71,7 +71,7 @@ curl --request POST \
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const baseUrl = 'https://api.nixflex.com';
 const result = await Nixflex.createKey({name:"Example API account"}, baseUrl);
 // Handle result privately; do not log secrets or call content.
 ```
@@ -80,13 +80,13 @@ const result = await Nixflex.createKey({name:"Example API account"}, baseUrl);
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+base_url = "https://api.nixflex.com"
 result = Nixflex.create_key(name="Example API account", base_url=base_url)
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex keys create --name "Example API account" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json > "$NXF_SECRET_RESPONSE_FILE"
+nixflex keys create --name "Example API account" --confirm --base-url https://api.nixflex.com --json > "$NXF_SECRET_RESPONSE_FILE"
 ```
 
 </RequestExample>

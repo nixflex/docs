@@ -1,0 +1,155 @@
+---
+title: "Read automatic keyterms"
+sidebarTitle: "Read automatic keyterms"
+description: "Read ranked automatic speech terms from live agent knowledge, with configured limits and saved manual terms for comparison."
+openapi: "/api-reference/public.openapi.json GET /agents/{target}/knowledge-keyterms"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-agents-target-knowledge-keyterms"
+---
+
+Read ranked automatic speech terms from an agent’s current live knowledge.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Automatic candidates default to 80, with an operator-configurable cap of 100; newly edited manual lists have a separate 20-term limit.
+- Read the actual effective list; terms are recognition hints, not extra knowledge answers.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `target` (path) | string | Yes | None | Owned agent ID. URL-encode it as a path segment. |
+
+Do not send a request body.
+
+This dedicated read returns automatic candidates. Agent list/detail reads also expose knowledge_keyterms when knowledge is enabled and filter against saved customer words. The dedicated read does not take an edited manual list; clients filter candidates against their current edited customer terms. Customer terms always take priority on calls. Only valid, unsuppressed, currently applicable live pieces contribute; drafts and raw sources do not. The read returns all six fields. Counts equal their returned array lengths. The automatic list is before call transport limits and is not filtered against unsaved manual form values. Legacy saved manual lists can exceed the edit limit. Treat both lists as read-only observations. Automatic selection excludes web addresses, API paths and URL-like terms. Spoken names such as AC/DC and St. James remain eligible. Older hints refresh in the background without an edit or reimport. Manual lists and their existing limits are unchanged.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `knowledge_keyterms` | array of string | Ranked automatic candidates; default cap 80 per agent, operator-configurable from 0 to 100. Maximum 100 items. |
+| `knowledge_keyterms_count` | integer | Length of knowledge_keyterms. Minimum 0. |
+| `knowledge_keyterms_limit` | integer | Configured automatic candidate limit; default 80. Minimum 0. Maximum 100. |
+| `manual_keyterms` | array of string | Saved customer entries, trimmed and nonempty. Compare with unsaved form values in your UI. |
+| `manual_keyterms_count` | integer | Length of manual_keyterms; an unchanged legacy list can exceed today’s edit limit. Minimum 0. |
+| `manual_keyterms_limit` | integer | Maximum nonempty terms for newly edited manual lists; unchanged saved lists may exceed this value. Value: `20`. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://api.nixflex.com/v1/agents/$(node -p 'encodeURIComponent(process.env.NXF_AGENT_ID)')/knowledge-keyterms" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.keyterms(process.env.NXF_AGENT_ID);
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.keyterms(os.environ["NXF_AGENT_ID"])
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+nixflex knowledge keyterms "$env:NXF_AGENT_ID" --json --base-url "https://api.nixflex.com"
+```
+
+```json MCP
+{
+  "name": "get_agent_knowledge_keyterms",
+  "arguments": {
+    "target": "target/example"
+  }
+}
+```
+
+</RequestExample>
+
+MCP has 97 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "knowledge_keyterms": [
+    "Evening appointments"
+  ],
+  "knowledge_keyterms_count": 1,
+  "knowledge_keyterms_limit": 80,
+  "manual_keyterms": [],
+  "manual_keyterms_count": 0,
+  "manual_keyterms_limit": 20
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

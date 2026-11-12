@@ -75,14 +75,14 @@ The response contains safe settings and `send_invites`; it contains no OAuth cre
 
 ## Example request
 
-Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
 
 <RequestExample>
 
 ```bash cURL (Bash)
 curl --request PATCH \
   --url 'https://api.nixflex.com/v1/integrations/google-calendar/number/%2B12025550123' \
-  --header "Authorization: Bearer $NXF_API_KEY" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header 'Content-Type: application/json' \
   --data '{"timezone":"Europe/London","send_invites":true}'
 ```
@@ -90,7 +90,7 @@ curl --request PATCH \
 ```javascript Node (HTTP)
 const response = await fetch('https://api.nixflex.com/v1/integrations/google-calendar/number/%2B12025550123', {
   method: 'PATCH',
-  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}`, 'Content-Type': 'application/json' },
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({"timezone":"Europe/London","send_invites":true}),
 });
 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -103,7 +103,7 @@ import os, json
 from urllib.request import Request, urlopen
 
 request = Request('https://api.nixflex.com/v1/integrations/google-calendar/number/%2B12025550123', method='PATCH',
-    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY'], 'Content-Type': 'application/json'},
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY'], 'Content-Type': 'application/json'},
     data="{\"timezone\":\"Europe/London\",\"send_invites\":true}".encode("utf-8"))
 with urlopen(request, timeout=30) as response:
     result = json.load(response)
@@ -111,7 +111,7 @@ with urlopen(request, timeout=30) as response:
 ```
 
 ```powershell PowerShell (HTTP)
-$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
 $body = '{"timezone":"Europe/London","send_invites":true}'
 $result = Invoke-RestMethod -Method PATCH -Uri 'https://api.nixflex.com/v1/integrations/google-calendar/number/%2B12025550123' -Headers $headers -DisableKeepAlive -ContentType "application/json" -Body ([Text.Encoding]::UTF8.GetBytes($body))
 # Handle $result privately.

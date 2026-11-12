@@ -56,19 +56,19 @@ The GET response returns the saved URL. Keep URLs private because they can conta
 
 ## Example request
 
-Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Review the target and payload before this write.
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` in your private process environment. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account at `https://api.nixflex.com`. Review the target and payload before this write.
 
 <RequestExample>
 
 ```bash cURL
 curl --request DELETE \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook/number/%2B12025550123" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/integrations/webhook/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
 const result = await c.integrations.delete("webhook", "+12025550123");
 // Keep private responses out of logs and AI conversations.
 ```
@@ -76,13 +76,12 @@ const result = await c.integrations.delete("webhook", "+12025550123");
 ```python Python
 import os
 from nixflex import Nixflex
-with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
     result = c.integrations.delete('webhook', '+12025550123')
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
-nixflex integrations delete webhook '+12025550123' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex integrations delete webhook '+12025550123' --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 ```json MCP
@@ -124,7 +123,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | --- | --- | --- | --- |
 | 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
 | 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

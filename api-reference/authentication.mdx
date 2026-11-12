@@ -43,7 +43,7 @@ The credential is the key ID, a colon, and the key secret. A verified personal d
 
 | Situation | Behaviour | What to do |
 | --- | --- | --- |
-| Missing or invalid API key | HTTP 401, `unauthorized` | Check the complete credential and environment. |
+| Missing or invalid API key | HTTP 401, `unauthorized` | Check the complete account credential. |
 | Key belongs to another account | It cannot access your resources | Use the owning account's key and resource IDs. |
 | Organisation policy refuses an operation | HTTP 403, usually `permission_denied` | Check authority and the operation's permissions. |
 | Organisation API key | Acts for the organisation with Owner authority | Restrict it to trusted server processes. |
@@ -68,7 +68,7 @@ The organisation signing secret is separate. API-key rotation does not rotate it
 ## Minimal read example
 
 ```bash
-curl 'https://api.nixflex.com/v1/agents?limit=1' -H "Authorization: Bearer $NXF_API_KEY"
+curl 'https://api.nixflex.com/v1/agents?limit=1' -H "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 A valid empty list is successful. Authentication failure uses the [standard error shape](/api-reference/errors#response-shape). For throttling, read `Retry-After` and follow the [retry rules](/api-reference/retries).

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {productionOnly} from './public-production-policy.mjs';
 const root=path.resolve(import.meta.dirname,'..'),args=process.argv.slice(2);
 const read=p=>fs.readFileSync(path.join(root,p),'utf8').replaceAll('\r\n','\n');
 const json=p=>JSON.parse(read(p));
@@ -17,8 +18,10 @@ const meta=(s,k)=>{const value=s.match(new RegExp('^'+k+': (.*)$','m'))?.[1];ret
 const methods=['get','post','put','patch','delete'];
 const operations=o=>Object.entries(o.paths).flatMap(([route,item])=>Object.entries(item).filter(([method])=>methods.includes(method)).map(([method,operation])=>({key:method.toUpperCase()+' '+route,id:operation.operationId,operation})));
 const ops=operations(spec),prior=operations(JSON.parse(git(plan.baseline,'api-reference/public.openapi.json')));
-check(same(config.navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','AI tools'])&&config.navigation.tabs[0].tab==='Business guide'&&config.navigation.tabs[4].tab==='AI tools','Five requested tabs in order');
-const expectedGroups=['Get started','Agents','Knowledge','Phone numbers','Calls','Call actions','Bookings','Voice campaigns','SMS','Website agent','Webhooks','Integrations','Bring your own','Team','Account','Build with AI','Switch to Nixflex','Reference'];
+check(JSON.stringify(config.navigation.tabs.map(t=>t.tab))===JSON.stringify(['Business guide','Developer guide','API reference','SDKs & CLI','Build with AI']),'Five requested tabs in order');
+const expectedGroups=['Get started','Agents','Knowledge','Phone numbers','Calls','Call actions','Bookings','Voice campaigns','SMS','Website agent','Webhooks','Integrations','Bring your own','Team','Account','Switch to Nixflex','Reference'];
+check(flatten(config.navigation.tabs[4])[0]==='guides/developer/build-with-ai','Shared app/SaaS overview is first in Build with AI');
+check(config.navigation.tabs.slice(0,2).every(t=>t.groups.every(g=>g.group!=='Build with AI')),'App/SaaS groups moved out of audience menus');
 check(JSON.stringify(config.navigation.tabs[1].groups.map(g=>g.group))===JSON.stringify(expectedGroups),'Exact approved Developer groups and order');
 check(nav.length===all.size&&same(nav,Object.keys(plan.metadata))&&same(nav,site.pages.map(p=>p.slug)),'Navigation, metadata and manifest have the same unique page set');
 check(ops.length===151&&new Set(ops.map(o=>o.id)).size===151,'151 public operations with unique IDs');
@@ -39,6 +42,7 @@ for(const tab of config.navigation.tabs)for(const group of tab.groups||[]){
 }
 for(const slug of nav){
  const text=read(slug+'.mdx'),title=meta(text,'title'),description=meta(text,'description'),label=meta(text,'sidebarTitle');
+ check(productionOnly(text),slug+' production-only public content');
  check(title.length>0&&title.length<=60&&!titles.has(title.toLowerCase()),slug+' unique title <=60');titles.add(title.toLowerCase());
  check(description.length>0&&description.length<=160&&!descriptions.has(description.toLowerCase()),slug+' unique description <=160');descriptions.add(description.toLowerCase());
  check(label.split(/\s+/).length>=1&&label.split(/\s+/).length<=4,slug+' sidebar label has 1–4 words');
@@ -94,13 +98,17 @@ for(const [old,target]of Object.entries(plan.retired)){
 }
 const tracked=execFileSync('git',['ls-tree','-r','--name-only',plan.baseline,'tests','scripts'],{cwd:root,encoding:'utf8'}).trim().split(/\r?\n/);
 const locked=tracked.filter(p=>p.startsWith('tests/')||/\/(?:check-|validate-|C[3-8]-TEST)/.test(p)||p==='scripts/c11-content-policy.mjs');
-// 509e7d8 includes Fahim's approved C15 reconciliation. C16 permits only the
-// three recorded release-wording test edits; every other locked file stays exact.
+// C271451 is the live C16 baseline. Fahim approved C17 changes only to
+// production-only examples and the renamed/moved Build with AI navigation.
 for(const file of locked){
- const approved=plan.approvedC16LockedHashes?.[file];
+ const approved=plan.approvedC17LockedHashes?.[file];
  const unchanged=approved?createHash('sha256').update(read(file)).digest('hex')===approved:read(file)===git(plan.lockedBaseline,file);
- check(unchanged,file+' matches approved C15 baseline or exact C16 wording edit');
+ check(unchanged,file+' matches live C16 baseline or exact approved C17 edit');
 }
+for(const file of ['docs.json','api-reference/public.openapi.json',...files('snippets').filter(f=>f!=='snippets/snippet-intro.mdx')]){
+ check(productionOnly(read(file)),file+' production-only public asset');
+}
+for(const file of new Set(Object.values(plan.sources)))check(productionOnly(read(file)),file+' production-only active authoring source');
 check(fs.existsSync(path.join(root,'logo/light.svg'))&&fs.existsSync(path.join(root,'logo/dark.svg'))&&read('favicon.svg').includes('#050706'),'Final voice-ring logo assets present');
 check(read('.mintignore').includes('spec-source/')&&read('.mintignore').includes('scripts/')&&read('.mintignore').includes('DOCS-STYLE-GUIDE.md'),'Authoring sources excluded from public output');
 result.counts={pages:nav.length,apiPages:api.length,operations:ops.length,authoredSources:Object.keys(plan.sources).length,audiencePairs:Object.keys(plan.audiencePairs).length,lockedFiles:locked.length,redirects:redirects.size,checks:result.checks.length,tabs:Object.fromEntries(config.navigation.tabs.map(t=>[t.tab,flatten(t).length]))};

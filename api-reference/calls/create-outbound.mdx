@@ -77,7 +77,7 @@ HTTP 200 is the accepted replay shape: `call_id`, `request_id`, `status:"initiat
 
 ## Example request
 
-These examples use staging and can place a real call. Set NXF_STAGING_KEY, the owned agent and number, and an approved recipient before running. The cURL example also needs a durably saved NXF_REQUEST_ID. Keep the host and credential in the same environment.
+These examples use `https://api.nixflex.com` and can place a real call. Set NIXFLEX_API_KEY, the owned agent and number, and an approved recipient before running. The cURL example also needs a durably saved NXF_REQUEST_ID. Keep the account credential private.
 
 The cURL tab demonstrates the new request UUID. The SDK/CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later; the examples below omit request_id and retain the older launch behaviour. For UUID reconciliation, use the cURL request or the [SDK preparation workflow](/guides/developer/call-requests). No example retries a write.
 
@@ -87,16 +87,16 @@ The cURL tab demonstrates the new request UUID. The SDK/CLI examples require Nod
 # Save NXF_REQUEST_ID durably before this first deliberate launch.
 # Set NXF_TO_NUMBER to an approved recipient; this can place a real call.
 curl --request POST \
-  --url 'https://nixflex-voice-engine-staging.up.railway.app/v1/calls/outbound' \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url 'https://api.nixflex.com/v1/calls/outbound' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header 'Content-Type: application/json' \
   --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\",\"request_id\":\"$NXF_REQUEST_ID\"}"
 ```
 
 ```javascript Node · without UUID
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
 // Handle result privately; do not log secrets or call content.
 ```
@@ -105,14 +105,14 @@ const result = await client.calls.create({agent_id:process.env.NXF_AGENT_ID,from
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.calls.create(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI · without UUID
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex calls create --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -209,7 +209,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 409 | [`outbound_request_unknown`](/api-reference/errors#outbound_request_unknown) | The saved request has an uncertain outcome. | Retain its UUID and check call history. Never automatically redial with a new ID. |
 | 503 | [`outbound_request_unknown`](/api-reference/errors#outbound_request_unknown) | The call result or its final journal update could not be confirmed. | Treat the outcome as unknown and preserve request_id. Check its status before another deliberate intent. |
 | 503 | [`outbound_request_unavailable`](/api-reference/errors#outbound_request_unavailable) | The request journal could not be checked. | For a launch, retain unknown and safe_to_retry:false: an earlier attempt may have dialled. Retry the status read, not a new launch. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

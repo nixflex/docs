@@ -69,7 +69,7 @@ Headers are private and never returned by the list route. Timeout inputs are par
 
 ## Example request
 
-Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Save the request JSON fields from the example below in request-46.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` in your private process environment. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account at `https://api.nixflex.com`. Save the request JSON fields from the example below in request-46.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
 
 ```json request-46.json
 {
@@ -93,15 +93,15 @@ Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 o
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data-binary @request-46.json
 ```
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
 const result = await c.integrations.createFunction("+12025550123", {"name": "lookup_fixture", "url": "https://example.invalid/tool", "method": "POST", "headers": {"X-Fixture": "private_fixture_value"}, "parameters": {"type": "object", "properties": {}}, "speak_during": null, "timeout_ms": 0, "is_active": false});
 // Keep private responses out of logs and AI conversations.
 ```
@@ -109,14 +109,13 @@ const result = await c.integrations.createFunction("+12025550123", {"name": "loo
 ```python Python
 import os
 from nixflex import Nixflex
-with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
     result = c.integrations.create_function('+12025550123', name='lookup_fixture', url='https://example.invalid/tool', method='POST', headers={'X-Fixture': 'private_fixture_value'}, parameters={'type': 'object', 'properties': {}}, speak_during=None, timeout_ms=0, is_active=False)
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 # Save the documented JSON fields privately as request-46.json first.
-nixflex integrations createFunction '+12025550123' --body '@request-46.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex integrations createFunction '+12025550123' --body '@request-46.json' --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 
@@ -159,7 +158,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`limit_reached`](/api-reference/errors#limit_reached) | The number already has 15 functions. | Remove an unused function before creating another. |
 | 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
 | 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

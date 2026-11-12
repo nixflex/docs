@@ -1,0 +1,214 @@
+---
+title: "Read call booking results"
+description: "Read confirmed booking results for a Nixflex call. Distinguish ready, none, processing, deleted and unavailable without guessing from a transcript."
+openapi: "/api-reference/public.openapi.json GET /calls/{id}/bookings"
+playground: "simple"
+sidebarTitle: "Read call booking results"
+canonical: "https://docs.nixflex.com/api-reference/calls/get-bookings"
+---
+
+Read the retained booking result for one account-owned call. Only ready returns confirmed mutations and their final results.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Only ready returns a confirmed booking result; every other state has result:null.
+- none needs complete evidence of zero successful mutations. unavailable is not an empty result.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/booking-receptionist) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `id` (path) | string | Yes | Owned call identifier. Invalid, missing and foreign identifiers share the same 404. At most 200 characters |
+
+Do not send a request body.
+
+This read does not contact a calendar or place a call. Invalid, missing and foreign call IDs share one 404. A retained result describes this call, not the current calendar. It uses the same public projection as [call.bookings](/api-reference/call-bookings), without a delivery signature. The response uses Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns `call_id`, `state` and `result`. The response is `Cache-Control: no-store`.
+
+| State | Result | What to show |
+| --- | --- | --- |
+| ready | Confirmed object | Show timeline and final from the retained result of this call. |
+| none | null | No successful mutation, established by complete booking evidence. |
+| processing | null | Tracked call or post-call work is unfinished; offer a bounded refresh. |
+| deleted | null | Content was removed, immediately scheduled for deletion, expired or is being purged. |
+| unavailable | null | Old, partial or unconfirmed evidence; no definitive booking result. |
+
+For ready, result has the complete [call.bookings payload](/api-reference/call-bookings#payload). Count active rows in final; timeline counts actions. This is not the current calendar inventory. Do not infer none from a transcript, an empty legacy array or an unsuccessful call.
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url 'https://api.nixflex.com/v1/calls/call_example/bookings' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/calls/call_example/bookings', {
+  method: 'GET',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/calls/call_example/bookings', method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
+$result = Invoke-RestMethod -Method GET -Uri 'https://api.nixflex.com/v1/calls/call_example/bookings' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+<ResponseExample>
+
+```json ready
+{
+  "call_id": "call_example",
+  "state": "ready",
+  "result": {
+    "event": "call.bookings",
+    "call_id": "call_example",
+    "agent_id": "agent_example",
+    "from": "+12025550101",
+    "to": "+12025550100",
+    "number": "+12025550100",
+    "ended_at": "2030-11-04T09:05:00.000Z",
+    "timeline": [
+      {
+        "action": "created",
+        "booking_uid": "booking_example",
+        "start": "2030-11-04T10:00:00.000Z",
+        "end": "2030-11-04T10:30:00.000Z",
+        "attendee_name": "Sam Carter",
+        "attendee_email": "sam@example.test",
+        "service": "Consultation",
+        "timezone": "Europe/London",
+        "at": "2030-11-04T09:01:00.000Z"
+      },
+      {
+        "action": "rescheduled",
+        "booking_uid": "booking_example",
+        "start": "2030-11-04T11:00:00.000Z",
+        "end": "2030-11-04T11:30:00.000Z",
+        "attendee_name": "Sam Carter",
+        "attendee_email": "sam@example.test",
+        "service": "Consultation",
+        "timezone": "Europe/London",
+        "at": "2030-11-04T09:02:00.000Z"
+      }
+    ],
+    "final": [
+      {
+        "status": "active",
+        "booking_uid": "booking_example",
+        "start": "2030-11-04T11:00:00.000Z",
+        "end": "2030-11-04T11:30:00.000Z",
+        "attendee_name": "Sam Carter",
+        "attendee_email": "sam@example.test",
+        "service": "Consultation",
+        "timezone": "Europe/London"
+      }
+    ]
+  }
+}
+```
+
+```json none
+{
+  "call_id": "call_example",
+  "state": "none",
+  "result": null
+}
+```
+
+```json processing
+{
+  "call_id": "call_example",
+  "state": "processing",
+  "result": null
+}
+```
+
+```json deleted
+{
+  "call_id": "call_example",
+  "state": "deleted",
+  "result": null
+}
+```
+
+```json unavailable
+{
+  "call_id": "call_example",
+  "state": "unavailable",
+  "result": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 401 · `unauthorized` | The credential is missing or invalid. | Check the full account credential and API host privately; stop the retry loop. |
+| 403 · `permission_denied` | This actor cannot perform the operation. | Resolve the account or role restriction through an authorised person. |
+| 404 · `not_found` | Call identifier is invalid, missing or foreign. Check the owned ID. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 · `rate_limit_exceeded` | The request limit was reached. | Wait at least Retry-After and use a bounded read retry. |
+| 503 · `call_bookings_unavailable` | The read failed. Retry the read with bounded backoff; never show none. | Retry the read with bounded backoff. Keep the result unavailable; never display none. |
+
+A 503 call_bookings_unavailable is a failed read, not none. Keep the last known uncertainty and use bounded read retries. A 404 does not reveal another account’s calls.
+
+## Retry and idempotency
+
+This read does not place a call or change a booking. Retry temporary read failures with bounded backoff. Refresh processing only within a chosen time limit; preserve deleted and unavailable as distinct results. This endpoint is not paginated.
+
+## Related endpoints
+
+- [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

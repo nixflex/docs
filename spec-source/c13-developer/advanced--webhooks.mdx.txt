@@ -40,7 +40,7 @@ Build an HTTPS receiver that verifies Nixflex events, saves them durably and han
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Set all identifiers and the API host for the intended account and environment. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. The supplied client candidates are Node/CLI 0.11.0 and Python 0.4.0. Use the matching reviewed archive; a registry install alone does not establish that these methods are available. See the [client release guidance](/sdks/ecosystem). Use identifiers owned by the intended account. The API address is `https://api.nixflex.com`. Obtain the correct signing credential through the authorised Owner flow. With organisations enabled, provision the separate, stable organisation signing secret through the authorised Owner flow. API-key rotation does not rotate that separate secret. Older account mode uses the key secret instead; establish which mode applies before verifying events.
 
 ## 1. Read the configured destination
 
@@ -169,7 +169,7 @@ export function parseVerifiedEvent(rawBody, signatureHeader, signingSecret) {
 
 Legacy sender paths can produce an unsigned delivery if signing material is unavailable. `call.bookings` requires signing material and retries instead of sending unsigned. Reject or quarantine any unverified delivery without business side effects. The dashboard's unsigned reachability test can receive a refusal from this strict receiver; keep any separate reachability handler isolated from business processing.
 
-Before rollout, use an approved staging call to receive a genuinely signed event, verify it with the privately provisioned secret, process a duplicate without repeating work, and request private playback. This is a manual acceptance check, not something the dashboard's unsigned test proves.
+Before rollout, use an approved test call to receive a genuinely signed event, verify it with the privately provisioned secret, process a duplicate without repeating work, and request private playback. This is a manual acceptance check, not something the dashboard's unsigned test proves.
 
 ## Delivery timing and retries
 

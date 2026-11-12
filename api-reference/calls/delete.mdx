@@ -58,22 +58,22 @@ HTTP 200 confirms content deletion. It does not erase billing or every external 
 
 ## Example request
 
-This request changes the selected resource. Set `NXF_API_KEY` privately for the same account and host; use an owned identifier. The examples send once.
+This request changes the selected resource. Set `NIXFLEX_API_KEY` privately for the same account and host; use an owned identifier. The examples send once.
 
-The SDK/CLI tabs use the exact [supported clients](/sdks/ecosystem#install-a-client). Configure `NIXFLEX_API_KEY`, `NIXFLEX_BASE_URL` and `NXF_CALL_ID` privately. MCP uses the same intended account and host. SDKs preserve the known queued error; other uncertain errors use `outcome_unknown` with the server code in `details.original_code`.
+The SDK/CLI tabs use the exact [supported clients](/sdks/ecosystem#install-a-client). Configure `NIXFLEX_API_KEY` and `NXF_CALL_ID` privately. Use `https://api.nixflex.com` for MCP and the other clients with the same intended account. SDKs preserve the known queued error; other uncertain errors use `outcome_unknown` with the server code in `details.original_code`.
 
 <RequestExample>
 
 ```bash cURL
 curl --request DELETE \
   --url "https://api.nixflex.com/v1/calls/call_example" \
-  --header "Authorization: Bearer $NXF_API_KEY"
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node HTTP
 const response = await fetch("https://api.nixflex.com/v1/calls/call_example", {
   method: 'DELETE', redirect: 'error', signal: AbortSignal.timeout(30_000),
-  headers: {Authorization: `Bearer ${process.env.NXF_API_KEY}`},
+  headers: {Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`},
 });
 const result = await response.json();
 if (!response.ok && result.error?.code !== 'hangup_pending') {
@@ -94,7 +94,7 @@ class NoRedirect(HTTPRedirectHandler):
 
 opener = build_opener(NoRedirect())
 request = Request("https://api.nixflex.com/v1/calls/call_example", method="DELETE",
-    headers={"Authorization": "Bearer " + os.environ["NXF_API_KEY"]})
+    headers={"Authorization": "Bearer " + os.environ["NIXFLEX_API_KEY"]})
 try:
     with opener.open(request, timeout=30) as response:
         result = json.load(response)
@@ -108,7 +108,7 @@ except HTTPError as error:
 ```
 
 ```powershell PowerShell HTTP
-$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
 $deleted = $false
 try {
     $result = Invoke-RestMethod -Method DELETE -Uri "https://api.nixflex.com/v1/calls/call_example" -Headers $headers -MaximumRedirection 0 -TimeoutSec 30
@@ -126,7 +126,7 @@ try {
 import Nixflex, { NixflexServerError } from 'nixflex';
 
 const apiKey = process.env.NIXFLEX_API_KEY;
-const baseUrl = process.env.NIXFLEX_BASE_URL;
+const baseUrl = 'https://api.nixflex.com';
 const resourceId = process.env.NXF_CALL_ID;
 if (!apiKey || !baseUrl || !resourceId) throw new Error('Configure the account, host and approved resource ID.');
 const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
@@ -155,7 +155,7 @@ from nixflex import Nixflex
 from nixflex.errors import NixflexServerError
 
 with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
-             base_url=os.environ["NIXFLEX_BASE_URL"], max_retries=0) as client:
+             base_url="https://api.nixflex.com", max_retries=0) as client:
     try:
         receipt = client.calls.delete(os.environ["NXF_CALL_ID"])
         if (receipt.get("deleted") is not True
@@ -174,7 +174,7 @@ with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
 ```
 
 ```bash CLI
-nixflex calls delete "$NXF_CALL_ID" --confirm --json --base-url "$NIXFLEX_BASE_URL"
+nixflex calls delete "$NXF_CALL_ID" --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 ```json MCP

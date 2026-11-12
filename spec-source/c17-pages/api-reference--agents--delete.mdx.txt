@@ -1,0 +1,149 @@
+---
+title: "Disable an agent"
+description: "Disable an owned Nixflex agent. Understand the inactive state, retained record and checks before assigning numbers or starting calls."
+openapi: "/api-reference/public.openapi.json DELETE /agents/{id}"
+playground: "simple"
+sidebarTitle: "Disable agent"
+canonical: "https://docs.nixflex.com/api-reference/agents/delete"
+---
+
+Switch an owned agent off by setting is_active to false. GET still returns the inactive record. This is not permanent erasure.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This sets is_active:false; the owned agent record remains readable.
+- It does not detach numbers, erase history or wait for live calls to finish.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agents) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+| `id` (path) | string | Yes |  |
+
+Do not send a request body.
+
+This operation only writes `is_active=false` and updates the timestamp.
+In plain words: **switch off**, not permanent deletion or a wait-for-live-calls operation.
+It does not detach phone numbers, erase the row/history, or send carrier requests.
+
+The existing response is kept for compatibility, but its wording means **soft disable**:
+
+
+
+GET by ID can still return the owned disabled agent. List defaults to active only;
+use `status=disabled` or `status=all` to include it.
+PUT `{"is_active":true}` can re-enable it. This is not the dashboard's permanent erasure process.
+
+The update must affect an owned row before success is returned.
+Missing/foreign rows return `404 not_found`; database failures return
+`503 agent_store_unavailable`. Check the agent before retrying an uncertain result.
+
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `message` | string | Compatibility wording for switching the agent off. |
+
+
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NIXFLEX_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request DELETE \
+  --url 'https://api.nixflex.com/v1/agents/agent_example' \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/agents/agent_example', method='DELETE',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
+$result = Invoke-RestMethod -Method DELETE -Uri 'https://api.nixflex.com/v1/agents/agent_example' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{
+  "message": "Agent deleted"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
+| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
+| 500 | Server error. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
+| 503 | Agent storage or catalog unavailable; check before retrying a write. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
+
+
+
+## Retry and idempotency
+
+Disable automatic write retries. A lost response leaves the result uncertain; read the affected resource before another deliberate action. No general Idempotency-Key replay guarantee applies. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [Create an agent](/api-reference/agents/create)
+- [List agents](/api-reference/agents/list)
+- [Errors and recovery](/api-reference/errors#error-envelope)

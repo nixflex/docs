@@ -17,7 +17,7 @@ Use the Node SDK for server-side reads and deliberate writes, with durable outbo
 
 **The important part**
 
-- Keep the complete account credential on the server and supply the intended base URL.
+- Keep the complete account credential on the server and use `https://api.nixflex.com`.
 - Install the exact reviewed 0.11.0 candidate; the version alone is not its identity.
 - Prepare and save a call locally before a separately approved send.
 
@@ -41,14 +41,14 @@ This is a local candidate installation, not a promise that a registry install re
 
 ## Make one safe read
 
-Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately for the intended account and environment. The base URL is the origin without `/v1`; the client adds that prefix. Save this as an ES module, for example `read-usage.mjs`:
+Set `NIXFLEX_API_KEY` privately for the intended account. These examples use `https://api.nixflex.com`. The base URL is the origin without `/v1`; the client adds that prefix. Save this as an ES module, for example `read-usage.mjs`:
 
 ```javascript
 import Nixflex, { NixflexError } from 'nixflex';
 
 const apiKey = process.env.NIXFLEX_API_KEY;
-const baseUrl = process.env.NIXFLEX_BASE_URL;
-if (!apiKey || !baseUrl) throw new Error('Configure the account and API host privately.');
+const baseUrl = 'https://api.nixflex.com';
+if (!apiKey) throw new Error('Configure NIXFLEX_API_KEY privately.');
 const client = new Nixflex({apiKey, baseUrl, timeoutMs: 30_000, maxRetries: 0});
 
 try {
@@ -69,7 +69,7 @@ Keep the returned usage object private. Avoid logging complete error objects bec
 
 ## Prepare a call without sending it
 
-The following local script reads a private `intent.json` containing the reviewed call fields. It generates the UUID and saves an exclusive file; it sends no request. Store the file in an application-owned private directory and retain its account/environment binding.
+The following local script reads a private `intent.json` containing the reviewed call fields. It generates the UUID and saves an exclusive file; it sends no request. Store the file in an application-owned private directory and retain its account binding.
 
 ```javascript
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -94,8 +94,8 @@ import Nixflex, { NixflexError } from 'nixflex';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const apiKey = process.env.NIXFLEX_API_KEY;
-const baseUrl = process.env.NIXFLEX_BASE_URL;
-if (!apiKey || !baseUrl) throw new Error('Configure the original account and API host.');
+const baseUrl = 'https://api.nixflex.com';
+if (!apiKey) throw new Error('Configure the original account credential privately.');
 const saved = JSON.parse(readFileSync('prepared-call.json', 'utf8'));
 const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
 try {
@@ -141,7 +141,7 @@ The default timeout is 30 seconds. `maxRetries` defaults to one eligible GET ret
 
 | Failure | Recovery |
 | --- | --- |
-| Authentication or permission refusal | Correct the account/environment or authorised role. |
+| Authentication or permission refusal | Correct the account or authorised role. |
 | Read rate limit | Honour retry guidance with a bound. |
 | Unknown write | Read saved state before another deliberate operation. |
 | SMS `do_not_contact` | Stop; do not resend around the refusal. |

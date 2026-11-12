@@ -15,7 +15,7 @@ Build voice, SMS and knowledge workflows through the documented Nixflex API.
 
 **The important part**
 
-- Start with a read-only usage request to check the account and environment.
+- Start with a read-only usage request to check the account.
 - Use only documented public operations; a dashboard feature is not automatically an API endpoint.
 
 </div>
@@ -54,9 +54,11 @@ The [public OpenAPI file](/api-reference/public.openapi.json) describes all 151 
 
 A new agent has a maximum call duration of **300 seconds**, a silence hang-up delay of **10 seconds**, and **dynamic greeting enabled**. An existing agent keeps its stored settings when a field is omitted from an update. See the [agent contract](/api-reference/agents/contract) and [versioning and changelog](/api-reference/versioning).
 
-## Environments
+<span id="environments"></span>
 
-Production uses `https://api.nixflex.com`. The staging service is for testing only. Endpoint examples labeled staging use `https://nixflex-voice-engine-staging.up.railway.app` with `NXF_STAGING_KEY`; use your production origin and production key together in a live integration. Never send a staging credential to production.
+## API address
+
+Use `https://api.nixflex.com` for every API request. Store your full account credential privately as `NIXFLEX_API_KEY`. The API path starts with `/v1`; SDK base URLs use the origin without that prefix.
 
 ## Next steps
 

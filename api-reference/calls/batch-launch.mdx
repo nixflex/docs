@@ -61,22 +61,22 @@ Consent, suppression, recipient-local windows and capacity remain normal contact
 
 ## Example request
 
-These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NIXFLEX_API_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same account at `https://api.nixflex.com` before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/launch" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/calls/batch/campaign_fixture/launch" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
 
 const c = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
 const result = await c.campaigns.launch("campaign_fixture");
@@ -87,16 +87,15 @@ import os
 from nixflex import Nixflex
 
 with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
     max_retries=0,
 ) as c:
     result = c.campaigns.launch('campaign_fixture')
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
-nixflex campaigns launch campaign_fixture --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex campaigns launch campaign_fixture --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 ```json MCP
@@ -143,7 +142,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 503 | [`campaigns_paused`](/api-reference/errors#campaigns_paused) | Campaign admission is temporarily paused. | Wait before a deliberate retry; check any saved campaign first. |
 | 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
 | 409 | [`number_disabled`](/api-reference/errors#number_disabled) | Outbound voice is disabled for this number. | Check the saved campaign and number state. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

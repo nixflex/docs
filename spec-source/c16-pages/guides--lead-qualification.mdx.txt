@@ -31,7 +31,7 @@ Create one authorised outbound call with a specific purpose, then reconcile its 
 
 ## Prerequisites
 
-Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the intended owned sender and approved recipient.
+Keep `NIXFLEX_API_KEY` private on the server and use `https://api.nixflex.com`. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the intended owned sender and approved recipient.
 
 ## 1. Prepare a clear purpose
 
@@ -74,7 +74,7 @@ with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as 
 
 ```bash CLI
 : "${NXF_REQUEST_ID:?Load the saved request UUID before sending}"
-NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls create --request-id "$NXF_REQUEST_ID" --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
+nixflex calls create --request-id "$NXF_REQUEST_ID" --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
 ```
 
 </CodeGroup>

@@ -341,7 +341,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -397,9 +397,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.deleteScope(process.env.NXF_AGENT_ID, {\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.delete_scope(os.environ[\"NXF_AGENT_ID\"], {\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-65.json.\nnixflex knowledge deleteScope \"$env:NXF_AGENT_ID\" --body '@request-65.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.deleteScope(process.env.NXF_AGENT_ID, {\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.delete_scope(os.environ[\"NXF_AGENT_ID\"], {\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-65.json.\nnixflex knowledge deleteScope \"$env:NXF_AGENT_ID\" --body '@request-65.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -878,7 +878,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -898,9 +898,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getScope(process.env.NXF_AGENT_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_scope(os.environ[\"NXF_AGENT_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getScope \"$env:NXF_AGENT_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getScope(process.env.NXF_AGENT_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_scope(os.environ[\"NXF_AGENT_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getScope \"$env:NXF_AGENT_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -1452,7 +1452,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1508,9 +1508,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.putScope(process.env.NXF_AGENT_ID, {\"settings\":{\"channels\":[\"inbound\"],\"match\":\"Strict\",\"not_found\":\"I don't have that information right now.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.put_scope(os.environ[\"NXF_AGENT_ID\"], {\n      \"settings\": {\n        \"channels\": [\n          \"inbound\"\n        ],\n        \"match\": \"Strict\",\n        \"not_found\": \"I don't have that information right now.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-67.json.\nnixflex knowledge putScope \"$env:NXF_AGENT_ID\" --body '@request-67.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.putScope(process.env.NXF_AGENT_ID, {\"settings\":{\"channels\":[\"inbound\"],\"match\":\"Strict\",\"not_found\":\"I don't have that information right now.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.put_scope(os.environ[\"NXF_AGENT_ID\"], {\n      \"settings\": {\n        \"channels\": [\n          \"inbound\"\n        ],\n        \"match\": \"Strict\",\n        \"not_found\": \"I don't have that information right now.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-67.json.\nnixflex knowledge putScope \"$env:NXF_AGENT_ID\" --body '@request-67.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -1713,7 +1713,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -1859,9 +1859,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.measureSource(process.env.NXF_AGENT_ID, {\"text\":\"Appointments are available Monday to Friday.\"});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.measure_source(os.environ[\"NXF_AGENT_ID\"], {\n      \"text\": \"Appointments are available Monday to Friday.\"\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-69.json.\nnixflex knowledge measureSource \"$env:NXF_AGENT_ID\" --body '@request-69.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.measureSource(process.env.NXF_AGENT_ID, {\"text\":\"Appointments are available Monday to Friday.\"});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.measure_source(os.environ[\"NXF_AGENT_ID\"], {\n      \"text\": \"Appointments are available Monday to Friday.\"\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-69.json.\nnixflex knowledge measureSource \"$env:NXF_AGENT_ID\" --body '@request-69.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -2248,7 +2248,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2310,9 +2310,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.startSession(process.env.NXF_AGENT_ID, {\"mode\":\"knowledge\",\"channel\":\"inbound\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.start_session(os.environ[\"NXF_AGENT_ID\"], {\n      \"mode\": \"knowledge\",\n      \"channel\": \"inbound\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-70.json.\nnixflex knowledge startSession \"$env:NXF_AGENT_ID\" --body '@request-70.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.startSession(process.env.NXF_AGENT_ID, {\"mode\":\"knowledge\",\"channel\":\"inbound\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.start_session(os.environ[\"NXF_AGENT_ID\"], {\n      \"mode\": \"knowledge\",\n      \"channel\": \"inbound\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-70.json.\nnixflex knowledge startSession \"$env:NXF_AGENT_ID\" --body '@request-70.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -2589,7 +2589,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2609,9 +2609,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getBase(process.env.NXF_KNOWLEDGE_BASE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_base(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getBase \"$env:NXF_KNOWLEDGE_BASE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getBase(process.env.NXF_KNOWLEDGE_BASE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_base(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getBase \"$env:NXF_KNOWLEDGE_BASE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -2769,7 +2769,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -2825,9 +2825,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.discardDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_draft_revision\":0}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.discard_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_draft_revision\": 0\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-104.json.\nnixflex knowledge discardDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-104.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.discardDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_draft_revision\":0}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.discard_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_draft_revision\": 0\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-104.json.\nnixflex knowledge discardDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-104.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -3277,7 +3277,7 @@
       "status": 200,
       "exampleBody": null,
       "auth": "Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.",
-      "notes": "This GET projects legacy normalization and repairs without saving them. Piece IDs are stable within the draft. Explicit save or accept persists the same repair through the write path. Keep the returned data.edit_revision before editing or accepting. Older deployments may differ; check the rollout for your environment.",
+      "notes": "This GET projects legacy normalization and repairs without saving them. Piece IDs are stable within the draft. Explicit save or accept persists the same repair through the write path. Keep the returned data.edit_revision before editing or accepting. ",
       "errors": [
         [
           400,
@@ -3331,7 +3331,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -3351,9 +3351,9 @@
       "query": "",
       "retry": "Use bounded retries for temporary read failures. This deployed GET does not persist repairs. Read the current edit revision before any deliberate save or acceptance; writes still need their own revision and idempotency checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -3950,7 +3950,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4006,9 +4006,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.updateDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"expected_draft_revision\":0,\"topic_id\":\"22222222-2222-4222-8222-222222222222\",\"topic\":{\"title\":\"Appointments\",\"facts\":\"Appointments are available Monday to Friday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.update_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"expected_draft_revision\": 0,\n      \"topic_id\": \"22222222-2222-4222-8222-222222222222\",\n      \"topic\": {\n        \"title\": \"Appointments\",\n        \"facts\": \"Appointments are available Monday to Friday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-106.json.\nnixflex knowledge updateDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-106.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.updateDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"expected_draft_revision\":0,\"topic_id\":\"22222222-2222-4222-8222-222222222222\",\"topic\":{\"title\":\"Appointments\",\"facts\":\"Appointments are available Monday to Friday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.update_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"expected_draft_revision\": 0,\n      \"topic_id\": \"22222222-2222-4222-8222-222222222222\",\n      \"topic\": {\n        \"title\": \"Appointments\",\n        \"facts\": \"Appointments are available Monday to Friday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-106.json.\nnixflex knowledge updateDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-106.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -4421,7 +4421,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4501,9 +4501,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.acceptDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"expected_draft_revision\":0,\"topic_ids\":[\"22222222-2222-4222-8222-222222222222\"]}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.accept_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"expected_draft_revision\": 0,\n      \"topic_ids\": [\n        \"22222222-2222-4222-8222-222222222222\"\n      ]\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-107.json.\nnixflex knowledge acceptDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-107.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.acceptDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"expected_draft_revision\":0,\"topic_ids\":[\"22222222-2222-4222-8222-222222222222\"]}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.accept_draft(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"expected_draft_revision\": 0,\n      \"topic_ids\": [\n        \"22222222-2222-4222-8222-222222222222\"\n      ]\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-107.json.\nnixflex knowledge acceptDraft \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-107.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -4859,7 +4859,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -4921,9 +4921,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.createExport(process.env.NXF_KNOWLEDGE_BASE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.create_export(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-108.json.\nnixflex knowledge createExport \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-108.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.createExport(process.env.NXF_KNOWLEDGE_BASE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.create_export(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-108.json.\nnixflex knowledge createExport \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-108.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -5086,7 +5086,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5106,9 +5106,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.overview(process.env.NXF_KNOWLEDGE_BASE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.overview(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge overview \"$env:NXF_KNOWLEDGE_BASE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.overview(process.env.NXF_KNOWLEDGE_BASE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.overview(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge overview \"$env:NXF_KNOWLEDGE_BASE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -5463,7 +5463,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5513,9 +5513,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.updateSettings(process.env.NXF_KNOWLEDGE_BASE_ID, {\"expected_revision\":1,\"settings\":{\"match\":\"Normal\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.update_settings(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"expected_revision\": 1,\n      \"settings\": {\n        \"match\": \"Normal\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-110.json.\nnixflex knowledge updateSettings \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-110.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.updateSettings(process.env.NXF_KNOWLEDGE_BASE_ID, {\"expected_revision\":1,\"settings\":{\"match\":\"Normal\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.update_settings(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"expected_revision\": 1,\n      \"settings\": {\n        \"match\": \"Normal\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-110.json.\nnixflex knowledge updateSettings \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-110.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -5716,7 +5716,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -5736,9 +5736,9 @@
       "query": "?limit=2",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.listSources(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.list_sources(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-111.json.\nnixflex knowledge listSources \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-111.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.listSources(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.list_sources(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-111.json.\nnixflex knowledge listSources \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-111.json' --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -6159,7 +6159,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6329,9 +6329,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.addSource(process.env.NXF_KNOWLEDGE_BASE_ID, {\"source\":{\"type\":\"text\",\"title\":\"Appointments\",\"text\":\"Appointments are available Monday to Friday.\"},\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.add_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"source\": {\n        \"type\": \"text\",\n        \"title\": \"Appointments\",\n        \"text\": \"Appointments are available Monday to Friday.\"\n      },\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-112.json.\nnixflex knowledge addSource \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-112.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.addSource(process.env.NXF_KNOWLEDGE_BASE_ID, {\"source\":{\"type\":\"text\",\"title\":\"Appointments\",\"text\":\"Appointments are available Monday to Friday.\"},\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.add_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"source\": {\n        \"type\": \"text\",\n        \"title\": \"Appointments\",\n        \"text\": \"Appointments are available Monday to Friday.\"\n      },\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-112.json.\nnixflex knowledge addSource \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-112.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -6525,7 +6525,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6587,9 +6587,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.deleteSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"topic_ids\":[\"22222222-2222-4222-8222-222222222222\"],\"manual\":\"keep\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.delete_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic_ids\": [\n        \"22222222-2222-4222-8222-222222222222\"\n      ],\n      \"manual\": \"keep\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-113.json.\nnixflex knowledge deleteSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-113.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.deleteSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"topic_ids\":[\"22222222-2222-4222-8222-222222222222\"],\"manual\":\"keep\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.delete_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic_ids\": [\n        \"22222222-2222-4222-8222-222222222222\"\n      ],\n      \"manual\": \"keep\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-113.json.\nnixflex knowledge deleteSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-113.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -6795,7 +6795,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -6845,9 +6845,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.renameSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"title\":\"Appointment guide\",\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.rename_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"title\": \"Appointment guide\",\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-114.json.\nnixflex knowledge renameSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-114.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.renameSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"title\":\"Appointment guide\",\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.rename_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"title\": \"Appointment guide\",\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-114.json.\nnixflex knowledge renameSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-114.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -7295,7 +7295,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7459,9 +7459,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.replaceSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"source\":{\"type\":\"text\",\"text\":\"Appointments are available Monday through Saturday.\"},\"expected_revision\":1,\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.replace_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"source\": {\n        \"type\": \"text\",\n        \"text\": \"Appointments are available Monday through Saturday.\"\n      },\n      \"expected_revision\": 1,\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-115.json.\nnixflex knowledge replaceSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-115.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.replaceSource(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"source\":{\"type\":\"text\",\"text\":\"Appointments are available Monday through Saturday.\"},\"expected_revision\":1,\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.replace_source(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"source\": {\n        \"type\": \"text\",\n        \"text\": \"Appointments are available Monday through Saturday.\"\n      },\n      \"expected_revision\": 1,\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-115.json.\nnixflex knowledge replaceSource \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-115.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -7841,7 +7841,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -7909,9 +7909,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.refreshSources(process.env.NXF_KNOWLEDGE_BASE_ID, {\"source_ids\":[\"11111111-1111-4111-8111-111111111111\"],\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.refresh_sources(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"source_ids\": [\n        \"11111111-1111-4111-8111-111111111111\"\n      ],\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-116.json.\nnixflex knowledge refreshSources \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-116.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.refreshSources(process.env.NXF_KNOWLEDGE_BASE_ID, {\"source_ids\":[\"11111111-1111-4111-8111-111111111111\"],\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.refresh_sources(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"source_ids\": [\n        \"11111111-1111-4111-8111-111111111111\"\n      ],\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-116.json.\nnixflex knowledge refreshSources \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-116.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -8275,7 +8275,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -8325,9 +8325,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.searchTopics(process.env.NXF_KNOWLEDGE_BASE_ID, {\"query\":\"appointment times\"});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.search_topics(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"query\": \"appointment times\"\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-117.json.\nnixflex knowledge searchTopics \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-117.json' --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.searchTopics(process.env.NXF_KNOWLEDGE_BASE_ID, {\"query\":\"appointment times\"});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.search_topics(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"query\": \"appointment times\"\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-117.json.\nnixflex knowledge searchTopics \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-117.json' --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -8690,7 +8690,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -8716,9 +8716,9 @@
       "query": "?limit=2",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.listTopics(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.list_topics(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-118.json.\nnixflex knowledge listTopics \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-118.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.listTopics(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.list_topics(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-118.json.\nnixflex knowledge listTopics \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-118.json' --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -9163,7 +9163,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -9231,9 +9231,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.createTopic(process.env.NXF_KNOWLEDGE_BASE_ID, {\"expected_revision\":1,\"topic\":{\"title\":\"Appointments\",\"facts\":\"Appointments are available Monday to Friday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.create_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic\": {\n        \"title\": \"Appointments\",\n        \"facts\": \"Appointments are available Monday to Friday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-119.json.\nnixflex knowledge createTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-119.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.createTopic(process.env.NXF_KNOWLEDGE_BASE_ID, {\"expected_revision\":1,\"topic\":{\"title\":\"Appointments\",\"facts\":\"Appointments are available Monday to Friday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.create_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic\": {\n        \"title\": \"Appointments\",\n        \"facts\": \"Appointments are available Monday to Friday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-119.json.\nnixflex knowledge createTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-119.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -9403,7 +9403,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -9453,9 +9453,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.deleteTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.delete_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-120.json.\nnixflex knowledge deleteTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-120.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.deleteTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.delete_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-120.json.\nnixflex knowledge deleteTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-120.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -9786,7 +9786,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -9806,9 +9806,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -10261,7 +10261,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -10329,9 +10329,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.updateTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"topic\":{\"facts\":\"Appointments are available Monday through Saturday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.update_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic\": {\n        \"facts\": \"Appointments are available Monday through Saturday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-122.json.\nnixflex knowledge updateTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-122.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.updateTopic(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {\"expected_revision\":1,\"topic\":{\"facts\":\"Appointments are available Monday through Saturday.\"}}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.update_topic(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], os.environ[\"NXF_RESOURCE_ID\"], {\n      \"expected_revision\": 1,\n      \"topic\": {\n        \"facts\": \"Appointments are available Monday through Saturday.\"\n      }\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-122.json.\nnixflex knowledge updateTopic \"$env:NXF_KNOWLEDGE_BASE_ID\" \"$env:NXF_RESOURCE_ID\" --body '@request-122.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -10518,7 +10518,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -10538,9 +10538,9 @@
       "query": "?limit=2",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.unanswered(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.unanswered(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-123.json.\nnixflex knowledge unanswered \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-123.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.unanswered(process.env.NXF_KNOWLEDGE_BASE_ID, {\"limit\":2});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.unanswered(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-123.json.\nnixflex knowledge unanswered \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-123.json' --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -10901,7 +10901,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -10975,9 +10975,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.discoverWebsite(process.env.NXF_KNOWLEDGE_BASE_ID, {\"url\":\"https://example.com\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.discover_website(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"url\": \"https://example.com\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-124.json.\nnixflex knowledge discoverWebsite \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-124.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.discoverWebsite(process.env.NXF_KNOWLEDGE_BASE_ID, {\"url\":\"https://example.com\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.discover_website(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"url\": \"https://example.com\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-124.json.\nnixflex knowledge discoverWebsite \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-124.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -11358,7 +11358,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -11426,9 +11426,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.importWebsite(process.env.NXF_KNOWLEDGE_BASE_ID, {\"discovery_id\":\"11111111-1111-4111-8111-111111111111\",\"page_ids\":[\"page_fixture\"],\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.import_website(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"discovery_id\": \"11111111-1111-4111-8111-111111111111\",\n      \"page_ids\": [\n        \"page_fixture\"\n      ],\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-125.json.\nnixflex knowledge importWebsite \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-125.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.importWebsite(process.env.NXF_KNOWLEDGE_BASE_ID, {\"discovery_id\":\"11111111-1111-4111-8111-111111111111\",\"page_ids\":[\"page_fixture\"],\"review\":true}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.import_website(os.environ[\"NXF_KNOWLEDGE_BASE_ID\"], {\n      \"discovery_id\": \"11111111-1111-4111-8111-111111111111\",\n      \"page_ids\": [\n        \"page_fixture\"\n      ],\n      \"review\": True\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-125.json.\nnixflex knowledge importWebsite \"$env:NXF_KNOWLEDGE_BASE_ID\" --body '@request-125.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -11767,7 +11767,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -11786,9 +11786,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.capabilities();\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.capabilities()\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge capabilities  --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.capabilities();\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.capabilities()\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge capabilities  --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -11987,7 +11987,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -12007,9 +12007,9 @@
       "query": "?cursor=0",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.events({\"cursor\":\"0\"});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.events({\n      \"cursor\": \"0\"\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-127.json.\nnixflex knowledge events  --body '@request-127.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.events({\"cursor\":\"0\"});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.events({\n      \"cursor\": \"0\"\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-127.json.\nnixflex knowledge events  --body '@request-127.json' --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -12622,7 +12622,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -12654,9 +12654,9 @@
       "query": "?format=text",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nimport { pipeline } from 'node:stream/promises';\nimport { open } from 'node:fs/promises';\n\nconst file = await open('knowledge-export.json', 'wx', 0o600);\ntry {\n  await pipeline(c.knowledge.downloadExport(process.env.NXF_RESOURCE_ID, {format:'text'}), file.createWriteStream());\n} finally {\n  await file.close();\n}\n// This file contains JSON with filename/content_type/text.\n// On failure, discard the partial file before starting a new download.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    chunks = c.knowledge.download_export(os.environ[\"NXF_RESOURCE_ID\"], {\"format\":\"text\"})\n    try:\n        with open(\"knowledge-export.json\", \"xb\") as output:\n            for chunk in chunks:\n                output.write(chunk)\n    finally:\n        chunks.close()\n# This is a JSON envelope. Discard partial output after a failed transfer.\n# Async: use async for on the returned iterator, without an initial await; aclose it.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-128.json.\nnixflex knowledge downloadExport \"$env:NXF_RESOURCE_ID\" --body '@request-128.json' --output knowledge-export.json --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nimport { pipeline } from 'node:stream/promises';\nimport { open } from 'node:fs/promises';\n\nconst file = await open('knowledge-export.json', 'wx', 0o600);\ntry {\n  await pipeline(c.knowledge.downloadExport(process.env.NXF_RESOURCE_ID, {format:'text'}), file.createWriteStream());\n} finally {\n  await file.close();\n}\n// This file contains JSON with filename/content_type/text.\n// On failure, discard the partial file before starting a new download.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    chunks = c.knowledge.download_export(os.environ[\"NXF_RESOURCE_ID\"], {\"format\":\"text\"})\n    try:\n        with open(\"knowledge-export.json\", \"xb\") as output:\n            for chunk in chunks:\n                output.write(chunk)\n    finally:\n        chunks.close()\n# This is a JSON envelope. Discard partial output after a failed transfer.\n# Async: use async for on the returned iterator, without an initial await; aclose it.",
+        "cli": "# Save the JSON below privately as request-128.json.\nnixflex knowledge downloadExport \"$env:NXF_RESOURCE_ID\" --body '@request-128.json' --output knowledge-export.json --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -12989,7 +12989,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -13410,9 +13410,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getJob(process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_job(os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getJob \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getJob(process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_job(os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getJob \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -13761,7 +13761,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -13817,9 +13817,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.cancelJob(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.cancel_job(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-130.json.\nnixflex knowledge cancelJob \"$env:NXF_RESOURCE_ID\" --body '@request-130.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.cancelJob(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.cancel_job(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-130.json.\nnixflex knowledge cancelJob \"$env:NXF_RESOURCE_ID\" --body '@request-130.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -14168,7 +14168,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -14230,9 +14230,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.retryJob(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.retry_job(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-131.json.\nnixflex knowledge retryJob \"$env:NXF_RESOURCE_ID\" --body '@request-131.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.retryJob(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.retry_job(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-131.json.\nnixflex knowledge retryJob \"$env:NXF_RESOURCE_ID\" --body '@request-131.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -14450,7 +14450,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -14470,9 +14470,9 @@
       "query": "?limit=2",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.targets({\"limit\":2});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.targets({\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-132.json.\nnixflex knowledge targets  --body '@request-132.json' --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.targets({\"limit\":2});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.targets({\n      \"limit\": 2\n    })\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-132.json.\nnixflex knowledge targets  --body '@request-132.json' --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -14813,7 +14813,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -14839,9 +14839,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.getSession(process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.get_session(os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge getSession \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.getSession(process.env.NXF_RESOURCE_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.get_session(os.environ[\"NXF_RESOURCE_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge getSession \"$env:NXF_RESOURCE_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -15200,7 +15200,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -15256,9 +15256,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.cancelSession(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.cancel_session(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-134.json.\nnixflex knowledge cancelSession \"$env:NXF_RESOURCE_ID\" --body '@request-134.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.cancelSession(process.env.NXF_RESOURCE_ID, {}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.cancel_session(os.environ[\"NXF_RESOURCE_ID\"], {}, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-134.json.\nnixflex knowledge cancelSession \"$env:NXF_RESOURCE_ID\" --body '@request-134.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -15508,7 +15508,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -15606,9 +15606,9 @@
       "query": "",
       "retry": "Use a new Idempotency-Key for each intended change. The same key with the identical operation and payload replays the stored result; a different payload conflicts. Do not automatically repeat an uncertain write. Read the current job/resource first, then reconcile with the original key. Check expected_revision against current state; a fresh key does not bypass revision checks.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.ask(process.env.NXF_RESOURCE_ID, {\"text\":\"When are appointments available?\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.ask(os.environ[\"NXF_RESOURCE_ID\"], {\n      \"text\": \"When are appointments available?\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\n# Save the JSON below privately as request-135.json.\nnixflex knowledge ask \"$env:NXF_RESOURCE_ID\" --body '@request-135.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.ask(process.env.NXF_RESOURCE_ID, {\"text\":\"When are appointments available?\"}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.ask(os.environ[\"NXF_RESOURCE_ID\"], {\n      \"text\": \"When are appointments available?\"\n    }, idempotency_key=os.environ[\"NXF_IDEMPOTENCY_KEY\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "# Save the JSON below privately as request-135.json.\nnixflex knowledge ask \"$env:NXF_RESOURCE_ID\" --body '@request-135.json' --idempotency-key \"$env:NXF_IDEMPOTENCY_KEY\" --confirm --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -15937,7 +15937,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -15957,9 +15957,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.usage();\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.usage()\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge usage  --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.usage();\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.usage()\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge usage  --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",
@@ -16107,7 +16107,7 @@
           401,
           "unauthorized",
           "The credential is missing or invalid.",
-          "Check the account credential and environment."
+          "Check the full account credential."
         ],
         [
           429,
@@ -16127,9 +16127,9 @@
       "query": "",
       "retry": "This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.",
       "kitExamples": {
-        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});\nconst result = await c.knowledge.keyterms(process.env.NXF_AGENT_ID);\n// Keep knowledge and private results out of logs.",
-        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NXF_STAGING_KEY\"], base_url=\"https://nixflex-voice-engine-staging.up.railway.app\", max_retries=0) as c:\n    result = c.knowledge.keyterms(os.environ[\"NXF_AGENT_ID\"])\n    # Keep knowledge and private results out of logs.",
-        "cli": "$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY\nnixflex knowledge keyterms \"$env:NXF_AGENT_ID\" --json --base-url \"https://nixflex-voice-engine-staging.up.railway.app\"",
+        "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.knowledge.keyterms(process.env.NXF_AGENT_ID);\n// Keep knowledge and private results out of logs.",
+        "python": "import os\nfrom nixflex import Nixflex\n\nwith Nixflex(api_key=os.environ[\"NIXFLEX_API_KEY\"], base_url=\"https://api.nixflex.com\", max_retries=0) as c:\n    result = c.knowledge.keyterms(os.environ[\"NXF_AGENT_ID\"])\n    # Keep knowledge and private results out of logs.",
+        "cli": "nixflex knowledge keyterms \"$env:NXF_AGENT_ID\" --json --base-url \"https://api.nixflex.com\"",
         "nt": "Node",
         "pt": "Python",
         "ct": "CLI (PowerShell)",

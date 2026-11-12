@@ -5,7 +5,7 @@ description: "Connect Cursor to the Nixflex MCP server using private environment
 canonical: "https://docs.nixflex.com/ai-tools/cursor"
 ---
 
-Connect Cursor to a local Nixflex MCP process for your selected account and API environment.
+Connect Cursor to a local Nixflex MCP process for your selected account.
 
 <div className="nxf-audience">
 
@@ -44,7 +44,7 @@ Illustrative conversation between colleagues.
 ## Connect
 
 1. [Set up the MCP server](/ai-tools/overview#install-the-mcp-server) with Node 22 or later.
-2. Have your private launcher or secret manager provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` to Cursor. Fully restart Cursor from that environment. Never paste the key into chat or a config file.
+2. Have your private launcher or secret manager provide `NIXFLEX_API_KEY` to Cursor. Fully restart Cursor from that environment. Never paste the key into chat or a config file.
 3. Add the entry below to your user `~/.cursor/mcp.json`, preserving other servers. For project-only use, Cursor also supports `.cursor/mcp.json` in the project. The example contains variable references, not credentials.
 4. Ensure npx is available to Cursor. On Windows, use `"command": "cmd.exe"` and `"args": ["/c", "npx", "-y", "nixflex-mcp"]` if the client needs an executable wrapper.
 5. Open Cursor's MCP settings, check that Nixflex connects, and inspect the tool list before approving the read below.
@@ -60,7 +60,7 @@ Illustrative conversation between colleagues.
       ],
       "env": {
         "NIXFLEX_API_KEY": "${env:NIXFLEX_API_KEY}",
-        "NIXFLEX_BASE_URL": "${env:NIXFLEX_BASE_URL}",
+        "NIXFLEX_BASE_URL": "https://api.nixflex.com",
         "NIXFLEX_CREDENTIAL_SOURCE": "environment"
       }
     }

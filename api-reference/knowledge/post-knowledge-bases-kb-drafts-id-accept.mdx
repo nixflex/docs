@@ -98,7 +98,7 @@ Acceptance queues indexing; it is not immediate publication. Unticked existing p
 
 ## Example request
 
-These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the staging credential in `NXF_STAGING_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Set `NXF_IDEMPOTENCY_KEY` to a new valid key for one intended operation. This operation changes state. Review the request and disable automatic write retries.
 
 ```json request-107.json
 {
@@ -114,8 +114,8 @@ These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed ve
 
 ```bash cURL (Bash)
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/drafts/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')/accept" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/drafts/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')/accept" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Idempotency-Key: $NXF_IDEMPOTENCY_KEY" \
   --header "Content-Type: application/json" \
   --data '{"expected_revision":1,"expected_draft_revision":0,"topic_ids":["22222222-2222-4222-8222-222222222222"]}'
@@ -123,7 +123,7 @@ curl --request POST \
 
 ```javascript Node
 import { Nixflex } from 'nixflex';
-const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
 const result = await c.knowledge.acceptDraft(process.env.NXF_KNOWLEDGE_BASE_ID, process.env.NXF_RESOURCE_ID, {"expected_revision":1,"expected_draft_revision":0,"topic_ids":["22222222-2222-4222-8222-222222222222"]}, {idempotencyKey:process.env.NXF_IDEMPOTENCY_KEY});
 // Keep knowledge and private results out of logs.
 ```
@@ -132,7 +132,7 @@ const result = await c.knowledge.acceptDraft(process.env.NXF_KNOWLEDGE_BASE_ID, 
 import os
 from nixflex import Nixflex
 
-with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
     result = c.knowledge.accept_draft(os.environ["NXF_KNOWLEDGE_BASE_ID"], os.environ["NXF_RESOURCE_ID"], {
       "expected_revision": 1,
       "expected_draft_revision": 0,
@@ -144,9 +144,8 @@ with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-vo
 ```
 
 ```powershell CLI (PowerShell)
-$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
 # Save the JSON below privately as request-107.json.
-nixflex knowledge acceptDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" --body '@request-107.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+nixflex knowledge acceptDraft "$env:NXF_KNOWLEDGE_BASE_ID" "$env:NXF_RESOURCE_ID" --body '@request-107.json' --idempotency-key "$env:NXF_IDEMPOTENCY_KEY" --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 </RequestExample>
@@ -195,7 +194,7 @@ Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and op
 | 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
 | 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
 | 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
 | 409 | [`draft_closed`](/api-reference/errors#draft_closed) | This review has already been accepted. | Read current state and resolve the conflict before sending a new request. |
 | 409 | [`review_required`](/api-reference/errors#review_required) | Review and acknowledge the warnings before accepting. | Read current state and resolve the conflict before sending a new request. |

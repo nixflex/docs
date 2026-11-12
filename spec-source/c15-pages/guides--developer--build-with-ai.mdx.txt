@@ -1,14 +1,14 @@
 ---
 title: "Build your app or SaaS with AI"
-sidebarTitle: "Overview"
-description: "Build a Nixflex-powered app with an AI coding assistant, server-side credentials, explicit customer isolation and verified call or booking results."
+sidebarTitle: "Build your app"
+description: "Plan and build a Nixflex app or SaaS with an AI assistant. Define the brief, protect customer data and review calls, messages and results together."
 canonical: "https://docs.nixflex.com/guides/developer/build-with-ai"
 ---
 
-Use an AI coding assistant to build the application around Nixflex while your server owns credentials, permissions and result handling.
+Plan your app with an AI assistant, then build one reviewed workflow at a time. Business owners define the outcome; developers keep credentials, permissions and results on the server.
 
 <div className="nxf-facts">
-  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Audience</small><strong>Business owners and developers</strong></div>
   <div><small>Credential</small><strong>Server only</strong></div>
 </div>
 
@@ -24,9 +24,15 @@ Use an AI coding assistant to build the application around Nixflex while your se
 
 <div className="nxf-audience">
 
-[Business guide](/guides/business/build-with-ai) · [Glossary](/guides/glossary)
+[Business guide](/business) · [Developer guide](/guides) · [Glossary](/guides/glossary)
 
 </div>
+
+## Write the brief
+
+Describe who will use the app, the screens they need and what a successful result looks like. Include who may view customer data, approve calls or messages, and change settings. Start with one useful task instead of asking the assistant to build everything at once.
+
+<span id="decide-the-customer-boundary"></span>
 
 ## Design the account boundary first
 
@@ -55,6 +61,15 @@ Use [API reference](/api-reference/introduction) and [client support](/sdks/ecos
 3. Persist the request intent before sending. Outbound calls can use a saved UUID for [request reconciliation](/guides/developer/call-requests).
 4. Receive signed webhook events durably and deduplicate by the documented identity.
 5. Read the resulting call, recording or booking state before displaying completion.
+
+## Review before testing
+
+| Check | What to review |
+| --- | --- |
+| Secrets | The account key stays on the server, outside prompts, logs and browser code. |
+| Permissions | Every request checks which customer and resources the signed-in person may use. |
+| Results | Loading, failure and an unknown outcome stay distinct from a completed call or booking. |
+| Changes | The person approving a write sees the exact recipient, resource and effect. |
 
 ## Test with synthetic results first
 

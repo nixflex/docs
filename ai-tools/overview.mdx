@@ -101,14 +101,16 @@ Keep keys out of chats, screenshots and shared files. Use your client’s privat
 | Variable | Value |
 | --- | --- |
 | `NIXFLEX_API_KEY` | The full organisation key pair, injected privately |
-| `NIXFLEX_BASE_URL` | `https://api.nixflex.com`, with the matching production key |
+| `NIXFLEX_BASE_URL` | `https://api.nixflex.com`, the fixed Nixflex API address |
 | `NIXFLEX_CREDENTIAL_SOURCE` | `environment` |
 
-For approved staging tests, pair the staging key with `https://nixflex-voice-engine-staging.up.railway.app`. Restart after changing the environment. Never ask the assistant to inspect secrets. Missing environment keys or URLs are refused.
+Restart the client after changing its private configuration. Never ask the assistant to inspect secrets. Missing required keys or API addresses are refused.
 
 Environment injection keeps keys out of these examples but does not make every local process a secret vault. Legacy CLI credential files are plaintext; keep them out of projects and cloud-synced folders.
 
 <span id="install-the-supplied-local-package"></span>
+
+Start with [Build your app or SaaS with AI](/guides/developer/build-with-ai) if you are planning a new product.
 
 ## Install the MCP server
 
@@ -120,7 +122,7 @@ npx -y nixflex-mcp
 
 Use MCP 0.5.0 or later. In a client configuration, set the command to `npx` and the arguments to `["-y", "nixflex-mcp"]`. On Windows, use `cmd.exe` with arguments `["/c", "npx", "-y", "nixflex-mcp"]` when the client needs an executable wrapper.
 
-Supply `NIXFLEX_API_KEY`, the matching `NIXFLEX_BASE_URL` and `NIXFLEX_CREDENTIAL_SOURCE=environment` through the client's private environment settings. Follow the [Claude](/ai-tools/claude), [Cursor](/ai-tools/cursor) or [Codex](/ai-tools/codex) instructions for that client's format. Restart the client after configuration; do not enter a key in a conversation or tool argument.
+Supply `NIXFLEX_API_KEY`, `NIXFLEX_BASE_URL=https://api.nixflex.com` and `NIXFLEX_CREDENTIAL_SOURCE=environment` through the client's private environment settings. Follow the [Claude](/ai-tools/claude), [Cursor](/ai-tools/cursor) or [Codex](/ai-tools/codex) instructions for that client's format. Restart the client after configuration; do not enter a key in a conversation or tool argument.
 
 ## Verify with one read
 

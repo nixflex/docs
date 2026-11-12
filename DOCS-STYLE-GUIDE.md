@@ -138,19 +138,28 @@ C15 applies this standard to the complete merged Business, Developer, API, SDK/C
 
 Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, the C13 and C14 layers, the final C15 sources/navigation/metadata and the whole-site manifest. The frozen C8 test runner is not regenerated without test-change approval. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified client examples when adding a newer HTTP capability; state the minimum supported client version clearly. Remove old command examples when the reviewed client no longer exposes them.
 
-The current complete source check is `scripts/check-c15-source.mjs`. Historical tests and validators remain locked at the approved C15 reconciliation `509e7d8`, with only the exact C16 release-wording edits recorded in `spec-source/c15-pages.json`. Earlier scope snapshots intentionally describe smaller page sets. Run historical checks separately and preserve their exact results; a new scope check does not silently rewrite or waive an old assertion. Any proposed locked-check change belongs in BEFORE-AFTER.md for approval.
+The current complete source check is `scripts/check-c15-source.mjs`. Historical tests and validators remain locked at live C16 `c271451`, with only the exact approved C17 tab-name edits recorded in `spec-source/c15-pages.json`. Earlier scope snapshots intentionally describe smaller page sets. Run historical checks separately and preserve their exact results; a new scope check does not silently rewrite or waive an old assertion. Any proposed locked-check change belongs in BEFORE-AFTER.md for approval.
 
 
 ## C15 maintenance precedence
 
-`spec-source/c15-pages.json` owns the final five-tab navigation, short sidebar labels, metadata, permanent redirects and merged topic map. Its `sources` map identifies the final authored MDX for changed and new pages in `spec-source/c15-pages/` or `spec-source/c16-pages/`. Edit those sources first when present; otherwise use the earlier source table. `scripts/build-c15-pages.mjs` runs after earlier builders and removes the three consolidated duplicate files from publication. Preserve their redirected URLs and section anchors.
+`spec-source/c15-pages.json` owns the final five-tab navigation, short sidebar labels, metadata, permanent redirects and merged topic map. Its `sources` map identifies the final authored MDX for changed and new pages in `spec-source/c15-pages/` or `spec-source/c16-pages/` or `spec-source/c17-pages/`. Edit those sources first when present; otherwise use the earlier source table. `scripts/build-c15-pages.mjs` runs after earlier builders and removes the four consolidated duplicate files from publication. Preserve their redirected URLs and section anchors.
 
 The final menu follows the approved feature groups, with an overview before task pages. Existing page URLs stay stable unless a true duplicate is consolidated. All old live URLs must either retain their useful page or redirect directly to its replacement. Do not create self-redirects or redirect chains.
 
 The final logo is the green voice ring on its dark tile, with a lowercase Inter 600 wordmark and the flat small-size favicon. Keep both light and dark variants. Public copy may name Inworld, Cartesia and Deepgram when useful. Do not name internal model or backend providers. Customer-owned connection guides may identify services the customer connects.
 
-C15’s independent current-scope gate is `scripts/check-c15-source.mjs`. Historical scope and contract assertions remain frozen at approved commit `509e7d8`, except for the three explicitly approved C16 release-wording test edits. Their normalized hashes are in the final source plan. Record any incompatible assertion and its proposed replacement in BEFORE-AFTER.md; never change a test simply to turn a result green.
+C15’s independent current-scope gate is `scripts/check-c15-source.mjs`. Historical scope and contract assertions remain frozen at live C16 `c271451`, except for the six explicitly approved C17 tab-name assertion edits. Their normalized hashes are in the final source plan. Record any incompatible assertion and its proposed replacement in BEFORE-AFTER.md; never change a test simply to turn a result green.
 
 ## Published client setup
 
 Use `npm install nixflex` for Node, `npm install -g nixflex` for the CLI, `pip install nixflex` for Python and `npx -y nixflex-mcp` for MCP. The documented minimum versions are Node/CLI 0.11.0, Python 0.4.0 and MCP 0.5.0. Keep keys in private client environment settings. Claude Desktop uses the npx configuration; do not promise a hosted desktop bundle. Preserve old fragment anchors while removing obsolete release-status prose. MCP 0.5.0 exposes 97 tools.
+
+
+## C17 production-only publication
+
+Every public example uses `https://api.nixflex.com` (`wss://api.nixflex.com` for WebSockets) and the single account credential variable `NIXFLEX_API_KEY`. Customers have one API environment. Keep test hosts, internal keys and deployment-choice wording out of published pages, snippets, OpenAPI and generated Markdown. MCP uses the fixed production address in its private configuration. Internal offline fixtures and historical evidence stay outside publication; never retarget a test runner to production.
+
+The fifth tab is **Build with AI**. Its first page is **Build your app or SaaS with AI**, shared by Business and Developer readers, followed by connection guides and Tasks. The former Business build page redirects directly to the retained Developer URL. The two audience menus link to the shared guide instead of carrying bottom Build with AI groups.
+
+C17 uses the live `c271451` locked baseline. Only the exact tab-name assertion changes recorded in `approvedC17LockedHashes` are authorised. All other locked checks remain byte-for-byte equivalent to that baseline. The full source gate rejects staging wording, Railway hosts and old account-key aliases in published pages and assets. Run it after the complete rebuild.

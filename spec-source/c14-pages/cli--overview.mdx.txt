@@ -1,11 +1,11 @@
 ---
 title: "Use the CLI with a private account connection"
 sidebarTitle: "CLI setup and safety"
-description: "Install the reviewed CLI, choose the account and API host explicitly, understand private input and distinguish read retries from deliberate writes."
+description: "Install the reviewed CLI, connect your account at api.nixflex.com, understand private input and distinguish read retries from deliberate writes."
 canonical: "https://docs.nixflex.com/cli/overview"
 ---
 
-Use the CLI for explicit terminal operations with a private credential, a known API host and checked command results.
+Use the CLI for explicit terminal operations with a private credential, the fixed API address and checked command results.
 
 <div className="nxf-facts">
   <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
@@ -18,7 +18,7 @@ Use the CLI for explicit terminal operations with a private credential, a known 
 **The important part**
 
 - The CLI ships in the reviewed Node package and needs Node 18 or later.
-- Pass the intended base URL explicitly; NIXFLEX_BASE_URL alone is not the legacy CLI’s host selector.
+- Pass `--base-url https://api.nixflex.com` explicitly with the CLI command.
 - A command can perform a write without a confirmation flag, so read its contract before running it.
 
 </div>
@@ -42,9 +42,9 @@ if ($LASTEXITCODE -ne 0) { throw 'CLI version check failed.' }
 
 A plain registry install does not prove that this candidate is published. The archive hash matters because earlier candidates can share the same version number.
 
-## Select the account and environment
+## Select the account
 
-Privately provision `NIXFLEX_API_KEY` in the terminal process. Supply the intended host through `--base-url`, using an origin without `/v1`. The examples pass `$env:NIXFLEX_BASE_URL` explicitly after checking it is set.
+Privately provision `NIXFLEX_API_KEY` in the terminal process. Pass `https://api.nixflex.com` through `--base-url`, without `/v1`. The examples pass `https://api.nixflex.com` explicitly.
 
 Legacy credential resolution is command `--key`, then `NIXFLEX_API_KEY`, then the local login file. Avoid the key argument because it can appear in process listings and shell history. The number credential command rejects `--key` entirely.
 

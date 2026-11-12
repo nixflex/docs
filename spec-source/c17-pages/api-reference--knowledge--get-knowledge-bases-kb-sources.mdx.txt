@@ -1,0 +1,166 @@
+---
+title: "List knowledge sources"
+sidebarTitle: "List sources"
+description: "List accepted sources with unsuppressed live pieces. Use their saved source IDs for renaming, replacement and deletion."
+openapi: "/api-reference/public.openapi.json GET /knowledge-bases/{kb}/sources"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-bases-kb-sources"
+---
+
+List accepted sources that still have unsuppressed live pieces.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use saved source IDs for rename, replacement or deletion.
+- A source's presence does not mean all its prepared text is published.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `kb` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `limit` (query) | integer | No | `50` | Maximum rows in this page. Minimum 1. Maximum 100. |
+| `cursor` (query) | string | No | Omitted | Opaque cursor from the prior response; omit for the first page. |
+
+Do not send a request body.
+
+Sources with no live pieces are omitted. Sources are ordered by ID; use next_cursor. Written-by-you topics without imported evidence do not create a source row.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `items` | array of object | Saved value. |
+| `items[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `items[].revision` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `items[].title` | string | Saved source title. |
+| `items[].type` | string | Stored source type. Allowed: `"text"`, `"file"`, `"url"`. |
+| `items[].url` | string | Present for website pages; private source location. |
+| `items[].tokens` | integer | Original source token count. |
+| `items[].created_at` | string | UTC timestamp. Format: date-time. |
+| `items[].topic_count` | integer | Unsuppressed live pieces linked to this source. |
+| `next_cursor` | string or null | Opaque cursor. Send it unchanged for the next page; null ends this list. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+```json request-111.json
+{
+  "limit": 2
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://api.nixflex.com/v1/knowledge-bases/$(node -p 'encodeURIComponent(process.env.NXF_KNOWLEDGE_BASE_ID)')/sources?limit=2" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.knowledge.listSources(process.env.NXF_KNOWLEDGE_BASE_ID, {"limit":2});
+// Keep knowledge and private results out of logs.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.knowledge.list_sources(os.environ["NXF_KNOWLEDGE_BASE_ID"], {
+      "limit": 2
+    })
+    # Keep knowledge and private results out of logs.
+```
+
+```powershell CLI (PowerShell)
+# Save the JSON below privately as request-111.json.
+nixflex knowledge listSources "$env:NXF_KNOWLEDGE_BASE_ID" --body '@request-111.json' --json --base-url "https://api.nixflex.com"
+```
+
+```json MCP
+{
+  "name": "list_knowledge_sources",
+  "arguments": {
+    "kb": "kb/example",
+    "limit": 25,
+    "cursor": "source/cursor"
+  }
+}
+```
+
+</RequestExample>
+
+MCP has 97 registered tools, including 19 Knowledge tools. This example uses a registered tool; configure its credentials and permissions separately.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "items": [],
+  "next_cursor": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

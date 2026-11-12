@@ -43,7 +43,7 @@ These examples require Python SDK 0.4.0 or later.
 
 ## Read usage with a synchronous client
 
-Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately. Use the API origin without `/v1`; the client adds that path prefix. The context manager closes the underlying HTTP client.
+Set `NIXFLEX_API_KEY` privately. These examples use `https://api.nixflex.com`. Use the API origin without `/v1`; the client adds that path prefix. The context manager closes the underlying HTTP client.
 
 ```python
 import os
@@ -51,7 +51,7 @@ from nixflex import Nixflex, NixflexError
 
 connection = {
     "api_key": os.environ["NIXFLEX_API_KEY"],
-    "base_url": os.environ["NIXFLEX_BASE_URL"],
+    "base_url": "https://api.nixflex.com",
     "timeout": 30.0,
     "max_retries": 0,
 }
@@ -81,7 +81,7 @@ from nixflex import AsyncNixflex
 async def inspect_request(request_id):
     async with AsyncNixflex(
         api_key=os.environ["NIXFLEX_API_KEY"],
-        base_url=os.environ["NIXFLEX_BASE_URL"],
+        base_url="https://api.nixflex.com",
         max_retries=0,
     ) as client:
         state = await client.calls.outbound_request(request_id)
@@ -128,7 +128,7 @@ from nixflex import Nixflex, NixflexError
 saved = json.loads(Path("prepared-call.json").read_text(encoding="utf-8"))
 try:
     with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
-                 base_url=os.environ["NIXFLEX_BASE_URL"],
+                 base_url="https://api.nixflex.com",
                  max_retries=0) as client:
         receipt = client.calls.create(**saved)
     with open("call-receipt.json", "x", encoding="utf-8") as handle:
@@ -141,7 +141,7 @@ except NixflexError as error:
     raise SystemExit(1)
 ```
 
-A local file failure after dispatch does not mean the call failed. Read `calls.outbound_request(saved["request_id"])` with the original account and environment. Preserve a known call ID even if journal confirmation is unconfirmed. A 404 or unavailable read is not permission for a new UUID.
+A local file failure after dispatch does not mean the call failed. Read `calls.outbound_request(saved["request_id"])` with the original account. Preserve a known call ID even if journal confirmation is unconfirmed. A 404 or unavailable read is not permission for a new UUID.
 
 ## Read results and use the right method
 
@@ -211,7 +211,7 @@ from nixflex import Nixflex
 from nixflex.errors import NixflexServerError
 
 with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
-             base_url=os.environ["NIXFLEX_BASE_URL"], max_retries=0) as client:
+             base_url="https://api.nixflex.com", max_retries=0) as client:
     try:
         receipt = client.campaigns.delete(os.environ["NXF_CAMPAIGN_ID"])
         if (receipt.get("deleted") is not True

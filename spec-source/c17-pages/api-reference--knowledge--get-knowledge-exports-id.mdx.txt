@@ -1,0 +1,236 @@
+---
+title: "Download knowledge export"
+sidebarTitle: "Download export"
+description: "Download a ready private knowledge export as structured JSON or readable text through the authenticated export route."
+openapi: "/api-reference/public.openapi.json GET /knowledge/exports/{id}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/knowledge/get-knowledge-exports-id"
+---
+
+Download a ready private export as structured JSON or readable text.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Download the prepared export through the authenticated route.
+- Keep private knowledge files out of public URLs and logs.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [Developer guide](/guides/developer/knowledge) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send Authorization: Bearer KEY_ID:KEY_SECRET using the owning account’s server-side API credential. API keys have Owner authority. With a personal dashboard session, Owner, Admin and Member may read visible knowledge; membership is checked before and after the read. Personal dashboard visibility can hide API-origin agents.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Opaque identifier. Keep it as a string. Format: uuid. |
+| `format` (query) | string | No | `"json"` | JSON envelope type. Allowed: `"json"`, `"text"`. |
+
+Do not send a request body.
+
+No new export is created by this GET. The export must be ready, unexpired (one hour) and at the same base revision. format=text still returns a JSON envelope with filename, content_type and text; save text privately. JSON excludes raw uploads. Accepted text bytes are bounded at 35 MiB and serialized JSON at 50 MiB.
+
+## Response fields
+
+`200 OK` returns the fields below. Follow the job and current revision where this operation queues work; an accepted response is not proof of publication.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `format` | string | Value: `"nixflex-knowledge-v1"`. |
+| `kb` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `settings` | object | Only channels, match and not_found may be supplied. Omitted settings retain the saved value on update. |
+| `settings.channels` | array of string | Enabled knowledge channels. An empty list turns knowledge off for all channels. Allowed items: `"inbound"`, `"outbound"`, `"web_voice"`, `"web_chat"`, `"sms"`. |
+| `settings.match` | string | Answer matching mode. Allowed: `"Strict"`, `"Normal"`. |
+| `settings.not_found` | string | Nonblank response when suitable knowledge is missing. Maximum 500 characters. Minimum 1 characters. |
+| `sources` | array of object | Saved value. |
+| `sources[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `sources[].rev` | integer | Latest integer revision read from this resource; it must still match when the request runs. Minimum 1. |
+| `sources[].object_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `sources[].type` | string | Allowed: `"text"`, `"file"`, `"url"`. |
+| `sources[].title` | string | Saved value. |
+| `sources[].url` | string | Saved value. |
+| `sources[].filename` | string | Saved value. |
+| `sources[].text` | string | Extracted original text, never raw uploaded file bytes. |
+| `sources[].tokens` | integer | Saved value. |
+| `sources[].parsed` | boolean | Saved value. |
+| `sources[].added_at` | string | UTC timestamp. Format: date-time. |
+| `sources[].source_order` | integer | Saved value. |
+| `topics` | array of object | Saved value. |
+| `topics[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `topics[].title` | string | Displayed piece title. |
+| `topics[].facts` | string | Piece text. |
+| `topics[].questions` | array of string | Retained manual/legacy labels; new imports do not generate questions. |
+| `topics[].evidence` | array of object | Saved value. |
+| `topics[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `topics[].evidence[].segment` | integer | Source segment index. |
+| `topics[].evidence[].quote` | string | Original evidence text. |
+| `topics[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `topics[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `topics[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `topics[].evidence[].title` | string | Title snapshot at answer time. |
+| `topics[].manual` | boolean | True when manually written or corrected. |
+| `topics[].valid_from` | string or null | UTC timestamp. Format: date-time. |
+| `topics[].valid_until` | string or null | UTC timestamp. Format: date-time. |
+| `topics[].suppressed` | boolean | True while an edited old piece must not be used. |
+| `topics[].origin` | string | Optional legacy origin marker. |
+| `topics[].position` | object | Stable display-order metadata. |
+| `topics[].position.added_at` | string | UTC timestamp. Format: date-time. |
+| `topics[].position.source` | integer | Saved value. |
+| `topics[].position.segment` | integer | Saved value. |
+| `topics[].page_name` | string | Optional source page label. |
+| `topics[].title_page` | string | Optional label used to distinguish similar automatic titles. |
+| `topics[].review_flags` | array of string | Allowed items: `"agent_instructions"`, `"suspicious_link"`, `"payment_details"`, `"sensitive_data"`, `"website_junk"`, `"code_example"`. |
+| `topics[].check_required` | boolean | A flagged topic needs explicit individual approval. |
+| `topics[].check_reasons` | array of string | Saved value. |
+| `topics[].check_reason` | string | Compatibility joined review reasons. |
+| `topics[].keyterms` | object | Read-only metadata. Refresh scheduling is still being checked separately; do not send it in writes. |
+| `topics[].keyterms.version` | integer | Stored automatic-term format version. |
+| `topics[].keyterms.fingerprint` | string | Digest of the source text used to validate cached terms. |
+| `topics[].keyterms.terms` | array of string | Stored candidate terms. |
+| `topics[].keyterms.ranks` | object | Keys are normalized terms; each value records score (1–4) and essential (boolean). |
+| `tombstones` | array of object | Saved value. |
+| `tombstones[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `tombstones[].subject_hash` | string | Normalized title digest. |
+| `tombstones[].evidence` | array of object | Saved value. |
+| `tombstones[].evidence[].source` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `tombstones[].evidence[].segment` | integer | Source segment index. |
+| `tombstones[].evidence[].quote` | string | Original evidence text. |
+| `tombstones[].evidence[].quote_hash` | string | Digest used by a deletion record. |
+| `tombstones[].evidence[].topic_id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `tombstones[].evidence[].revision` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `tombstones[].evidence[].title` | string | Title snapshot at answer time. |
+| `objects` | array of object | Saved value. |
+| `objects[].id` | string | Opaque identifier. Keep it as a string. Format: uuid. |
+| `objects[].media` | string | Value: `"text/plain"`. |
+| `objects[].digest` | string | Content digest. |
+| `objects[].base64` | string | Accepted extracted-text bytes encoded as base64, not uploaded raw-file bytes. |
+| `filename` | string | Saved value. |
+| `content_type` | string | Saved value. |
+| `text` | string | All unsuppressed live piece titles/text and plain settings. |
+
+## Example request
+
+These examples target Node/CLI 0.11.0 and Python 0.4.0; confirm the installed version supports the method before use. The cURL tab uses Bash; CLI uses PowerShell. Python shows sync usage; AsyncNixflex uses the same JSON methods with async with and await. Set the account credential in `NIXFLEX_API_KEY` and the owned path identifiers shown below in environment variables. Keep private responses out of logs.
+
+```json request-128.json
+{
+  "format": "text"
+}
+```
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request GET \
+  --url "https://api.nixflex.com/v1/knowledge/exports/$(node -p 'encodeURIComponent(process.env.NXF_RESOURCE_ID)')?format=text" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+import { pipeline } from 'node:stream/promises';
+import { open } from 'node:fs/promises';
+
+const file = await open('knowledge-export.json', 'wx', 0o600);
+try {
+  await pipeline(c.knowledge.downloadExport(process.env.NXF_RESOURCE_ID, {format:'text'}), file.createWriteStream());
+} finally {
+  await file.close();
+}
+// This file contains JSON with filename/content_type/text.
+// On failure, discard the partial file before starting a new download.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    chunks = c.knowledge.download_export(os.environ["NXF_RESOURCE_ID"], {"format":"text"})
+    try:
+        with open("knowledge-export.json", "xb") as output:
+            for chunk in chunks:
+                output.write(chunk)
+    finally:
+        chunks.close()
+# This is a JSON envelope. Discard partial output after a failed transfer.
+# Async: use async for on the returned iterator, without an initial await; aclose it.
+```
+
+```powershell CLI (PowerShell)
+# Save the JSON below privately as request-128.json.
+nixflex knowledge downloadExport "$env:NXF_RESOURCE_ID" --body '@request-128.json' --output knowledge-export.json --json --base-url "https://api.nixflex.com"
+```
+
+</RequestExample>
+
+MCP does not offer this operation because this operation is outside the approved tool permissions. Use the documented Node, Python, CLI or HTTP operation with the required authority.
+
+## Example response
+
+Illustrative response; identifiers are placeholders and optional fields can be absent.
+
+<ResponseExample>
+
+```json Response
+{
+  "format": "nixflex-knowledge-v1",
+  "kb": "11111111-1111-4111-8111-111111111111",
+  "settings": {},
+  "sources": [],
+  "topics": [],
+  "tombstones": [],
+  "objects": []
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use `error.type`, `error.code`, `error.message`, `error.doc_url` and optional `error.details`. Knowledge failures include a request ID in details when available. Read the safe message as text. A job can return HTTP 200 with state `failed` and `error`; that is a job failure, not an HTTP error. Source failures can arise during preparation after the initial accepted response.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_input`](/api-reference/errors#invalid_input) | Check the information and try again. | Correct the named fields or reduce the input before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | That topic is not available. | Check the owned identifier and feature availability. |
+| 409 | [`deleting`](/api-reference/errors#deleting) | This knowledge base is being deleted. | Read current state and resolve the conflict before sending a new request. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Knowledge is unavailable right now. Your saved information is safe. Try again. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_unconfigured`](/api-reference/errors#knowledge_unconfigured) | Knowledge is not available yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 503 | [`knowledge_not_released`](/api-reference/errors#knowledge_not_released) | Knowledge is not released yet. | Retry reads with bounded backoff; reconcile writes before repeating. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | Your personal role does not allow this action. | Use a permitted personal account; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | Your membership has ended. | Use a permitted personal account; do not share the organisation key. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for the stated retry/reset time. |
+| 409 | [`export_expired`](/api-reference/errors#export_expired) | Request a new private export. | Read current state and resolve the conflict before sending a new request. |
+| 413 | [`export_limit`](/api-reference/errors#export_limit) | This export is too large for one download. Export or remove sources in smaller groups. | Correct the named fields or reduce the input before retrying. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read or calculation. GET requests may retry transient connection failures once with bounded backoff; respect Retry-After. Do not retry invalid input or ownership errors unchanged. POST calculations are not automatically retried.
+
+## Related endpoints
+
+- [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities)
+- [List knowledge agents](/api-reference/knowledge/get-knowledge-targets)
+- [Errors and recovery](/api-reference/errors#error-envelope)

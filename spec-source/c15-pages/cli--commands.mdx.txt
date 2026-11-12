@@ -156,10 +156,10 @@ Check both exit code and result. A preview can exit successfully without sending
 | `campaigns delete ID --confirm` | Cancel waiting voice work, end running calls and remove the campaign and recipients. |
 | `sms campaigns delete ID --confirm` | Remove an SMS campaign and waiting work; sent messages cannot be recalled. |
 
-The new voice command without `--confirm` is a local preview with zero requests. Run the confirmed command only after approving the exact campaign. Configure `NIXFLEX_API_KEY` privately and set `NIXFLEX_BASE_URL` and `NXF_CAMPAIGN_ID` for that account:
+The new voice command without `--confirm` is a local preview with zero requests. Run the confirmed command only after approving the exact campaign. Configure `NIXFLEX_API_KEY` privately and set `NXF_CAMPAIGN_ID` to an owned campaign:
 
 ```bash
-nixflex campaigns delete "$NXF_CAMPAIGN_ID" --confirm --json --base-url "$NIXFLEX_BASE_URL"
+nixflex campaigns delete "$NXF_CAMPAIGN_ID" --confirm --json --base-url "https://api.nixflex.com"
 ```
 
 Each confirmed command sends one DELETE. A 503 `hangup_pending` remains a structured error with `deleted:false` and `retry_pending:true` in its details; display queued, not deleted. Other uncertain errors keep the original code in `details.original_code`. No command retries automatically. Use fresh reads, then deliberately repeat the same DELETE if needed. History and used charges remain; no refund. `calls delete-all --confirm` keeps its separate guarded bulk contract.

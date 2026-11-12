@@ -79,20 +79,20 @@ Native language matches sort first, then matching locale, display name, and voic
 
 ## Example request
 
-The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
+These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
 
 <RequestExample>
 
 ```bash cURL
 curl --request GET \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/voices?limit=25&language=en&agent_language=multi" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY"
+  --url "https://api.nixflex.com/v1/voices?limit=25&language=en&agent_language=multi" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
 ```
 
 ```javascript Node
 import Nixflex from 'nixflex';
-const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
-const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
 const result = await client.voices.list({limit:25,language:"en",agent_language:"multi"});
 // Handle result privately; do not log secrets or call content.
 ```
@@ -101,14 +101,14 @@ const result = await client.voices.list({limit:25,language:"en",agent_language:"
 import os, json
 from pathlib import Path
 from nixflex import Nixflex
-base_url = "https://nixflex-voice-engine-staging.up.railway.app"
-with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
     result = client.voices.list(limit=25,language="en",agent_language="multi")
 # AsyncNixflex supports the same calls with await (and async with).
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex voices list --limit 25 --language en --agent-language multi --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+nixflex voices list --limit 25 --language en --agent-language multi --base-url https://api.nixflex.com --json
 ```
 
 </RequestExample>
@@ -162,7 +162,7 @@ Failures return an `error` object with `code`, `message`, `doc_url` and optional
 | 400 | [`invalid_cursor`](/api-reference/errors#invalid_cursor) | The cursor is malformed or belongs to another account/filter. | Restart with the intended filters. |
 | 409 | [`cursor_expired`](/api-reference/errors#cursor_expired) | The catalog revision changed. | Restart at the first page and deduplicate by voice_key. |
 | 503 | [`catalog_unavailable`](/api-reference/errors#catalog_unavailable) | The catalog is not loaded. | Retry the read after a short wait. |
-| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
 | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
 
 </div>

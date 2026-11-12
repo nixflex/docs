@@ -8,7 +8,7 @@ const spec=json('api-reference/public.openapi.json'),calendar='/integrations/goo
 test('C10 preserves D-owned files and assigns all published pages to exactly one of five tabs',()=>{
  const plan=json('spec-source/c10-site.json');
  assert.equal(new Set(plan.pages.map(p=>p.slug)).size,plan.pages.length);
- assert.deepEqual(json('docs.json').navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']);
+ assert.deepEqual(json('docs.json').navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','Build with AI']);
  // D1 merge base: C must not quietly rewrite D's content or metadata.
  for(const row of plan.pages.filter(p=>p.owner==='D')){
   const original=execFileSync('git',['show',plan.ownershipBaseline+':'+row.slug+'.mdx'],{cwd:root,encoding:'utf8'});

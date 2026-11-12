@@ -48,7 +48,7 @@ Inspect warnings in successful responses; do not assume every supplied field was
 
 ### 4 November 2026 — booking results and safer deletion
 
-These changes are confirmed in the reviewed staging engine. Publish and deploy them together for the intended environment; a documentation update alone does not change production behaviour.
+Use the documented contract below and check the minimum client version before using a feature.
 
 | Change | Integration action |
 | --- | --- |
@@ -75,7 +75,7 @@ Knowledge belongs to the agent. Mutations use their endpoint's revision and idem
 
 Knowledge Test now starts in knowledge-only mode. It does not use full-agent settings, numbers, or call purposes. Old full-agent sessions are closed; create a new knowledge session. The former test-options route is retired. Replies identify whole-base or search selection, remove spoken tags, and return `knowledge_loading` if loading exceeds five seconds. Source lists show live sources; deleting the last topic removes an empty source and its saved original. Live answer counts use the current agent assignment.
 
-Feature availability follows the engine deployed in your environment. Confirm release availability and client support before adopting a newly documented operation in production.
+Check the minimum client version and supported methods before adopting a newly documented operation.
 
 ## Follow a change
 
@@ -89,7 +89,7 @@ The reference now includes four per-number Google Calendar operations: [connect]
 
 **Compatibility change:** single-SMS suppression now returns HTTP 409 `do_not_contact`, type `conflict`, instead of 400 `invalid_request`. Stop on an opt-out. Campaigns continue to hold affected recipients individually.
 
-[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. New voice bookings use full-name spelling, email-local-part spelling and a spoken domain before one combined approval. A correction repeats only the wrong part. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.
+[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. New voice bookings use full-name spelling, email-local-part spelling and a spoken domain before one combined approval. A correction repeats only the wrong part. Google controls invite delivery. Check client support before relying on newly added operations.
 
 ## Next steps
 

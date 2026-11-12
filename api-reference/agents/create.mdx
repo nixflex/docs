@@ -162,15 +162,15 @@ More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 w
 ## Example request
 
 All four examples send the same `name`, `system_prompt` and three `boosted_keywords`, leaving the call limits and greeting at their defaults.
-The examples use staging. Set `NXF_STAGING_KEY` to your staging credential in your own environment;
+These examples use `https://api.nixflex.com`. Store your account credential privately in `NIXFLEX_API_KEY`;
 the CLI reads the same credential through `NIXFLEX_API_KEY`. Do not put a key in a URL or source file.
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents" \
-  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --url "https://api.nixflex.com/v1/agents" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
   --data '{"name":"C2 API sample","system_prompt":"You are a helpful assistant. Answer questions clearly.","boosted_keywords":"Nixflex, Sam, appointment"}'
 ```
@@ -179,8 +179,8 @@ curl --request POST \
 import { Nixflex } from 'nixflex';
 
 const client = new Nixflex({
-  apiKey: process.env.NXF_STAGING_KEY,
-  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  apiKey: process.env.NIXFLEX_API_KEY,
+  baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
 const agent = await client.agents.create({
@@ -196,8 +196,8 @@ import os
 from nixflex import Nixflex
 
 with Nixflex(
-    api_key=os.environ["NXF_STAGING_KEY"],
-    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    api_key=os.environ["NIXFLEX_API_KEY"],
+    base_url="https://api.nixflex.com",
     max_retries=0,
 ) as client:
     agent = client.agents.create(
@@ -209,8 +209,8 @@ with Nixflex(
 ```
 
 ```bash CLI
-NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents create \
-  --base-url "https://nixflex-voice-engine-staging.up.railway.app" \
+nixflex agents create \
+  --base-url "https://api.nixflex.com" \
   --name "C2 API sample" \
   --prompt "You are a helpful assistant. Answer questions clearly." \
   --set 'boosted_keywords=Nixflex, Sam, appointment' \
@@ -262,7 +262,7 @@ returns `400 invalid_agent_field` with `details.field: "max_call_duration_second
 | 400 | `deprecated_field` | Agent-level carrier credentials were supplied. | Remove credentials; configure the phone number separately. |
 | 400 | `invalid_voice_key`, `voice_not_found`, `voice_selection_conflict` | Invalid, missing or conflicting catalog selection. | Select a valid voice; supply one identifier or a matching pair. |
 | 400 | `voice_unavailable`, `voice_temporarily_unavailable`, `voice_not_available`, `voice_incompatible_language`, `no_approved_languages` | The selected voice cannot serve this request. | Select an available voice compatible with the language. |
-| 401 | `unauthorized` | Credential is missing or invalid. | Check the credential and environment before resending. |
+| 401 | `unauthorized` | Credential is missing or invalid. | Check the full account credential before resending. |
 | 403 | `permission_denied` | Organisation policy refuses this action. | Resolve the account or role restriction through an authorised person. |
 | 429 | `rate_limit_exceeded` | The account request limit was reached before creation. | Wait for `Retry-After` before resending. |
 | 500 | `server_error` | The creation outcome could not be confirmed. | Keep the outcome uncertain and check for the intended agent before another deliberate create. |

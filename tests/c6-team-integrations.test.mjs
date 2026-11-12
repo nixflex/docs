@@ -48,7 +48,7 @@ test('C6 covers only the approved groups and keeps all successful writes pending
  const rows=missing.split('\n').filter(l=>/^\| \d+ \|/.test(l));assert.equal(rows.length,0);assert.match(missing,/19 registered Knowledge tool examples/);
  for(const d of defs){assert.ok(!rows.some(l=>l.startsWith('| '+d.number+' |')));if(d.method!=='GET'||d.sensitive)assert.ok(coverage.includes('| '+d.number+' | pending manual test |'));}
  const previous=spawnSync('git',['show','ad36141:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(previous.status,0);
- const config=JSON.parse(read('docs.json')),old=JSON.parse(previous.stdout);assert.deepEqual(config.navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']);
+ const config=JSON.parse(read('docs.json')),old=JSON.parse(previous.stdout);assert.deepEqual(config.navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','Build with AI']);
 });
 test('all 19 C4 pages use K2 methods with explicit minimum client versions',()=>{
  const core=Object.values(JSON.parse(read('spec-source/c4-core.json')).operations);assert.equal(core.length,19);
