@@ -4,6 +4,7 @@ description: "Configure Nixflex SMS replies with a separate number prompt, knowl
 canonical: "https://docs.nixflex.com/sms/sms-agent"
 sidebarTitle: "SMS replies"
 ---
+
 Give an owned number SMS-specific instructions, enable replies deliberately and check the resulting conversations.
 
 <div className="nxf-facts">
@@ -84,6 +85,8 @@ nixflex numbers get +12025550100 --json --base-url https://api.nixflex.com
 
 PATCH the number with `sms_prompt` containing the business facts, purpose, reply style and action boundaries for text. The prompt limit is 20,000 characters. Do not put a private API credential or unsupported action into instructions.
 
+Set the reply language explicitly, for example: “Reply in the same language as the customer” or “Reply only in Spanish”. Ask for short replies; long texts can use several message segments. State what the agent must not promise and when it should say that a person needs to help. If the answer is absent from the instructions and enabled knowledge, tell it to say that it does not know. These text instructions do not change phone-call instructions.
+
 ## 3. Enable the reply switch
 
 Set `sms_reply_enabled:true` deliberately. The number, account, agent and current message checks must still permit a reply. Turning off replies does not delete the conversation or stop separately requested outbound messages.
@@ -115,3 +118,7 @@ The saved number object shows `sms_reply_enabled` and `sms_prompt`. Reread after
 - [Number update](/api-reference/phone-numbers/update)
 - [Inbox with code](/guides/developer/agent-inbox)
 - [Knowledge workflow](/guides/developer/knowledge)
+
+## Related dashboard and AI tasks
+
+- [Take customer bookings by text](/guides/sms-booking)

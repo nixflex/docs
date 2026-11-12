@@ -1,7 +1,7 @@
 ---
 title: "Connect an AI assistant to your Nixflex account"
 sidebarTitle: "Choose an AI assistant"
-description: "Choose a local AI client for the Nixflex MCP candidate, verify its 96 tools and understand approvals, private credentials and call-result limits."
+description: "Choose a local AI client for the Nixflex MCP candidate, verify its 97 tools and understand approvals, private credentials and call-result limits."
 canonical: "https://docs.nixflex.com/ai-tools/overview"
 ---
 
@@ -24,7 +24,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 **The important part**
 
-- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 96 tools.
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
 - Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
 - Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
 - Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
@@ -130,7 +130,7 @@ Start `node` with the absolute installed `node_modules/nixflex-mcp/index.js` pat
 
 ## Verify with one read
 
-Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 96 tools. Then ask:
+Open the client's MCP status, check Nixflex connected, and confirm it exposes the expected 97 tools. Then ask:
 
 > Use Nixflex get_usage only. Summarise my account usage. Do not create, change, call, text or delete anything, and never show credentials.
 
@@ -145,6 +145,16 @@ Use [llms.txt](https://docs.nixflex.com/llms.txt) to find pages, or append `.md`
 ## If connection fails
 
 Check Node, the absolute package path, private environment setup and client policy, then restart. Fewer tools may mean an older package. Send support only redacted errors and package/client versions, never environment dumps or keys.
+
+## Voice booking approval
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
 
 ## Next
 

@@ -1,0 +1,58 @@
+---
+title: "Understand live monitoring and takeover"
+description: "Understand Nixflex live call access, monitoring permissions and human takeover states, including short-lived browser access and the limits of call controls."
+canonical: "https://docs.nixflex.com/concepts/live-monitor"
+sidebarTitle: "Live monitoring"
+---
+Let authorised teammates listen to eligible active calls and distinguish a requested takeover from a committed human handoff.
+
+<div className="nxf-facts">
+  <div><small>Listen</small><strong>No microphone added</strong></div>
+  <div><small>Takeover</small><strong>Confirmed handoff</strong></div>
+  <div><small>Access</small><strong>Current eligibility</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Eligible Members can use Listen and takeover without becoming general writers.
+- After committed takeover the AI does not return automatically.
+- An accepted End request is not proof the connection has ended.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/live-monitoring) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Access and call state
+
+Monitoring must be enabled for the number and allowed by current account and call state. Owner, Admin and Member can have eligible Listen/takeover access; Member is not limited to listening only.
+
+ Listen does not make the teammate a speaker. Takeover needs microphone access and a confirmed handover. Once committed, the AI does not return to the conversation. Muting is not returning control to the AI. End the call deliberately when the human conversation is finished.
+
+ Access changes can revoke listening and pending takeover. A committed human takeover can retain only mute/hangup controls to finish that call. A pending disconnection is not proof audio has already stopped.
+
+ Monitoring eligibility and costs depend on the actual call and enabled capabilities. Read the on-screen state, and do not infer that an accepted End request means the telephone connection has ended.
+
+- [Use live monitoring](/guides/live-monitoring)
+- [Team roles](/concepts/organisations)
+- [Saved monitoring switch](/api-reference/phone-numbers/update)
+
+
+## Authenticated browser listening
+
+The dashboard checks organisation membership, number monitoring and current call eligibility before granting access. Browser media access uses scoped, short-lived authorisation; never expose the shared account API key in browser code or a public playback URL.
+
+ Read `monitor_enabled` on the owned number and change its saved permission with the number PATCH. That switch does not create a listening session or media grant. Never invent a reusable public media token. Use the supported dashboard session flow for Listen and takeover.
+
+ Listening, requesting takeover and a committed human takeover are distinct states. A failed microphone check leaves no confirmed handover. After confirmed takeover, the AI does not return automatically. Permission changes can end listening or cancel pending takeover; committed human work may retain the controls needed to finish its call.
+
+ Audio can stop when a call ends, a grant expires or permission changes. Preserve those states rather than presenting every stream failure as a silent successful call.
+
+- [Use live monitoring](/guides/live-monitoring)
+- [Team roles](/concepts/organisations)
+- [Saved monitoring switch](/api-reference/phone-numbers/update)

@@ -28,11 +28,6 @@ Prepare an SMS campaign’s template, recipients and contact checks, then track 
 
 </div>
 
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
-
-
 ## Choose the task
 
 | Task | Outcome |
@@ -97,9 +92,9 @@ Store `campaign_id` and read campaign state. Sent, delivered and failed counts a
 
 ## 5. Control unsent work
 
-Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. DELETE has separate eligibility checks and does not recall messages. PATCH can edit only the fields and states allowed by the API.
+Use `POST /v1/sms/campaigns/{id}/cancel` to stop future dispatch, and the documented resume or consent routes when appropriate. Delete removes the campaign and recipient list after stopping waiting work and any running calls. Neither action recalls a sent text. PATCH edits only the fields and states allowed by the API.
 
-Keep a campaign visible until deletion is confirmed. The final B57 deletion contract is pending review; do not carry the older settlement-wait rule into the new release or invent a replacement response. See the marked [deletion contract](/api-reference/sms/campaigns-delete) before using this action.
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up. If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
 
 ## Example response
 

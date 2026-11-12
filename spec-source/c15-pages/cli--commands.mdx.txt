@@ -1,0 +1,528 @@
+---
+title: "Find the CLI command for your task"
+sidebarTitle: "CLI command reference"
+description: "Find reviewed CLI command families, exact call recovery commands, private credential inputs and confirmation boundaries before running a change."
+canonical: "https://docs.nixflex.com/cli/commands"
+---
+Choose the command for one task and read its effect, required inputs and recovery rule before execution.
+
+<div className="nxf-facts">
+  <div><small>Syntax</small><strong>nixflex group command</strong></div>
+  <div><small>Output</small><strong>JSON for scripts</strong></div>
+  <div><small>Writes</small><strong>No automatic retry</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the exact reviewed candidate and explicit `--base-url` for your account.
+- A confirmation preview is command-specific; creates can send immediately.
+- Use private input for secrets and keep JSON results out of shared logs.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read command syntax and results
+
+Run `nixflex --help` for the installed command inventory. The tables below omit the leading `nixflex`; angle-bracket values are placeholders, not literal arguments. Append `--base-url` for the intended host and `--json` where structured output is needed.
+
+General creates and updates accept documented `--body '@file.json'` and repeated `--set field=value` inputs. The parser recognises booleans, null and numbers; `@file` reads text. Do not assume a future API field is accepted by an older typed command. Read back a deliberate change.
+
+## Account and safe reads
+
+| Command | Effect |
+| --- | --- |
+| `usage` | Read account usage and balance. |
+| `whoami` | Read the selected key identity and usage; treat output as private. |
+| `doctor` | Inspect CLI/runtime/configuration and make a connectivity read. |
+| `login` / `logout` | Manage the legacy plaintext local credential file. |
+| `keys create --body '@account.json' --confirm` | Create an account credential; not a connectivity test. |
+| `keys rotate --confirm` | Replace the secret; existing integrations need an authorised rollout. |
+| `completion <bash\|zsh\|pwsh>` | Print a completion script for review before shell installation. |
+
+Never put a key in command history. See [private connection setup](/cli/overview).
+
+## Agents and call reads
+
+| Command | Effect |
+| --- | --- |
+| `agents list` / `agents get <id>` | Read agents using supported filters. |
+| `agents create --body '@agent.json'` | Create the specified agent. |
+| `agents update <id> --body '@changes.json'` | Update the documented supplied fields. |
+| `agents delete <id> --confirm` | Request deletion of the selected agent. |
+| `calls list --limit 50` | Read legacy offset results; no agent filter. |
+| `calls history --agent <id> --limit 50` | Read filtered history with the returned paging contract. |
+| `calls get <id>` / `calls read <id>` | Read legacy or explicit detail projection respectively. |
+| `calls recording <id>` | Read current authorised playback availability and expiry. |
+| `calls bookings <id>` | Read ready, none, processing, deleted or unavailable booking evidence. |
+
+## Prepare, send and reconcile one call
+
+| Command | Effect |
+| --- | --- |
+| `calls prepare --body '@intent.json' --output prepared-call.json --json` | Generate and save a UUID locally; sends nothing and never overwrites. |
+| `calls create --body '@prepared-call.json'` | Send the approved saved call once. |
+| `calls create ... --request-id <uuid>` | Use an explicitly saved UUID with the exact original inputs. |
+| `calls outboundRequest <uuid>` | Read durable request state without dispatching. |
+
+`--var name=Sam` maps to `dynamic_vars` for `{{name}}`. Use one variables alias only. `--wait` on a send polls for completion; its timeout is not a hangup timer. A late result must not cause another call. Follow the complete [CLI quickstart](/cli/quickstart).
+
+## Campaigns and contact controls
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `campaigns list`, `create`, `launch`, `consent`, `cancel`, `resume`, `delete` | Voice campaign work; creation can launch immediately. Cancel lets active calls finish; Delete requests their hang-up. |
+| `sms campaigns list`, `get`, `create`, `launch`, `update`, `consent`, `cancel`, `resume` | SMS campaign work; sent, delivered and replies remain separate. |
+| `contacts` commands | Contact-hour previews and suppression operations from the installed help. |
+
+Prefer complete JSON bodies for nested recipient variables, country and time-zone data. A CSV convenience importer does not make every column a top-level recipient policy field. Review [voice preparation](/guides/developer/campaigns/prepare-and-launch) or [SMS preparation](/guides/developer/sms-campaigns/prepare-and-send) before creating work.
+
+`calls delete` and `sms campaigns delete` require confirmation and use the same-ID deletion flow: queued hang-up continues automatically, used charges remain, and a repeated DELETE safely resumes the request. `calls delete-all` keeps the separate bulk safety checks. Use [HTTP voice campaign deletion](/api-reference/voice-campaigns/delete) when that method is unavailable in your installed client.
+
+## Numbers, callers, SMS and inbox
+
+| Family | Tasks and boundary |
+| --- | --- |
+| `numbers list`, `get`, `usage`, `update`, `delete` | Owned-number reads and deliberate changes; move with an agent-only update. |
+| `numbers web-calls <number> get` | Read the website-call preference; effective voice also needs the Web agent enabled. |
+| `callers get`, `set`, `import`, `delete` | Number-scoped caller context; imports batch records and need partial-result handling. |
+| `sms send` | Send one message; acceptance is not delivery and opt-outs must stop sending. |
+| `web-agent` commands | Website settings with the observed revision. |
+| `inbox` commands | Channel-scoped conversations, messages, read state and archive changes. |
+
+For a new number import, use the supported dashboard setup. The public import schema omits legacy credential fields. Never copy carrier secrets into `--set` arguments or invent credential aliases.
+
+## Google Calendar and number credentials
+
+| Command | Effect |
+| --- | --- |
+| `integrations getGoogleCalendar <number>` | Read the safe connection state; the engine may check existing access internally. |
+| `integrations connectGoogleCalendar <number> --return-url <https-url> --confirm` | Create a private ten-minute consent link for the authorised person. |
+| `integrations updateGoogleCalendarSettings <number> --body '@calendar-settings.json' --confirm` | Save supplied settings; hours replace the complete seven-day map. |
+| `integrations disconnectGoogleCalendar <number> --confirm` | Remove saved access; dispatched calendar work cannot be recalled. |
+| `numbers updateCredentials <number> --provider twilio --confirm` | Update the existing carrier connection using its private environment pair. |
+
+The credential command accepts private environment variables or `--credentials-stdin` from a trusted private process pipe. It rejects `--key`, `--body`, `--set`, credential files and secret command arguments. Use `NIXFLEX_TWILIO_SID` plus `NIXFLEX_TWILIO_TOKEN`, or select `telnyx` with `NIXFLEX_TELNYX_API_KEY` plus `NIXFLEX_TELNYX_CONNECTION_ID`.
+
+Stop on `carrier_outcome_unknown`. `credential_save_pending` needs deliberate completion with identical input, not a general automatic retry. A credential update does not switch carriers or remove/re-import the number.
+
+## Knowledge, team and integrations
+
+| Family | Next guide |
+| --- | --- |
+| `knowledge` | [Source, draft, job and publication workflow](/guides/developer/knowledge); preserve idempotency keys and revisions. |
+| `organisation` | [Invitations and roles](/guides/developer/team/invitations-and-roles); personal ownership/closure remains in its authenticated flow. |
+| `organisation activityCsv --output <file>` | Export privately with the documented filters and streaming behaviour. |
+| `integrations` and `webhooks` | [Integration setup](/integrations/overview) and [signed receiver](/advanced/webhooks). |
+| `mcp setup` | [AI client installation](/ai-tools/overview); a tool server setup is separate from a business operation. |
+
+The reviewed CLI does not expose the old account model, voice or storage command groups. Use their supported dashboard connection flows rather than commands copied from an older package.
+
+## Handle failures
+
+Check both exit code and result. A preview can exit successfully without sending, and a failed command can follow an accepted write. Keep only safe codes and IDs in diagnostics. Reconcile the saved resource or request before repeating a mutation.
+
+- [Run the safe quickstart](/cli/quickstart)
+- [Check the exact package](/sdks/ecosystem)
+- [Read API error recovery](/reference/errors)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="setting-any-field"></span>
+<span id="account"></span>
+<span id="agents"></span>
+<span id="calls"></span>
+<span id="campaigns-voice-batch"></span>
+<span id="numbers"></span>
+<span id="callers-caller-context"></span>
+<span id="sms"></span>
+<span id="webhooks-per-number"></span>
+<span id="bring-your-own"></span>
+<span id="mcp"></span>
+<span id="errors-and-exit-codes"></span>
+
+{/* C15 K9 deletion */}
+
+## Delete content and inspect the result
+
+| Command | Effect |
+| --- | --- |
+| `calls delete ID --confirm` | End a running call and remove its content; recording cleanup can remain queued. |
+| `campaigns delete ID --confirm` | Cancel waiting voice work, end running calls and remove the campaign and recipients. |
+| `sms campaigns delete ID --confirm` | Remove an SMS campaign and waiting work; sent messages cannot be recalled. |
+
+The new voice command without `--confirm` is a local preview with zero requests. Run the confirmed command only after approving the exact campaign. Configure `NIXFLEX_API_KEY` privately and set `NIXFLEX_BASE_URL` and `NXF_CAMPAIGN_ID` for that account:
+
+```bash
+nixflex campaigns delete "$NXF_CAMPAIGN_ID" --confirm --json --base-url "$NIXFLEX_BASE_URL"
+```
+
+Each confirmed command sends one DELETE. A 503 `hangup_pending` remains a structured error with `deleted:false` and `retry_pending:true` in its details; display queued, not deleted. Other uncertain errors keep the original code in `details.original_code`. No command retries automatically. Use fresh reads, then deliberately repeat the same DELETE if needed. History and used charges remain; no refund. `calls delete-all --confirm` keeps its separate guarded bulk contract.
+
+{/* C15 complete method directory */}
+
+## Complete command index
+
+The reviewed CLI exposes the 146 command names below, including aliases and local setup commands. Run `nixflex --help` for arguments and flags. Review each write before supplying `--confirm`; confirmation is not a substitute for consent to contact someone.
+
+<AccordionGroup>
+
+<Accordion title="account">
+
+[Task guide](/guides/developer/account).
+
+| Command |
+| --- |
+| `nixflex account retention` |
+
+</Accordion>
+
+<Accordion title="agents">
+
+[Task guide](/concepts/agents).
+
+| Command |
+| --- |
+| `nixflex agents create` |
+| `nixflex agents delete` |
+| `nixflex agents get` |
+| `nixflex agents list` |
+| `nixflex agents update` |
+
+</Accordion>
+
+<Accordion title="callers">
+
+[Task guide](/concepts/caller-context).
+
+| Command |
+| --- |
+| `nixflex callers delete` |
+| `nixflex callers get` |
+| `nixflex callers import` |
+| `nixflex callers set` |
+
+</Accordion>
+
+<Accordion title="calls">
+
+[Task guide](/guides/developer/calls).
+
+| Command |
+| --- |
+| `nixflex calls bookings` |
+| `nixflex calls create` |
+| `nixflex calls delete` |
+| `nixflex calls delete-all` |
+| `nixflex calls get` |
+| `nixflex calls history` |
+| `nixflex calls list` |
+| `nixflex calls outboundRequest` |
+| `nixflex calls prepare` |
+| `nixflex calls read` |
+| `nixflex calls recording` |
+
+</Accordion>
+
+<Accordion title="campaigns">
+
+[Task guide](/guides/developer/campaigns).
+
+| Command |
+| --- |
+| `nixflex campaigns cancel` |
+| `nixflex campaigns consent` |
+| `nixflex campaigns create` |
+| `nixflex campaigns delete` |
+| `nixflex campaigns launch` |
+| `nixflex campaigns list` |
+| `nixflex campaigns resume` |
+
+</Accordion>
+
+<Accordion title="completion">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex completion` |
+
+</Accordion>
+
+<Accordion title="contacts">
+
+[Task guide](/guides/developer/contact-controls).
+
+| Command |
+| --- |
+| `nixflex contacts add` |
+| `nixflex contacts list` |
+| `nixflex contacts preview` |
+| `nixflex contacts remove` |
+
+</Accordion>
+
+<Accordion title="doctor">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex doctor` |
+
+</Accordion>
+
+<Accordion title="inbox">
+
+[Task guide](/guides/developer/agent-inbox).
+
+| Command |
+| --- |
+| `nixflex inbox features` |
+| `nixflex inbox list` |
+| `nixflex inbox numbers` |
+| `nixflex inbox retention` |
+| `nixflex inbox thread` |
+| `nixflex inbox update` |
+
+</Accordion>
+
+<Accordion title="integrations">
+
+[Task guide](/integrations/overview).
+
+| Command |
+| --- |
+| `nixflex integrations connectGoogleCalendar` |
+| `nixflex integrations createFunction` |
+| `nixflex integrations delete` |
+| `nixflex integrations deleteAgentPrecall` |
+| `nixflex integrations deleteFunction` |
+| `nixflex integrations disconnectGoogleCalendar` |
+| `nixflex integrations get` |
+| `nixflex integrations getAgentPrecall` |
+| `nixflex integrations getGoogleCalendar` |
+| `nixflex integrations listFunctions` |
+| `nixflex integrations set` |
+| `nixflex integrations setAgentPrecall` |
+| `nixflex integrations updateFunction` |
+| `nixflex integrations updateGoogleCalendarSettings` |
+
+</Accordion>
+
+<Accordion title="keys">
+
+[Task guide](/authentication).
+
+| Command |
+| --- |
+| `nixflex keys activity` |
+| `nixflex keys create` |
+| `nixflex keys rotate` |
+
+</Accordion>
+
+<Accordion title="knowledge">
+
+[Task guide](/guides/developer/knowledge).
+
+| Command |
+| --- |
+| `nixflex knowledge acceptDraft` |
+| `nixflex knowledge addSource` |
+| `nixflex knowledge ask` |
+| `nixflex knowledge cancelJob` |
+| `nixflex knowledge cancelSession` |
+| `nixflex knowledge capabilities` |
+| `nixflex knowledge createExport` |
+| `nixflex knowledge createTopic` |
+| `nixflex knowledge deleteScope` |
+| `nixflex knowledge deleteSource` |
+| `nixflex knowledge deleteTopic` |
+| `nixflex knowledge discardDraft` |
+| `nixflex knowledge discoverWebsite` |
+| `nixflex knowledge downloadExport` |
+| `nixflex knowledge events` |
+| `nixflex knowledge getBase` |
+| `nixflex knowledge getDraft` |
+| `nixflex knowledge getJob` |
+| `nixflex knowledge getScope` |
+| `nixflex knowledge getSession` |
+| `nixflex knowledge getTopic` |
+| `nixflex knowledge importWebsite` |
+| `nixflex knowledge keyterms` |
+| `nixflex knowledge listSources` |
+| `nixflex knowledge listTopics` |
+| `nixflex knowledge measureFile` |
+| `nixflex knowledge measureSource` |
+| `nixflex knowledge overview` |
+| `nixflex knowledge putScope` |
+| `nixflex knowledge refreshSources` |
+| `nixflex knowledge renameSource` |
+| `nixflex knowledge replaceSource` |
+| `nixflex knowledge replaceSourceFile` |
+| `nixflex knowledge retryJob` |
+| `nixflex knowledge searchTopics` |
+| `nixflex knowledge startSession` |
+| `nixflex knowledge targets` |
+| `nixflex knowledge unanswered` |
+| `nixflex knowledge updateDraft` |
+| `nixflex knowledge updateSettings` |
+| `nixflex knowledge updateTopic` |
+| `nixflex knowledge uploadSource` |
+| `nixflex knowledge usage` |
+| `nixflex knowledge waitJob` |
+
+</Accordion>
+
+<Accordion title="login">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex login` |
+
+</Accordion>
+
+<Accordion title="logout">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex logout` |
+
+</Accordion>
+
+<Accordion title="mcp">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex mcp setup` |
+
+</Accordion>
+
+<Accordion title="numbers">
+
+[Task guide](/guides/developer/phone-numbers).
+
+| Command |
+| --- |
+| `nixflex numbers delete` |
+| `nixflex numbers get` |
+| `nixflex numbers import` |
+| `nixflex numbers list` |
+| `nixflex numbers move` |
+| `nixflex numbers update` |
+| `nixflex numbers updateCredentials` |
+| `nixflex numbers usage` |
+| `nixflex numbers web-calls` |
+
+</Accordion>
+
+<Accordion title="organisation">
+
+[Task guide](/guides/developer/organisations).
+
+| Command |
+| --- |
+| `nixflex organisation activity` |
+| `nixflex organisation activityCsv` |
+| `nixflex organisation claim` |
+| `nixflex organisation claimInvite` |
+| `nixflex organisation get` |
+| `nixflex organisation invite` |
+| `nixflex organisation members` |
+| `nixflex organisation remove` |
+| `nixflex organisation removeMember` |
+| `nixflex organisation rename` |
+| `nixflex organisation resend` |
+| `nixflex organisation revoke` |
+| `nixflex organisation role` |
+| `nixflex organisation setRole` |
+
+</Accordion>
+
+<Accordion title="sms">
+
+[Task guide](/sms/send-sms).
+
+| Command |
+| --- |
+| `nixflex sms campaigns cancel` |
+| `nixflex sms campaigns consent` |
+| `nixflex sms campaigns create` |
+| `nixflex sms campaigns delete` |
+| `nixflex sms campaigns get` |
+| `nixflex sms campaigns launch` |
+| `nixflex sms campaigns list` |
+| `nixflex sms campaigns resume` |
+| `nixflex sms campaigns update` |
+| `nixflex sms send` |
+
+</Accordion>
+
+<Accordion title="usage">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex usage` |
+
+</Accordion>
+
+<Accordion title="voices">
+
+[Task guide](/concepts/voices).
+
+| Command |
+| --- |
+| `nixflex voices get` |
+| `nixflex voices list` |
+
+</Accordion>
+
+<Accordion title="web-agent">
+
+[Task guide](/guides/developer/website/install-and-verify).
+
+| Command |
+| --- |
+| `nixflex web-agent get` |
+| `nixflex web-agent update` |
+
+</Accordion>
+
+<Accordion title="webhooks">
+
+[Task guide](/advanced/webhooks).
+
+| Command |
+| --- |
+| `nixflex webhooks delete` |
+| `nixflex webhooks get` |
+| `nixflex webhooks set` |
+
+</Accordion>
+
+<Accordion title="whoami">
+
+[Task guide](/cli/quickstart).
+
+| Command |
+| --- |
+| `nixflex whoami` |
+
+</Accordion>
+
+</AccordionGroup>

@@ -2,7 +2,7 @@
 title: "Configure recording and private playback"
 description: "Configure Nixflex call recording, resolve agent and number overrides and request fresh playback access while preserving recording, retention and storage states."
 canonical: "https://docs.nixflex.com/advanced/call-recording"
-sidebarTitle: "Call recording"
+sidebarTitle: "Recording"
 ---
 Configure the effective recording decision and use authenticated recording access to check whether audio is actually available.
 
@@ -27,10 +27,6 @@ Configure the effective recording decision and use authenticated recording acces
 [Business guide](/guides/business/call-history) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
 
 </div>
-
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
 
 ## Prerequisites
 
@@ -99,6 +95,16 @@ Example: `{"call_id":"call_example","status":"not_recorded","url":null,"expires_
 | No playable URL | Display the returned status, not a broken player. |
 | Customer bucket | Use the customer’s authorised storage path. |
 | Pending deletion | Do not restore access from a cached URL. |
+
+## Delete content deliberately
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
 
 ## Next steps
 

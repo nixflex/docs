@@ -32,10 +32,6 @@ Use the HTTP status and machine-readable code together. Messages can become more
 <span id="error-envelope"></span>
 
 
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
-
 ## Response shape
 
 ```json
@@ -118,7 +114,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="campaign_in_progress">campaign_in_progress</span> | 409 | A campaign is still running or scheduled. Cancel it or wait for it to finish before deleting this data. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
 | <span id="campaign_launch_failed">campaign_launch_failed</span> | 400 | The campaign could not be launched as requested. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
 | <span id="campaign_outcome_unknown">campaign_outcome_unknown</span> | 500 | The result could not be confirmed. Check this campaign before submitting again; do not resend. | Read campaign status and results. Do not create or launch another campaign. |
-| <span id="campaign_settlement_pending">campaign_settlement_pending</span> | 409 | This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes. | Keep the SMS campaign visible: `error.details.deleted` is `false`. Wait for settlement and read current state before another deliberate delete. Zero sent is not deletion proof. |
+| <span id="campaign_settlement_pending">campaign_settlement_pending</span> | 409 | This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes. | Legacy settlement refusal. Current single voice/SMS campaign deletion cancels waiting work and uses the B57 contract below; do not apply this old refusal to those routes. |
 | <span id="campaigns_paused">campaigns_paused</span> | 503 | Campaigns are paused for maintenance. Nothing was created or sent - try again in a few minutes. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="capacity_lookup_unavailable">capacity_lookup_unavailable</span> | 503 | Call capacity could not be confirmed. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
 | <span id="carrier_error">carrier_error</span> | 502 | The carrier refused the call. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
@@ -146,7 +142,7 @@ Codes are alphabetical. Some codes have more than one status because their read,
 | <span id="deleting">deleting</span> | 409 | This knowledge base is being deleted. | Wait for the existing deletion to finish; do not write to this base. |
 | <span id="deletion_cleanup_failed">deletion_cleanup_failed</span> | 409 | Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again. | Contact support about the failed cleanup before trying deletion again. |
 | <span id="deletion_pending">deletion_pending</span> | 503 | Private files are still being deleted. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
-| <span id="deletion_unavailable">deletion_unavailable</span> | 503 | Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending. | Keep deletion unconfirmed and reconcile the safety check through support before another deliberate action. |
+| <span id="deletion_unavailable">deletion_unavailable</span> | 503 | Deletion could not be confirmed. | For one call or campaign, check the list and resume the same DELETE. For bulk/account cleanup, follow that operation’s safety response. |
 | <span id="deletion_unsettled">deletion_unsettled</span> | 409 | Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending. | Keep deletion pending until the outcome and charge are settled; do not repeat the delete automatically. |
 | <span id="deprecated_field">deprecated_field</span> | 400 | An unsupported legacy setting was supplied. | Remove the legacy setting and use the documented resource settings. |
 | <span id="dispatch_safety_unavailable">dispatch_safety_unavailable</span> | 503 | Dispatch safety could not be confirmed; this attempt sent and charged nothing. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
@@ -602,3 +598,22 @@ Single-SMS suppression changed from 400 `invalid_request` to 409 `do_not_contact
 - [API overview](/api-reference/introduction)
 - [Retry rules](/api-reference/retries)
 - [Authentication](/api-reference/authentication)
+
+
+## Call and campaign content deletion
+
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+| Code | Status | What it means | What to do |
+| --- | --- | --- | --- |
+| <span id="hangup_pending">hangup_pending</span> | 503 | Owned running calls have not confirmed hang-up; deletion is queued. | Show queued, let the worker continue, and repeat the same DELETE if needed. |
+| <span id="invalid_delete">invalid_delete</span> | 400 | The call or campaign ID has an invalid length. | Use the owned identifier with 1–200 characters. |
+
+For these three same-ID deletion routes, `deletion_unavailable` means check the list and resume the same DELETE. Older `call_in_progress`, `deletion_unsettled` and recording-safety refusal codes belong to bulk/account cleanup; they are not the current single-call or campaign-delete contract.
+
+
+### Voice campaign detail
+
+| Code | HTTP | Meaning | What to do |
+| --- | --- | --- | --- |
+| <span id="campaign_unavailable">campaign_unavailable</span> | 503 | The campaign or its current wider-hours evidence could not be read. | Retry the read with bounded backoff. Do not show an empty campaign or invent a false confirmation. |

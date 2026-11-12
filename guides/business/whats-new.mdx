@@ -44,7 +44,7 @@ On a phone, swipe the table sideways if you cannot see every column.
 ## Clearer bookings and caller invitations
 
 - **A calendar for each number.** Connect Google Calendar, choose that number's hours and appointment length, and control **Email the caller a Google invite**. [Set up Google Calendar](/guides/business/google-calendar).
-- **Two separate contact checks.** The agent reads back the name and waits for yes, then spells the email's part before @ once and asks for another yes. Familiar domains are said as words; unusual ones are spelled too. Corrections get their own check. [Prepare your booking receptionist](/guides/booking-receptionist).
+- **One voice booking approval.** The caller spells the full name and email local part, says the domain as words, then approves one combined read-back. Correct only the wrong part. SMS and existing-booking changes keep their flow. [Prepare your booking receptionist](/guides/booking-receptionist).
 - **Honest confirmations.** After a confirmed booking and invitation request, “Google will email you an invite” explains what happens next. The agent does not claim inbox delivery or a text that was not sent.
 
 ## More control over your business
@@ -72,9 +72,17 @@ The versions below are **supplied release candidates**. Check the linked setup g
 | --- | --- |
 | [Node and CLI](/sdks/ecosystem) | 0.11.0 |
 | [Python](/sdks/python) | 0.4.0 |
-| [MCP for AI tools](/ai-tools/overview) | 0.5.0, with 96 tools |
+| [MCP for AI tools](/ai-tools/overview) | 0.5.0, with 97 tools |
 
 MCP can help with the calendar connection and settings, read a call’s retained booking result and check a saved outbound request without dialling. It cannot book appointments or publish knowledge directly; see its guide for permissions and private credential setup.
+
+## Delete calls and campaigns
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+Read [delete call data](/guides/business/privacy/delete-call-data).
 
 ## Next
 

@@ -1,0 +1,49 @@
+---
+title: "Handle organisation closure in your app"
+sidebarTitle: "Account closure"
+description: "Design around Owner-only dashboard closure, locked access and retained financial evidence without confusing closure with content deletion."
+canonical: "https://docs.nixflex.com/guides/developer/account/closure"
+---
+
+Send the Owner to the dashboard closure workflow and stop new work when the organisation is locked.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Organisation closure requires the Owner’s personal dashboard workflow.
+- A locked account is not proof that cleanup is complete.
+- Single-call and campaign deletion do not close an organisation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/privacy/close-account) · [Glossary](/guides/glossary)
+
+</div>
+
+## Keep closure outside ordinary API automation
+
+Account closure is a deliberate Owner action in **Settings → Danger zone → Delete account**, with a fresh sign-in check and typed confirmation. Do not create an account-deletion script by chaining call, number, agent or key endpoints. Those operations have different scopes and retained records.
+
+## Stop your own work
+
+When access is locked, stop dispatching new work, remove the account from scheduled application jobs and show the actual account status. Do not treat a 403 or unavailable read as an empty account that should be re-created. Keep identifiers needed to reconcile already-accepted work according to your own retention policy.
+
+Calls already connected may finish during closure. Downloaded data, your own recording bucket and downstream integration copies remain your responsibility. Personal login identities remain after organisation closure, while everyone loses organisation access.
+
+## Prepare the user
+
+Offer links to the dashboard data download, Call History recordings and Billing documents before closure. Explain that remaining credit is not refunded and required billing records remain. Show an unconfirmed or pending result honestly; do not turn it into a successful erasure notice.
+
+## Next steps
+
+- [Owner closure steps](/guides/business/privacy/close-account)
+- [Retention rules](/concepts/data-retention)
+- [Delete one call](/api-reference/calls/delete)

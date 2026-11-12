@@ -1,6 +1,6 @@
 ---
 title: "Set up a receptionist that takes bookings"
-sidebarTitle: "Take bookings by phone"
+sidebarTitle: "Overview"
 description: "Set up a Nixflex booking receptionist, connect a calendar to your number, confirm appointment details and test the real calendar result before going live."
 canonical: "https://docs.nixflex.com/guides/booking-receptionist"
 ---
@@ -25,7 +25,7 @@ Building an app? [Developer version](/actions/booking-confirmation).
 **The important part**
 
 - Connect the calendar to the intended number. A prompt alone cannot enable booking.
-- Confirm the name and email before creating a booking; corrections need a fresh check.
+- For a voice booking, collect the spelled name and email, then get one yes after the combined read-back.
 - The calendar result confirms the appointment. A transcript or spoken promise does not.
 - An invitation or text request is separate from inbox or handset delivery.
 
@@ -84,7 +84,13 @@ Tell the agent which appointment the caller can book, what information to confir
 
 <span id="4-choose-confirmation-settings" />
 
-For a new booking, the agent asks for the name, reads it back and waits for yes. It then asks for the email, spells the part before @ once for approval and asks for a separate yes. Familiar domains are said as words: “s-a-m at gmail dot com”. An unusual domain is spelled too. Saved addresses get the same check. A correction repeats only that field; after approval, booking messages do not repeat the address. The optional final confirmation setting controls approval of the action and time, not these contact checks.
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
 
 With Google Calendar, review **Email the caller a Google invite** on the number's calendar card. It starts on. After a confirmed booking and invitation request, the agent says “Google will email you an invite.” Updates and cancellations use matching wording. This is not an inbox-delivery promise. Cal.com handles its own emails. **In-Call SMS** is separate: the agent can say it texted the details only after a matching send is accepted; that is not proof of handset delivery.
 
@@ -94,7 +100,7 @@ With Google Calendar, review **Email the caller a Google invite** on the number'
 
 <span id="5-test-a-complete-booking" />
 
-Call from an owned test phone and ask for a slot. Give a name and email, including a deliberate correction, and check that each corrected field gets its own read-back and yes. Confirm the event actually appears in the calendar. Try an unavailable time and a move or cancellation; existing appointment changes need email approval without asking for a new name. Remove the test appointment through your normal calendar process.
+Call from a phone you control. Spell the full name and email local part, say the domain as words, and approve one combined read-back. Make a deliberate correction and check that only the wrong part is asked again. Verify the appointment in the calendar. Test an unavailable time, then a move or cancellation using the existing-booking flow. Remove the test appointment through your calendar.
 
 </Step>
 

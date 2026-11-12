@@ -1,0 +1,547 @@
+---
+title: "Use the Python SDK with sync or async code"
+sidebarTitle: "Python SDK"
+description: "Install the reviewed Python candidate, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states."
+canonical: "https://docs.nixflex.com/sdks/python"
+---
+
+Use the Python SDK with a managed synchronous or asynchronous client, keeping reads, approved writes and recovery separate.
+
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Python 3.9+</strong></div>
+  <div><small>Clients</small><strong>Sync and async</strong></div>
+  <div><small>Recovery</small><strong>Saved UUID and current reads</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The reviewed 0.4.0 package requires Python 3.9 or later and httpx.
+- Automatic retries are GET-only; a failed mutation can still have happened.
+- Local call preparation stays synchronous even on AsyncNixflex.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install the reviewed wheel
+
+Compare the supplied wheel with its [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your virtual environment:
+
+```bash
+python -m pip install ./nixflex-0.4.0-py3-none-any.whl
+```
+
+A registry installation alone does not establish this candidate’s availability. Use the exact reviewed archive when testing its newer call and calendar methods.
+
+## Read usage with a synchronous client
+
+Set `NIXFLEX_API_KEY` and `NIXFLEX_BASE_URL` privately. Use the API origin without `/v1`; the client adds that path prefix. The context manager closes the underlying HTTP client.
+
+```python
+import os
+from nixflex import Nixflex, NixflexError
+
+connection = {
+    "api_key": os.environ["NIXFLEX_API_KEY"],
+    "base_url": os.environ["NIXFLEX_BASE_URL"],
+    "timeout": 30.0,
+    "max_retries": 0,
+}
+try:
+    with Nixflex(**connection) as client:
+        usage = client.usage.get()
+        if not isinstance(usage, dict):
+            raise ValueError("Unexpected usage response")
+        print("Usage read succeeded.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": error.request_id})
+    raise SystemExit(1)
+```
+
+Keep the returned object and complete exception details out of routine logs. Log only safe status, code and request identifiers.
+
+## Use an asynchronous client
+
+JSON methods are awaitable. This read-only function opens and closes its own client:
+
+```python
+import asyncio
+import os
+from nixflex import AsyncNixflex
+
+async def inspect_request(request_id):
+    async with AsyncNixflex(
+        api_key=os.environ["NIXFLEX_API_KEY"],
+        base_url=os.environ["NIXFLEX_BASE_URL"],
+        max_retries=0,
+    ) as client:
+        state = await client.calls.outbound_request(request_id)
+        if state["state"] == "accepted" and state["call_id"]:
+            return await client.calls.bookings(state["call_id"])
+        return state
+
+if __name__ == "__main__":
+    result = asyncio.run(inspect_request(os.environ["NXF_REQUEST_ID"]))
+    print("Saved request inspected; no call sent.")
+```
+
+Keep the result private and preserve its state. Streaming methods such as Activity CSV return an async iterator rather than an ordinary JSON value.
+
+## Prepare locally and persist first
+
+Create a private `intent.json` using the [outbound request fields](/guides/developer/call-requests). Run this once for a new intention; it sends nothing and refuses to overwrite an existing prepared file.
+
+```python
+import json
+from pathlib import Path
+from nixflex import prepare_outbound_call
+
+intent = json.loads(Path("intent.json").read_text(encoding="utf-8"))
+prepared = prepare_outbound_call(intent)
+with open("prepared-call.json", "x", encoding="utf-8") as handle:
+    json.dump(prepared, handle, indent=2)
+    handle.write("\n")
+print("Prepared locally; no call sent.")
+```
+
+Use private directory permissions on your platform and store the account/base-URL association with the intention. Do not regenerate the UUID when reopening your process. `client.calls.prepare(**params)` is also local and synchronous, including on `AsyncNixflex`.
+
+## Send only the approved saved intention
+
+The following separate script places a paid call once. Run it only after approval of the saved inputs, never as an automatic retry.
+
+```python
+import json
+import os
+from pathlib import Path
+from nixflex import Nixflex, NixflexError
+
+saved = json.loads(Path("prepared-call.json").read_text(encoding="utf-8"))
+try:
+    with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
+                 base_url=os.environ["NIXFLEX_BASE_URL"],
+                 max_retries=0) as client:
+        receipt = client.calls.create(**saved)
+    with open("call-receipt.json", "x", encoding="utf-8") as handle:
+        json.dump(receipt, handle, indent=2)
+        handle.write("\n")
+    print("Receipt saved; inspect the call separately.")
+except NixflexError as error:
+    print({"status": error.status, "code": error.code,
+           "request_id": saved["request_id"]})
+    raise SystemExit(1)
+```
+
+A local file failure after dispatch does not mean the call failed. Read `calls.outbound_request(saved["request_id"])` with the original account and environment. Preserve a known call ID even if journal confirmation is unconfirmed. A 404 or unavailable read is not permission for a new UUID.
+
+## Read results and use the right method
+
+| Task | Python method |
+| --- | --- |
+| Filtered call history | `calls.history(agent=agent_id, limit=50)` |
+| Current detail | `calls.read(call_id)` |
+| Booking evidence | `calls.bookings(call_id)` |
+| Recording access | `calls.recording(call_id)` |
+| Owned number | `phone_numbers.get(number)` |
+| Website settings | `web_agent.get(number)` |
+| Knowledge workflow | `knowledge` methods with saved keys and revisions. |
+
+Legacy `calls.list` uses limit/offset and refuses an agent filter; use history for filtering. Continue cursor endpoints using their returned cursor and documented parameters. Lists are not frozen snapshots.
+
+`variables` is a Python convenience alias for wire field `dynamic_vars`. Supply one alias only. A no-ID create uses the older call response; saved UUID requests use the durable receipt contract.
+
+## Preserve failure and booking states
+
+The default timeout is 30 seconds and the default is one eligible GET retry. `max_retries=0` disables those retries; the supported range is 0–3. `NixflexOutcomeUnknownError` and the `NixflexOutboundRequestError` family require reconciliation rather than an automatic replacement write.
+
+For bookings, only `ready` carries `result`. `none` means confirmed no successful changes; `processing`, `deleted` and `unavailable` must remain distinct. Count active `final` rows, not the number of timeline actions.
+
+| Error | Action |
+| --- | --- |
+| 401 or role refusal | Resolve the account, host or authorised role. |
+| GET rate limit | Follow the server retry guidance within a bound. |
+| Unknown mutation | Read current state with the saved operation identity. |
+| `do_not_contact` | Stop the send, including older 400 and current 409 forms. |
+
+Use the [strict raw-byte webhook verifier](/advanced/webhooks#3-verify-exact-request-bytes) before parsing an event. The signing secret is separate from the full API authentication string, and durable deduplication is still required.
+
+- [Read the Node equivalent](/sdks/node)
+- [Use paging safely](/guides/developer/pagination)
+- [Reconcile a saved outbound request](/guides/developer/call-requests)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="reviewed-040-candidate"></span>
+<span id="authenticate"></span>
+<span id="async"></span>
+<span id="agents"></span>
+<span id="calls"></span>
+<span id="phone-numbers"></span>
+<span id="caller-context"></span>
+<span id="sms"></span>
+<span id="webhooks"></span>
+<span id="account-and-bring-your-own"></span>
+<span id="errors"></span>
+<span id="retries"></span>
+<span id="related"></span>
+
+{/* C15 K9 deletion */}
+
+## Delete content deliberately
+
+The reviewed candidate supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
+
+The exact queued response raises `NixflexServerError`: status 503, code `hangup_pending`, and details `deleted:false` plus `retry_pending:true`. It is not success. The server continues automatically; a later deliberate repeat of the same DELETE is safe. Other uncertain failures use `outcome_unknown`; inspect `details.original_code` and current state privately. No error or 404 is converted into deletion success.
+
+Bulk call cleanup keeps its separate guard and counters. It does not use this queue classification. See [delete a call](/api-reference/calls/delete), [delete a voice campaign](/api-reference/voice-campaigns/delete) and [delete an SMS campaign](/api-reference/sms/campaigns-delete).
+
+Python returns dictionaries. With `AsyncNixflex`, await the same resource methods. This synchronous example sends one approved voice campaign delete:
+
+```python
+import os
+from nixflex import Nixflex
+from nixflex.errors import NixflexServerError
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
+             base_url=os.environ["NIXFLEX_BASE_URL"], max_retries=0) as client:
+    try:
+        receipt = client.campaigns.delete(os.environ["NXF_CAMPAIGN_ID"])
+        if (receipt.get("deleted") is not True
+                or receipt.get("campaign_id") != os.environ["NXF_CAMPAIGN_ID"]
+                or not isinstance(receipt.get("message"), str)):
+            raise RuntimeError("Deletion is not confirmed.")
+        print("Campaign deletion confirmed; history and used charges remain.")
+    except NixflexServerError as error:
+        if (error.status == 503 and error.code == "hangup_pending"
+                and error.details.get("deleted") is False
+                and error.details.get("retry_pending") is True):
+            print("Deletion queued; the server continues after hang-up.")
+        else:
+            raise  # Keep private; reconcile an unknown result before a deliberate repeat.
+```
+
+{/* C15 complete method directory */}
+
+## Public method directory
+
+This directory lists all 137 public resource methods in the reviewed candidate. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
+
+The same resource names work with `Nixflex` and `AsyncNixflex`. Await asynchronous JSON operations; use `async for` for asynchronous streams. `prepare` builds an intention locally.
+
+<AccordionGroup>
+
+<Accordion title="keys">
+
+[Fields, results and workflow](/authentication).
+
+| Method | Signature |
+| --- | --- |
+| `client.keys.rotate` | `rotate()` |
+| `client.keys.activity` | `activity(*, period=None)` |
+
+</Accordion>
+
+<Accordion title="usage">
+
+[Fields, results and workflow](/guides/developer/billing).
+
+| Method | Signature |
+| --- | --- |
+| `client.usage.get` | `get()` |
+
+</Accordion>
+
+<Accordion title="webhooks">
+
+[Fields, results and workflow](/advanced/webhooks).
+
+| Method | Signature |
+| --- | --- |
+| `client.webhooks.set` | `set(phone_number: str, url: str, slot: int=1)` |
+| `client.webhooks.get` | `get(phone_number: str, slot: int=1)` |
+| `client.webhooks.delete` | `delete(phone_number: str, slot: int=1)` |
+
+</Accordion>
+
+<Accordion title="agents">
+
+[Fields, results and workflow](/concepts/agents).
+
+| Method | Signature |
+| --- | --- |
+| `client.agents.create` | `create(**params: Any)` |
+| `client.agents.list` | `list(limit: Optional[int]=None, offset: Optional[int]=None, *, status: Optional[AgentStatus]=None, search: Optional[str]=None)` |
+| `client.agents.get` | `get(agent_id: str)` |
+| `client.agents.update` | `update(agent_id: str, **params: Any)` |
+| `client.agents.delete` | `delete(agent_id: str)` |
+
+</Accordion>
+
+<Accordion title="callers">
+
+[Fields, results and workflow](/concepts/caller-context).
+
+| Method | Signature |
+| --- | --- |
+| `client.callers.get` | `get(phone_number: str, caller_number: str)` |
+| `client.callers.set` | `set(phone_number: str, caller_number: str, **fields: Any)` |
+| `client.callers.delete` | `delete(phone_number: str, caller_number: str)` |
+| `client.callers.import_` | `import_(phone_number: str, callers: List[Dict[str, Any]])` |
+
+</Accordion>
+
+<Accordion title="calls">
+
+[Fields, results and workflow](/guides/developer/calls).
+
+| Method | Signature |
+| --- | --- |
+| `client.calls.prepare` | `prepare(**params: Any)` |
+| `client.calls.bookings` | `bookings(call_id: str)` |
+| `client.calls.outbound_request` | `outbound_request(request_id: str)` |
+| `client.calls.create` | `create(agent_id: str, to_number: str, prompt: str, from_number: Optional[str]=None, variables: Optional[Dict[str, str]]=None, **extra: Any)` |
+| `client.calls.list` | `list(limit: Optional[int]=None, offset: Optional[int]=None, agent_id: Optional[str]=None)` |
+| `client.calls.get` | `get(call_id: str)` |
+| `client.calls.history` | `history(**filters: Any)` |
+| `client.calls.read` | `read(call_id: str)` |
+| `client.calls.recording` | `recording(call_id: str)` |
+| `client.calls.delete` | `delete(call_id: str)` |
+| `client.calls.delete_all` | `delete_all()` |
+
+</Accordion>
+
+<Accordion title="campaigns">
+
+[Fields, results and workflow](/guides/developer/campaigns).
+
+| Method | Signature |
+| --- | --- |
+| `client.campaigns.delete` | `delete(campaign_id: str)` |
+| `client.campaigns.cancel` | `cancel(campaign_id: str)` |
+| `client.campaigns.consent` | `consent(campaign_id: str, event: str, confirmed: bool)` |
+| `client.campaigns.resume` | `resume(campaign_id: str)` |
+| `client.campaigns.list` | `list(status: Optional[str]=None, limit: Optional[int]=None)` |
+| `client.campaigns.create` | `create(agent_id: str, from_number: str, prompt: str, recipients: List[Dict[str, Any]], **extra: Any)` |
+| `client.campaigns.launch` | `launch(campaign_id: str)` |
+
+</Accordion>
+
+<Accordion title="contacts">
+
+[Fields, results and workflow](/guides/developer/contact-controls).
+
+| Method | Signature |
+| --- | --- |
+| `client.contacts.preview` | `preview(agent_id: str, recipients: List[Dict[str, Any]], **extra: Any)` |
+| `client.contacts.list` | `list(channel: Optional[str]=None, after: Optional[str]=None)` |
+| `client.contacts.add` | `add(phone_numbers: List[str], **extra: Any)` |
+| `client.contacts.remove` | `remove(phone_number: str, **extra: Any)` |
+
+</Accordion>
+
+<Accordion title="account">
+
+[Fields, results and workflow](/guides/developer/account).
+
+| Method | Signature |
+| --- | --- |
+| `client.account.retention` | `retention()` |
+
+</Accordion>
+
+<Accordion title="voices">
+
+[Fields, results and workflow](/concepts/voices).
+
+| Method | Signature |
+| --- | --- |
+| `client.voices.list` | `list(*, language: Optional[str]=None, gender: Optional[Literal['male', 'female', 'unknown']]=None, locale: Optional[str]=None, agent_id: Optional[str]=None, agent_language: Optional[str]=None, availability: Optional[Literal['active', 'all']]=None, limit: Optional[int]=None, cursor: Optional[str]=None)` |
+| `client.voices.get` | `get(voice_key: str, *, agent_id: Optional[str]=None, agent_language: Optional[str]=None)` |
+
+</Accordion>
+
+<Accordion title="inbox">
+
+[Fields, results and workflow](/guides/developer/agent-inbox).
+
+| Method | Signature |
+| --- | --- |
+| `client.inbox.list` | `list(channel: str, number: str, **query: Any)` |
+| `client.inbox.thread` | `thread(channel: str, number: str, thread: str, **query: Any)` |
+| `client.inbox.update` | `update(channel: str, number: str, thread: str, **changes: Any)` |
+| `client.inbox.features` | `features()` |
+| `client.inbox.numbers` | `numbers(offset: Optional[int]=None)` |
+| `client.inbox.retention` | `retention(number: Optional[str]=None)` |
+
+</Accordion>
+
+<Accordion title="integrations">
+
+[Fields, results and workflow](/integrations/overview).
+
+| Method | Signature |
+| --- | --- |
+| `client.integrations.connect_google_calendar` | `connect_google_calendar(number: str, return_url: str)` |
+| `client.integrations.get_google_calendar` | `get_google_calendar(number: str)` |
+| `client.integrations.disconnect_google_calendar` | `disconnect_google_calendar(number: str)` |
+| `client.integrations.update_google_calendar_settings` | `update_google_calendar_settings(number: str, **settings)` |
+| `client.integrations.get` | `get(provider: str, number: str)` |
+| `client.integrations.set` | `set(provider: str, number: str, **settings)` |
+| `client.integrations.delete` | `delete(provider: str, number: str)` |
+| `client.integrations.get_agent_precall` | `get_agent_precall(agent_id: str)` |
+| `client.integrations.set_agent_precall` | `set_agent_precall(agent_id: str, url: str)` |
+| `client.integrations.delete_agent_precall` | `delete_agent_precall(agent_id: str)` |
+| `client.integrations.list_functions` | `list_functions(number: str)` |
+| `client.integrations.create_function` | `create_function(number: str, *, name: str, url: str, **settings)` |
+| `client.integrations.update_function` | `update_function(number: str, id: str, **settings)` |
+| `client.integrations.delete_function` | `delete_function(number: str, id: str)` |
+
+</Accordion>
+
+<Accordion title="knowledge">
+
+[Fields, results and workflow](/guides/developer/knowledge).
+
+| Method | Signature |
+| --- | --- |
+| `client.knowledge.delete_scope` | `delete_scope(target, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.get_scope` | `get_scope(target, *, timeout=None)` |
+| `client.knowledge.put_scope` | `put_scope(target, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.measure_source` | `measure_source(target, body, *, timeout=None)` |
+| `client.knowledge.start_session` | `start_session(target, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.get_base` | `get_base(kb, *, timeout=None)` |
+| `client.knowledge.discard_draft` | `discard_draft(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.get_draft` | `get_draft(kb, id, *, timeout=None)` |
+| `client.knowledge.update_draft` | `update_draft(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.accept_draft` | `accept_draft(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.create_export` | `create_export(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.overview` | `overview(kb, *, timeout=None)` |
+| `client.knowledge.update_settings` | `update_settings(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.list_sources` | `list_sources(kb, query=None, *, timeout=None)` |
+| `client.knowledge.add_source` | `add_source(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.delete_source` | `delete_source(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.rename_source` | `rename_source(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.replace_source` | `replace_source(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.refresh_sources` | `refresh_sources(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.search_topics` | `search_topics(kb, body, *, timeout=None)` |
+| `client.knowledge.list_topics` | `list_topics(kb, query=None, *, timeout=None)` |
+| `client.knowledge.create_topic` | `create_topic(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.delete_topic` | `delete_topic(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.get_topic` | `get_topic(kb, id, *, timeout=None)` |
+| `client.knowledge.update_topic` | `update_topic(kb, id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.unanswered` | `unanswered(kb, query=None, *, timeout=None)` |
+| `client.knowledge.discover_website` | `discover_website(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.import_website` | `import_website(kb, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.capabilities` | `capabilities(*, timeout=None)` |
+| `client.knowledge.events` | `events(query=None, *, timeout=None)` |
+| `client.knowledge.download_export` | `download_export(id, query=None, *, timeout=None)` |
+| `client.knowledge.get_job` | `get_job(id, *, timeout=None)` |
+| `client.knowledge.cancel_job` | `cancel_job(id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.retry_job` | `retry_job(id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.targets` | `targets(query=None, *, timeout=None)` |
+| `client.knowledge.get_session` | `get_session(id, *, timeout=None)` |
+| `client.knowledge.cancel_session` | `cancel_session(id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.ask` | `ask(id, body, *, idempotency_key, timeout=None)` |
+| `client.knowledge.usage` | `usage(query=None, *, timeout=None)` |
+| `client.knowledge.keyterms` | `keyterms(target, *, timeout=None)` |
+| `client.knowledge.upload_source` | `upload_source(kb, file, *, idempotency_key, **metadata)` |
+| `client.knowledge.replace_source_file` | `replace_source_file(kb, id, file, *, idempotency_key, **metadata)` |
+| `client.knowledge.measure_file` | `measure_file(target, file, **metadata)` |
+| `client.knowledge.wait_job` | `wait_job(id, *, max_attempts=20, interval=1.0, timeout=30.0)` |
+
+</Accordion>
+
+<Accordion title="organisation">
+
+[Fields, results and workflow](/guides/developer/organisations).
+
+| Method | Signature |
+| --- | --- |
+| `client.organisation.get` | `get()` |
+| `client.organisation.members` | `members()` |
+| `client.organisation.activity` | `activity(*, before: Optional[str]=None, actor: Optional[str]=None, from_: Optional[str]=None, to: Optional[str]=None)` |
+| `client.organisation.invite` | `invite(email: str, role: Literal['admin', 'member']='member')` |
+| `client.organisation.resend` | `resend(invite_id: str)` |
+| `client.organisation.revoke` | `revoke(invite_id: str)` |
+| `client.organisation.remove_member` | `remove_member(user_id: str)` |
+| `client.organisation.set_role` | `set_role(user_id: str, role: Literal['admin', 'member'])` |
+| `client.organisation.claim_invite` | `claim_invite(email: str)` |
+| `client.organisation.rename` | `rename(name: str)` |
+| `client.organisation.activity_csv` | `activity_csv(*, before=None, actor=None, from_=None, to=None)` |
+
+</Accordion>
+
+<Accordion title="phone_numbers">
+
+[Fields, results and workflow](/guides/developer/phone-numbers).
+
+| Method | Signature |
+| --- | --- |
+| `client.phone_numbers.update_credentials` | `update_credentials(phone_number: str, **credentials)` |
+| `client.phone_numbers.import_` | `import_(phone_number: str, agent_id: str, **credentials: Any)` |
+| `client.phone_numbers.list` | `list(agent_id: Optional[str]=None, *, provider: Optional[Literal['twilio', 'telnyx']]=None, limit: Optional[int]=None, cursor: Optional[str]=None)` |
+| `client.phone_numbers.get` | `get(phone_number: str)` |
+| `client.phone_numbers.usage` | `usage(phone_number: str, *, period: Optional[Literal['today', '7', '14', '30', '90', 'all']]=None, time_zone: Optional[str]=None)` |
+| `client.phone_numbers.update` | `update(phone_number: str, *, inbound_enabled: Switch=_UNSET, outbound_enabled: Switch=_UNSET, sms_reply_enabled: Switch=_UNSET, web_agent_enabled: Switch=_UNSET, web_calls_enabled: Switch=_UNSET, web_functions_enabled: Switch=_UNSET, monitor_enabled: Switch=_UNSET, **params: Any)` |
+| `client.phone_numbers.delete` | `delete(phone_number: str)` |
+| `client.phone_numbers.move` | `move(phone_number: str, agent_id: str)` |
+| `client.phone_numbers.set_web_calls` | `set_web_calls(phone_number: str, enabled: bool)` |
+| `client.phone_numbers.get_web_calls` | `get_web_calls(phone_number: str)` |
+
+</Accordion>
+
+<Accordion title="sms.campaigns">
+
+[Fields, results and workflow](/guides/developer/sms-campaigns/prepare-and-send).
+
+| Method | Signature |
+| --- | --- |
+| `client.sms.campaigns.cancel` | `cancel(campaign_id: str)` |
+| `client.sms.campaigns.consent` | `consent(campaign_id: str, event: str, confirmed: bool)` |
+| `client.sms.campaigns.resume` | `resume(campaign_id: str)` |
+| `client.sms.campaigns.update` | `update(campaign_id: str, **changes: Any)` |
+| `client.sms.campaigns.create` | `create(agent_id: str, from_number: str, message: Optional[str]=None, recipients: Optional[List[Dict[str, Any]]]=None, **extra: Any)` |
+| `client.sms.campaigns.launch` | `launch(campaign_id: str)` |
+| `client.sms.campaigns.list` | `list(status: Optional[str]=None, limit: Optional[int]=None, before: Optional[str]=None)` |
+| `client.sms.campaigns.get` | `get(campaign_id: str, limit: Optional[int]=None, recipient_cursor: Optional[str]=None, message_cursor: Optional[str]=None)` |
+| `client.sms.campaigns.delete` | `delete(campaign_id: str)` |
+
+</Accordion>
+
+<Accordion title="sms">
+
+[Fields, results and workflow](/sms/send-sms).
+
+| Method | Signature |
+| --- | --- |
+| `client.sms.send` | `send(agent_id: str, from_number: str, to: str, message: str, **extra: Any)` |
+
+</Accordion>
+
+<Accordion title="web_agent">
+
+[Fields, results and workflow](/guides/developer/website/install-and-verify).
+
+| Method | Signature |
+| --- | --- |
+| `client.web_agent.get` | `get(number: str)` |
+| `client.web_agent.update` | `update(number: str, revision: str, settings: Dict[str, Any])` |
+
+</Accordion>
+
+</AccordionGroup>
+
+### Client helpers
+
+| Helper | Purpose |
+| --- | --- |
+| `Nixflex(...)` / `AsyncNixflex(...)` | Create a synchronous or asynchronous client; use its context manager to close connections. |
+| `Nixflex.create_key(...)` / `AsyncNixflex.create_key(...)` | Create a new account credential deliberately; see [create an account key](/api-reference/account/create-key). |
+| `prepare_outbound_call(...)` | Prepare an outbound intention locally before saving and approving it. |
+| `verify_webhook_signature(...)` | Verify the unchanged raw request body and signature before processing an event; see [webhooks](/advanced/webhooks). |

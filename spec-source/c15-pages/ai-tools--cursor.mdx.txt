@@ -1,0 +1,119 @@
+---
+title: "Connect Cursor to Nixflex with MCP"
+sidebarTitle: "Connect Cursor"
+description: "Connect Cursor to the Nixflex MCP candidate using private environment variables, verify the tools and try five prompts with clear approval and action limits."
+canonical: "https://docs.nixflex.com/ai-tools/cursor"
+---
+
+Connect Cursor to a local Nixflex MCP process for your selected account and API environment.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sdks/mcp).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>Local Node process</strong></div>
+  <div><small>Configuration</small><strong>mcp.json</strong></div>
+  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Secrets</small><strong>Environment references</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
+- Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
+- Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Prepare a new returns-policy topic from these approved facts.</p>
+  <p><strong>Cursor</strong><br />I will read the current knowledge and show a draft with any conflicts.</p>
+  <p><strong>Owner</strong><br />Show me how to review and publish it in the dashboard. Do not use another route to bypass the missing knowledge-write tool.</p>
+</div>
+
+## Connect
+
+1. [Install the supplied package](/ai-tools/overview#install-the-supplied-local-package) with Node 22 or later.
+2. Have your private launcher or secret manager provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` to Cursor. Fully restart Cursor from that environment. Never paste the key into chat or a config file.
+3. Add the entry below to your user `~/.cursor/mcp.json`, preserving other servers. For project-only use, Cursor also supports `.cursor/mcp.json` in the project. The example contains variable references, not credentials.
+4. Replace the package path with your actual absolute path. On macOS or Linux, use the installed path under your home directory from the setup guide, written in full.
+5. Open Cursor's MCP settings, check that Nixflex connects, and inspect the tool list before approving the read below.
+
+```json
+{
+  "mcpServers": {
+    "nixflex": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
+      ],
+      "env": {
+        "NIXFLEX_API_KEY": "${env:NIXFLEX_API_KEY}",
+        "NIXFLEX_BASE_URL": "${env:NIXFLEX_BASE_URL}",
+        "NIXFLEX_CREDENTIAL_SOURCE": "environment"
+      }
+    }
+  }
+}
+```
+
+Cursor expands the environment references when starting the server. If Node is not on its path, use the full Node executable path. See [Cursor's MCP configuration](https://cursor.com/docs/mcp) for configuration locations and environment interpolation.
+
+## Verify before editing anything
+
+> Use Nixflex get_usage only. Summarise usage without changing the account, making a call or sending a message. Do not show credentials.
+
+Check for **97 tools** in this candidate. Keep approval of tool calls enabled. Not every older write tool has its own confirmation field. If a write times out, inspect current state instead of repeating it automatically. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request.
+
+## Five prompts to try
+
+### 1. Create an agent
+
+> List my Nixflex agents and prepare a Willow Support agent for service questions. Show the instructions and proposed settings for my review. Use create_agent only after I approve. Do not change project files, existing agents or phone numbers as part of this request.
+
+### 2. Add knowledge through the dashboard
+
+> Read Willow Support's existing knowledge with the Nixflex tools. Help me draft a new returns-policy topic using only the facts I provide. Show duplicate or conflicting facts, then give me dashboard review and publication steps. MCP cannot add or publish it; do not report success before I do that.
+
+### 3. Check calls
+
+> Find the latest five completed calls for Willow Support with Nixflex list_calls. Summarise confirmed outcomes and unresolved questions without exposing caller contact details. Do not edit records or contact callers.
+
+### 4. Prepare a calendar booking test
+
+> Help me prepare calendar booking on one Nixflex number. List the numbers and let me choose. Explain the dashboard connection, opening hours and Google invite switch, then draft a test conversation with full-name spelling, email-local-part spelling, a domain spoken as words, and one combined read-back followed by one clear yes. There is no direct booking tool here; do not start a call, send SMS or invent an appointment result.
+
+### 5. Read usage
+
+> Read Nixflex get_usage and explain the returned usage and balance in a small table. Use the actual returned period and mark missing figures unknown. Do not change billing, rotate a key or estimate charges that were not returned.
+
+## Read booking and request results
+
+Use `get_call_bookings` for a known call ID and `get_outbound_call_request` for a saved request ID. These tools read results without booking or dialling. Report missing or unavailable content honestly, and do not change project files or make direct API calls to bypass a missing tool. See [the call-result states and saved-request workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests).
+
+## What stays outside MCP
+
+The candidate can create a ten-minute Google consent link for a human to open, check the connection, update settings and disconnect a number. The status read can refresh or check an existing connection internally. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not proof of delivery. Knowledge publishing and direct booking remain unavailable.
+
+The number-credential tool takes only number, provider and confirmation; it reads the selected carrier pair from the server's private environment. If enabling it, add only that pair's variable references to the existing `env` object, using the same `${env:NAME}` form as above. Never insert their values or ask Cursor to inspect them. Follow [the exact private variable names and limits](/ai-tools/overview#google-calendar-and-number-credentials). A request to create a call is a real outbound action and can spend credit. Review [capabilities and permissions](/ai-tools/overview) before enabling writes.
+
+Give Cursor [llms.txt](https://docs.nixflex.com/llms.txt) to find documentation, or [this Markdown page](https://docs.nixflex.com/ai-tools/cursor.md) for setup context. Reading docs is separate from accessing your account.
+
+## Next
+
+- [Manage calendar settings](/ai-tools/calendar-settings)
+- [Check call and booking results](/ai-tools/call-results)
+- [Prepare private number credentials](/ai-tools/number-credentials)
+
+Reviewed 5 November 2026.

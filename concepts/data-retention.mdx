@@ -28,10 +28,6 @@ Set call and message retention while keeping policy eligibility, completed clean
 
 </div>
 
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
-
 ## Account default and agent setting
 
 Choose **90 / 30 / 7 / 1 day / Delete after each call**. The API represents the last
@@ -77,7 +73,11 @@ there was never a recording. Independent carrier recording is outside a Nixflex 
 Switching recording off affects new work, not old audio. Number `true` still wins
 over agent `false`; see [recording](/advanced/call-recording).
 `DELETE /v1/agents/:id` switches the agent off; it does not erase its history.
-Call deletion and account erasure have their own safety checks and pending outcomes.
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Account closure is a separate Owner-only workflow; read [close account](/guides/business/privacy/close-account).
 A timeout or an HTTP request alone is not proof that all copies are gone.
 
 This page does not promise that all service/provider data stays in one region or
@@ -92,3 +92,7 @@ See [privacy/action inheritance](/concepts/agent-inheritance) and
 - [Set up an agent](/business)
 - [Privacy settings](/guides/business/privacy)
 - [Manage number settings with code](/guides/developer/phone-numbers)
+
+## Related dashboard and AI tasks
+
+- [Review retention for every agent and channel](/guides/business/privacy/retention)

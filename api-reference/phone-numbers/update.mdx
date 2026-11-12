@@ -56,7 +56,7 @@ Send a JSON object.
 | `web_prompt` | string or null | No | Unchanged | Web prompt override. Null or empty stores an empty string. Maximum 16000 characters. |
 | `speaking_rate` | number or null or string | No | Unchanged | Number values are clamped to 0.5–1.5. Null or an empty string clears to inheritance; use 1 for normal speed. |
 | `dtmf_enabled` | boolean or null | No | Unchanged | Keypad override. Null or empty clears to inheritance; legacy true strings are accepted. |
-| `require_booking_confirmation` | boolean or null | No | Unchanged | Booking confirmation override; null inherits the agent. |
+| `require_booking_confirmation` | boolean or null | No | Unchanged | Saved confirmation override; null inherits the agent. New voice bookings always need one combined approval, even when false. |
 | `record_call` | boolean or null | No | Unchanged | Recording override; null inherits the agent. |
 | `recording_source` | string or null | No | Unchanged | provider or nixflex; null or empty inherits the agent. Case and surrounding whitespace are normalised. Allowed: `"provider"`, `"nixflex"`, `null`, `""`. |
 | `voicemail_leave_enabled` | boolean or null | No | Unchanged | Number-specific voicemail setting; null is unset. When enabled, the merged message must be nonblank. |
@@ -110,7 +110,7 @@ Read web_calls_effective from the number detail endpoint to check effective webs
 | `phone_number.web_prompt` | string or null | Web prompt override. Null or empty stores an empty string. Maximum 16000 characters. |
 | `phone_number.speaking_rate` | number or null or string | Number values are clamped to 0.5–1.5. Null or an empty string clears to inheritance; use 1 for normal speed. |
 | `phone_number.dtmf_enabled` | boolean or null | Keypad override. Null or empty clears to inheritance; legacy true strings are accepted. |
-| `phone_number.require_booking_confirmation` | boolean or null | Booking confirmation override; null inherits the agent. |
+| `phone_number.require_booking_confirmation` | boolean or null | Saved confirmation override; null inherits the agent. New voice bookings always need one combined approval, even when false. |
 | `phone_number.record_call` | boolean or null | Recording override; null inherits the agent. |
 | `phone_number.recording_source` | string or null | provider or nixflex; null or empty inherits the agent. Case and surrounding whitespace are normalised. Allowed: `"provider"`, `"nixflex"`, `null`, `""`. |
 | `phone_number.voicemail_leave_enabled` | boolean or null | Number-specific voicemail setting; null is unset. When enabled, the merged message must be nonblank. |

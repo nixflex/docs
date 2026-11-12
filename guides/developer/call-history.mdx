@@ -28,10 +28,6 @@ Build a call-results view that keeps call completion, booking evidence and recor
 
 </div>
 
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
-
 <div className="nxf-flow">
   <div><strong>1. Read history</strong>Keep filters fixed while paging.</div>
   <div><strong>2. Read bookings</strong>Handle every returned state.</div>
@@ -135,9 +131,9 @@ Use `GET /v1/calls/{id}/recording` when the user asks to play a recording. Read 
 
 ## 5. Apply retention and deletion honestly
 
-Read the configured policy and actual current state. Cleanup waits for required finalisation and post-call decisions. Customer-owned storage has its own lifecycle. Deleting one call does not erase every caller record or external integration copy.
+Read the configured policy and actual current state. Automatic retention waits for its required finalisation and post-call decisions. Deliberate single-call deletion uses the separate flow below. Customer-owned storage has its own lifecycle. Deleting one call does not erase every caller record or external integration copy.
 
-Single-call deletion can now finish for a narrowly verified empty recording: the call has ended and settled, recording was skipped, no stored recording row or carrier copy exists, the upload fence is closed, and all post-call work and memory decisions have finished. The server must have fresh ownership and absence proof. A missing URL, an empty file list or a completed call alone is not enough. Unknown or missing evidence stays pending or refused. This does not change bulk or account deletion, and required financial records remain.
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund. If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
 
 Show `unavailable` with `reason:tracking_unavailable` as unavailable tracking, not proof that a recording was erased. Read the [single-call deletion contract](/api-reference/calls/delete) before offering a delete action.
 
@@ -161,3 +157,13 @@ A recording access reply has `call_id`, `status`, `url` and `expires_at`. For ex
 - [Recording access](/api-reference/calls/get-calls-id-recording)
 - [Signed events](/advanced/webhooks)
 - [Booking-result endpoint](/api-reference/calls/get-bookings)
+
+## Related dashboard and AI tasks
+
+- [Check call requests and booking results with AI](/ai-tools/call-results)
+- [Check the booking result of a call](/guides/business/booking-results)
+- [Find, play and download a call recording](/guides/business/call-history/recordings)
+- [Read your dashboard overview](/guides/business/dashboard)
+- [Delete call and campaign data](/guides/business/privacy/delete-call-data)
+- [Use the dashboard on your phone](/guides/business/using-on-phone)
+- [See what's new in Nixflex](/guides/business/whats-new)

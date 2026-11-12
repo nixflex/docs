@@ -1,0 +1,59 @@
+---
+title: "Trace API requests and webhook deliveries"
+sidebarTitle: "Request logs"
+description: "Use request IDs and dashboard metadata to investigate Nixflex API failures and delivery attempts without logging secrets or replaying uncertain writes."
+canonical: "https://docs.nixflex.com/guides/developer/logs"
+---
+
+Correlate your own request record with dashboard Logs, then reconcile the affected resource before retrying a write.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Logs expose request metadata, not a public history API for full bodies.
+- Keep request IDs separate from call IDs and outbound request UUIDs.
+- An HTTP success and a completed business action are different evidence.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/logs) · [Glossary](/guides/glossary)
+
+</div>
+
+## Keep an application request record
+
+Save the intended account, API host, operation, safe resource identifier and application correlation ID before a write. Retain any returned request or resource IDs privately. For outbound calls, persist the optional `request_id` UUID with the exact input before the first launch.
+
+The dashboard search accepts an exact `req_` request ID or an endpoint substring. Method, HTTP status family and date filters narrow the list. The request row shows time, method, endpoint, status, latency, safe error code and request ID. It does not retrieve full historical request or response bodies.
+
+## Reconcile by operation
+
+| Operation | Reconciliation |
+| --- | --- |
+| Outbound call with a saved UUID | [Read the original request](/api-reference/calls/get-outbound-request), keep the same account and host, and never allocate a new UUID automatically. |
+| Campaign creation or launch | Read the saved campaign and recipients before another launch. |
+| Single call or campaign deletion | Check the list; the same-ID DELETE safely resumes its durable request. |
+| Recording read | Preserve pending or unavailable state and retry the read with a bound. |
+| Booking automation | Validate the signed event or read retained booking results; do not infer success from a transcript. |
+
+## Webhook delivery evidence
+
+Dashboard delivery rows show response status, attempt count and first/last attempt times. A successful HTTP delivery means the destination accepted that attempt; your receiver still needs durable processing and duplicate handling. Verify signatures against the exact raw request body before processing. Use [delivery and recovery](/guides/developer/webhooks/delivery-and-recovery) for the complete receiver workflow.
+
+## Keep logs safe
+
+Record useful codes and IDs without auth headers, signing secrets, signed recording URLs, full transcripts or private payloads. When opening a support case, include the approximate time, safe request ID and error code. Do not resend the original private body unless a secure support process explicitly needs it.
+
+## Next steps
+
+- [Error recovery](/guides/developer/errors)
+- [Outbound request journal](/guides/developer/call-requests)
+- [Webhook signatures](/advanced/webhooks)

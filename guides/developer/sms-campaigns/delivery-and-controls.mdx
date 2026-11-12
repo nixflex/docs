@@ -1,6 +1,6 @@
 ---
 title: "Read SMS campaign delivery and controls"
-sidebarTitle: "SMS delivery and controls"
+sidebarTitle: "Delivery and controls"
 description: "Track SMS sent, delivered, failed and reply counts separately, cancel unsent work and reconcile uncertain sends without creating duplicate campaigns."
 canonical: "https://docs.nixflex.com/guides/developer/sms-campaigns/delivery-and-controls"
 ---
@@ -18,7 +18,7 @@ Track the existing SMS campaign’s delivery and reply evidence, then control on
 
 - Sent, delivered, failed and reply counts describe different outcomes.
 - Cancel stops future dispatch and cannot recall a message already sent.
-- Deletion guidance is pending the final B57 contract; do not infer it from cancellation.
+- Delete cancels waiting work and hangs up running calls; Cancel alone stops future dispatch.
 
 </div>
 
@@ -27,10 +27,6 @@ Track the existing SMS campaign’s delivery and reply evidence, then control on
 [Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
 
 </div>
-
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
 
 ## Read the current campaign
 
@@ -50,7 +46,7 @@ The [update route](/api-reference/sms-campaigns/patch-sms-campaigns-id) permits 
 
 ## Keep deletion separate
 
-The reviewed deletion endpoint is [DELETE SMS campaign](/api-reference/sms/campaigns-delete). Its next-release semantics are explicitly pending B57 review. Do not use the older settlement refusal as the final new-release rule, and do not invent an immediate-delete response. Cancellation and deletion are separate actions, and neither recalls a sent text.
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up. Use [DELETE SMS campaign](/api-reference/sms/campaigns-delete). If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
 
 | Observation | What to show or do |
 | --- | --- |
@@ -58,8 +54,12 @@ The reviewed deletion endpoint is [DELETE SMS campaign](/api-reference/sms/campa
 | Reply arrives later | Associate it using the current campaign and conversation rules. |
 | Unknown send outcome | Reconcile the existing recipient; do not automatically resend. |
 | Control response lost | Read the campaign before repeating the control. |
-| Delete result unconfirmed | Keep a pending result until the final supported contract confirms the outcome. |
+| Delete result unconfirmed | Show queued or unconfirmed, check the list, and resume with the same DELETE if needed. |
 
 - [Prepare an SMS campaign](/guides/developer/sms-campaigns/prepare-and-send)
 - [Read the campaign response schema](/api-reference/sms/campaigns-get)
 - [Work with SMS conversations](/guides/developer/agent-inbox)
+
+## Related dashboard and AI tasks
+
+- [Check SMS delivery and customer replies](/guides/business/sms-campaigns/check-delivery)

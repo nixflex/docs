@@ -1,0 +1,171 @@
+---
+title: "Delete an SMS campaign"
+sidebarTitle: "Delete SMS campaign"
+description: "Delete an owned SMS campaign, stop waiting work and running calls, and keep sent history and used charges."
+canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-delete"
+openapi: "/api-reference/public.openapi.json DELETE /sms/campaigns/{id}"
+playground: "simple"
+---
+
+Stop this campaign and remove its campaign view while preserving sent history and used charges.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Permission</small><strong>Owner or Admin</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Running calls are hung up before content deletion.
+- A queued hang-up is not a completed delete; the same request safely resumes it.
+- Used charges remain. Customer-managed copies have their own lifecycle.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/privacy/delete-call-data) · [Developer guide](/sms/sms-campaigns) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Use the owning account's server-side credential in `Authorization: Bearer KEY_ID:KEY_SECRET`. An organisation API key has Owner authority. Personal dashboard sessions need Owner or Admin authority; Members receive 403.
+
+## Request fields
+
+| Field | Type | Required | Limits |
+| --- | --- | --- | --- |
+| `id` (path) | string | Yes | 1–200 characters; the exact owned identifier. |
+
+Do not send a request body. Review the ID and effect before sending; completed content removal cannot be undone.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+## Response fields
+
+HTTP 200 confirms content deletion. It does not erase billing or every external copy.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | The requested owned campaign ID. |
+| `deleted` | boolean | True: the campaign and recipient list are removed. |
+| `message` | string | `Campaign deleted`. |
+
+## Example request
+
+These examples use the existing Node, Python, CLI and MCP delete methods. They target staging and use an owned fixture ID. Set `NXF_STAGING_KEY` privately for that account; configure MCP for the same host. The request changes the campaign. The CLI and MCP require explicit confirmation.
+
+Use the exact [reviewed candidate](/sdks/ecosystem#verify-the-reviewed-candidate). Its Node/Python clients preserve a proved 503 `hangup_pending` as `NixflexServerError`; other uncertain failures use `outcome_unknown` with the server code in `details.original_code`. A client exception for HTTP 503 does not mean deletion has stopped. Read its error code and details: `hangup_pending` is queued, while `deletion_unavailable` does not confirm a queue. Show deletion as complete only after HTTP 200 with `deleted:true`. See the response and recovery sections below.
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.sms.campaigns.delete("campaign_fixture");
+if (result.deleted !== true || result.campaign_id !== "campaign_fixture" || typeof result.message !== "string") {
+  throw new Error("Deletion is not confirmed.");
+}
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.sms.campaigns.delete('campaign_fixture')
+    if (result.get("deleted") is not True or result.get("campaign_id") != "campaign_fixture"
+            or not isinstance(result.get("message"), str)):
+        raise RuntimeError("Deletion is not confirmed.")
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex sms campaigns delete campaign_fixture --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "delete_sms_campaign",
+  "arguments": {
+    "campaign_id": "campaign_fixture",
+    "confirm": true
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+<ResponseExample>
+
+```json 200 deletion confirmed
+{
+  "campaign_id": "campaign_example",
+  "deleted": true,
+  "message": "Campaign deleted"
+}
+```
+
+```json 503 hang-up queued
+{
+  "error": {
+    "type": "server_error",
+    "code": "hangup_pending",
+    "message": "Waiting work is cancelled. Some calls have not confirmed they ended yet. Deletion is queued and will finish once hang-up is confirmed.",
+    "doc_url": "https://docs.nixflex.com/errors/hangup_pending",
+    "details": {
+      "deleted": false,
+      "retry_pending": true
+    }
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+| Status / code | Meaning | What to do |
+| --- | --- | --- |
+| 400 `invalid_delete` | Invalid identifier length. | Use the exact owned ID, from 1 to 200 characters. |
+| 401 | Missing or invalid authentication. | Check the credential and host privately. |
+| 403 `permission_denied` | The personal session cannot delete. | Ask an Owner or Admin; never give a Member the account key as a workaround. |
+| 404 `not_found` | The item is missing or belongs to another account. | Check the saved ID and account. Do not infer another account's data. |
+| 429 | Rate limited. | Honour Retry-After and avoid a polling write loop. |
+| 503 `hangup_pending` | Hang-up is unconfirmed; deletion is queued. | Show queued, not deleted. The worker continues automatically; the same DELETE safely resumes it. |
+| 503 `deletion_unavailable` | Deletion could not be confirmed. | Check the list and repeat the same DELETE if needed; an existing request safely resumes. |
+
+The 503 flags are inside `error.details`, not at the response root. `hangup_pending` includes `deleted:false` and `retry_pending:true`; `deletion_unavailable` includes `deleted:false` without promising that a queue exists.
+
+## Retry and idempotency
+
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Use bounded reads to refresh the list. Do not treat the generic write-retry rule for call creation or SMS sending as the deletion rule: this same-ID DELETE has a deliberate resume contract. It does not require an Idempotency-Key header.
+
+## Related endpoints
+
+- [Delete call data in the dashboard](/guides/business/privacy/delete-call-data)
+- [Bulk call deletion](/api-reference/calls/delete-all)
+- [Errors and recovery](/api-reference/errors#error-envelope)

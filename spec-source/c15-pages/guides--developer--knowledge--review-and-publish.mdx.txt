@@ -1,0 +1,102 @@
+---
+title: "Review and publish knowledge drafts"
+sidebarTitle: "Review and publish"
+description: "Inspect prepared facts, save draft edits with current revisions, approve selected topics and confirm the publication job before using new answers."
+canonical: "https://docs.nixflex.com/guides/developer/knowledge/review-and-publish"
+---
+
+Turn a prepared knowledge draft into live answers by reviewing its facts, choosing topics and confirming publication.
+
+<div className="nxf-facts">
+  <div><small>Input</small><strong>Prepared draft</strong></div>
+  <div><small>Concurrency</small><strong>Current revisions</strong></div>
+  <div><small>Finish</small><strong>Confirmed live topics</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A prepared source is not the same as published knowledge.
+- Use the latest base revision and draft edit revision for each save or acceptance.
+- Warnings and flagged topics need explicit human choices.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/knowledge) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Find the draft from its job
+
+An import returns HTTP 202. Example response, with illustrative IDs:
+
+```json
+{
+  "id":"11111111-1111-4111-8111-111111111111",
+  "kb":"22222222-2222-4222-8222-222222222222",
+  "kind":"import",
+  "state":"pending",
+  "stage":"pending",
+  "progress":{"percent":0},
+  "result":null,
+  "error":null,
+  "next_retry_at":null,
+  "paid_work_started":false,
+  "created_at":"2026-11-05T12:00:00Z"
+}
+```
+
+Poll [GET job](/api-reference/knowledge/get-knowledge-jobs-id) using the returned `id`. Use a bounded delay, for example one second increasing to five seconds, and stop when the user leaves the screen. This is a client choice, not a required server interval. Honour `next_retry_at` and HTTP retry guidance. Resume later from the same job ID rather than submitting another import.
+
+| State | Client action |
+| --- | --- |
+| `pending`, `running` | Keep polling; show server `stage` and `progress.percent`. Progress measures completed stages, not time remaining. |
+| `needs_review` | Read `result.draft_id` and show the draft for review. |
+| `ready` | Inspect the job kind and result. An unchanged or duplicate-only import can be ready without publishing new topics. |
+| `failed` | Read the job’s safe `error`. HTTP 200 for a failed job is still a failed operation. |
+| `cancelled`, `deleted` | Stop polling and reconcile current state. |
+
+Read [the draft](/api-reference/knowledge/get-knowledge-bases-kb-drafts-id). Legacy normalization is projected without being saved, using stable draft-scoped piece IDs. An explicit save or accept persists the repair. Retain the returned `data.edit_revision`, not an earlier cached value. Show each topic’s `facts`, title and review reasons. Edit with `expected_revision`, `expected_draft_revision`, `topic_id` and `topic`; save before accepting.
+
+## Choose and publish reviewed facts
+
+POST to [accept draft](/api-reference/knowledge/post-knowledge-bases-kb-drafts-id-accept) with a new operation key. Use the current base revision, current draft edit revision and the explicit IDs the reviewer selected:
+
+```json
+{"expected_revision":1,"expected_draft_revision":0,"topic_ids":["33333333-3333-4333-8333-333333333333"]}
+```
+
+Those values are examples, not defaults to hard-code. If warnings exist, collect acknowledgement and send `acknowledge_warnings:true`. Individually approved flagged pieces go in `approved_flagged_topic_ids`; never populate that array automatically. An unticked replacement retains the existing live topic.
+
+Acceptance returns another job. Poll until its publication is confirmed, then reread the base and [live topics](/api-reference/knowledge/get-knowledge-bases-kb-topics). Lists use `items,next_cursor`, with limit 1–100. A stale topic cursor requires restarting the list.
+
+## Handle a stale review
+
+On `stale_revision`, reload both the current base and draft. Show the reviewer what changed before submitting again. Do not simply copy a newer revision number into an old approval: the facts or selected replacements may have changed.
+
+Keep the idempotency key for an uncertain save. Use a new key only for a genuinely new edit or acceptance decision. `idempotency_conflict` means the same key was sent with different input; preserve the original operation record.
+
+## Confirm what callers can use
+
+After the publication job completes, read the base revision and live topics. Check the selected facts, their channels and any suppression state. Editing a live topic suppresses its old answer during that edit; a source import alone does not replace previously accepted facts.
+
+| Result | What to show |
+| --- | --- |
+| `needs_review` | The draft and the choices still required. |
+| `ready` with publication result | Refresh the live list and confirm the chosen topics. |
+| `ready` with unchanged input | No new publication; retain the existing facts. |
+| `review_required` or `suspicious_review_required` | Return to explicit review, without auto-approving. |
+| Job `failed` inside HTTP 200 | A failed operation, with its safe error and recovery choice. |
+
+## Check the answer
+
+- [Test knowledge answers](/guides/developer/knowledge/test-and-troubleshoot)
+- [Edit a live topic](/api-reference/knowledge/patch-knowledge-bases-kb-topics-id)
+- [Refresh sources and export facts](/guides/developer/knowledge/refresh-and-export)
+
+## Related dashboard and AI tasks
+
+- [Add and review your business facts](/guides/business/knowledge/add-facts)

@@ -1,6 +1,6 @@
 ---
 title: "Check call requests and booking results with AI"
-sidebarTitle: "Check call and booking results"
+sidebarTitle: "Call and booking results"
 description: "Use the MCP candidate’s read tools to inspect saved call requests and retained booking results without redialling or inventing missing outcomes."
 canonical: "https://docs.nixflex.com/ai-tools/call-results"
 ---
@@ -43,7 +43,7 @@ Illustrative conversation between colleagues.
 
 ## Before you start
 
-Use the reviewed, unpublished 96-tool MCP 0.5.0 candidate and verify its discovered schemas. Have either the original saved request UUID or a known call ID for the same account and API environment. Ask for only the customer data needed for the review.
+Use the reviewed, unpublished 97-tool MCP 0.5.0 candidate and verify its discovered schemas. Have either the original saved request UUID or a known call ID for the same account and API environment. Ask for only the customer data needed for the review.
 
 ## Complete the task
 
@@ -93,6 +93,14 @@ Placing the paid call requires those unchanged inputs and saved `request_id` wit
 | Booking `processing`, `deleted` or `unavailable` | Content cannot be read for the stated reason. | Report the actual state and avoid claiming no booking occurred. |
 
 
+
+## Delete content deliberately
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
 
 ## Next
 

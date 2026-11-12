@@ -1,0 +1,152 @@
+---
+title: "Handle voice booking approval"
+sidebarTitle: "Booking confirmation"
+description: "Require clear customer approval before a calendar change, handle number overrides, and separate saved settings from confirmed booking results."
+canonical: "https://docs.nixflex.com/actions/booking-confirmation"
+---
+For a new voice booking, collect the spelled contact details and wait for one clear yes after the combined read-back. The older setting still controls its other supported calendar-change flows.
+
+<div className="nxf-facts">
+  <div><small>New voice booking</small><strong>One combined approval</strong></div>
+  <div><small>Scope</small><strong>Every number</strong></div>
+  <div><small>Proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- New voice bookings collect the spelled full name and email local part before one combined read-back and one clear yes.
+- The combined approval is required on every number, even when require_booking_confirmation is false.
+- A saved setting or spoken promise is not proof that the calendar accepted a booking.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/booking-receptionist) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<div className="nxf-flow">
+  <div><strong>1. Collect spelling</strong>Full name, then email local part and spoken domain.</div>
+  <div><strong>2. Read back the plan</strong>Service, date, time, zone, name and email.</div>
+  <div><strong>3. Wait for approval</strong>A correction needs a new read-back.</div>
+  <div><strong>4. Check the result</strong>Only claim a confirmed action.</div>
+</div>
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Use an owned agent and a number with the intended calendar connection. Match the host and key to the same environment. The setting below is for the other supported calendar-change flows; a new voice booking always requires the combined approval.
+
+## 1. Read the current settings
+
+Read the agent and any relevant number override before changing shared behaviour. A prompt alone cannot grant an action capability.
+
+## 2. Save the other-flow setting
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request PUT \
+  --url "https://api.nixflex.com/v1/agents/agent_example" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"require_booking_confirmation":true}'
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/agents/agent_example', {
+  method: 'PUT',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({"require_booking_confirmation":true}),
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result.error?.code || 'unknown'}`);
+// Use the result privately; do not log account or caller data.
+```
+
+```python Python
+import os, json
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        return None
+
+request = Request(
+    'https://api.nixflex.com/v1/agents/agent_example',
+    method='PUT',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY'], 'Content-Type': 'application/json'},
+    data='{"require_booking_confirmation":true}'.encode('utf-8'),
+)
+with build_opener(NoRedirect).open(request, timeout=30) as response:
+    result = json.load(response)
+# Use the result privately; do not log account or caller data.
+```
+
+```powershell CLI (PowerShell)
+nixflex agents update agent_example --set require_booking_confirmation=true --json --base-url https://api.nixflex.com
+```
+
+</CodeGroup>
+
+The saved agent default is false. A number can store true, false or null; null inherits the agent. These saved values do not turn off the mandatory combined approval for a new voice booking. The existing setting still applies to its other supported calendar-change flows.
+
+## Use the mandatory new-booking flow
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
+<div className="nxf-conversation">
+  <p><strong>Caller</strong><br />Can I book Saturday at 10:00?</p>
+  <p><strong>Your agent</strong><br />Please spell your full name, first and last, letter by letter.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h K-h-a-n.</p>
+  <p><strong>Your agent</strong><br />Please spell the part of your email before at, letter by letter, then say the domain as words.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h, at example dot com.</p>
+  <p><strong>Your agent</strong><br />The booking details are Saturday at 10:00 in your selected time zone, for Sarah Khan, s-a-r-a-h at example dot com. Is that right?</p>
+  <p><strong>Caller</strong><br />Yes.</p>
+  <p><strong>Your agent, after confirmed success</strong><br />You’re booked for Saturday at 10:00.</p>
+</div>
+
+Email-domain checks do not prove that a mailbox exists. Never silently change the address. Google invitations follow the saved send-invites setting; Cal.com handles its own mail. In-call SMS needs its own capability and confirmed send result.
+
+## 3. Write a narrow instruction
+
+Ask the agent to read back the exact service, date, time and time zone, then wait for the customer’s answer. A changed detail needs a new read-back. Do not describe an attempted booking as confirmed.
+
+## 4. Test the actual outcome
+
+Test an affirmative answer, a correction and an unclear response. Check the actual calendar entry and action result. Confirmation recognition supports its configured forms; it is not a promise that every phrasing or language will be understood.
+
+## 5. Review the result
+
+Read back configuration after a confirmed update. Inspect the call and action result separately; a saved switch is not proof a real business action succeeded. If a write response is lost, reread the object before repeating it.
+
+## Example response
+
+The agent update returns the safe saved agent projection. Check the intended fields in a fresh [agent read](/api-reference/agents/get); call outcomes are separate records.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Number override | Resolve it before assuming the agent value wins. |
+| Ambiguous or changed time | Ask again and confirm the new details. |
+| Calendar rejects the action | Report that outcome, not a booking success. |
+| Text confirmation wanted | In-call SMS needs its separate switch and eligible sender. |
+
+## Next steps
+
+- [Google Calendar setup](/actions/google-calendar)
+- [Read call and booking results](/guides/developer/call-history)
+- [Update the agent setting](/api-reference/agents/update)

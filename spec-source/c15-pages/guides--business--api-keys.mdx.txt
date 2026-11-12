@@ -1,0 +1,66 @@
+---
+title: "Manage your organisation API key"
+sidebarTitle: "API key"
+description: "Find the full organisation key, check its activity and limits, and rotate it carefully without sharing credentials in browser code or AI chats."
+canonical: "https://docs.nixflex.com/guides/business/api-keys"
+---
+
+The Owner manages the organisation key on API Keys. Treat the full key like a password for the whole account.
+
+<div className="nxf-facts">
+  <div><small>Access</small><strong>Owner</strong></div>
+  <div><small>Where</small><strong>API Keys</strong></div>
+  <div><small>Scope</small><strong>Organisation</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The key belongs to the organisation and carries Owner authority.
+- Rotation stops the old key immediately. Update every connected application.
+- Keep the key in a private server or client secret store, never in an AI conversation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Developer guide](/authentication) · [Glossary](/guides/glossary)
+
+</div>
+
+## Copy the right connection details
+
+1. Sign in as the **Owner** and open **API Keys**.
+2. Check the displayed **API base URL** for the environment you intend to use.
+3. Choose **Copy full key** beside **Your key**.
+4. Store it in the private credential field or secret store of the application you are connecting.
+5. Use the relevant [AI tools setup guide](/ai-tools/overview) or give your developer the [authentication guide](/authentication).
+
+The masked text is not the full credential. Do not paste the copied value into agent instructions, website code, public repositories, screenshots or a chat. Invite teammates with their own login instead of sharing the key.
+
+## Check activity and limits
+
+**Last used** describes the latest retained API request. The usage card shows today or the last seven days in UTC, errors and the busiest endpoints. Dashboard background polling is not counted as customer API activity.
+
+The **Limits** card shows the concurrent-call limit and the peak this month. Use **Request increase** if the business needs a higher limit. Do not assume a fixed limit applies to every organisation.
+
+The separate organisation signing secret verifies incoming webhook messages in your application. API-key rotation does not rotate that signing secret. Keep both values private; see [webhook verification](/advanced/webhooks).
+
+## Rotate the key
+
+1. Inventory the applications and integrations that use the current key.
+2. Prepare their private configuration so you can update them promptly.
+3. Choose **Rotate**, read the confirmation and choose **Rotate key**.
+4. After confirmed success, copy the new full key from the result and update those applications.
+5. Check a read-only connection and review activity before resuming work.
+
+The old key stops at once. A lost response is not proof that rotation failed: reload API Keys to read the current key before considering another rotation. Do not repeatedly rotate to diagnose a connection problem.
+
+Removing a teammate does not rotate a copied organisation key. Review credential access separately from team membership.
+
+## Next steps
+
+- [Protect your personal login](/guides/business/account-security)
+- [Investigate Logs](/guides/business/logs)
+- [Build with an AI tool](/ai-tools/overview)

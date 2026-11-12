@@ -11,7 +11,7 @@ Locked by Fahim on 5 November 2026. Applies to every new page and every future p
 | API reference | The exact action and object | Authentication, request/response contract, a minimal valid example, errors with recovery and write/replay limits | A full multi-feature tutorial |
 | Webhook event | What causes this event and what it proves | Payload, timing, signature, duplicate identity, durable acceptance, examples and failure handling | Presenting the event as a callable API endpoint |
 
-Every Business page links to its Developer counterpart; every Developer page links back. An API page links to the relevant Business and Developer guides. Several endpoints may share the same feature guide: do not turn a Business page into a list of every endpoint. Pair by task, not by matching filenames. Use the nearest existing guide until a planned counterpart is written; never publish a broken link or an empty future page. Maintain the pairing map with the source plan. Chat D owns Business and AI pages; Chat C owns API, Developer and client pages.
+Every Business page links to its Developer counterpart; every Developer page links back. An API page links to the relevant Business and Developer guides. Several endpoints may share the same feature guide: do not turn a Business page into a list of every endpoint. Pair by task, not by matching filenames. Use the nearest existing guide until a planned counterpart is written; never publish a broken link or an empty future page. Maintain the pairing map with the source plan. C15 brings the complete docs tree under the coordinated maintenance pass. Update both audience pages and their contract references in the same feature round.
 
 ## The shared page shape
 
@@ -36,7 +36,7 @@ Preserve useful deep-link anchors when rewriting headings. Keep endpoint section
 | Endpoint | Action + object | Connect Google Calendar |
 | Webhook | Receive + result, with the event name | Receive booking results: call.bookings |
 
-Titles must be unique and at most 60 characters. Put the main task or feature early. Do not lead with a method, long URL, “How to”, “Everything about”, or “Nixflex” on every page. A sidebar label should normally be two to five words and at most 36 characters; retain enough context to distinguish siblings. HTTP method badges provide method context where supported. Use sentence case and British English in prose; never change wire names, code or product labels to match spelling preferences.
+Titles must be unique and at most 60 characters. Put the main task or feature early. Do not lead with a method, long URL, “How to”, “Everything about”, or “Nixflex” on every page. A sidebar label should be one to four words and at most 36 characters; retain enough context to distinguish siblings. HTTP method badges provide method context where supported. Use sentence case and British English in prose; never change wire names, code or product labels to match spelling preferences.
 
 Use the existing **single glossary at `/guides/glossary`**. Prefer *phone number*, *agent*, *organisation*, *booking*, *knowledge*, *topic*, *source*, *draft*, *campaign* and *channel* consistently. Explain a required technical term once near its first use; do not invent synonyms for variety. An account key and a person's session are different credentials. A call ID, request ID, booking UID and webhook event name are different identifiers. Keep their code spelling exact. Propose missing glossary terms to its owner rather than creating a second glossary.
 
@@ -71,7 +71,7 @@ The shared CSS also applies the readable light-theme green to native selected si
 
 Use a short conversation, flow boxes, a status table or code tabs before considering a screenshot. A screenshot is essential only when a person needs to recognise an otherwise confusing control or visual state. Crop to that decision, add useful alt text and record its source/version. No decorative screenshots, placeholder product captures or text baked into images. Existing unrelated screenshots are not permission to add more.
 
-A conversation must show each required approval. For bookings, a name confirmation and email confirmation are separate; do not skip the customer's “yes” and then claim a successful booking. Claim a booking or notification request only after a confirmed result, and never promise inbox delivery. Use fictional contacts and reserved example domains. Do not put real credentials, live customer data, internal fixtures or protected numbers in examples.
+A conversation must show each required approval. For a new voice booking, the caller spells the full name letter by letter, spells the email local part letter by letter and says the domain as words. Then show one combined read-back of the booking, name and email and one clear yes before the write. This is required on every number even when the old optional final-confirmation setting is off. Correct only the wrong part. SMS and existing-booking lookup, move and cancel keep their own contact flow. Claim a booking or notification request only after a confirmed result, and never promise inbox delivery. Use fictional contacts and reserved example domains. Do not put real credentials, live customer data, internal fixtures or protected numbers in examples.
 
 Examples must match the merged contract and actual client version. Prefer complete, minimal HTTP examples when client support is not verified. Identify candidate client packages honestly. Never copy a constructor or method from the visual mockup as proof that an SDK exposes it. A read example should be safe and useful; a write example must name its effect, ownership requirement and uncertainty/retry boundary. Never retry an unknown call launch with a new request ID automatically.
 
@@ -119,7 +119,7 @@ Mintlify generates page metadata, social images and structured data from configu
 4. Run the full local gate. Preserve failed and pending evidence. Existing locked tests need explicit approval for any further change; adding a feature does not silently waive this rule.
 5. Open a reviewed private preview through the operator workflow. A preview URL is public unless authentication or password protection is actually enabled; never call an unlisted URL private. No main merge or production publication is part of this authoring workflow.
 
-C14 applies this standard to all 162 API pages, all 87 Developer pages and all eight SDK/CLI/MCP pages. The five accepted C13 samples remain part of the complete Developer set. Twenty-one new Developer task pages and one MCP developer page implement the feature plan without changing existing URLs. Chat D applies the same guide to its owned pages; Chat C preserves the accepted D6 content unchanged.
+C15 applies this standard to the complete merged Business, Developer, API, SDK/CLI and AI-tools site. The accepted earlier samples and D7 task pages are part of that same tree. Coordinate both audiences, API contracts and client examples in each feature round; no separate ownership boundary should leave contradictory public guidance.
 
 ## Where to edit the authoritative sources
 
@@ -132,10 +132,21 @@ C14 applies this standard to all 162 API pages, all 87 Developer pages and all e
 | Hand-authored agent-creation endpoint | `spec-source/c13-standalone/agents--create.mdx.txt` holds its contract tables and examples; the C13 plan supplies its lead and layout. Never use the generated page as its own input. |
 | Any Developer or SDK/CLI/MCP page | The matching `.mdx.txt` file named by `spec-source/c14-pages.json`, under `spec-source/c14-pages/`. This includes the five earlier samples; C14 is now their final authoring layer. |
 | New feature route, page pairing or review state | `spec-source/c14-pages.json`, `docs.json` and `FEATURE-PAGES-PLAN.md`; publish only after the complete page exists. |
-| Pending call/campaign deletion release | The explicit list in `spec-source/c14-pages.json` and the warning in `scripts/build-c14-pages.mjs`. Keep the reviewed B56 API contract until the final B57 result is supplied and checked. |
+| Final single-call and campaign deletion | `scripts/c15-contracts.mjs` and the matching C15 authored pages, checked against engine 9da04ec and dashboard e79c6d3. Keep bulk/account deletion separate. |
 | Literal CLI formatting in the generated organisation CSV note | `scripts/build-c14-pages.mjs` applies the code spans after the established contract builders. Keep the reviewed OpenAPI description unchanged. |
 | Shared visual style | `styles.css`; check both light and dark themes and a phone viewport |
 
-Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, the C13 API layer, the complete C14 Developer/client layer and finally the whole-site manifest. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified client examples when adding a newer HTTP capability; label the exact candidate and release status clearly. Remove old command examples when the reviewed client no longer exposes them.
+Run `node scripts/build-docs.mjs` after edits. It rebuilds endpoint contracts, the C13 and C14 layers, the final C15 sources/navigation/metadata and the whole-site manifest. The frozen C8 test runner is not regenerated without test-change approval. Do not edit generated MDX alone or rerun one-time migration helpers from a handoff folder. Keep verified client examples when adding a newer HTTP capability; label the exact candidate and release status clearly. Remove old command examples when the reviewed client no longer exposes them.
 
-The current complete source check is `scripts/check-c14-source.mjs`. Existing tests and validators remain locked at the accepted C13 baseline, including the C13 scope snapshot that intentionally describes only 279 pages and five Developer samples. Run historical checks separately and preserve their exact results; a new scope check does not silently rewrite or waive an old assertion. Any proposed locked-check change belongs in BEFORE-AFTER.md for approval.
+The current complete source check is `scripts/check-c15-source.mjs`. Historical tests and validators remain locked at the accepted C14 snapshot except for the exact approved D7 policy exception. Earlier scope snapshots intentionally describe smaller page sets. Run historical checks separately and preserve their exact results; a new scope check does not silently rewrite or waive an old assertion. Any proposed locked-check change belongs in BEFORE-AFTER.md for approval.
+
+
+## C15 maintenance precedence
+
+`spec-source/c15-pages.json` owns the final five-tab navigation, short sidebar labels, metadata, permanent redirects and merged topic map. Its `sources` map identifies the final authored MDX for changed and new pages in `spec-source/c15-pages/`. Edit those sources first when present; otherwise use the earlier source table. `scripts/build-c15-pages.mjs` runs after earlier builders and removes the three consolidated duplicate files from publication. Preserve their redirected URLs and section anchors.
+
+The final menu follows the approved feature groups, with an overview before task pages. Existing page URLs stay stable unless a true duplicate is consolidated. All old live URLs must either retain their useful page or redirect directly to its replacement. Do not create self-redirects or redirect chains.
+
+The final logo is the green voice ring on its dark tile, with a lowercase Inter 600 wordmark and the flat small-size favicon. Keep both light and dark variants. Public copy may name Inworld, Cartesia and Deepgram when useful. Do not name internal model or backend providers. Customer-owned connection guides may identify services the customer connects.
+
+C15’s independent current-scope gate is `scripts/check-c15-source.mjs`. Historical scope and contract assertions remain frozen except for the exact approved D7 policy patch. Record any incompatible assertion and its proposed replacement in BEFORE-AFTER.md; never change a test simply to turn a result green.

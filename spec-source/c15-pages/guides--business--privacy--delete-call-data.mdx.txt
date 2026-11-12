@@ -1,0 +1,80 @@
+---
+title: "Delete call and campaign data"
+sidebarTitle: "Delete call data"
+description: "Remove call or campaign content, understand queued hang-up and recording cleanup, and keep sent history and retained charges clear."
+canonical: "https://docs.nixflex.com/guides/business/privacy/delete-call-data"
+---
+
+Delete a selected call or campaign from the dashboard after checking exactly which content you want to remove.
+
+<div className="nxf-facts">
+  <div><small>Access</small><strong>Owner or Admin</strong></div>
+  <div><small>Where</small><strong>Dashboard</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- An Owner or Admin can delete call and campaign content. A Member cannot.
+- Deleting a running call hangs it up first. Campaign deletion also cancels waiting work.
+- Used charges remain, with no refund. Your downloaded and customer-managed copies have their own lifecycle.
+
+</div>
+
+<div className="nxf-audience">
+
+[Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose what to remove
+
+| Action | What changes | What remains |
+| --- | --- | --- |
+| Delete one call | The running call is ended first, then its customer content is removed. Nixflex recording cleanup is tracked separately. | Required billing evidence, used charges and copies kept outside Nixflex. |
+| Delete a voice campaign | Waiting work is cancelled, its running calls are ended, and the campaign and recipient list disappear. | Calls already made stay in Call History; used charges remain. |
+| Delete an SMS campaign | Waiting work is cancelled and the campaign and recipient list disappear after any required hang-up. | Already-sent texts stay in message history and cannot be recalled. |
+| Cancel a campaign | Future dispatch stops. | Active calls may finish; campaign records remain for review. |
+
+Deleting a campaign does not also delete every call it made. Delete an individual call from Call History if its content should be removed too. Inbox **Archive** only changes inbox organisation; it is not deletion.
+
+## Delete one call
+
+1. Open **Call History** with an Owner or Admin login.
+2. Open the intended call and check its number, time and result. Download any recording you are authorised to keep before deleting.
+3. Choose **Delete** and read the confirmation. A running call will be hung up.
+4. Confirm once and read the result. A lost connection to the dashboard is not a success message.
+5. Refresh the list. If deletion is still queued or unconfirmed, use Delete again on that same call if needed; an existing request safely resumes.
+
+## Delete a campaign
+
+1. Open the voice or SMS campaign and confirm its name and recipient list.
+2. Decide whether you want to stop future sending only or remove the campaign. Choose **Cancel** for the first task and **Delete** for the second.
+3. Read the confirmation, including the effect on waiting work and running calls.
+4. Confirm Delete and wait for the result. Check Call History or message history separately for work already sent.
+
+## Read the result
+
+| Result | What it means | What to do |
+| --- | --- | --- |
+| Deletion confirmed | The selected content is removed from its normal customer view. | Keep any required follow-up records outside the deleted view. |
+| Waiting for hang-up | A running connection has not confirmed it ended. Deletion is queued and continues automatically. | Check the list later. Repeating Delete on the same item safely resumes it. |
+| Recording cleanup queued | Call content is deleted, but removal of the Nixflex recording copy is not yet confirmed. | Allow tracked cleanup to continue; do not claim every audio copy is gone. |
+| Result could not be confirmed | The request may already exist. | Check the list, then repeat Delete on the same item if needed. |
+| Item not found | It is missing or unavailable to this account. | Check the selected account and identifier. |
+| Permission denied | Your role cannot perform this action. | Ask the Owner or an Admin. |
+
+## Recordings and outside copies
+
+Nixflex tracks removal of its recording copy. Carrier cleanup is best effort and does not prevent confirmed call-content deletion. Your own recording bucket, downloaded files, exported data and copies sent to other tools remain under your control. An already-issued recording link may work until it expires or the stored object is removed.
+
+## Account closure is separate
+
+This task does not close the organisation, remove its phone numbers or erase billing records. Automatic retention and bulk call deletion have separate rules. Use [close your account](/guides/business/privacy/close-account) only when the whole organisation should close.
+
+## Next steps
+
+- [Choose retention](/guides/business/privacy/retention)
+- [Understand recording access](/guides/business/call-history/recordings)
+- [Compare team roles](/guides/business/team-roles)

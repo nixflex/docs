@@ -1,0 +1,78 @@
+---
+title: "Troubleshoot calendar booking outcomes"
+sidebarTitle: "Booking troubleshooting"
+description: "Diagnose calendar access, contact approval, availability and post-call booking states without confusing an accepted action with a confirmed appointment."
+canonical: "https://docs.nixflex.com/guides/developer/bookings/troubleshooting"
+---
+Find whether a booking failed at connection, approval, availability or result handling before attempting another calendar action.
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>One booking provider</strong></div>
+  <div><small>Evidence</small><strong>Confirmed action result</strong></div>
+  <div><small>Recovery</small><strong>Read before repeating</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- New voice bookings require spelling followed by one combined read-back and one clear yes.
+- A call summary is not proof that the calendar mutation succeeded.
+- processing, deleted and unavailable are different from confirmed no bookings.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/booking-results) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Check connection and scope
+
+Read the number’s saved Google Calendar or Cal.com connection. Only one booking provider can be active for a number. Assign an eligible agent before connecting. A Google status read returning 503 is unknown, while `needs_reconnect:true` asks for renewed consent.
+
+For Google, check the explicit number time zone, complete hours map, slot length and calendar ID. For Cal.com, check the event configuration and the agent’s intended IANA time zone. Do not reuse one provider’s settings shape for the other.
+
+## Check the required approvals
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
+## Diagnose the action result
+
+| Result or symptom | Next step |
+| --- | --- |
+| `agent_not_assigned` | Assign the intended owned agent before connection or booking setup. |
+| `booking_provider_conflict` | Deliberately choose one provider and disconnect the unwanted connection. |
+| Ambiguous or nonexistent local time | Ask for a valid time in the intended zone. |
+| Slot no longer available | Offer another currently available slot. |
+| `needs_info` or missing approval | Ask for the required information; do not claim completion. |
+| Call ended before write | Do not start a new mutation after the call. |
+| Network outcome uncertain | Reconcile the same action before any replacement. |
+
+## Read the post-call result
+
+Use [GET call booking results](/api-reference/calls/get-bookings) or verified [`call.bookings`](/api-reference/call-bookings). Only `ready` carries a result. Inspect its ordered `timeline` and per-UID `final` rows; count rows whose final status is `active`. Creation followed by cancellation leaves zero active bookings, while a reschedule is not automatically a second appointment.
+
+`none` confirms no successful mutations only with complete retained evidence. `processing`, `deleted` and `unavailable` return null results and must remain distinct. A malformed ready result must not be silently treated as an empty list.
+
+An already-existing booking lookup is not a new public mutation event. Do not send a second booking-created automation merely because that lookup confirmed an appointment.
+
+## Separate follow-up delivery
+
+Google invitations are requested according to `send_invites`; inbox delivery and a separate owner email are not promised. In-call SMS requires its own enabled capability and confirmed matching carrier acceptance. Keep a successful appointment separate from a failed or unavailable follow-up message.
+
+- [Review booking approval rules](/actions/booking-confirmation)
+- [Set Google availability and invitations](/guides/developer/bookings/google-calendar-settings)
+- [Recover missed booking events](/guides/developer/webhooks/delivery-and-recovery)
+
+## Related dashboard and AI tasks
+
+- [Fix a Cal.com booking problem](/guides/business/calcom/fix-bookings)
+- [Fix a Google Calendar booking problem](/guides/business/google-calendar/fix-bookings)

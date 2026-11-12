@@ -1,0 +1,71 @@
+---
+title: "Manage team invitations and role changes"
+sidebarTitle: "Invitations and roles"
+description: "Build team administration with personal role checks, invitation expiry and seat limits, while preserving unknown invitation and removal outcomes."
+canonical: "https://docs.nixflex.com/guides/developer/team/invitations-and-roles"
+---
+
+Invite people and manage permitted roles from the current organisation context, keeping personal access separate from the shared server key.
+
+<div className="nxf-facts">
+  <div><small>Roles</small><strong>Owner, Admin, Member</strong></div>
+  <div><small>Invite life</small><strong>24 hours</strong></div>
+  <div><small>Authority</small><strong>Check current context</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Admins manage Members; Admin and ownership changes require the Owner.
+- Pending unexpired invitations count towards seats.
+- A person’s role restriction must never be bypassed with a shared key in the browser.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read current access
+
+Read [organisation context](/api-reference/organisation/get-organisation) and [members](/api-reference/organisation/get-organisation-members) before showing an administrative action. Use permissions from the authenticated server response, not a role submitted by the browser.
+
+An organisation API key has account authority. A personal login has its own role. Owner can manage shared work, Admins, the key and ownership. Admin can manage business work, Billing, Activity and Members. Member can read shared work and use eligible Listen or takeover, but cannot mutate shared work or see Nixflex amounts.
+
+## Prepare an invitation
+
+Use [create invitation](/api-reference/organisation/post-organisation-invites) with the intended email and allowed role from its schema. Show that choice to the authorised person before sending. Do not invent a password or distribute the shared account key as a substitute for an invitation.
+
+The reviewed defaults are 50 seats, including unexpired pending invitations, and 20 new or resent invitations per UTC day. Invitation links last 24 hours. Read current members and invitations before retrying a request whose response was lost.
+
+## Resend or cancel deliberately
+
+[Resend](/api-reference/organisation/post-organisation-invites-id-resend) replaces the previous link. A response that leaves email delivery uncertain must remain uncertain in your application; creating more invitations is not a delivery check. [Cancel](/api-reference/organisation/delete-organisation-invites-id) the intended pending invitation when it is no longer wanted.
+
+Invitation acceptance belongs to the invited person’s authenticated flow. Do not claim another person’s invite using a shared server credential.
+
+## Change or remove a membership
+
+Use the documented [role change](/api-reference/organisation/patch-organisation-members-id) or [member removal](/api-reference/organisation/delete-organisation-members-id) route after checking the current actor’s permission. Admins manage Members only. Refresh the membership list after a confirmed result.
+
+Removing a person does not rotate a key that was shared outside the application. A committed human takeover may finish its one call. `live_disconnect_pending` remains pending until disconnection is confirmed.
+
+| Result | Recovery |
+| --- | --- |
+| Permission refusal | Refresh personal access and ask an authorised role to perform the task. |
+| Seat or invitation limit | Review pending invitations and wait for the reported allowance. |
+| Expired or replaced link | Use the current invitation flow; do not reuse an older link. |
+| Lost write response | Read members and invitations before repeating. |
+
+- [Read the full role matrix](/api-reference/organisation/roles)
+- [Handle ownership and closure](/guides/developer/team/ownership-and-closure)
+- [Read Activity](/api-reference/organisation/get-organisation-activity)
+
+## Related dashboard and AI tasks
+
+- [Change a teammate’s role](/guides/business/team-change-role)
+- [Invite people to your team](/guides/business/team-invitations)
+- [Choose the right team role](/guides/business/team-roles)

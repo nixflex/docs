@@ -1,0 +1,69 @@
+---
+title: "Build your app or SaaS with AI"
+sidebarTitle: "Overview"
+description: "Build a Nixflex-powered app with an AI coding assistant, server-side credentials, explicit customer isolation and verified call or booking results."
+canonical: "https://docs.nixflex.com/guides/developer/build-with-ai"
+---
+
+Use an AI coding assistant to build the application around Nixflex while your server owns credentials, permissions and result handling.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep Nixflex credentials on the server and out of prompts, repositories and browser bundles.
+- An agent ID is not a tenant security boundary.
+- Ask for a small read first, then review every workflow that calls, texts or changes data.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/build-with-ai) · [Glossary](/guides/glossary)
+
+</div>
+
+## Design the account boundary first
+
+Decide whether customers connect their own Nixflex accounts or share an organisation you manage. One organisation has shared agents, numbers, knowledge and balance; multiple agents do not create isolated customer accounts. For a SaaS product, keep an explicit mapping from your authenticated customer to the permitted account and resource IDs. Authorise that mapping on every server request.
+
+Do not build a platform-wide account-creation loop or promise reseller billing, subaccounts or per-agent privacy from unrelated endpoints. Confirm that your commercial and account model fits the supported organisation model before onboarding customers.
+
+## Give the assistant a bounded brief
+
+```text Build brief
+Build a server-side Nixflex integration for our existing app.
+Read the current API contract and use placeholder environment-variable names.
+Start with one authenticated read and a UI for loading, success and failure.
+Keep secrets out of browser code and logs.
+Authorise each customer-to-account and resource mapping before requests.
+Show me every proposed write workflow and its unknown-result handling.
+Do not run live calls, send messages or change account resources while building.
+```
+
+Use [API reference](/api-reference/introduction) and [client support](/sdks/ecosystem) as contract sources. A plausible method invented by a model is not a supported API. Review generated imports, field names and return handling against the installed client version.
+
+## Build one complete workflow
+
+1. Start with a read, such as listing owned agents, and show loading, empty and unavailable states separately.
+2. Add a deliberate write with a review screen showing its destination and effect.
+3. Persist the request intent before sending. Outbound calls can use a saved UUID for [request reconciliation](/guides/developer/call-requests).
+4. Receive signed webhook events durably and deduplicate by the documented identity.
+5. Read the resulting call, recording or booking state before displaying completion.
+
+## Test with synthetic results first
+
+Test 401/403, validation errors, timeouts, duplicate events and a response lost after acceptance. A read failure must not appear as zero calls or zero bookings. Confirm that one customer's server request cannot select another customer's credential or resource.
+
+Then use an agreed test account and controlled recipients for a small live check. Test the outcome in the real destination, including a booking correction or a failed transfer. Remove only the disposable fixtures you created.
+
+## Next steps
+
+- [Quickstart](/quickstart)
+- [Authentication and authority](/guides/developer/account/security)
+- [Connect an AI tool](/ai-tools/overview)

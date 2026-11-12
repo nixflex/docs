@@ -5691,7 +5691,8 @@
                   },
                   "require_booking_confirmation": {
                     "type": "boolean",
-                    "default": false
+                    "default": false,
+                    "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                   },
                   "voicemail_leave_enabled": {
                     "type": "boolean",
@@ -6041,7 +6042,8 @@
                       "type": "boolean"
                     },
                     "require_booking_confirmation": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                     },
                     "voicemail_leave_enabled": {
                       "type": "boolean"
@@ -6835,7 +6837,8 @@
                         "type": "boolean"
                       },
                       "require_booking_confirmation": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                       },
                       "voicemail_leave_enabled": {
                         "type": "boolean"
@@ -7491,7 +7494,8 @@
                       "type": "boolean"
                     },
                     "require_booking_confirmation": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                     },
                     "voicemail_leave_enabled": {
                       "type": "boolean"
@@ -8155,7 +8159,8 @@
                       "type": "boolean"
                     },
                     "require_booking_confirmation": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                     },
                     "voicemail_leave_enabled": {
                       "type": "boolean"
@@ -8866,7 +8871,7 @@
                   },
                   "require_booking_confirmation": {
                     "type": "boolean",
-                    "description": "Require confirmation before supported calendar writes."
+                    "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                   },
                   "voicemail_leave_enabled": {
                     "type": "boolean",
@@ -11492,40 +11497,73 @@
             "bearerAuth": []
           }
         ],
-        "description": "Request guarded cleanup of one owned ended, settled call. A narrow skipped-recording case can complete only with fresh proof of no stored object, no carrier copy, closed upload fence and completed post-call/settlement work. Missing or unknown evidence remains refused. Bulk/account deletion is unchanged; a missing URL is not erasure proof.",
+        "description": "Hang up a running owned call, then remove its content. Recording cleanup can remain queued after content deletion. Owner and Admin may delete; Member may not. Used charges and required financial evidence remain; no refund is made. A hangup_pending response queues durable completion without waiting for settlement. Repeating the same DELETE safely resumes the same request. A lost response is not confirmed success. Customer-managed copies are outside this operation. Bulk call deletion and account closure have separate contracts.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Owned call identifier. Missing and foreign IDs have the same 404.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Call content deleted. Recording cleanup has its own explicit state.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "call_id": {
-                      "type": "string"
-                    },
-                    "deleted": {
-                      "type": "boolean",
-                      "const": true
-                    },
-                    "recording_deleted": {
-                      "type": "boolean",
-                      "description": "Whether legacy cleanup counted at least one requested recording or transfer-audio path. False for the successful narrow empty-recording path; not proof that a recording existed or every copy was erased."
-                    }
-                  },
                   "required": [
                     "call_id",
                     "deleted",
-                    "recording_deleted"
-                  ]
+                    "recording_deleted",
+                    "recording_cleanup"
+                  ],
+                  "properties": {
+                    "call_id": {
+                      "type": "string",
+                      "description": "The owned call ID from the request."
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "const": true,
+                      "description": "The call content has been removed from customer views after confirmed hang-up."
+                    },
+                    "recording_deleted": {
+                      "type": "boolean",
+                      "description": "True only when the Nixflex recording copy is confirmed absent. This is not proof of carrier or customer-storage erasure."
+                    },
+                    "recording_cleanup": {
+                      "type": "string",
+                      "enum": [
+                        "carrier_best_effort",
+                        "queued"
+                      ],
+                      "description": "queued means Nixflex-copy cleanup is still tracked. carrier_best_effort means that copy is confirmed absent; carrier cleanup remains best effort."
+                    }
+                  },
+                  "additionalProperties": true
                 },
                 "examples": {
-                  "empty_recording": {
-                    "summary": "Narrow empty-recording cleanup completed.",
+                  "cleaned": {
                     "value": {
                       "call_id": "call_example",
                       "deleted": true,
-                      "recording_deleted": false
+                      "recording_deleted": true,
+                      "recording_cleanup": "carrier_best_effort"
+                    }
+                  },
+                  "cleanup_queued": {
+                    "value": {
+                      "call_id": "call_example",
+                      "deleted": true,
+                      "recording_deleted": false,
+                      "recording_cleanup": "queued"
                     }
                   }
                 }
@@ -11533,44 +11571,63 @@
             }
           },
           "400": {
-            "description": "Invalid request - missing or malformed parameters.",
+            "description": "invalid_delete: The identifier must contain 1–200 characters.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "required": [
+                    "error"
+                  ],
                   "properties": {
                     "error": {
                       "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
                       "properties": {
                         "type": {
                           "type": "string"
                         },
                         "code": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "invalid_delete"
+                          ]
                         },
                         "message": {
                           "type": "string"
                         },
                         "doc_url": {
-                          "type": "string"
+                          "type": "string",
+                          "format": "uri"
                         },
                         "details": {
                           "type": "object",
                           "additionalProperties": true
                         }
                       },
-                      "required": [
-                        "type",
-                        "code",
-                        "message",
-                        "doc_url"
-                      ]
+                      "additionalProperties": true
                     }
                   },
-                  "required": [
-                    "error"
-                  ]
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "invalid_delete": {
+                    "value": {
+                      "error": {
+                        "type": "invalid_request",
+                        "code": "invalid_delete",
+                        "message": "Choose a valid call or campaign.",
+                        "doc_url": "https://docs.nixflex.com/errors/invalid_delete",
+                        "details": {}
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -11618,51 +11675,8 @@
               }
             }
           },
-          "404": {
-            "description": "Not found on your account.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string"
-                        },
-                        "code": {
-                          "type": "string"
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "doc_url": {
-                          "type": "string"
-                        },
-                        "details": {
-                          "type": "object",
-                          "additionalProperties": true
-                        }
-                      },
-                      "required": [
-                        "type",
-                        "code",
-                        "message",
-                        "doc_url"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Call work, settlement or recording cleanup is unfinished. details.deleted=false and details.safe_to_retry=false; do not claim deletion or automatically repeat the request.",
+          "403": {
+            "description": "permission_denied: Owner or Admin authority is required. A Member cannot delete content.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11687,11 +11701,7 @@
                         "code": {
                           "type": "string",
                           "enum": [
-                            "call_in_progress",
-                            "deletion_unsettled",
-                            "recording_cleanup_pending",
-                            "cleanup_pending_confirmation",
-                            "deletion_cleanup_failed"
+                            "permission_denied"
                           ]
                         },
                         "message": {
@@ -11703,130 +11713,85 @@
                         },
                         "details": {
                           "type": "object",
-                          "additionalProperties": true,
-                          "required": [
-                            "deleted",
-                            "account_locked",
-                            "reason",
-                            "review_due",
-                            "safe_to_retry"
-                          ],
-                          "properties": {
-                            "deleted": {
-                              "const": false
-                            },
-                            "account_locked": {
-                              "const": false
-                            },
-                            "reason": {
-                              "type": "string",
-                              "enum": [
-                                "call_in_progress",
-                                "deletion_unsettled",
-                                "recording_cleanup_pending",
-                                "cleanup_pending_confirmation",
-                                "deletion_cleanup_failed"
-                              ]
-                            },
-                            "review_due": {
-                              "type": [
-                                "string",
-                                "null"
-                              ],
-                              "format": "date-time"
-                            },
-                            "safe_to_retry": {
-                              "const": false
-                            }
-                          }
+                          "additionalProperties": true
                         }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission_denied": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "Only an Admin or the Owner can do this.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: The item is missing or belongs to another account. These cases have the same response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
                 },
                 "examples": {
-                  "call_in_progress": {
+                  "not_found": {
                     "value": {
                       "error": {
-                        "type": "conflict",
-                        "code": "call_in_progress",
-                        "message": "This call is still in progress. Try again after it ends.",
-                        "doc_url": "https://docs.nixflex.com/errors/call_in_progress",
-                        "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "call_in_progress",
-                          "review_due": null,
-                          "safe_to_retry": false
-                        }
-                      }
-                    }
-                  },
-                  "deletion_unsettled": {
-                    "value": {
-                      "error": {
-                        "type": "conflict",
-                        "code": "deletion_unsettled",
-                        "message": "Deletion is waiting for a call or text outcome and its final charge to be confirmed. Contact support if it remains pending.",
-                        "doc_url": "https://docs.nixflex.com/errors/deletion_unsettled",
-                        "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "deletion_unsettled",
-                          "review_due": null,
-                          "safe_to_retry": false
-                        }
-                      }
-                    }
-                  },
-                  "recording_cleanup_pending": {
-                    "value": {
-                      "error": {
-                        "type": "conflict",
-                        "code": "recording_cleanup_pending",
-                        "message": "Recording cleanup is still pending. The data has not been deleted. Contact support if it remains pending.",
-                        "doc_url": "https://docs.nixflex.com/errors/recording_cleanup_pending",
-                        "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "recording_cleanup_pending",
-                          "review_due": null,
-                          "safe_to_retry": false
-                        }
-                      }
-                    }
-                  },
-                  "cleanup_pending_confirmation": {
-                    "value": {
-                      "error": {
-                        "type": "conflict",
-                        "code": "cleanup_pending_confirmation",
-                        "message": "Recording cleanup pending – needs confirmation of the original storage and any transfer audio. The data has not been deleted; support must review it.",
-                        "doc_url": "https://docs.nixflex.com/errors/cleanup_pending_confirmation",
-                        "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "cleanup_pending_confirmation",
-                          "review_due": null,
-                          "safe_to_retry": false
-                        }
-                      }
-                    }
-                  },
-                  "deletion_cleanup_failed": {
-                    "value": {
-                      "error": {
-                        "type": "conflict",
-                        "code": "deletion_cleanup_failed",
-                        "message": "Cleanup did not finish. The data is not confirmed deleted. Contact support before trying again.",
-                        "doc_url": "https://docs.nixflex.com/errors/deletion_cleanup_failed",
-                        "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "deletion_cleanup_failed",
-                          "review_due": null,
-                          "safe_to_retry": false
-                        }
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Call not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
                       }
                     }
                   }
@@ -11878,7 +11843,7 @@
             }
           },
           "503": {
-            "description": "Deletion safety could not be confirmed. No completed deletion is claimed; preserve the unknown/pending state.",
+            "description": "hangup_pending: Hang-up is unconfirmed and durable deletion will continue. deletion_unavailable: The result could not be confirmed; check the list and repeat the same DELETE to resume any existing request safely.",
             "content": {
               "application/json": {
                 "schema": {
@@ -11903,6 +11868,7 @@
                         "code": {
                           "type": "string",
                           "enum": [
+                            "hangup_pending",
                             "deletion_unavailable"
                           ]
                         },
@@ -11915,57 +11881,38 @@
                         },
                         "details": {
                           "type": "object",
-                          "additionalProperties": true,
-                          "required": [
-                            "deleted",
-                            "account_locked",
-                            "reason",
-                            "review_due",
-                            "safe_to_retry"
-                          ],
-                          "properties": {
-                            "deleted": {
-                              "const": false
-                            },
-                            "account_locked": {
-                              "const": false
-                            },
-                            "reason": {
-                              "type": "string",
-                              "enum": [
-                                "deletion_unavailable"
-                              ]
-                            },
-                            "review_due": {
-                              "type": [
-                                "string",
-                                "null"
-                              ],
-                              "format": "date-time"
-                            },
-                            "safe_to_retry": {
-                              "const": false
-                            }
-                          }
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "hangup_pending": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "hangup_pending",
+                        "message": "The call has not confirmed it ended yet. Deletion is queued and will finish once hang-up is confirmed.",
+                        "doc_url": "https://docs.nixflex.com/errors/hangup_pending",
+                        "details": {
+                          "deleted": false,
+                          "retry_pending": true
                         }
                       }
                     }
-                  }
-                },
-                "examples": {
+                  },
                   "deletion_unavailable": {
                     "value": {
                       "error": {
                         "type": "server_error",
                         "code": "deletion_unavailable",
-                        "message": "Deletion safety could not be confirmed. Deletion has not finished. Contact support if it remains pending.",
+                        "message": "Deletion could not be confirmed. Check the list and try Delete again; an existing request will safely resume.",
                         "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
                         "details": {
-                          "deleted": false,
-                          "account_locked": false,
-                          "reason": "deletion_unavailable",
-                          "review_due": null,
-                          "safe_to_retry": false
+                          "deleted": false
                         }
                       }
                     }
@@ -11974,17 +11921,7 @@
               }
             }
           }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
+        }
       }
     },
     "/calls/outbound": {
@@ -17884,98 +17821,71 @@
         }
       },
       "delete": {
-        "operationId": "deleteSmsCampaign",
-        "summary": "Delete an SMS campaign",
-        "description": "Delete an owned SMS campaign only after active work and settlement are resolved. Zero sent is not sufficient proof. Keep the row until confirmed success; a missing owned campaign returns the same success acknowledgement.",
         "tags": [
           "SMS campaigns"
         ],
+        "summary": "Delete an SMS campaign",
+        "operationId": "deleteSmsCampaign",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Cancel waiting campaign work, hang up its running calls, then remove the campaign and recipient list. Calls already made and SMS already sent remain in history. Owner and Admin may delete; Member may not. Used charges and required financial evidence remain; no refund is made. A hangup_pending response queues durable completion without waiting for settlement. Repeating the same DELETE safely resumes the same request. A lost response is not confirmed success. Customer-managed copies are outside this operation. Bulk call deletion and account closure have separate contracts.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "Owned campaign identifier. Missing and foreign IDs have the same 404.",
             "schema": {
               "type": "string",
-              "description": "Exact saved campaign_id owned by this account. This operation does not declare a route-level length or character validator."
+              "minLength": 1,
+              "maxLength": 200
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Campaign and recipient list removed. Sent history and used charges remain.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Deletion acknowledgement."
-                    }
-                  },
                   "required": [
+                    "campaign_id",
+                    "deleted",
                     "message"
                   ],
-                  "description": "",
-                  "additionalProperties": false
-                },
-                "example": {
-                  "message": "Campaign deleted"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "unauthorized: The credential is missing or invalid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
                   "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string",
-                          "description": "Machine-readable error code."
-                        },
-                        "message": {
-                          "type": "string",
-                          "description": "Explanation."
-                        },
-                        "doc_url": {
-                          "type": "string",
-                          "description": "Error reference link."
-                        },
-                        "details": {
-                          "type": "object",
-                          "properties": {},
-                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
-                          "additionalProperties": true
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "doc_url",
-                        "type"
-                      ],
-                      "description": "",
-                      "additionalProperties": false
+                    "campaign_id": {
+                      "type": "string"
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "const": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "const": "Campaign deleted"
                     }
                   },
-                  "required": [
-                    "error"
-                  ],
-                  "description": "",
-                  "additionalProperties": false
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "deleted": {
+                    "value": {
+                      "campaign_id": "campaign_example",
+                      "deleted": true,
+                      "message": "Campaign deleted"
+                    }
+                  }
                 }
               }
             }
           },
-          "409": {
-            "description": "campaign_settlement_pending: final results/charges are unsettled; details.deleted=false. campaign_in_progress: cancel or wait for active work first.",
+          "400": {
+            "description": "invalid_delete: The identifier must contain 1–200 characters.",
             "content": {
               "application/json": {
                 "schema": {
@@ -17995,14 +17905,12 @@
                       ],
                       "properties": {
                         "type": {
-                          "type": "string",
-                          "const": "conflict"
+                          "type": "string"
                         },
                         "code": {
                           "type": "string",
                           "enum": [
-                            "campaign_settlement_pending",
-                            "campaign_in_progress"
+                            "invalid_delete"
                           ]
                         },
                         "message": {
@@ -18017,56 +17925,19 @@
                           "additionalProperties": true
                         }
                       },
-                      "allOf": [
-                        {
-                          "if": {
-                            "properties": {
-                              "code": {
-                                "const": "campaign_settlement_pending"
-                              }
-                            }
-                          },
-                          "then": {
-                            "properties": {
-                              "details": {
-                                "type": "object",
-                                "required": [
-                                  "deleted"
-                                ],
-                                "properties": {
-                                  "deleted": {
-                                    "const": false
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                },
-                "examples": {
-                  "settlement": {
-                    "value": {
-                      "error": {
-                        "type": "conflict",
-                        "code": "campaign_settlement_pending",
-                        "message": "This campaign is waiting for its final send results and charges. It has not been deleted. Try again after settlement finishes.",
-                        "doc_url": "https://docs.nixflex.com/errors/campaign_settlement_pending",
-                        "details": {
-                          "deleted": false
-                        }
-                      }
+                      "additionalProperties": true
                     }
                   },
-                  "running": {
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "invalid_delete": {
                     "value": {
                       "error": {
-                        "type": "conflict",
-                        "code": "campaign_in_progress",
-                        "message": "This campaign is still running. Cancel it or wait for it to finish before deleting it.",
-                        "doc_url": "https://docs.nixflex.com/errors/campaign_in_progress",
+                        "type": "invalid_request",
+                        "code": "invalid_delete",
+                        "message": "Choose a valid call or campaign.",
+                        "doc_url": "https://docs.nixflex.com/errors/invalid_delete",
                         "details": {}
                       }
                     }
@@ -18075,56 +17946,51 @@
               }
             }
           },
-          "429": {
-            "description": "rate_limit_exceeded: The account request limit was reached.",
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
                   "properties": {
                     "error": {
                       "type": "object",
                       "properties": {
+                        "type": {
+                          "type": "string"
+                        },
                         "code": {
-                          "type": "string",
-                          "description": "Machine-readable error code."
+                          "type": "string"
                         },
                         "message": {
-                          "type": "string",
-                          "description": "Explanation."
+                          "type": "string"
                         },
                         "doc_url": {
-                          "type": "string",
-                          "description": "Error reference link."
+                          "type": "string"
                         },
                         "details": {
                           "type": "object",
-                          "properties": {},
-                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
                           "additionalProperties": true
                         }
                       },
                       "required": [
+                        "type",
                         "code",
                         "message",
-                        "doc_url",
-                        "type"
-                      ],
-                      "description": "",
-                      "additionalProperties": false
+                        "doc_url"
+                      ]
                     }
                   },
                   "required": [
                     "error"
-                  ],
-                  "description": "",
-                  "additionalProperties": false
+                  ]
                 }
               }
             }
           },
-          "503": {
-            "description": "deletion_unavailable: deletion could not be checked; no deletion confirmed.",
+          "403": {
+            "description": "permission_denied: Owner or Admin authority is required. A Member cannot delete content.",
             "content": {
               "application/json": {
                 "schema": {
@@ -18149,6 +18015,174 @@
                         "code": {
                           "type": "string",
                           "enum": [
+                            "permission_denied"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission_denied": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "Only an Admin or the Owner can do this.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: The item is missing or belongs to another account. These cases have the same response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "error": {
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Campaign not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "hangup_pending: Hang-up is unconfirmed and durable deletion will continue. deletion_unavailable: The result could not be confirmed; check the list and repeat the same DELETE to resume any existing request safely.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "hangup_pending",
                             "deletion_unavailable"
                           ]
                         },
@@ -18163,17 +18197,39 @@
                           "type": "object",
                           "additionalProperties": true
                         }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "hangup_pending": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "hangup_pending",
+                        "message": "Waiting work is cancelled. Some calls have not confirmed they ended yet. Deletion is queued and will finish once hang-up is confirmed.",
+                        "doc_url": "https://docs.nixflex.com/errors/hangup_pending",
+                        "details": {
+                          "deleted": false,
+                          "retry_pending": true
+                        }
                       }
                     }
-                  }
-                },
-                "example": {
-                  "error": {
-                    "type": "server_error",
-                    "code": "deletion_unavailable",
-                    "message": "Deletion could not be checked. No deletion was confirmed.",
-                    "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
-                    "details": {}
+                  },
+                  "deletion_unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "deletion_unavailable",
+                        "message": "Deletion could not be confirmed. Check the list and try Delete again; an existing request will safely resume.",
+                        "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
+                        "details": {
+                          "deleted": false
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -19212,7 +19268,7 @@
                               "boolean",
                               "null"
                             ],
-                            "description": "true / false for this number, null = inherit the agent. See /actions/booking-confirmation."
+                            "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                           },
                           "record_call": {
                             "type": [
@@ -19879,7 +19935,8 @@
                           "type": [
                             "boolean",
                             "null"
-                          ]
+                          ],
+                          "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                         },
                         "record_call": {
                           "type": [
@@ -20096,7 +20153,7 @@
                                 "boolean",
                                 "null"
                               ],
-                              "description": "Booking confirmation override; null inherits the agent."
+                              "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                             },
                             "record_call": {
                               "type": [
@@ -20664,7 +20721,7 @@
                           "boolean",
                           "null"
                         ],
-                        "description": "Booking confirmation override; null inherits the agent."
+                        "description": "Saved confirmation setting for supported calendar changes. A new voice booking always requires one combined read-back and one clear yes, even when false. A null number override inherits the agent."
                       },
                       "record_call": {
                         "type": [
@@ -72411,6 +72468,966 @@
                         "message": "The call request could not be checked. Try again shortly.",
                         "doc_url": "https://docs.nixflex.com/errors/outbound_request_unavailable",
                         "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{id}": {
+      "get": {
+        "tags": [
+          "Voice campaigns"
+        ],
+        "summary": "Get a voice campaign",
+        "operationId": "getVoiceCampaign",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Read one owned voice campaign with the same fields as a campaign-list item. No recipients are included. Wider-hours confirmation uses current saved evidence; an evidence-read failure returns 503 rather than false. Missing, foreign, deleted and invalid IDs have the same 404. Responses use Cache-Control: no-store.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Exact owned campaign identifier. Invalid, missing, foreign and deleted IDs share a 404.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned campaign detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "campaign"
+                  ],
+                  "properties": {
+                    "campaign": {
+                      "type": "object",
+                      "properties": {
+                        "campaign_id": {
+                          "type": "string",
+                          "description": "Public campaign ID."
+                        },
+                        "agent_id": {
+                          "type": "string",
+                          "description": "Owning agent ID."
+                        },
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved campaign label."
+                        },
+                        "from_number": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "International number with + and digits; no spaces.",
+                          "pattern": "^\\+[1-9][0-9]{6,14}$"
+                        },
+                        "schedule_type": {
+                          "type": "string",
+                          "description": "Saved now or schedule mode."
+                        },
+                        "scheduled_date": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved scheduled date."
+                        },
+                        "window_start_minutes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "description": "Configured start minute."
+                        },
+                        "window_end_minutes": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "description": "Configured end minute."
+                        },
+                        "window_days": {
+                          "type": [
+                            "array",
+                            "null"
+                          ],
+                          "items": {
+                            "type": "string",
+                            "description": "Weekday."
+                          },
+                          "description": ""
+                        },
+                        "timezone": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved campaign time zone."
+                        },
+                        "source": {
+                          "type": "string",
+                          "description": "Saved origin label."
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Current state; for example scheduled, launching, running, done, failed or cancelled. Treat new states conservatively."
+                        },
+                        "total_count": {
+                          "type": "integer",
+                          "description": "Count.",
+                          "minimum": 0
+                        },
+                        "started_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved timestamp, or null.",
+                          "format": "date-time"
+                        },
+                        "completed_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved timestamp, or null.",
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved timestamp, or null.",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Saved timestamp, or null.",
+                          "format": "date-time"
+                        },
+                        "allow_wider_hours": {
+                          "type": "boolean",
+                          "description": "True only with confirmation evidence for the current policy revision."
+                        },
+                        "prompt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Default voice instructions."
+                        },
+                        "done_count": {
+                          "type": "integer",
+                          "description": "Count.",
+                          "minimum": 0
+                        },
+                        "failed_count": {
+                          "type": "integer",
+                          "description": "Count.",
+                          "minimum": 0
+                        },
+                        "voicemail_count": {
+                          "type": "integer",
+                          "description": "Count.",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "campaign_id",
+                        "agent_id",
+                        "name",
+                        "from_number",
+                        "schedule_type",
+                        "scheduled_date",
+                        "window_start_minutes",
+                        "window_end_minutes",
+                        "window_days",
+                        "timezone",
+                        "source",
+                        "status",
+                        "total_count",
+                        "started_at",
+                        "completed_at",
+                        "created_at",
+                        "updated_at",
+                        "allow_wider_hours",
+                        "prompt",
+                        "done_count",
+                        "failed_count",
+                        "voicemail_count"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "campaign": {
+                    "value": {
+                      "campaign": {
+                        "campaign_id": "campaign_example",
+                        "agent_id": "agent_example",
+                        "name": "Appointment reminders",
+                        "prompt": null,
+                        "from_number": "+12025550123",
+                        "schedule_type": "schedule",
+                        "scheduled_date": "2026-11-20",
+                        "window_start_minutes": 540,
+                        "window_end_minutes": 1020,
+                        "window_days": [
+                          "mon",
+                          "tue",
+                          "wed",
+                          "thu",
+                          "fri"
+                        ],
+                        "timezone": "America/New_York",
+                        "source": "api",
+                        "status": "scheduled",
+                        "total_count": 10,
+                        "done_count": 0,
+                        "failed_count": 0,
+                        "voicemail_count": 0,
+                        "started_at": null,
+                        "completed_at": null,
+                        "created_at": "2026-11-12T00:00:00Z",
+                        "updated_at": "2026-11-12T00:00:00Z",
+                        "allow_wider_hours": false
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "description": "Do not store this response.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized: The credential is missing or invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Machine-readable error code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Explanation."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error reference link."
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "doc_url",
+                        "type"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied: The authenticated principal is not allowed to access this account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "permission_denied"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission_denied": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "You do not have permission to do this.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: Invalid, missing, foreign or deleted campaign.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "error": {
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Campaign not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limit_exceeded: The account request limit was reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Machine-readable error code."
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Explanation."
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "description": "Error reference link."
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {},
+                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "doc_url",
+                        "type"
+                      ],
+                      "description": "",
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "description": "",
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "campaign_unavailable: Campaign details or current wider-hours evidence could not be read.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "campaign_unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "campaign_unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "campaign_unavailable",
+                        "message": "Campaign details could not be checked. Please retry.",
+                        "doc_url": "https://docs.nixflex.com/errors/campaign_unavailable",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calls/batch/{id}": {
+      "delete": {
+        "tags": [
+          "Voice campaigns"
+        ],
+        "summary": "Delete a voice campaign",
+        "operationId": "deleteVoiceCampaign",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Cancel waiting campaign work, hang up its running calls, then remove the campaign and recipient list. Calls already made and SMS already sent remain in history. Owner and Admin may delete; Member may not. Used charges and required financial evidence remain; no refund is made. A hangup_pending response queues durable completion without waiting for settlement. Repeating the same DELETE safely resumes the same request. A lost response is not confirmed success. Customer-managed copies are outside this operation. Bulk call deletion and account closure have separate contracts.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Owned campaign identifier. Missing and foreign IDs have the same 404.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign and recipient list removed. Sent history and used charges remain.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "campaign_id",
+                    "deleted",
+                    "message"
+                  ],
+                  "properties": {
+                    "campaign_id": {
+                      "type": "string"
+                    },
+                    "deleted": {
+                      "type": "boolean",
+                      "const": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "const": "Campaign deleted"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "deleted": {
+                    "value": {
+                      "campaign_id": "campaign_example",
+                      "deleted": true,
+                      "message": "Campaign deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_delete: The identifier must contain 1–200 characters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "invalid_delete"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "invalid_delete": {
+                    "value": {
+                      "error": {
+                        "type": "invalid_request",
+                        "code": "invalid_delete",
+                        "message": "Choose a valid call or campaign.",
+                        "doc_url": "https://docs.nixflex.com/errors/invalid_delete",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - bad or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "permission_denied: Owner or Admin authority is required. A Member cannot delete content.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "permission_denied"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "permission_denied": {
+                    "value": {
+                      "error": {
+                        "type": "permission_denied",
+                        "code": "permission_denied",
+                        "message": "Only an Admin or the Owner can do this.",
+                        "doc_url": "https://docs.nixflex.com/errors/permission_denied",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "not_found: The item is missing or belongs to another account. These cases have the same response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "not_found"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "not_found": {
+                    "value": {
+                      "error": {
+                        "type": "not_found",
+                        "code": "not_found",
+                        "message": "Campaign not found.",
+                        "doc_url": "https://docs.nixflex.com/errors/not_found",
+                        "details": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded. Honour the Retry-After header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Every error uses this envelope. Branch on error.code, not on the message text.",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "hangup_pending: Hang-up is unconfirmed and durable deletion will continue. deletion_unavailable: The result could not be confirmed; check the list and repeat the same DELETE to resume any existing request safely.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "code",
+                        "message",
+                        "doc_url",
+                        "details"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "hangup_pending",
+                            "deletion_unavailable"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "doc_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "details": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "hangup_pending": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "hangup_pending",
+                        "message": "Waiting work is cancelled. Some calls have not confirmed they ended yet. Deletion is queued and will finish once hang-up is confirmed.",
+                        "doc_url": "https://docs.nixflex.com/errors/hangup_pending",
+                        "details": {
+                          "deleted": false,
+                          "retry_pending": true
+                        }
+                      }
+                    }
+                  },
+                  "deletion_unavailable": {
+                    "value": {
+                      "error": {
+                        "type": "server_error",
+                        "code": "deletion_unavailable",
+                        "message": "Deletion could not be confirmed. Check the list and try Delete again; an existing request will safely resume.",
+                        "doc_url": "https://docs.nixflex.com/errors/deletion_unavailable",
+                        "details": {
+                          "deleted": false
+                        }
                       }
                     }
                   }

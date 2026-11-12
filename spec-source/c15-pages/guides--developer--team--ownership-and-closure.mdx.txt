@@ -1,0 +1,69 @@
+---
+title: "Handle ownership changes and account closure"
+sidebarTitle: "Ownership and closure"
+description: "Keep ownership acceptance, leaving and account closure in the authenticated personal flow, and reconcile access, key handling and unfinished work."
+canonical: "https://docs.nixflex.com/guides/developer/team/ownership-and-closure"
+---
+
+Direct ownership and closure decisions through the authorised person’s dashboard flow, then reconcile the resulting access in your integration.
+
+<div className="nxf-facts">
+  <div><small>Decision maker</small><strong>Current authorised person</strong></div>
+  <div><small>Flow</small><strong>Authenticated dashboard</strong></div>
+  <div><small>Afterward</small><strong>Refresh access and work state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Ownership acceptance and account closure require a personal authenticated flow.
+- Never invent public transfer or closure endpoints from dashboard behaviour.
+- A removed membership does not revoke a separately shared server key.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Separate people from server access
+
+Read [organisation context](/api-reference/organisation/get-organisation) for the current account and permissions. A server key represents the organisation; it does not represent the person accepting an invitation, leaving a team or accepting ownership.
+
+The Owner controls ownership offers and organisation closure. Personal invitation acceptance, Leave and ownership acceptance use the person’s authenticated dashboard flow. This public API guide does not define a substitute transfer or closure route.
+
+## Prepare for a deliberate ownership change
+
+Have the current Owner and intended recipient use the supported dashboard flow. Before the change, identify the application’s server credential storage, signing-secret provisioning and operational contact. Do not pass either credential through a team message or invitation URL.
+
+After confirmed acceptance, refresh personal permissions and the organisation context. Reconcile unfinished administration requests before allowing the former owner’s client to send another change. Do not infer that an ownership offer alone has transferred access.
+
+## Keep signing and API credentials distinct
+
+Only the Owner reveals the shared key in the dashboard. Signing-secret retrieval allows the organisation server key; among personal roles, only Owner can retrieve it. Organisation signing secrets are separate from the API key: rotating the API key does not rotate that signing secret.
+
+Removing a member does not rotate a credential they already copied. Any credential replacement is a separate authorised operation with its own integration rollout and reconciliation. Never perform it automatically as a side effect of refreshing the member list.
+
+## Handle closure and unfinished work
+
+Use the Owner’s supported closure flow and read the result it actually returns. Do not translate an accepted request into a promise that calls, callbacks, external accounts or storage have all stopped. Keep unknown work visible until the relevant state can be confirmed.
+
+| Observation | Application behaviour |
+| --- | --- |
+| Ownership offer pending | Retain current permissions; do not grant the intended recipient Owner actions yet. |
+| Personal access removed | End that session’s access and refresh its views. |
+| Server request loses access | Stop retries and resolve account status through the authorised owner. |
+| Live disconnection pending | Keep the pending result; do not claim the person was disconnected. |
+| Closure result uncertain | Use the same personal flow to reconcile; do not repeatedly submit closure. |
+
+- [Manage invitations and roles](/guides/developer/team/invitations-and-roles)
+- [Read the role matrix](/api-reference/organisation/roles)
+- [Understand webhook secrets](/advanced/webhooks#prerequisites)
+
+## Related dashboard and AI tasks
+
+- [Leave a team or remove a member](/guides/business/team-leave)
+- [Transfer ownership to a teammate](/guides/business/team-ownership)

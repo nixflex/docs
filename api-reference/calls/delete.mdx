@@ -1,131 +1,219 @@
 ---
 title: "Delete a call"
-description: "Delete an owned Nixflex call with guarded recording cleanup. Handle blocked or uncertain results without treating them as confirmed deletion."
+sidebarTitle: "Delete call"
+description: "Hang up and delete an owned call, track recording cleanup and safely resume queued deletion while retaining used charges."
+canonical: "https://docs.nixflex.com/api-reference/calls/delete"
 openapi: "/api-reference/public.openapi.json DELETE /calls/{id}"
 playground: "simple"
-sidebarTitle: "Delete call"
-canonical: "https://docs.nixflex.com/api-reference/calls/delete"
 ---
-Request guarded cleanup for one owned call.
+
+Deleting one call hangs it up first if it is still running, then removes its content.
 
 <div className="nxf-facts">
   <div><small>Method</small><strong>DELETE</strong></div>
   <div><small>Success</small><strong>200</strong></div>
-  <div><small>Scope</small><strong>Owning account</strong></div>
+  <div><small>Permission</small><strong>Owner or Admin</strong></div>
 </div>
 
 <div className="nxf-important">
 
 **The important part**
 
-- Only the server can confirm that required cleanup and evidence checks have finished.
-- A missing recording link or an empty file list does not prove deletion completed.
+- Running calls are hung up before content deletion.
+- A queued hang-up is not a completed delete; the same request safely resumes it.
+- Used charges remain. Customer-managed copies have their own lifecycle.
 
 </div>
 
 <div className="nxf-audience">
 
-[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+[Business guide](/guides/business/privacy/delete-call-data) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
 
 </div>
 
-In-progress or unsettled work and pending or failed cleanup can return 409/503. This is not a promise of immediate all-copy erasure. Reconcile an uncertain response before another deliberate action.
-
-
-<Warning>
-**DOCS-PENDING — deletion update.** The next engine release changes call/campaign deletion. Its final response contract has not yet been supplied for this documentation review. The details below describe the reviewed B56 contract, not a verified B57 result. Do not use these deletion examples for the new release until this note is resolved.
-</Warning>
-
 ## Authentication
 
-Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+Use the owning account's server-side credential in `Authorization: Bearer KEY_ID:KEY_SECRET`. An organisation API key has Owner authority. Personal dashboard sessions need Owner or Admin authority; Members receive 403.
 
 ## Request fields
 
-| Field | Type | Required | Default and limits |
+| Field | Type | Required | Limits |
 | --- | --- | --- | --- |
-| `id` (path) | string | Yes |  |
+| `id` (path) | string | Yes | 1–200 characters; the exact owned identifier. |
 
-Do not send a request body.
+Do not send a request body. Review the ID and effect before sending; completed content removal cannot be undone.
 
-Requests guarded cleanup of one owned call. It is not a promise of immediate erasure of every copy.
-
-An ended, settled call with a skipped managed recording can now complete a narrow empty-recording path. It requires proof of no stored object or carrier copy, a closed upload fence, complete saved call context, finished post-call work and settlement, no active writers/read leases or unknown copies, and a fresh owned-resource absence check. Any missing or unknown proof keeps the strict 409 refusal. A stored object row in any state does not qualify. Bulk and account deletion are unchanged.
-
-A recording marked unavailable (tracking_unavailable), an empty URL or zero recorded seconds is not proof of erasure. The call may have completed normally while deletion remains pending. The narrow path makes no carrier or storage DELETE request.
-
-### Not reversible
-
-<Warning>Completed removal cannot be undone through this API. Do not promise immediate completion, automatic retry or removal from customer-owned storage and external copies. Lost replies leave the outcome unknown: check before retrying.</Warning>
-
-Billing and retained financial evidence are unaffected. Call usage remains part of the account's financial records. This operation does not promise to remove webhook delivery logs.
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
 
 ## Response fields
 
-`200` returns the following shape.
+HTTP 200 confirms content deletion. It does not erase billing or every external copy.
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `call_id` | string | Always returned. |
-| `deleted` | boolean | Always returned. |
-| `recording_deleted` | boolean | Whether legacy cleanup counted at least one requested recording or transfer-audio path. False for the successful narrow empty-recording path; not proof that a recording existed or every copy was erased. |
-
-The example shows successful narrow empty-recording cleanup: `deleted` is true and `recording_deleted` is false.
-
-`recording_deleted` reflects whether the legacy cleanup path counted a requested recording or transfer-audio path. That path can request removal of a possible transfer-audio object even when none exists. The flag is not proof that a recording existed or every copy was erased. A refused or unknown request must not be shown as deleted.
+| `call_id` | string | The requested owned call ID. |
+| `deleted` | boolean | True: call content is removed after confirmed hang-up. |
+| `recording_deleted` | boolean | True when the Nixflex copy is confirmed absent; false while its cleanup is queued. |
+| `recording_cleanup` | string | `queued` or `carrier_best_effort`. Carrier cleanup remains best effort even when our copy is gone. |
 
 ## Example request
 
-Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+This request changes the selected resource. Set `NXF_API_KEY` privately for the same account and host; use an owned identifier. The examples send once.
+
+The SDK/CLI tabs use the exact [reviewed candidates](/sdks/ecosystem#verify-the-reviewed-candidate). Configure `NIXFLEX_API_KEY`, `NIXFLEX_BASE_URL` and `NXF_CALL_ID` privately. MCP uses the same intended account and host. SDKs preserve the known queued error; other uncertain errors use `outcome_unknown` with the server code in `details.original_code`.
 
 <RequestExample>
 
-```bash cURL (Bash)
+```bash cURL
 curl --request DELETE \
-  --url 'https://api.nixflex.com/v1/calls/call_example' \
+  --url "https://api.nixflex.com/v1/calls/call_example" \
   --header "Authorization: Bearer $NXF_API_KEY"
 ```
 
-```javascript Node (HTTP)
-const response = await fetch('https://api.nixflex.com/v1/calls/call_example', {
-  method: 'DELETE',
-  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+```javascript Node HTTP
+const response = await fetch("https://api.nixflex.com/v1/calls/call_example", {
+  method: 'DELETE', redirect: 'error', signal: AbortSignal.timeout(30_000),
+  headers: {Authorization: `Bearer ${process.env.NXF_API_KEY}`},
 });
-if (!response.ok) throw new Error(`HTTP ${response.status}`);
 const result = await response.json();
-// Handle the private result without logging it.
+if (!response.ok && result.error?.code !== 'hangup_pending') {
+  throw new Error(`HTTP ${response.status}: ${result.error?.code || 'unknown'}`);
+}
+// A queued reply is not deletion success. Show the returned state privately.
+const deleted = response.ok && result.deleted === true;
 ```
 
-```python Python (HTTP)
-import os, json
-from urllib.request import Request, urlopen
+```python Python HTTP
+import json, os
+from urllib.error import HTTPError
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-request = Request('https://api.nixflex.com/v1/calls/call_example', method='DELETE',
-    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY']})
-with urlopen(request, timeout=30) as response:
-    result = json.load(response)
-# Handle the private result without logging it.
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+opener = build_opener(NoRedirect())
+request = Request("https://api.nixflex.com/v1/calls/call_example", method="DELETE",
+    headers={"Authorization": "Bearer " + os.environ["NXF_API_KEY"]})
+try:
+    with opener.open(request, timeout=30) as response:
+        result = json.load(response)
+        deleted = result.get("deleted") is True
+except HTTPError as error:
+    result = json.load(error)
+    deleted = False
+    if result.get("error", {}).get("code") != "hangup_pending":
+        raise
+# Keep result private. Queued hang-up continues without a polling write loop.
 ```
 
-```powershell PowerShell (HTTP)
+```powershell PowerShell HTTP
 $headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
-$result = Invoke-RestMethod -Method DELETE -Uri 'https://api.nixflex.com/v1/calls/call_example' -Headers $headers -DisableKeepAlive
-# Handle $result privately.
+$deleted = $false
+try {
+    $result = Invoke-RestMethod -Method DELETE -Uri "https://api.nixflex.com/v1/calls/call_example" -Headers $headers -MaximumRedirection 0 -TimeoutSec 30
+    $deleted = $result.deleted -eq $true
+} catch {
+    # A 503 is not completed deletion. Read the safe error response privately.
+    # hangup_pending continues automatically; do not start a write polling loop.
+    throw
+}
+# Use $result privately. Only $deleted confirms content removal.
+```
+
+
+```javascript Node SDK
+import Nixflex, { NixflexServerError } from 'nixflex';
+
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+const resourceId = process.env.NXF_CALL_ID;
+if (!apiKey || !baseUrl || !resourceId) throw new Error('Configure the account, host and approved resource ID.');
+const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
+try {
+  const receipt = await client.calls.delete(resourceId);
+  if (receipt.deleted !== true || receipt.call_id !== resourceId || typeof receipt.recording_deleted !== 'boolean' ||
+      !['carrier_best_effort', 'queued'].includes(receipt.recording_cleanup)) {
+    throw new Error('Deletion is not confirmed.');
+  }
+  console.log('Content deletion confirmed; recording and history rules still apply.');
+} catch (error) {
+  if (error instanceof NixflexServerError && error.status === 503 &&
+      error.code === 'hangup_pending' && error.details?.deleted === false &&
+      error.details?.retry_pending === true) {
+    console.log('Deletion queued; the server continues after hang-up.');
+  } else {
+    // Keep the error private. Reconcile an unknown result before a deliberate repeat.
+    throw error;
+  }
+}
+```
+
+```python Python SDK
+import os
+from nixflex import Nixflex
+from nixflex.errors import NixflexServerError
+
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
+             base_url=os.environ["NIXFLEX_BASE_URL"], max_retries=0) as client:
+    try:
+        receipt = client.calls.delete(os.environ["NXF_CALL_ID"])
+        if (receipt.get("deleted") is not True
+                or receipt.get("call_id") != os.environ["NXF_CALL_ID"]
+                or not isinstance(receipt.get("recording_deleted"), bool)
+                or receipt.get("recording_cleanup") not in ("carrier_best_effort", "queued")):
+            raise RuntimeError("Deletion is not confirmed.")
+        print("Content deletion confirmed; recording and history rules still apply.")
+    except NixflexServerError as error:
+        if (error.status == 503 and error.code == "hangup_pending"
+                and error.details.get("deleted") is False
+                and error.details.get("retry_pending") is True):
+            print("Deletion queued; the server continues after hang-up.")
+        else:
+            raise  # Keep private; reconcile an unknown result before a deliberate repeat.
+```
+
+```bash CLI
+nixflex calls delete "$NXF_CALL_ID" --confirm --json --base-url "$NIXFLEX_BASE_URL"
+```
+
+```json MCP
+{
+  "name": "delete_call",
+  "arguments": {
+    "call_id": "call_fixture",
+    "confirm": true
+  }
+}
 ```
 
 </RequestExample>
 
 ## Example response
 
-Illustrative response with placeholder identifiers.
-
 <ResponseExample>
 
-```json Response
+```json 200 deletion confirmed
 {
   "call_id": "call_example",
   "deleted": true,
-  "recording_deleted": false
+  "recording_deleted": false,
+  "recording_cleanup": "queued"
+}
+```
+
+```json 503 hang-up queued
+{
+  "error": {
+    "type": "server_error",
+    "code": "hangup_pending",
+    "message": "The call has not confirmed it ended yet. Deletion is queued and will finish once hang-up is confirmed.",
+    "doc_url": "https://docs.nixflex.com/errors/hangup_pending",
+    "details": {
+      "deleted": false,
+      "retry_pending": true
+    }
+  }
 }
 ```
 
@@ -133,32 +221,26 @@ Illustrative response with placeholder identifiers.
 
 ## Errors
 
-Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
-
-| Status / code | What it means | What to do |
+| Status / code | Meaning | What to do |
 | --- | --- | --- |
-| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
-| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
-| 404 · `not_found` | The call is absent, already deleted or belongs to another account. | Check the exact owned identifier and current resource state; do not probe another account. |
-| 409 · `call_in_progress` | The call is still in progress. | Wait for the call to end, then read its current state before a deliberate deletion. |
-| 409 · `deletion_unsettled` | The call outcome or charge is not settled. | Keep deletion pending until the outcome and charge are settled; do not repeat the delete automatically. |
-| 409 · `recording_cleanup_pending` | Recording or transfer-audio cleanup is unfinished. | Keep deletion pending and ask support to confirm storage cleanup before another action. |
-| 409 · `cleanup_pending_confirmation` | Cleanup evidence still needs confirmation. | Ask support to reconcile the cleanup evidence; a missing file alone is not confirmation. |
-| 409 · `deletion_cleanup_failed` | Required cleanup failed. | Contact support about the failed cleanup before trying deletion again. |
-| 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
-| 503 · `deletion_unavailable` | Deletion safety could not be checked. | Keep deletion unconfirmed and reconcile the safety check through support before another deliberate action. |
+| 400 `invalid_delete` | Invalid identifier length. | Use the exact owned ID, from 1 to 200 characters. |
+| 401 | Missing or invalid authentication. | Check the credential and host privately. |
+| 403 `permission_denied` | The personal session cannot delete. | Ask an Owner or Admin; never give a Member the account key as a workaround. |
+| 404 `not_found` | The item is missing or belongs to another account. | Check the saved ID and account. Do not infer another account's data. |
+| 429 | Rate limited. | Honour Retry-After and avoid a polling write loop. |
+| 503 `hangup_pending` | Hang-up is unconfirmed; deletion is queued. | Show queued, not deleted. The worker continues automatically; the same DELETE safely resumes it. |
+| 503 `deletion_unavailable` | Deletion could not be confirmed. | Check the list and repeat the same DELETE if needed; an existing request safely resumes. |
 
-
-Only calls made with your own API key can be deleted; another account's call ID returns the same `404`.
-
-Safety refusals include `details.deleted=false`, `details.account_locked=false`, the `reason` code, nullable `review_due`, and `details.safe_to_retry=false`. A review timestamp is not a promise that cleanup will finish by that time. Keep the pending state and reconcile through support before another deliberate action.
+The 503 flags are inside `error.details`, not at the response root. `hangup_pending` includes `deleted:false` and `retry_pending:true`; `deletion_unavailable` includes `deleted:false` without promising that a queue exists.
 
 ## Retry and idempotency
 
-Disable automatic write retries. A lost response leaves the result uncertain; read the affected resource before another deliberate action. No general Idempotency-Key replay guarantee applies. See [retry rules](/api-reference/retries).
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Use bounded reads to refresh the list. Do not treat the generic write-retry rule for call creation or SMS sending as the deletion rule: this same-ID DELETE has a deliberate resume contract. It does not require an Idempotency-Key header.
 
 ## Related endpoints
 
-- [List calls](/api-reference/calls/list)
-- [Get call history](/api-reference/calls/get-calls-history)
+- [Delete call data in the dashboard](/guides/business/privacy/delete-call-data)
+- [Bulk call deletion](/api-reference/calls/delete-all)
 - [Errors and recovery](/api-reference/errors#error-envelope)

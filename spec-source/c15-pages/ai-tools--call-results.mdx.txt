@@ -1,0 +1,111 @@
+---
+title: "Check call requests and booking results with AI"
+sidebarTitle: "Check call and booking results"
+description: "Use the MCP candidate’s read tools to inspect saved call requests and retained booking results without redialling or inventing missing outcomes."
+canonical: "https://docs.nixflex.com/ai-tools/call-results"
+---
+
+Read the saved outbound request or a call’s retained booking result before deciding whether any follow-up action is needed.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/call-history).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Package</small><strong>MCP 0.5.0 candidate</strong></div>
+  <div><small>New read tools</small><strong>Two</strong></div>
+  <div><small>Request lookup</small><strong>Saved request ID</strong></div>
+  <div><small>Booking lookup</small><strong>Known call ID</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Neither result-read tool places a call or books an appointment.
+- Accepted means the request has a call ID, not that someone answered or the call finished.
+- A booking result describes that call’s retained changes, not the calendar as it is now.
+- Keep the original request ID, exact inputs, account and environment. Never generate a replacement ID to retry an uncertain call.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />The launch response was lost. Do not call again.</p>
+  <p><strong>Assistant</strong><br />I will use get_outbound_call_request with the saved request ID and report its actual state.</p>
+  <p><strong>Owner</strong><br />If it has a call ID, follow that call. Do not treat an unknown result as permission to redial.</p>
+</div>
+
+## Before you start
+
+Use the reviewed, unpublished 97-tool MCP 0.5.0 candidate and verify its discovered schemas. Have either the original saved request UUID or a known call ID for the same account and API environment. Ask for only the customer data needed for the review.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Read the original outbound request">
+
+Use `get_outbound_call_request` with its saved `request_id`. This is a read. Keep `pending`, `accepted`, `rejected` and `unknown` distinct. If accepted, retain the returned call ID and follow that call.
+
+</Step>
+
+<Step title="Read a known call’s bookings">
+
+Use `get_call_bookings` with the actual `call_id`. Only `ready` contains result content. Read the ordered timeline and final appointment state as returned, without filling missing fields from guesses.
+
+</Step>
+
+<Step title="Report uncertainty accurately">
+
+`none` means no successful booking changes were recorded for that call. `processing`, `deleted` and `unavailable` are different states; none proves an appointment never existed. Check the actual calendar if you need its current state.
+
+</Step>
+
+<Step title="Prepare a new call only as a separate approved task">
+
+For a new intent, `create_call` with the complete reviewed call inputs, `safe_retry: true` and no `request_id` prepares a UUID locally and returns `sent: false`. Save that ID with the exact inputs and account/environment association. Preparation places no call.
+
+</Step>
+
+<Step title="Keep sending separate from preparation">
+
+Placing the paid call requires those unchanged inputs and saved `request_id` with `confirm: true`, after human approval. Reconcile uncertain results with the same ID rather than preparing another. The older path without a request ID or preparation option remains able to place a call without this new confirmation field, so keep client approvals enabled.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Request `accepted` | The saved request was accepted and has a call ID. | Follow that call; do not infer answered or completed. |
+| Request `pending` or `unknown` | The result is not established. | Read the same request and investigate before any further action. |
+| Request `rejected` | The saved attempt was refused. | Review the reason; it is not permission to redial blindly. |
+| Booking `ready` | Retained booking content is available. | Read the timeline and final result for that call. |
+| Booking `none` | No successful booking changes were recorded. | Keep it distinct from unavailable data and check the calendar before a new booking. |
+| Booking `processing`, `deleted` or `unavailable` | Content cannot be read for the stated reason. | Report the actual state and avoid claiming no booking occurred. |
+
+
+
+## Delete content deliberately
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
+
+## Next
+
+- [Choose and connect your AI client](/ai-tools/overview)
+- [Read booking results in the dashboard](/guides/business/booking-results)
+- [Call one number in the dashboard](/guides/business/call-one-number)
+
+Reviewed 5 November 2026.

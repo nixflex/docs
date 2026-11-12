@@ -1,0 +1,127 @@
+---
+title: "Connect Codex to Nixflex with MCP"
+sidebarTitle: "Connect Codex"
+description: "Configure the Nixflex MCP candidate in Codex without saving a key in TOML. Verify a read and try five prompts for agents, knowledge, calls, booking and usage."
+canonical: "https://docs.nixflex.com/ai-tools/codex"
+---
+
+Connect Codex to a local Nixflex MCP process using a privately supplied organisation key.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/sdks/mcp).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>Local Node process</strong></div>
+  <div><small>Configuration</small><strong>Your MCP settings</strong></div>
+  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Secrets</small><strong>Private environment</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
+- Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
+- Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />Draft a new reception agent and show its settings first.</p>
+  <p><strong>Codex</strong><br />I will read the existing agent list, then prepare the proposed instructions.</p>
+  <p><strong>Owner</strong><br />Wait for approval before create_agent, and do not attach a number or make a call.</p>
+</div>
+
+## Connect
+
+1. [Install the supplied package](/ai-tools/overview#install-the-supplied-local-package) with Node 22 or later.
+2. Provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` privately in the environment used to launch Codex. Never ask Codex to read the key or put its value in a chat, command argument or TOML file.
+3. Add this server to `~/.codex/config.toml`, preserving existing settings. Replace the Windows path with your actual installed path. For macOS or Linux, write the absolute path under your home directory in full.
+4. Restart Codex from the prepared environment. Use `codex mcp list` or `/mcp` to inspect the connection and tools.
+5. Run the read-only prompt below and approve only that action.
+
+```toml
+[mcp_servers.nixflex]
+command = "node"
+args = ["C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"]
+startup_timeout_sec = 30
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
+
+[mcp_servers.nixflex.env]
+NIXFLEX_CREDENTIAL_SOURCE = "environment"
+```
+
+The `env_vars` names forward values from the launching environment; they are not the values themselves. Use a full Node executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
+
+### Optional private number-credential updates
+
+For `update_phone_number_credentials`, privately provide the pair for the number's current carrier to the environment that launches Codex. Replace the existing `env_vars` line inside `[mcp_servers.nixflex]`, before `[mcp_servers.nixflex.env]`, with **one** of these choices. These are variable names only; never write their values in TOML or ask Codex to read them.
+
+<CodeGroup>
+
+```toml Twilio
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TWILIO_SID", "NIXFLEX_TWILIO_TOKEN"]
+```
+
+```toml Telnyx
+env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL", "NIXFLEX_TELNYX_API_KEY", "NIXFLEX_TELNYX_CONNECTION_ID"]
+```
+
+</CodeGroup>
+
+Restart from that prepared environment. The tool accepts only `phone_number`, `provider` and `confirm`, then reads the selected pair privately after confirmation. Missing configuration sends nothing. Keep the original two-name list if you do not need credential updates. See [the credential and uncertain-outcome limits](/ai-tools/overview#google-calendar-and-number-credentials).
+
+## Verify with a read
+
+> Use Nixflex get_usage only. Explain the usage returned without changing anything or printing credentials. Do not use shell commands to inspect my secret environment.
+
+Expect **97 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
+
+## Five prompts to try
+
+### 1. Create an agent
+
+> Read my Nixflex agent list. Draft a Willow Reception agent for answering service questions, and show its exact instructions and settings before creating it. Wait for my approval before create_agent. Do not attach numbers, modify repository files or place a call.
+
+### 2. Prepare new knowledge
+
+> Read Willow Reception's current knowledge. Help me turn the business facts I provide into one clear topic, identify conflicts and show dashboard steps to add, review and publish it. This MCP has no knowledge write tool. Do not use shell or direct API calls to bypass that limit or say the topic is live.
+
+### 3. Check recent calls
+
+> Use Nixflex list_calls for Willow Reception's latest five completed calls. Summarise confirmed outcomes, missing results and follow-up needs. Keep personal details out of the answer. Do not change records, call people or send messages.
+
+### 4. Prepare booking via a calendar
+
+> List my Nixflex numbers and let me choose one for booking. With my approval, check get_google_calendar. If new consent is needed, show the number and return URL for approval before connect_google_calendar with confirm: true; I will open the ten-minute link. Check status after consent. Show settings changes before asking approval for update_google_calendar_settings with confirm: true. Give me a manual test-call script with full-name spelling, email-local-part spelling, a domain spoken as words, and one combined read-back followed by one clear yes. MCP cannot book directly; do not call the booking API or claim an appointment or invitation delivery.
+
+### 5. Read usage
+
+> Use Nixflex get_usage to make a small usage and balance table with the actual returned period. Say when a value is unavailable. Do not change billing, rotate credentials, inspect local secret files or invent an invoice.
+
+## Check a call without repeating it
+
+The candidate’s `get_outbound_call_request` reads the original saved request ID without dialling. `get_call_bookings` reads the retained booking result for a known call ID. Keep `ready`, `none`, `processing`, `deleted` and `unavailable` distinct. Follow [the saved-request workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests) before any new approved outbound call; never prepare a replacement ID for an uncertain launch.
+
+## Limits and documentation
+
+Use the dashboard for knowledge publication and personal ownership actions. The candidate supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
+
+Give Codex [llms.txt](https://docs.nixflex.com/llms.txt) and [this page as Markdown](https://docs.nixflex.com/ai-tools/codex.md). Ask it to read the relevant page and inspect the available tool schema before proposing an action. Documentation is context, not account permission.
+
+## Next
+
+- [Manage calendar settings](/ai-tools/calendar-settings)
+- [Check call and booking results](/ai-tools/call-results)
+- [Prepare private number credentials](/ai-tools/number-credentials)
+
+Reviewed 5 November 2026.

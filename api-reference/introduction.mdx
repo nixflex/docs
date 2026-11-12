@@ -48,7 +48,7 @@ Successful statuses and response shapes vary by operation. Some lists are bare a
 
 The public reference covers accounts and keys, agents, voices, phone numbers, calls, campaigns, SMS, contact controls, caller context, web agents, inboxes, knowledge, organisations, and integration settings. A product feature does not automatically provide a public API operation. Only documented public operations belong in an integration.
 
-The [public OpenAPI file](/api-reference/public.openapi.json) describes all 149 documented public operations in this reference. Its operation IDs are stable. Download it for client generation and contract checks. Its `webhooks` section also describes [call.bookings](/api-reference/call-bookings); this adds no callable endpoint.
+The [public OpenAPI file](/api-reference/public.openapi.json) describes all 150 documented public operations in this reference. Its operation IDs are stable. Download it for client generation and contract checks. Its `webhooks` section also describes [call.bookings](/api-reference/call-bookings); this adds no callable endpoint.
 
 ## Normal agent defaults
 
@@ -66,4 +66,254 @@ See [Node](/sdks/node), [Python](/sdks/python), [CLI](/cli/overview), and [MCP](
 
 Read [Rate limits](/api-reference/rate-limits), [Idempotency](/api-reference/idempotency) and [Webhooks](/api-reference/webhooks) before connecting background jobs. Each endpoint includes authentication, fields, examples, errors and retry rules.
 
-The supplied MCP 0.5.0 candidate has **94 registered tools**, including **19 Knowledge tools**. Knowledge endpoint pages show registered tool calls or explain why a tool is unavailable. Node, Python and CLI examples identify methods supported by the documented kit versions.
+The supplied MCP 0.5.0 candidate has **97 registered tools**, including **19 Knowledge tools**. Knowledge endpoint pages show registered tool calls or explain why a tool is unavailable. Node, Python and CLI examples identify methods supported by the documented kit versions.
+
+## Find an API operation
+
+Choose a resource below for the exact request fields, responses and recovery steps. These are the 151 public HTTP operations; webhook events and dashboard-only personal actions are separate.
+
+<AccordionGroup>
+
+<Accordion title="Agents (5)">
+
+| Task | Method and path |
+| --- | --- |
+| [Create an agent](/api-reference/agents/create) | `POST /agents` |
+| [List agents](/api-reference/agents/list) | `GET /agents` |
+| [Get an agent](/api-reference/agents/get) | `GET /agents/{id}` |
+| [Update an agent](/api-reference/agents/update) | `PUT /agents/{id}` |
+| [Disable an agent](/api-reference/agents/delete) | `DELETE /agents/{id}` |
+
+</Accordion>
+
+<Accordion title="Phone numbers (7)">
+
+| Task | Method and path |
+| --- | --- |
+| [List phone numbers](/api-reference/phone-numbers/list) | `GET /phone-numbers` |
+| [Get a phone number](/api-reference/phone-numbers/get) | `GET /phone-numbers/{phoneNumber}` |
+| [Import a phone number](/api-reference/phone-numbers/import) | `POST /phone-numbers` |
+| [Update a phone number](/api-reference/phone-numbers/update) | `PATCH /phone-numbers/{phoneNumber}` |
+| [Get number usage](/api-reference/phone-numbers/usage) | `GET /phone-numbers/{phoneNumber}/usage` |
+| [Update phone number credentials](/api-reference/phone-numbers/credentials) | `POST /phone-numbers/{phoneNumber}/credentials` |
+| [Remove a phone number](/api-reference/phone-numbers/delete) | `DELETE /phone-numbers/{phoneNumber}` |
+
+</Accordion>
+
+<Accordion title="Calls (9)">
+
+| Task | Method and path |
+| --- | --- |
+| [List calls](/api-reference/calls/list) | `GET /calls` |
+| [Get call history](/api-reference/calls/get-calls-history) | `GET /calls/history` |
+| [Get a call](/api-reference/calls/get) | `GET /calls/{id}` |
+| [Read call booking results](/api-reference/calls/get-bookings) | `GET /calls/{id}/bookings` |
+| [Get a call recording](/api-reference/calls/get-calls-id-recording) | `GET /calls/{id}/recording` |
+| [Create an outbound call](/api-reference/calls/create-outbound) | `POST /calls/outbound` |
+| [Read an outbound call request](/api-reference/calls/get-outbound-request) | `GET /calls/outbound/requests/{request_id}` |
+| [Delete a call](/api-reference/calls/delete) | `DELETE /calls/{id}` |
+| [Delete all calls](/api-reference/calls/delete-all) | `DELETE /calls` |
+
+</Accordion>
+
+<Accordion title="Voice campaigns (8)">
+
+| Task | Method and path |
+| --- | --- |
+| [List voice campaigns](/api-reference/voice-campaigns/get-campaigns) | `GET /campaigns` |
+| [Get a voice campaign](/api-reference/voice-campaigns/get) | `GET /campaigns/{id}` |
+| [Create a voice campaign](/api-reference/calls/batch-create) | `POST /calls/batch` |
+| [Launch a voice campaign](/api-reference/calls/batch-launch) | `POST /calls/batch/{id}/launch` |
+| [Cancel voice campaign](/api-reference/voice-campaigns/post-calls-batch-id-cancel) | `POST /calls/batch/{id}/cancel` |
+| [Resume voice campaign](/api-reference/voice-campaigns/post-calls-batch-id-resume) | `POST /calls/batch/{id}/resume` |
+| [Record voice consent](/api-reference/voice-campaigns/post-calls-batch-id-consent) | `POST /calls/batch/{id}/consent` |
+| [Delete a voice campaign](/api-reference/voice-campaigns/delete) | `DELETE /calls/batch/{id}` |
+
+</Accordion>
+
+<Accordion title="SMS (10)">
+
+| Task | Method and path |
+| --- | --- |
+| [Send an SMS](/api-reference/sms/send) | `POST /sms` |
+| [List SMS campaigns](/api-reference/sms/campaigns-list) | `GET /sms/campaigns` |
+| [Create an SMS campaign](/api-reference/sms/campaigns-create) | `POST /sms/campaigns` |
+| [Get an SMS campaign](/api-reference/sms/campaigns-get) | `GET /sms/campaigns/{id}` |
+| [Update SMS reply settings](/api-reference/sms-campaigns/patch-sms-campaigns-id) | `PATCH /sms/campaigns/{id}` |
+| [Launch an SMS campaign](/api-reference/sms/campaigns-launch) | `POST /sms/campaigns/{id}/launch` |
+| [Cancel SMS campaign](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel) | `POST /sms/campaigns/{id}/cancel` |
+| [Resume SMS campaign](/api-reference/sms-campaigns/post-sms-campaigns-id-resume) | `POST /sms/campaigns/{id}/resume` |
+| [Record SMS consent](/api-reference/sms-campaigns/post-sms-campaigns-id-consent) | `POST /sms/campaigns/{id}/consent` |
+| [Delete an SMS campaign](/api-reference/sms/campaigns-delete) | `DELETE /sms/campaigns/{id}` |
+
+</Accordion>
+
+<Accordion title="Knowledge (40)">
+
+| Task | Method and path |
+| --- | --- |
+| [Get knowledge capabilities](/api-reference/knowledge/get-knowledge-capabilities) | `GET /knowledge/capabilities` |
+| [List knowledge agents](/api-reference/knowledge/get-knowledge-targets) | `GET /knowledge/targets` |
+| [Get agent knowledge](/api-reference/knowledge/get-agents-target-knowledge-base) | `GET /agents/{target}/knowledge-base` |
+| [Set agent knowledge](/api-reference/knowledge/put-agents-target-knowledge-base) | `PUT /agents/{target}/knowledge-base` |
+| [Get knowledge base](/api-reference/knowledge/get-knowledge-bases-kb) | `GET /knowledge-bases/{kb}` |
+| [Get knowledge overview](/api-reference/knowledge/get-knowledge-bases-kb-overview) | `GET /knowledge-bases/{kb}/overview` |
+| [Read automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms) | `GET /agents/{target}/knowledge-keyterms` |
+| [Get knowledge usage](/api-reference/knowledge/get-knowledge-usage) | `GET /knowledge/usage` |
+| [Read knowledge events](/api-reference/knowledge/get-knowledge-events) | `GET /knowledge/events` |
+| [Measure knowledge source](/api-reference/knowledge/post-agents-target-knowledge-base-source-measure) | `POST /agents/{target}/knowledge-base/source-measure` |
+| [Import knowledge source](/api-reference/knowledge/post-knowledge-bases-kb-sources) | `POST /knowledge-bases/{kb}/sources` |
+| [List knowledge sources](/api-reference/knowledge/get-knowledge-bases-kb-sources) | `GET /knowledge-bases/{kb}/sources` |
+| [Rename knowledge source](/api-reference/knowledge/patch-knowledge-bases-kb-sources-id) | `PATCH /knowledge-bases/{kb}/sources/{id}` |
+| [Replace knowledge source](/api-reference/knowledge/post-knowledge-bases-kb-sources-id-replacements) | `POST /knowledge-bases/{kb}/sources/{id}/replacements` |
+| [Refresh website sources](/api-reference/knowledge/post-knowledge-bases-kb-sources-refresh) | `POST /knowledge-bases/{kb}/sources/refresh` |
+| [Delete knowledge source](/api-reference/knowledge/delete-knowledge-bases-kb-sources-id) | `DELETE /knowledge-bases/{kb}/sources/{id}` |
+| [Discover website pages](/api-reference/knowledge/post-knowledge-bases-kb-website-discoveries) | `POST /knowledge-bases/{kb}/website-discoveries` |
+| [Import selected pages](/api-reference/knowledge/post-knowledge-bases-kb-website-imports) | `POST /knowledge-bases/{kb}/website-imports` |
+| [Get knowledge draft](/api-reference/knowledge/get-knowledge-bases-kb-drafts-id) | `GET /knowledge-bases/{kb}/drafts/{id}` |
+| [Edit knowledge draft](/api-reference/knowledge/patch-knowledge-bases-kb-drafts-id) | `PATCH /knowledge-bases/{kb}/drafts/{id}` |
+| [Accept knowledge draft](/api-reference/knowledge/post-knowledge-bases-kb-drafts-id-accept) | `POST /knowledge-bases/{kb}/drafts/{id}/accept` |
+| [Discard knowledge draft](/api-reference/knowledge/delete-knowledge-bases-kb-drafts-id) | `DELETE /knowledge-bases/{kb}/drafts/{id}` |
+| [List knowledge topics](/api-reference/knowledge/get-knowledge-bases-kb-topics) | `GET /knowledge-bases/{kb}/topics` |
+| [Get knowledge topic](/api-reference/knowledge/get-knowledge-bases-kb-topics-id) | `GET /knowledge-bases/{kb}/topics/{id}` |
+| [Create knowledge topic](/api-reference/knowledge/post-knowledge-bases-kb-topics) | `POST /knowledge-bases/{kb}/topics` |
+| [Update knowledge topic](/api-reference/knowledge/patch-knowledge-bases-kb-topics-id) | `PATCH /knowledge-bases/{kb}/topics/{id}` |
+| [Delete knowledge topic](/api-reference/knowledge/delete-knowledge-bases-kb-topics-id) | `DELETE /knowledge-bases/{kb}/topics/{id}` |
+| [Search knowledge topics](/api-reference/knowledge/post-knowledge-bases-kb-topic-search) | `POST /knowledge-bases/{kb}/topic-search` |
+| [List unanswered questions](/api-reference/knowledge/get-knowledge-bases-kb-unanswered) | `GET /knowledge-bases/{kb}/unanswered` |
+| [Update knowledge settings](/api-reference/knowledge/patch-knowledge-bases-kb-settings) | `PATCH /knowledge-bases/{kb}/settings` |
+| [Start knowledge test](/api-reference/knowledge/post-agents-target-knowledge-base-test-sessions) | `POST /agents/{target}/knowledge-base/test-sessions` |
+| [Get knowledge test session](/api-reference/knowledge/get-knowledge-test-sessions-id) | `GET /knowledge/test-sessions/{id}` |
+| [Ask a knowledge test question](/api-reference/knowledge/post-knowledge-test-sessions-id-messages) | `POST /knowledge/test-sessions/{id}/messages` |
+| [Cancel knowledge test](/api-reference/knowledge/post-knowledge-test-sessions-id-cancel) | `POST /knowledge/test-sessions/{id}/cancel` |
+| [Get knowledge job](/api-reference/knowledge/get-knowledge-jobs-id) | `GET /knowledge/jobs/{id}` |
+| [Retry knowledge job](/api-reference/knowledge/post-knowledge-jobs-id-retry) | `POST /knowledge/jobs/{id}/retry` |
+| [Cancel knowledge job](/api-reference/knowledge/post-knowledge-jobs-id-cancel) | `POST /knowledge/jobs/{id}/cancel` |
+| [Create knowledge export](/api-reference/knowledge/post-knowledge-bases-kb-exports) | `POST /knowledge-bases/{kb}/exports` |
+| [Download knowledge export](/api-reference/knowledge/get-knowledge-exports-id) | `GET /knowledge/exports/{id}` |
+| [Delete agent knowledge](/api-reference/knowledge/delete-agents-target-knowledge-base) | `DELETE /agents/{target}/knowledge-base` |
+
+</Accordion>
+
+<Accordion title="Web agent (2)">
+
+| Task | Method and path |
+| --- | --- |
+| [Read web agent settings](/api-reference/web-agent/get-agent-web-number) | `GET /agent-web/{number}` |
+| [Update web agent settings](/api-reference/web-agent/patch-agent-web-number) | `PATCH /agent-web/{number}` |
+
+</Accordion>
+
+<Accordion title="Inbox (6)">
+
+| Task | Method and path |
+| --- | --- |
+| [Check inbox availability](/api-reference/agent-inbox/get-agent-inbox-features) | `GET /agent-inbox/features` |
+| [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers) | `GET /agent-inbox/numbers` |
+| [List inbox conversations](/api-reference/agent-inbox/get-agent-inbox-channel-number) | `GET /agent-inbox/{channel}/{number}` |
+| [Read an inbox thread](/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread) | `GET /agent-inbox/{channel}/{number}/thread/{thread}` |
+| [Update an inbox thread](/api-reference/agent-inbox/patch-agent-inbox-channel-number-thread-thread) | `PATCH /agent-inbox/{channel}/{number}/thread/{thread}` |
+| [Read inbox retention](/api-reference/agent-inbox/get-agent-inbox-retention) | `GET /agent-inbox/retention` |
+
+</Accordion>
+
+<Accordion title="Contacts (8)">
+
+| Task | Method and path |
+| --- | --- |
+| [Delete caller context](/api-reference/caller-context/delete) | `DELETE /phone-numbers/{phoneNumber}/callers/{callerNumber}` |
+| [Get caller context](/api-reference/caller-context/get) | `GET /phone-numbers/{phoneNumber}/callers/{callerNumber}` |
+| [Set caller context](/api-reference/caller-context/set) | `PUT /phone-numbers/{phoneNumber}/callers/{callerNumber}` |
+| [Import caller context](/api-reference/caller-context/import) | `POST /phone-numbers/{phoneNumber}/callers/import` |
+| [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview) | `POST /contact-hours/preview` |
+| [List contact suppressions](/api-reference/contact-controls/get-contact-suppressions) | `GET /contact-suppressions` |
+| [Add contact suppressions](/api-reference/contact-controls/post-contact-suppressions) | `POST /contact-suppressions` |
+| [Remove a contact suppression](/api-reference/contact-controls/delete-contact-suppressions) | `DELETE /contact-suppressions` |
+
+</Accordion>
+
+<Accordion title="Integrations (38)">
+
+| Task | Method and path |
+| --- | --- |
+| [Get Cal.com settings](/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber) | `GET /integrations/calcom/number/{phoneNumber}` |
+| [Set Cal.com settings](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber) | `PUT /integrations/calcom/number/{phoneNumber}` |
+| [Delete Cal.com settings](/api-reference/integration-settings/delete-integrations-calcom-number-phoneNumber) | `DELETE /integrations/calcom/number/{phoneNumber}` |
+| [Connect Google Calendar](/api-reference/integration-settings/google-calendar) | `POST /integrations/google-calendar/number/{phoneNumber}/connect` |
+| [Get Google Calendar status](/api-reference/integration-settings/google-calendar-status) | `GET /integrations/google-calendar/number/{phoneNumber}` |
+| [Disconnect Google Calendar](/api-reference/integration-settings/google-calendar-disconnect) | `DELETE /integrations/google-calendar/number/{phoneNumber}` |
+| [Update Google Calendar settings](/api-reference/integration-settings/google-calendar-settings) | `PATCH /integrations/google-calendar/number/{phoneNumber}` |
+| [Get Slack settings](/api-reference/integration-settings/get-integrations-slack-number-phoneNumber) | `GET /integrations/slack/number/{phoneNumber}` |
+| [Set Slack settings](/api-reference/integration-settings/put-integrations-slack-number-phoneNumber) | `PUT /integrations/slack/number/{phoneNumber}` |
+| [Delete Slack settings](/api-reference/integration-settings/delete-integrations-slack-number-phoneNumber) | `DELETE /integrations/slack/number/{phoneNumber}` |
+| [Get Zapier settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber) | `GET /integrations/zapier/number/{phoneNumber}` |
+| [Set Zapier settings](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber) | `PUT /integrations/zapier/number/{phoneNumber}` |
+| [Delete Zapier settings](/api-reference/integration-settings/delete-integrations-zapier-number-phoneNumber) | `DELETE /integrations/zapier/number/{phoneNumber}` |
+| [Get Make settings](/api-reference/integration-settings/get-integrations-make-number-phoneNumber) | `GET /integrations/make/number/{phoneNumber}` |
+| [Set Make settings](/api-reference/integration-settings/put-integrations-make-number-phoneNumber) | `PUT /integrations/make/number/{phoneNumber}` |
+| [Delete Make settings](/api-reference/integration-settings/delete-integrations-make-number-phoneNumber) | `DELETE /integrations/make/number/{phoneNumber}` |
+| [Get GoHighLevel settings](/api-reference/integration-settings/get-integrations-gohighlevel-number-phoneNumber) | `GET /integrations/gohighlevel/number/{phoneNumber}` |
+| [Set GoHighLevel settings](/api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber) | `PUT /integrations/gohighlevel/number/{phoneNumber}` |
+| [Delete GoHighLevel settings](/api-reference/integration-settings/delete-integrations-gohighlevel-number-phoneNumber) | `DELETE /integrations/gohighlevel/number/{phoneNumber}` |
+| [Get pre-call gate for number](/api-reference/integration-settings/get-integrations-precall-number-phoneNumber) | `GET /integrations/precall/number/{phoneNumber}` |
+| [Get pre-call gate for agent](/api-reference/integration-settings/get-integrations-precall-agent-agentId) | `GET /integrations/precall/agent/{agentId}` |
+| [Set pre-call gate for number](/api-reference/integration-settings/put-integrations-precall-number-phoneNumber) | `PUT /integrations/precall/number/{phoneNumber}` |
+| [Set pre-call gate for agent](/api-reference/integration-settings/put-integrations-precall-agent-agentId) | `PUT /integrations/precall/agent/{agentId}` |
+| [Clear pre-call gate for number](/api-reference/integration-settings/delete-integrations-precall-number-phoneNumber) | `DELETE /integrations/precall/number/{phoneNumber}` |
+| [Clear pre-call gate for agent](/api-reference/integration-settings/delete-integrations-precall-agent-agentId) | `DELETE /integrations/precall/agent/{agentId}` |
+| [List custom functions](/api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber) | `GET /integrations/custom-functions/number/{phoneNumber}` |
+| [Create a custom function](/api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber) | `POST /integrations/custom-functions/number/{phoneNumber}` |
+| [Update a custom function](/api-reference/integration-settings/patch-integrations-custom-functions-number-phoneNumber-id) | `PATCH /integrations/custom-functions/number/{phoneNumber}/{id}` |
+| [Delete a custom function](/api-reference/integration-settings/delete-integrations-custom-functions-number-phoneNumber-id) | `DELETE /integrations/custom-functions/number/{phoneNumber}/{id}` |
+| [Get first webhook](/api-reference/integration-settings/get-integrations-webhook-number-phoneNumber) | `GET /integrations/webhook/number/{phoneNumber}` |
+| [Get second webhook](/api-reference/integration-settings/get-integrations-webhook2-number-phoneNumber) | `GET /integrations/webhook2/number/{phoneNumber}` |
+| [Set first webhook](/api-reference/integration-settings/put-integrations-webhook-number-phoneNumber) | `PUT /integrations/webhook/number/{phoneNumber}` |
+| [Set second webhook](/api-reference/integration-settings/put-integrations-webhook2-number-phoneNumber) | `PUT /integrations/webhook2/number/{phoneNumber}` |
+| [Clear first webhook](/api-reference/integration-settings/delete-integrations-webhook-number-phoneNumber) | `DELETE /integrations/webhook/number/{phoneNumber}` |
+| [Clear second webhook](/api-reference/integration-settings/delete-integrations-webhook2-number-phoneNumber) | `DELETE /integrations/webhook2/number/{phoneNumber}` |
+| [Get web calls](/api-reference/integration-settings/get-integrations-web-calls-number-phoneNumber) | `GET /integrations/web-calls/number/{phoneNumber}` |
+| [Set web calls](/api-reference/integration-settings/put-integrations-web-calls-number-phoneNumber) | `PUT /integrations/web-calls/number/{phoneNumber}` |
+| [Clear web calls](/api-reference/integration-settings/delete-integrations-web-calls-number-phoneNumber) | `DELETE /integrations/web-calls/number/{phoneNumber}` |
+
+</Accordion>
+
+<Accordion title="Organisation (11)">
+
+| Task | Method and path |
+| --- | --- |
+| [Get organisation context](/api-reference/organisation/get-organisation) | `GET /organisation` |
+| [List organisation members](/api-reference/organisation/get-organisation-members) | `GET /organisation/members` |
+| [List organisation activity](/api-reference/organisation/get-organisation-activity) | `GET /organisation/activity` |
+| [Request an owner claim](/api-reference/organisation/post-organisation-claim-invite) | `POST /organisation/claim-invite` |
+| [Invite a teammate](/api-reference/organisation/post-organisation-invites) | `POST /organisation/invites` |
+| [Resend a team invitation](/api-reference/organisation/post-organisation-invites-id-resend) | `POST /organisation/invites/{id}/resend` |
+| [Revoke a team invitation](/api-reference/organisation/delete-organisation-invites-id) | `DELETE /organisation/invites/{id}` |
+| [Change an organisation role](/api-reference/organisation/patch-organisation-members-id) | `PATCH /organisation/members/{id}` |
+| [Remove an organisation member](/api-reference/organisation/delete-organisation-members-id) | `DELETE /organisation/members/{id}` |
+| [Rename an organisation](/api-reference/organisation/patch-organisation-name) | `PATCH /organisation/name` |
+| [Get the signing secret](/api-reference/organisation/get-organisation-signing-secret) | `GET /organisation/signing-secret` |
+
+</Accordion>
+
+<Accordion title="Account and usage (5)">
+
+| Task | Method and path |
+| --- | --- |
+| [Create an API account](/api-reference/account/create-key) | `POST /keys` |
+| [Rotate the API key](/api-reference/account/rotate-key) | `POST /keys/rotate` |
+| [Get account usage](/api-reference/account/usage) | `GET /usage` |
+| [Get account retention](/api-reference/account-and-keys/get-account-retention) | `GET /account/retention` |
+| [Get key activity](/api-reference/account-and-keys/get-keys-activity) | `GET /keys/activity` |
+
+</Accordion>
+
+<Accordion title="Voices (2)">
+
+| Task | Method and path |
+| --- | --- |
+| [List voices](/api-reference/voices/get-voices) | `GET /voices` |
+| [Get a voice](/api-reference/voices/get-voices-voice_key) | `GET /voices/{voice_key}` |
+
+</Accordion>
+
+</AccordionGroup>

@@ -17,7 +17,7 @@ Connect Cal.com to an owned number, choose the intended event settings and verif
 **The important part**
 
 - Calendar access and the agent’s permission to act are separate.
-- Confirm the spoken name and email independently before booking.
+- Collect the spelled name and email for a new voice booking, then use one combined read-back and one yes.
 - Use returned booking results; an accepted action is not proof of notification delivery.
 
 </div>
@@ -76,7 +76,7 @@ Use the documented PUT integration route with the calendar credentials and event
 
 ## 3. Describe permitted booking
 
-State the service, required customer information and how to handle multiple existing appointments. Enable `require_booking_confirmation` where a read-back is required. Current availability still needs checking at the actual booking step.
+State the service, required customer information and how to handle multiple existing appointments. New voice bookings always require one combined read-back and one clear yes, even when `require_booking_confirmation` is false. Current availability still needs checking at the actual booking step.
 
 ## 4. Test the calendar result
 
@@ -102,8 +102,18 @@ The settings GET returns a safe configuration view without the full secret. Book
 | Call ended before write | Do not start a new mutation. |
 | Confirmation text unavailable | Keep the successful appointment separate from the text failure. |
 
+## Voice booking approval
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
 ## Next steps
 
-- [Read connection](/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber)
-- [Save connection](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber)
-- [Confirmation rules](/actions/booking-confirmation)
+- [Booking approval](/actions/booking-confirmation)
+- [Troubleshoot bookings](/guides/developer/bookings/troubleshooting)
+- [Booking results](/api-reference/calls/get-bookings)

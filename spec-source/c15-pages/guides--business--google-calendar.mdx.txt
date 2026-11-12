@@ -1,0 +1,176 @@
+---
+title: "Take bookings with Google Calendar"
+sidebarTitle: "Google Calendar"
+description: "Connect Google Calendar to a Nixflex number, set hours and caller invites, and check confirmed appointment results."
+canonical: "https://docs.nixflex.com/guides/business/google-calendar"
+---
+
+Each business number has its own calendar connection, even when numbers share an agent.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/actions/google-calendar).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who can set up</small><strong>Owner, Admin</strong></div>
+  <div><small>Connection</small><strong>Each number</strong></div>
+  <div><small>Length options</small><strong>15, 30, 45, 60 min</strong></div>
+  <div><small>Caller invites</small><strong>Start on</strong></div>
+</div>
+
+<span id="before-you-start" />
+
+<div className="nxf-important">
+
+**The important part**
+
+- **Each number has its own calendar connection and hours**, even when numbers share an agent.
+- Use one booking connection per number: **Google Calendar or Cal.com**. Disconnect the other before switching.
+- The caller spells their name and email local part; one combined read-back and one clear yes approve the voice booking.
+- Google is asked to send caller invitations when the switch is on. A saved appointment does not prove inbox delivery.
+
+</div>
+
+## What your caller hears
+
+Illustrative successful booking with caller invitations enabled. The final line follows a confirmed booking and invitation request.
+
+<div className="nxf-conversation">
+  <p><strong>Caller</strong><br />Can I book Saturday at 10:00?</p>
+  <p><strong>Your agent</strong><br />Please spell your full name, first and last, letter by letter.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h K-h-a-n.</p>
+  <p><strong>Your agent</strong><br />Please spell the part of your email before at, letter by letter, then say the domain as words.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h, at example dot com.</p>
+  <p><strong>Your agent</strong><br />The booking details are Saturday at 10:00 in your selected time zone, for Sarah Khan, s-a-r-a-h at example dot com. Is that right?</p>
+  <p><strong>Caller</strong><br />Yes.</p>
+  <p><strong>Your agent, after confirmed success</strong><br />You’re booked for Saturday at 10:00.</p>
+</div>
+
+<span id="steps" />
+
+## Set it up
+
+<Steps>
+
+<Step title="Open the right number">
+
+<span id="1-select-the-number" />
+
+In **Integrations**, choose the intended agent and phone number. Use an Owner or Admin login and a calendar you can edit. Members can view the connection.
+
+</Step>
+
+<Step title="Connect Google">
+
+<span id="2-connect-the-calendar" />
+
+Choose **Google Calendar → Connect**, sign in to the intended Google account and approve calendar access. Return to Nixflex and check the account shown. Keep your Google password out of agent instructions.
+
+</Step>
+
+<Step title="Set hours and appointment length">
+
+<span id="3-set-booking-hours" />
+
+Check the calendar, time zone and weekly opening hours. Mark closed days as closed. Choose 15, 30, 45 or 60 minutes. Closing time must follow opening time; an overnight interval is not supported.
+
+</Step>
+
+<Step title="Choose caller invitations">
+
+<span id="4-choose-caller-invitations" />
+
+Set **Email the caller a Google invite** and save. It starts on, including for an existing connection unless you turned it off. With it on, Google is asked to email an invitation, update or cancellation. With it off, the booking can still be saved without that email request.
+
+</Step>
+
+<Step title="Call to test it">
+
+<span id="5-test-the-result" />
+
+Book a test appointment, try an unavailable time and correct a name or email. Check the spelling questions and one combined read-back followed by one yes. Then move and cancel the test booking using the existing-booking flow. Verify the actual calendar and any invitation separately. In **Call History**, open [Booking result](/guides/business/booking-results) to check the final appointment and recorded changes.
+
+</Step>
+
+</Steps>
+
+<Tip>
+Running several branches? Connect each branch’s number to the calendar and hours that branch uses.
+</Tip>
+
+<span id="understand-the-connection-status" />
+
+## What the status means
+
+On a phone, swipe the table sideways if you cannot see every column.
+
+| Status or result | What it means | What to do |
+| --- | --- | --- |
+| **Connected** | The calendar connection check succeeded. | Test the booking rules before relying on them. |
+| **Not set up** | This number has no completed connection. | Choose Connect for this number. |
+| **Reconnect needed** | Google access needs renewing. | Choose Reconnect and approve Google access again. Saved booking settings are kept. |
+| **Could not check** | The status read did not finish. | Retry before relying on the calendar. This does not prove it disconnected. |
+
+## Common questions
+
+<AccordionGroup>
+
+<Accordion title="How is the email checked?">
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
+</Accordion>
+
+<span id="does-the-caller-always-receive-the-invite" style={{ scrollMarginTop: "8rem" }} />
+
+<Accordion title="Does the caller always receive the invite?" id="has-the-caller-definitely-received-the-invitation">
+
+No. “Google will email you an invite” describes the confirmed request, not arrival in the inbox. Check the address and spam folder if needed. An email-domain check does not prove the mailbox exists.
+
+</Accordion>
+
+<span id="what-happens-if-i-disconnect" style={{ scrollMarginTop: "8rem" }} />
+
+<Accordion title="What happens if I disconnect?" id="what-happens-when-i-disconnect">
+
+Choose **Disconnect** and wait for confirmation. This number loses its calendar access in Nixflex; existing appointments remain and other numbers are unaffected. An action already sent to Google may finish, so check the calendar if a call was booking at that moment.
+
+</Accordion>
+
+<span id="can-the-agent-text-a-confirmation-too" style={{ scrollMarginTop: "8rem" }} />
+
+<Accordion title="Can the agent text a confirmation too?" id="does-this-send-a-text-or-enable-website-booking">
+
+Texting needs the separate **In-Call SMS** setting and a matching confirmed send result. The invite switch does not enable texts or owner notifications. Built-in website calendar actions are unavailable.
+
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
+
+<CardGroup cols={2}>
+
+<Card title="Check a booking result" href="/guides/business/booking-results">
+Read the final appointment and changes from a call.
+</Card>
+
+<Card title="Change hours and invitations" href="/guides/business/google-calendar/change-settings">
+Update the selected number’s rules and check the saved result.
+</Card>
+
+</CardGroup>
+
+If a booking does not work as expected, [check the connection, hours and result](/guides/business/google-calendar/fix-bookings) before repeating it.
+
+Reviewed 5 November 2026.

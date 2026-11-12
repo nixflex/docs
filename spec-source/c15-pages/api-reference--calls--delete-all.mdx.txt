@@ -1,0 +1,174 @@
+---
+title: "Delete all calls"
+description: "Request guarded deletion of Nixflex call data for the account. Review scope, cleanup requirements and uncertain outcomes before another request."
+openapi: "/api-reference/public.openapi.json DELETE /calls"
+playground: "simple"
+sidebarTitle: "Delete all calls"
+canonical: "https://docs.nixflex.com/api-reference/calls/delete-all"
+---
+Request guarded cleanup of the account’s calls without deleting SMS or closing the account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This affects the account's call history; confirm the scope before sending.
+- A single-call cleanup rule does not automatically apply to bulk deletion.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+Work or cleanup confirmation can remain pending and return 409/503. Legacy recording counters are not all-copy erasure proof. Reconcile an uncertain response before another deliberate action.
+
+
+## Authentication
+
+Use `Authorization: Bearer KEY_ID:KEY_SECRET` for the owning account. An organisation API key has Owner authority. Personal sessions use the role rules documented in [Authentication](/api-reference/authentication); do not treat a Member session as an API key.
+
+## Request fields
+
+| Field | Type | Required | Default and limits |
+| --- | --- | --- | --- |
+
+
+Do not send a request body.
+
+Requests guarded cleanup of owned call history. The current public guard can
+hold nonempty cleanup for storage/transfer-audio confirmation. This is not an
+immediate account-erasure workflow and does **not** delete SMS messages. The
+new single-call and campaign deletion flow does not replace these bulk safety checks.
+
+### Not reversible
+
+<Warning>
+  This is destructive if allowed. SDK changes never automatically retry it;
+  a lost reply may follow partial progress. Check before retrying. There is no
+  undo through this API; no promise about customer-owned or exported copies.
+</Warning>
+
+### What this does NOT do
+
+- This call-data request does not delete your agents, phone numbers or API keys.
+- Billing and invoices are unaffected. Past usage stays on your invoices; billing records are retained for tax purposes.
+- Account deletion is a separate dashboard-owner workflow with pending states;
+  this endpoint does not close an account or certify its complete erasure.
+
+## Response fields
+
+`200` returns the following shape.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `deleted` | boolean | Optional saved value. |
+| `calls_deleted` | integer | Optional saved value. |
+| `recordings_deleted` | integer | Optional saved value. |
+| `sms_deleted` | integer | Optional saved value. |
+
+Legacy  shape; an already-empty scope can return:
+
+
+
+| Field | Type | Notes |
+|---|---|---|
+| `calls_deleted` | number | Call records removed. |
+| `recordings_deleted` | number | Legacy requested-storage-path count, including possible whisper paths; not proof of objects found or every copy erased. |
+| `sms_deleted` | number | Compatibility field; this route does not delete SMS and returns zero. |
+
+Refusals use 409 for in-progress, unsettled or pending/failed cleanup, and 503 when
+safety cannot be checked. The bulk codes include `call_in_progress`, `deletion_unsettled`,
+`recording_cleanup_pending`, `cleanup_pending_confirmation` and `deletion_cleanup_failed`. A safety refusal includes `details.deleted=false` and
+`details.safe_to_retry=false`; show the reason instead of “deleted”. No completion
+deadline or all-copy erasure guarantee is made by this response.
+
+## Example request
+
+Production HTTP examples. Replace the placeholder identifiers with resources owned by the account. Set `NXF_API_KEY` privately; never print it.
+
+<RequestExample>
+
+```bash cURL (Bash)
+curl --request DELETE \
+  --url 'https://api.nixflex.com/v1/calls' \
+  --header "Authorization: Bearer $NXF_API_KEY"
+```
+
+```javascript Node (HTTP)
+const response = await fetch('https://api.nixflex.com/v1/calls', {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const result = await response.json();
+// Handle the private result without logging it.
+```
+
+```python Python (HTTP)
+import os, json
+from urllib.request import Request, urlopen
+
+request = Request('https://api.nixflex.com/v1/calls', method='DELETE',
+    headers={'Authorization': 'Bearer ' + os.environ['NXF_API_KEY']})
+with urlopen(request, timeout=30) as response:
+    result = json.load(response)
+# Handle the private result without logging it.
+```
+
+```powershell PowerShell (HTTP)
+$headers = @{ Authorization = "Bearer $env:NXF_API_KEY" }
+$result = Invoke-RestMethod -Method DELETE -Uri 'https://api.nixflex.com/v1/calls' -Headers $headers -DisableKeepAlive
+# Handle $result privately.
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative response with placeholder identifiers.
+
+<ResponseExample>
+
+```json Response
+{
+  "deleted": true,
+  "calls_deleted": 0,
+  "recordings_deleted": 0,
+  "sms_deleted": 0
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Branch on `error.code`, not the wording of `error.message`. The envelope includes `type`, `code`, `message`, `doc_url` and `details`.
+
+| Status / code | What it means | What to do |
+| --- | --- | --- |
+| 400 | Invalid request - missing or malformed parameters. | Correct the named field or query using the request table before trying again. |
+| 401 | Authentication failed - bad or missing API key. | Check the full account credential and API host privately; stop the retry loop. |
+| 404 | Not found on your account. | Check the exact owned identifier and current resource state; do not probe another account. |
+| 429 | Rate limit exceeded. Honour the Retry-After header. | Stop automatic retries; wait for the limit and reconcile state before a deliberate action. |
+| 500 | Server error. | Treat the outcome as uncertain and read the affected resource before another deliberate change. |
+
+
+
+## Retry and idempotency
+
+Disable automatic write retries. A lost response leaves the result uncertain; read the affected resource before another deliberate action. No general Idempotency-Key replay guarantee applies. See [retry rules](/api-reference/retries).
+
+## Related endpoints
+
+- [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,0 +1,111 @@
+---
+title: "Fix a Cal.com booking problem"
+sidebarTitle: "Fix Cal.com bookings"
+description: "Check a number’s Cal.com connection, event type, time zone and appointment result before repeating an uncertain booking."
+canonical: "https://docs.nixflex.com/guides/business/calcom/fix-bookings"
+---
+
+Check the selected number and Cal.com event before changing credentials or repeating a booking request.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/bookings/troubleshooting).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Connection</small><strong>Per number</strong></div>
+  <div><small>Settings changes</small><strong>Owner, Admin</strong></div>
+  <div><small>Saved key</small><strong>Hidden</strong></div>
+  <div><small>Appointment proof</small><strong>Calendar result</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the intended Cal.com account, username and event slug for the selected number.
+- A blank saved-key field keeps the existing key; it does not mean no key is stored.
+- Check Cal.com before repeating a booking whose result is uncertain.
+- Cal.com handles its own emails. A missing email is not proof that the booking failed.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Admin</strong><br />The saved key field is empty. Should I enter the key again?</p>
+  <p><strong>Owner</strong><br />If it says Saved — leave blank to keep, the stored key is hidden.</p>
+  <p><strong>Admin</strong><br />I will check the event and saved result first, then replace the key only if that is the intended fix.</p>
+</div>
+
+## Before you start
+
+Have access to the intended Cal.com calendar and the affected call or SMS conversation. Use Owner or Admin access to edit the connection. Keep keys and customer details out of support screenshots.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Match the conversation to its number">
+
+Find the business number used, then select it in **Integrations → Cal.com**. Shared agent knowledge does not share calendar connections between numbers.
+
+</Step>
+
+<Step title="Review the event settings">
+
+Check the account, username, event slug and real calendar time zone. Confirm the event type exists and represents the service the customer requested. Do not replace a valid time zone with one copied from an example.
+
+</Step>
+
+<Step title="Handle the saved key deliberately">
+
+Leave **Saved — leave blank to keep** empty for ordinary settings changes. Supply a new key only to replace it. After an unknown save, refresh the card before submitting another change.
+
+</Step>
+
+<Step title="Find what actually happened">
+
+Inspect the calendar for the requested appointment. For a phone call, review its retained **Booking result** too. Check required contact approvals in the conversation. A transcript or SMS reply alone is not proof that Cal.com completed the action.
+
+</Step>
+
+<Step title="Test after the correction">
+
+Make a controlled booking, an unavailable-time request and a correction. Verify the appointment in Cal.com, then remove the test booking. If a result remains uncertain, give support the affected number, time and redacted error rather than repeating the action.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Settings saved | The connection configuration was recorded. | Test the complete booking path. |
+| Key field says Saved | The existing secret is stored but not displayed. | Leave blank unless replacing it. |
+| Appointment found | Cal.com contains the appointment. | Review its time and attendee details instead of booking again. |
+| Result uncertain | The action may have happened. | Check the calendar and retained result before another attempt. |
+
+
+
+## Voice booking approval
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
+## Next
+
+- [Connect Cal.com](/guides/business/calcom)
+- [Read a call’s booking result](/guides/business/booking-results)
+- [Set up a booking receptionist](/guides/booking-receptionist)
+
+Reviewed 5 November 2026.

@@ -1,0 +1,113 @@
+---
+title: "Configure recording and private playback"
+description: "Configure Nixflex call recording, resolve agent and number overrides and request fresh playback access while preserving recording, retention and storage states."
+canonical: "https://docs.nixflex.com/advanced/call-recording"
+sidebarTitle: "Call recording"
+---
+Configure the effective recording decision and use authenticated recording access to check whether audio is actually available.
+
+<div className="nxf-facts">
+  <div><small>Decision</small><strong>Number then agent</strong></div>
+  <div><small>Playback</small><strong>Authorised access</strong></div>
+  <div><small>Capture</small><strong>Check actual state</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A number’s explicit recording value overrides the agent, including false and true.
+- Changing settings affects new work and does not erase old audio.
+- An absent URL or pending recording is not proof that no copy exists.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [exact reviewed candidate](/sdks/ecosystem). Review the applicable customer notice and business policy for the call before recording.
+
+## 1. Read recording access
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/calls/$NXF_CALL_ID/recording" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.recording(process.env.NXF_CALL_ID);
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.recording(os.environ["NXF_CALL_ID"])
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls recording "$NXF_CALL_ID" --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 2. Resolve the setting
+
+For `record_call`, explicit number true/false overrides the agent; null inherits. Agent off plus number on still enables this recording decision. `recording_source` is resolved separately and cannot turn capture on when the effective recording decision is off.
+
+## 3. Choose the capture path
+
+The selected recording source affects what audio can be captured, including transfer legs. Website voice has no telephone-network recording source. Do not promise every source captures the entire human handoff.
+
+## 4. Request playback when needed
+
+GET `/v1/calls/{id}/recording` under current account authorisation. Use `status`, `url`, `expires_at`. Private-access mode signs available links for 600 seconds; a legacy path can use 300 seconds. Honour the returned expiry instead of hard-coding a lifetime.
+
+## 5. Apply retention and storage rules
+
+Turning recording off applies to new work; it does not delete existing audio or independently configured external recording. Call retention and deletion have tracked cleanup. Customer-bucket files need the customer’s own lifecycle. Storage failure can lead to fallback, not guaranteed regional exclusivity.
+
+## Example response
+
+Example: `{"call_id":"call_example","status":"not_recorded","url":null,"expires_at":null}`. Pending, expired, customer_bucket, unavailable and pending_deletion also need distinct UI states.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Capture enabled | Wait for actual recording availability. |
+| Expired link | Request fresh authorised access. |
+| No playable URL | Display the returned status, not a broken player. |
+| Customer bucket | Use the customer’s authorised storage path. |
+| Pending deletion | Do not restore access from a cached URL. |
+
+## Delete content deliberately
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up.
+
+If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
+
+## Next steps
+
+- [Recording access schema](/api-reference/calls/get-calls-id-recording)
+- [Retention](/concepts/data-retention)
+- [Your own storage](/advanced/your-own-storage)

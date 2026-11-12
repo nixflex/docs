@@ -1,0 +1,63 @@
+---
+title: "Switch from Retell or Vapi to Nixflex"
+sidebarTitle: "Overview"
+description: "Map an existing Retell or Vapi integration to Nixflex, rebuild the contract boundaries and test routing, actions and results before a controlled cutover."
+canonical: "https://docs.nixflex.com/guides/developer/switch-to-nixflex"
+---
+
+Move one tested workflow at a time, mapping your existing agent configuration to the actual Nixflex objects and contracts.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- There is no automatic import or drop-in API compatibility promise.
+- Keep the current service available until the new number routing and outcomes are verified.
+- Rewrite webhook verification and retry handling for Nixflex rather than copying old assumptions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/switch-to-nixflex) · [Glossary](/guides/glossary)
+
+</div>
+
+## Map the workflow
+
+Retell documents voice and chat agents; Vapi documents assistants and multi-assistant workflows. Use their current configuration as an inventory, then map each requirement to a supported Nixflex feature. This is a migration checklist, not a claim that every source feature has an equivalent.
+
+| Existing concern | Nixflex destination | Verify |
+| --- | --- | --- |
+| Agent or assistant instructions | [Agent](/concepts/agents) and main prompt | Role, language, voice and fallback. |
+| Business reference facts | [Knowledge](/guides/developer/knowledge) | Reviewed live topics and channel permissions. |
+| Phone routing | [Owned phone number](/guides/developer/phone-numbers) | Carrier credentials, agent assignment and channel switches. |
+| Tools and actions | [Call actions](/actions/overview) and [custom functions](/advanced/custom-functions) | Actual allowed actions, auth and failure handling. |
+| Calendar booking | [Bookings](/guides/developer/bookings) | Per-number connection and mandatory voice approval. |
+| Events and analysis | [Webhooks](/advanced/webhooks) and [post-call analysis](/advanced/post-call-analysis) | Payload, signature, event timing and duplicate identity. |
+| Historical data | Your existing export and retention process | Do not assume old call IDs or history can be imported as Nixflex calls. |
+
+## Rebuild the server adapter
+
+Use the Nixflex host, authentication and exact request fields. Keep source-platform IDs in a separate mapping; do not send them as Nixflex IDs. Review accepted versus completed outcomes and the retry contract for each operation. In particular, an uncertain outbound launch must not be repeated with a new UUID automatically.
+
+## Test before routing customers
+
+Start with an owned test number. Test inbound and outbound speech, an unknown answer, transfer fallback, SMS, a booking correction and a webhook retry. Compare the actual business result, not just similar transcripts. Test customer isolation and ensure no secret appears in a browser bundle or log.
+
+## Cut over deliberately
+
+Record the current carrier routing and rollback destination. Make the authorised routing change only after the new workflow passes. Monitor Call History and Logs, keep one person responsible for the cutover and revert routing if the agreed checks fail. Do not run both systems against the same recipient list or replay unfinished campaigns.
+
+Read the source platforms’ current concepts in [Retell’s introduction](https://docs.retellai.com/general/introduction) and [Vapi’s introduction](https://docs.vapi.ai/quickstart/introduction). These links help identify the starting configuration; the Nixflex reference defines the destination contract.
+
+## Next steps
+
+- [Create an agent](/guides/developer/agents/create)
+- [Connect a number](/guides/developer/phone-numbers/import-and-connect)
+- [Check request outcomes](/guides/developer/logs)

@@ -1,0 +1,111 @@
+---
+title: "Fix a Google Calendar booking problem"
+sidebarTitle: "Fix Google bookings"
+description: "Check the selected number, Google access, booking hours and confirmed result before repeating a booking or reconnecting a calendar."
+canonical: "https://docs.nixflex.com/guides/business/google-calendar/fix-bookings"
+---
+
+Find whether a booking problem comes from the number’s connection, availability rules, contact checks or an uncertain result.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/bookings/troubleshooting).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Start with</small><strong>Number and call</strong></div>
+  <div><small>Access problem</small><strong>Reconnect if requested</strong></div>
+  <div><small>Booking proof</small><strong>Confirmed result</strong></div>
+  <div><small>Unknown outcome</small><strong>Check before repeating</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A saved connection does not prove a booking happened, and a failed status read does not prove disconnection.
+- Check both the call’s booking result and the actual calendar before creating another appointment.
+- Keep no booking changes distinct from processing, deleted or unavailable details.
+- An absent email does not prove the appointment is absent. Invitation requests and inbox delivery are separate.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Admin</strong><br />The caller says no invitation arrived. Should we book them again?</p>
+  <p><strong>Owner</strong><br />First check the appointment and Booking result. The event may already exist.</p>
+  <p><strong>Admin</strong><br />Then I will check the invitation switch and address without creating a duplicate.</p>
+</div>
+
+## Before you start
+
+Have the affected business number and call time. Use an Owner or Admin login for connection changes; a permitted team member can review shared call records. Keep customer contact details private.
+
+## Complete the task
+
+<Steps>
+
+<Step title="Identify the exact number">
+
+Open the call and note the business number used. In **Integrations**, select that same number. A connection on a different number does not supply this number’s calendar.
+
+</Step>
+
+<Step title="Check the connection state">
+
+If **Not set up**, complete the intended connection. If **Reconnect needed**, approve Google access again. If **Could not check**, retry the read first. Do not disconnect a working calendar merely because a status request failed.
+
+</Step>
+
+<Step title="Check the time being offered">
+
+Review the calendar, time zone, weekly hours, closed days and appointment length. Confirm the caller’s intended date and time zone. An unavailable slot needs a different available time, not a promise that the calendar will accept it.
+
+</Step>
+
+<Step title="Review contact approval and the result">
+
+Read the conversation for the required name and email checks. Open **Booking result** and use **Refresh bookings** when it is processing or unavailable. Inspect the actual calendar before retrying a booking that may already have completed.
+
+</Step>
+
+<Step title="Test the corrected setup">
+
+Change only the relevant setting, confirm it saved and make one controlled test. Verify the appointment, any move or cancellation, and the separate invitation request. Remove the test appointment afterwards.
+
+</Step>
+
+</Steps>
+
+## Read the result
+
+| What you see | What it means | What to do |
+| --- | --- | --- |
+| Connected, but no suitable slot | Access works; the booking rules or availability may exclude that time. | Review the correct calendar, time zone and hours. |
+| Booking result ready | Retained changes from that call are available. | Read the final appointment and timeline, then compare the current calendar. |
+| Processing or unavailable | The result is not currently established. | Refresh the read; do not assume no appointment was created. |
+| Appointment exists, no email seen | Booking and inbox delivery differ. | Check the invitation setting, approved address and spam folder. |
+
+
+
+## Voice booking approval
+
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
+
+## Next
+
+- [Change hours and invitations](/guides/business/google-calendar/change-settings)
+- [Read booking-result states](/guides/business/booking-results)
+- [Set up booking by text](/guides/sms-booking)
+
+Reviewed 5 November 2026.

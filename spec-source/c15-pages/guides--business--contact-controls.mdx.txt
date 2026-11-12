@@ -1,0 +1,148 @@
+---
+title: "Review opt-outs and customer contact hours"
+sidebarTitle: "Opt-outs and contact hours"
+description: "Use the Nixflex do-not-contact list and recipient timing checks to review outbound calls and texts, understand held rows and handle customer opt-outs."
+canonical: "https://docs.nixflex.com/guides/business/contact-controls"
+---
+
+Keep outbound calls and texts aligned with your customer contact choices. Nixflex checks contact restrictions and timing before dispatch. Use those checks alongside your own permission records; a green preview is not a complete compliance assessment.
+
+<div className="nxf-audience">
+
+Building an app? [Developer version](/guides/developer/contact-controls).
+
+</div>
+
+<div className="nxf-facts">
+  <div><small>Who can manage</small><strong>Owner, Admin</strong></div>
+  <div><small>Channels</small><strong>Voice, SMS or both</strong></div>
+  <div><small>Recipient opt-outs</small><strong>Locked</strong></div>
+  <div><small>Timing check</small><strong>Again at dispatch</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A ready preview is not proof of customer permission. Keep your own permission records.
+- A locked recipient opt-out cannot be removed by the business; removing a business entry does not clear it.
+- Use the recipient’s location and possible time zones. Your business clock is not a fallback.
+- Changing the recipients requires a fresh review. An unavailable check is not permission to send.
+
+</div>
+
+## See how it works
+
+Illustrative conversation between colleagues.
+
+<div className="nxf-conversation">
+  <p><strong>Owner</strong><br />This recipient is waiting even though our office is open.</p>
+  <p><strong>Colleague</strong><br />The check uses the recipient’s local hours. Review their location and the next allowed window.</p>
+  <p><strong>Owner</strong><br />I will keep the row held until its checks allow sending and our permission record is clear.</p>
+</div>
+
+## Before you start
+
+- Use an Owner or Admin login to change business restrictions.
+- Have the full international number and the reason for adding or correcting an entry.
+
+## Steps
+
+<Steps>
+
+<Step title="Open the list">
+
+<span id="1-open-the-list" />
+
+Open **Do-not-contact list** from a new campaign page. Choose **All**, **Voice only** or **SMS only**. These are separate lists: an All entry applies to calls and texts, not just one channel.
+
+</Step>
+
+<Step title="Add a business restriction">
+
+<span id="2-add-a-business-restriction" />
+
+Add the number to the appropriate list, using the available entry or upload control. Check its international format and the intended channel before saving. A business-added entry can later be removed by an authorised person.
+
+</Step>
+
+<Step title="Review locked opt-outs">
+
+<span id="3-review-locked-opt-outs" />
+
+An entry created when someone opts out is marked separately and cannot be removed by the business. **View message** shows the received opt-out evidence when available. The restriction can apply to both voice and SMS.
+
+</Step>
+
+<Step title="Check recipient timing">
+
+<span id="4-check-recipient-timing" />
+
+Return to the campaign preview. Review ready, waiting, unknown-location and unavailable checks. If you know the recipient’s country or time zone, supply it. The number’s possible zones still matter; the business’s own clock is not a fallback.
+
+</Step>
+
+<Step title="Confirm the reviewed list">
+
+<span id="5-confirm-the-reviewed-list" />
+
+Correct invalid or incomplete rows, then confirm permission for that version of the list. If you change the recipients, review again. Wait for an unavailable check to recover rather than assuming the recipient is ready.
+
+</Step>
+
+</Steps>
+
+## What happens next
+
+Restricted recipients stay held in campaigns, and single outbound calls or texts can be refused before sending. Timing is checked again at dispatch, so an earlier preview can change.
+
+## Read the recipient check
+
+| Check | Meaning | Next step |
+| --- | --- | --- |
+| Ready | The current checks allow dispatch. | Confirm permission for this exact list; timing is checked again later. |
+| Waiting | The recipient is outside the allowed sending window. | Review the recipient’s local window. |
+| Location unknown | Nixflex cannot safely choose a sending time. | Supply the known country or time zone and review again. |
+| Restricted | A business restriction or recipient opt-out applies. | Keep the recipient held; do not bypass a locked opt-out. |
+| Check unavailable | Readiness could not be established. | Wait for the check to recover. |
+
+## Common questions
+
+<AccordionGroup>
+
+<Accordion title="Can I remove my own entry?">
+
+Yes, when contact-list management is available. Removing a business entry does not clear a separate locked recipient opt-out.
+
+</Accordion>
+
+<Accordion title="Does STOP send a reply from Nixflex?">
+
+Nixflex records the opt-out before an AI reply or its billing and sends no confirmation text through that path. It blocks further calls and texts to that person in the account. Network-level behaviour is separate.
+
+Recognised whole-message keywords are **STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, REVOKE, OPTOUT**, and **توقف، وقف، ايقاف، الغاء، الغاء الاشتراك، وقف الرسائل، ايقاف الرسائل**. Case, spacing and some punctuation are normalised. A sentence such as “please stop contacting me” may not match this keyword check; handle that request through your own review process and restrict contact. Keyword detection alone is not a complete consent process.
+
+</Accordion>
+
+<Accordion title="Do wider hours bypass all checks?">
+
+No. They require an allowed choice and a reason; hard limits, permission and restrictions still apply.
+
+</Accordion>
+
+<Accordion title="What if management is paused?">
+
+Existing opt-outs remain enforced. Wait until management is available and check the saved state before repeating a change.
+
+</Accordion>
+
+</AccordionGroup>
+
+<span id="related-guides" />
+
+## Next
+
+- [Voice campaigns](/guides/business/voice-campaigns)
+- [SMS campaigns](/guides/business/sms-campaigns)
+
+Reviewed 5 November 2026.

@@ -28,7 +28,7 @@ Building an app? [Developer version](/actions/google-calendar).
 
 - **Each number has its own calendar connection and hours**, even when numbers share an agent.
 - Use one booking connection per number: **Google Calendar or Cal.com**. Disconnect the other before switching.
-- The agent checks the name and waits for yes, then checks the email and waits for a **separate yes**.
+- The caller spells their name and email local part; one combined read-back and one clear yes approve the voice booking.
 - Google is asked to send caller invitations when the switch is on. A saved appointment does not prove inbox delivery.
 
 </div>
@@ -38,16 +38,14 @@ Building an app? [Developer version](/actions/google-calendar).
 Illustrative successful booking with caller invitations enabled. The final line follows a confirmed booking and invitation request.
 
 <div className="nxf-conversation">
-  <p><strong>Caller</strong><br />Can I book a haircut for Saturday morning?</p>
-  <p><strong>Your agent</strong><br />I have 10:00 or 11:30. Which works?</p>
-  <p><strong>Caller</strong><br />10:00, please. My name is Sarah Khan.</p>
-  <p><strong>Your agent</strong><br />Sarah Khan, is that right?</p>
+  <p><strong>Caller</strong><br />Can I book Saturday at 10:00?</p>
+  <p><strong>Your agent</strong><br />Please spell your full name, first and last, letter by letter.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h K-h-a-n.</p>
+  <p><strong>Your agent</strong><br />Please spell the part of your email before at, letter by letter, then say the domain as words.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h, at example dot com.</p>
+  <p><strong>Your agent</strong><br />The booking details are Saturday at 10:00 in your selected time zone, for Sarah Khan, s-a-r-a-h at example dot com. Is that right?</p>
   <p><strong>Caller</strong><br />Yes.</p>
-  <p><strong>Your agent</strong><br />And your email?</p>
-  <p><strong>Caller</strong><br />Sarah at example dot com.</p>
-  <p><strong>Your agent</strong><br />s-a-r-a-h at e-x-a-m-p-l-e dot c-o-m. Is that correct?</p>
-  <p><strong>Caller</strong><br />Yes.</p>
-  <p><strong>Your agent</strong><br />You’re booked for Saturday at 10:00. Google will email you an invite.</p>
+  <p><strong>Your agent, after confirmed success</strong><br />You’re booked for Saturday at 10:00.</p>
 </div>
 
 <span id="steps" />
@@ -92,7 +90,7 @@ Set **Email the caller a Google invite** and save. It starts on, including for a
 
 <span id="5-test-the-result" />
 
-Book a test appointment, try an unavailable time and correct a name or email. Check the separate approvals, then move and cancel the test booking. Verify the actual calendar and any invitation separately. In **Call History**, open [Booking result](/guides/business/booking-results) to check the final appointment and changes recorded for that call.
+Book a test appointment, try an unavailable time and correct a name or email. Check the spelling questions and one combined read-back followed by one yes. Then move and cancel the test booking using the existing-booking flow. Verify the actual calendar and any invitation separately. In **Call History**, open [Booking result](/guides/business/booking-results) to check the final appointment and recorded changes.
 
 </Step>
 
@@ -121,7 +119,13 @@ On a phone, swipe the table sideways if you cannot see every column.
 
 <Accordion title="How is the email checked?">
 
-The agent spells the part before @ once and says familiar domains as words, such as “s-a-r-a-h at gmail dot com”. An unusual domain is spelled too. Saved addresses still need approval. A correction repeats that check, and later booking messages omit the approved address.
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
+
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
 
 </Accordion>
 

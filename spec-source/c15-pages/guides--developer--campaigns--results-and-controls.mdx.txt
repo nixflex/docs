@@ -1,0 +1,70 @@
+---
+title: "Track voice campaign results and controls"
+sidebarTitle: "Voice results and controls"
+description: "Read voice campaign state, resolve holds and cancel or resume unsent work while keeping queued calls, connected calls and final outcomes distinct."
+canonical: "https://docs.nixflex.com/guides/developer/campaigns/results-and-controls"
+---
+Track the saved voice campaign and control future dispatch without recreating recipients whose outcomes are uncertain.
+
+<div className="nxf-facts">
+  <div><small>Track</small><strong>Existing campaign</strong></div>
+  <div><small>Cancel</small><strong>Future dispatch</strong></div>
+  <div><small>Outcomes</small><strong>Read individual calls</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Queued work and the legacy dialed count do not prove a connected call.
+- Cancel stops future dispatch; it does not hang up active calls.
+- Resume operates on the existing campaign and does not mean repeat completed recipients.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Read the existing campaign
+
+Use the saved `campaign_id` and the [campaign list](/api-reference/voice-campaigns/get-campaigns) and its returned campaign records. Retain current status, recipient results and hold reasons. Use returned paging information instead of assuming the first list is complete.
+
+Keep accepted recipients, queued jobs, connected calls and terminal call outcomes distinct. The legacy `dialed` field counts enqueued work. A completed campaign summary is not a substitute for the actual call result when your workflow depends on a specific conversation or booking.
+
+## Resolve a hold
+
+| Hold or result | Action |
+| --- | --- |
+| Missing consent | Use the documented consent action after genuine permission is confirmed. |
+| Unknown recipient location | Correct the location through the supported editable state; never substitute the campaign clock silently. |
+| Contact hours or suppression | Honour the contact policy and current suppression state. |
+| Capacity or temporary pause | Retain the campaign and wait; do not create a replacement. |
+| Unknown launch | Read existing work and retain uncertainty until reconciled. |
+
+Use [campaign consent](/api-reference/voice-campaigns/post-calls-batch-id-consent) only for an authorised decision. A preview does not override the final contact checks at dispatch.
+
+## Cancel or resume deliberately
+
+[Cancel](/api-reference/voice-campaigns/post-calls-batch-id-cancel) prevents future dispatch. Active calls can continue and need their own call-control decision. Read the campaign after a confirmed control result, and reconcile after a lost response before sending another control.
+
+[Resume](/api-reference/voice-campaigns/post-calls-batch-id-resume) acts on the existing campaign under the current admission checks. It is not a request to redial every completed recipient. Do not implement resume by posting the original recipient list as a new campaign.
+
+## Read final call and booking evidence
+
+Use [call history](/guides/developer/call-history) for individual call results and booking states. A late webhook is a delivery issue, not permission to place another call. Preserve `processing`, `unavailable` and `unknown` results until the evidence changes.
+
+Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up. Use [DELETE voice campaign](/api-reference/voice-campaigns/delete). If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+- [Prepare a campaign](/guides/developer/campaigns/prepare-and-launch)
+- [Read call and booking results](/guides/developer/call-history)
+- [Recover missed webhooks](/guides/developer/webhooks/delivery-and-recovery)
+
+## Related dashboard and AI tasks
+
+- [Check the results of a voice campaign](/guides/business/voice-campaigns/check-results)
+
+
+Read one owned campaign with [Get a voice campaign](/api-reference/voice-campaigns/get). It returns the same saved fields as the list, without recipients, and sends `Cache-Control: no-store`. A 503 keeps the result unavailable; it must not clear the campaign or turn the wider-hours choice into false.

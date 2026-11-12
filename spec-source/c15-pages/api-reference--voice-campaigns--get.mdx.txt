@@ -1,0 +1,197 @@
+---
+title: "Get a voice campaign"
+sidebarTitle: "Get voice campaign"
+description: "Read one owned voice campaign, its saved schedule and current progress. Check wider-hours confirmation without retrieving recipients."
+canonical: "https://docs.nixflex.com/api-reference/voice-campaigns/get"
+openapi: "/api-reference/public.openapi.json GET /campaigns/{id}"
+playground: "simple"
+---
+
+Read the saved schedule, progress and current wider-hours choice for one voice campaign.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This read returns the same campaign fields as the list, without recipients.
+- Wider-hours confirmation is checked against the current saved schedule.
+- An unavailable result is an error, not an empty campaign or a false confirmation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns/check-results) · [Developer guide](/guides/developer/campaigns/results-and-controls) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account's server-side credential. Owner, Admin and Member may read their account's campaign in the signed-in dashboard. The public endpoint uses the existing API-key authentication and account scope.
+
+## Request fields
+
+| Field | Type | Required | Limits and meaning |
+| --- | --- | --- | --- |
+| `id` (path) | string | Yes | The exact saved campaign ID, 1–200 characters. Invalid, missing, foreign and deleted IDs share the same 404. |
+
+Do not send a request body. This endpoint has no pagination or recipient query fields.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign` | object | The owned campaign. |
+| `campaign.campaign_id` | string | Public campaign ID. |
+| `campaign.agent_id` | string | Owning agent ID. |
+| `campaign.name` | string or null | Saved campaign label. |
+| `campaign.from_number` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `campaign.schedule_type` | string | Saved now or schedule mode. |
+| `campaign.scheduled_date` | string or null | Saved scheduled date. |
+| `campaign.window_start_minutes` | integer or null | Configured start minute. |
+| `campaign.window_end_minutes` | integer or null | Configured end minute. |
+| `campaign.window_days` | array or null | Saved value. |
+| `campaign.timezone` | string or null | Saved campaign time zone. |
+| `campaign.source` | string | Saved origin label. |
+| `campaign.status` | string | Current state; for example scheduled, launching, running, done, failed or cancelled. Treat new states conservatively. |
+| `campaign.total_count` | integer | Count. Minimum 0. |
+| `campaign.started_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `campaign.completed_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `campaign.created_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `campaign.updated_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `campaign.allow_wider_hours` | boolean | True only with confirmation evidence for the current policy revision. |
+| `campaign.prompt` | string or null | Default voice instructions. |
+| `campaign.done_count` | integer | Count. Minimum 0. |
+| `campaign.failed_count` | integer | Count. Minimum 0. |
+| `campaign.voicemail_count` | integer | Count. Minimum 0. |
+
+
+The response sends `Cache-Control: no-store`. Keep null values as null. `allow_wider_hours` is true only when the current saved hours and days have matching confirmation evidence. Missing or outdated evidence means false; a failed evidence read returns 503. Internal policy identifiers and account credentials are excluded.
+
+## Example request
+
+These examples use HTTP directly. The reviewed SDK/CLI/MCP candidates provide the [campaign list](/api-reference/voice-campaigns/get-campaigns); they do not add a dedicated detail method. Set `NXF_BASE_URL`, `NXF_API_KEY` and `NXF_CAMPAIGN_ID` privately for the intended host and an owned campaign. The base URL has no trailing `/v1`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "$NXF_BASE_URL/v1/campaigns/$NXF_CAMPAIGN_ID" \
+  --header "Authorization: Bearer $NXF_API_KEY"
+```
+
+```javascript Node (HTTP)
+const base = process.env.NXF_BASE_URL.replace(/\/$/, '');
+const id = encodeURIComponent(process.env.NXF_CAMPAIGN_ID);
+const response = await fetch(`${base}/v1/campaigns/${id}`, {
+  headers: { Authorization: `Bearer ${process.env.NXF_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(result.error?.code ?? `HTTP ${response.status}`);
+console.log(result.campaign);
+```
+
+```python Python (HTTP)
+import json
+import os
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+
+base = os.environ["NXF_BASE_URL"].rstrip("/")
+campaign_id = quote(os.environ["NXF_CAMPAIGN_ID"], safe="")
+request = Request(
+    f"{base}/v1/campaigns/{campaign_id}",
+    headers={"Authorization": f"Bearer {os.environ['NXF_API_KEY']}"},
+)
+with urlopen(request, timeout=20) as response:
+    result = json.load(response)
+print(result["campaign"])
+```
+
+```powershell PowerShell (HTTP)
+$base = $env:NXF_BASE_URL.TrimEnd('/')
+$campaignId = [Uri]::EscapeDataString($env:NXF_CAMPAIGN_ID)
+$result = Invoke-RestMethod -Method Get -Uri "$base/v1/campaigns/$campaignId" -Headers @{
+    Authorization = "Bearer $env:NXF_API_KEY"
+}
+$result.campaign
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200 OK` response with all campaign fields. Counters describe saved progress and do not guarantee that every recipient was reached.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign": {
+    "campaign_id": "campaign_example",
+    "agent_id": "agent_example",
+    "name": "Appointment reminders",
+    "prompt": null,
+    "from_number": "+12025550123",
+    "schedule_type": "schedule",
+    "scheduled_date": "2026-11-20",
+    "window_start_minutes": 540,
+    "window_end_minutes": 1020,
+    "window_days": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+    ],
+    "timezone": "America/New_York",
+    "source": "api",
+    "status": "scheduled",
+    "total_count": 10,
+    "done_count": 0,
+    "failed_count": 0,
+    "voicemail_count": 0,
+    "started_at": null,
+    "completed_at": null,
+    "created_at": "2026-11-12T00:00:00Z",
+    "updated_at": "2026-11-12T00:00:00Z",
+    "allow_wider_hours": false
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures use the standard [error envelope](/api-reference/errors#error-envelope). Preserve the response status and code.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account and host. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The principal cannot access this account. | Check the account permission. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | The ID is invalid, missing, foreign or deleted. | Check the owned ID; do not retry unchanged. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Respect `Retry-After`. |
+| 503 | [`campaign_unavailable`](/api-reference/errors#campaign_unavailable) | Campaign details or current confirmation evidence could not be checked. | Keep the previous view marked unavailable and retry the read with bounded backoff. |
+
+</div>
+
+## Retry and idempotency
+
+This request is read-only. Retry transient connection or server errors with bounded backoff. Do not turn 503 into an empty campaign, a false wider-hours choice or successful deletion. A later read can return newer progress. Respect `Cache-Control: no-store`.
+
+## Related endpoints
+
+- [List voice campaigns](/api-reference/voice-campaigns/get-campaigns)
+- [Launch a voice campaign](/api-reference/calls/batch-launch)
+- [Delete a voice campaign](/api-reference/voice-campaigns/delete)

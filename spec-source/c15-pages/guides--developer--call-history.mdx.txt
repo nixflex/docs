@@ -1,0 +1,169 @@
+---
+title: "Read call and booking results in code"
+sidebarTitle: "Call and booking results"
+description: "Read call history, show all five booking-result states, fetch current recording access and reconcile delayed work without inventing an empty result."
+canonical: "https://docs.nixflex.com/guides/developer/call-history"
+---
+Build a call-results view that keeps call completion, booking evidence and recording availability separate.
+
+<div className="nxf-facts">
+  <div><small>History</small><strong>Account-scoped reads</strong></div>
+  <div><small>Booking states</small><strong>Five explicit states</strong></div>
+  <div><small>Recording link</small><strong>Fetch at playback</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Only ready contains a confirmed booking object; none needs complete evidence of zero mutations.
+- A completed call can still have unfinished recording, analysis or booking work.
+- Use the saved outbound request UUID to reconcile an uncertain launch; never redial from an empty history page.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<div className="nxf-flow">
+  <div><strong>1. Read history</strong>Keep filters fixed while paging.</div>
+  <div><strong>2. Read bookings</strong>Handle every returned state.</div>
+  <div><strong>3. Load recording</strong>Request a current access link.</div>
+  <div><strong>4. Refresh carefully</strong>Bound read retries and honour retention.</div>
+</div>
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.11.0 or Python 0.4.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment.
+
+## 1. Read history
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/calls/history?period=month&outcome=failed&limit=25" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.history({period:"month",outcome:"failed",limit:25});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.history(period="month",outcome="failed",limit=25)
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls history --period month --outcome failed --limit 25 --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 2. Page using server values
+
+Use the endpoint’s documented filters, bounds and pagination. Do not treat one response as the whole account history. Keep call identifiers opaque and preserve unknown timestamps or outcomes.
+
+## 3. Show separate processing states
+
+Display call state, analysis, costs and recording availability separately. Missing summary or structured data is not a confirmed negative answer. A requested end or deletion can remain pending.
+
+For confirmed booking changes, receive the signed [`call.bookings` event](/api-reference/call-bookings). Its action timeline and final booking results answer different questions: create then cancel produces two actions and zero active results. Deduplicate by trusted account, event and call ID before updating your view; the event can arrive separately from `call.completed`.
+
+### Read the retained booking result
+
+Call `GET /v1/calls/{id}/bookings` with the owned call ID. This read does not contact a calendar or place a call. Its result describes this call, not the current calendar inventory.
+
+```javascript Node · booking read
+const response = await fetch('https://api.nixflex.com/v1/calls/call_example/bookings', {
+  headers: {Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`},
+});
+const payload = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${payload.error?.code || 'unknown'}`);
+const view = bookingView(payload); // helper below; keep private booking data off logs
+```
+
+```javascript State mapping
+function bookingView(payload) {
+  if (!payload || typeof payload.call_id !== 'string' || !payload.call_id) throw new Error('Invalid booking response');
+  if (payload.state === 'ready') {
+    const rows = payload.result?.final;
+    if (!Array.isArray(rows) || rows.length === 0 || rows.some(item => !item || !['active', 'cancelled'].includes(item.status))) {
+      throw new Error('Unrecognised booking rows');
+    }
+    return {state: 'ready', activeBookings: rows.filter(item => item.status === 'active').length, result: payload.result};
+  }
+  if (!['none', 'processing', 'deleted', 'unavailable'].includes(payload.state) || payload.result !== null) {
+    throw new Error('Unrecognised booking result');
+  }
+  return {state: payload.state, activeBookings: payload.state === 'none' ? 0 : null, result: null};
+}
+```
+
+If this helper rejects an unrecognised response, keep the result unavailable rather than showing zero. It checks the fields used for this count; validate any other fields before using them in your application.
+
+| State | UI meaning | Refresh behaviour |
+| --- | --- | --- |
+| `ready` | Confirmed result; count active final rows. | Use the retained result. |
+| `none` | Complete evidence confirms no successful booking mutation. | Show zero for this call. |
+| `processing` | Tracked work is still unfinished. | Offer bounded refresh. |
+| `deleted` | Retained content is no longer available. | Respect retention; do not rebuild from logs. |
+| `unavailable` | The evidence cannot establish a result. | Keep booking count unknown. |
+
+A failed GET is not `none`. On 503, preserve the previous uncertainty and retry the read with a limit. For an uncertain outbound launch, [read the original request UUID](/api-reference/calls/get-outbound-request). A new UUID would create a new call intent.
+
+## 4. Request a current recording link
+
+Use `GET /v1/calls/{id}/recording` when the user asks to play a recording. Read `status`, `url` and `expires_at`. Available links are short-lived; do not save them as permanent public URLs. Other statuses can have `url:null`.
+
+## 5. Apply retention and deletion honestly
+
+Read the configured policy and actual current state. Automatic retention waits for its required finalisation and post-call decisions. Deliberate single-call deletion uses the separate flow below. Customer-owned storage has its own lifecycle. Deleting one call does not erase every caller record or external integration copy.
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund. If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules.
+
+Show `unavailable` with `reason:tracking_unavailable` as unavailable tracking, not proof that a recording was erased. Read the [single-call deletion contract](/api-reference/calls/delete) before offering a delete action.
+
+## Example response
+
+A recording access reply has `call_id`, `status`, `url` and `expires_at`. For example, `{"call_id":"call_example","status":"pending","url":null,"expires_at":null}` means no usable recording link is available yet.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| 404 or inaccessible call | Check ownership; do not reuse cached access. |
+| Recording pending | Offer a later bounded refresh. |
+| expired/not_recorded/customer_bucket | Explain the returned state; do not invent a link. |
+| pending_deletion | Respect revoked access and tracked cleanup. |
+| unavailable with tracking_unavailable | Keep recording state unknown; do not show a deletion success. |
+| Optional analysis absent | Keep it unknown rather than manufacturing a result. |
+
+## Next steps
+
+- [Recording access](/api-reference/calls/get-calls-id-recording)
+- [Signed events](/advanced/webhooks)
+- [Booking-result endpoint](/api-reference/calls/get-bookings)
+
+## Related dashboard and AI tasks
+
+- [Check call requests and booking results with AI](/ai-tools/call-results)
+- [Check the booking result of a call](/guides/business/booking-results)
+- [Find, play and download a call recording](/guides/business/call-history/recordings)
+- [Read your dashboard overview](/guides/business/dashboard)
+- [Delete call and campaign data](/guides/business/privacy/delete-call-data)
+- [Use the dashboard on your phone](/guides/business/using-on-phone)
+- [See what's new in Nixflex](/guides/business/whats-new)

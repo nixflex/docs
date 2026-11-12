@@ -1,0 +1,292 @@
+---
+title: "Update an agent"
+sidebarTitle: "Update agent"
+description: "Update selected settings on an owned Nixflex agent. The PUT request is partial: omitted fields keep their saved values."
+openapi: "/api-reference/public.openapi.json PUT /agents/{id}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agents/update"
+---
+Change selected settings on an account-owned agent. Although the method is PUT, this is a partial update: omitted fields keep their saved values. Creation defaults are not reapplied.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PUT</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Omitted fields keep their stored values; send only the intended change.
+- Read the agent after an uncertain response before repeating the update.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agents) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | The account-owned identifier returned by the API. |
+
+Partial update. Omitted fields remain unchanged; create defaults are never reapplied. At least one recognised field is required. Unknown fields alongside recognised fields produce warnings; unknown-only input is refused.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `is_active` | boolean | No | Unchanged | Whether the agent is active. |
+| `ai_speaks_first` | boolean | No | Unchanged | Let the agent speak first. |
+| `dynamic_greeting` | boolean | No | Unchanged | Generate a greeting for the conversation. |
+| `func_end_call` | boolean | No | Unchanged | Voice silence/duration timer gate, not a blanket prohibition on END_CALL. |
+| `func_cold_transfer` | boolean | No | Unchanged | Compatibility-only; not the effective transfer permission. |
+| `func_send_sms` | boolean | No | Unchanged | Compatibility-only; use incall_sms_enabled for in-call SMS. |
+| `record_call` | boolean | No | Unchanged | Agent recording default; an explicit number true/false wins. |
+| `post_call_sms_enabled` | boolean | No | Unchanged | Enable a post-call SMS where supported. |
+| `incall_sms_enabled` | boolean | No | Unchanged | Allow in-call SMS under the effective number policy. |
+| `amd_enabled` | boolean | No | Unchanged | Enable answering-machine detection where supported. |
+| `greet_by_name` | boolean | No | Unchanged | Inbound name-greeting hint, independent of remembering callers; not global anonymization. |
+| `remember_callers` | boolean | No | Unchanged | Phone caller context/learning; false does not erase saved records or website visitor history. |
+| `require_booking_confirmation` | boolean | No | Unchanged | Saved calendar-confirmation setting. New voice bookings always need one combined read-back and one clear yes, even when false. |
+| `voicemail_leave_enabled` | boolean | No | Unchanged | Requires a nonblank `voicemail_message` when true. |
+| `name` | string | No | Unchanged | Up to 200 characters. Maximum 200 characters. |
+| `system_prompt` | string | No | Unchanged | Up to 3,000 tokens when knowledge prompt checks are enabled; otherwise up to 16,000 characters. The 100,000-character input ceiling is for counting, not the accepted prompt size. Maximum 100000 characters. |
+| `welcome_message` | string | No | Unchanged | Up to 16,000 characters. Static greeting when dynamic greeting is off. Maximum 16000 characters. |
+| `voice_id` | string or null | No | Unchanged | Legacy catalog alias, up to 200 characters. If both voice fields are supplied, they must identify the same voice. Maximum 200 characters. |
+| `voice_key` | string or null | No | Unchanged | Catalog identifier, up to 36 characters. Prefer this to a voice alias. Maximum 36 characters. |
+| `language` | string | No | Unchanged | Supported language code or `multi`, up to 32 characters; empty uses `multi`. The selected voice must support the language. Maximum 32 characters. |
+| `webhook_url` | string or null | No | Unchanged | HTTP(S) URL without embedded credentials, up to 2,048 characters; empty is accepted. Maximum 2048 characters. |
+| `phone_number` | string or null | No | Unchanged | E.164, null or empty, up to 32 characters. Does not import or attach a number. Maximum 32 characters. |
+| `llm_model` | string | No | Unchanged | Compatibility-only; does not select the runtime model. Maximum 200 characters. |
+| `fallback_message` | string | No | Unchanged | Compatibility-only; no current runtime consumer. Maximum 16000 characters. |
+| `post_call_sms_template` | string | No | Unchanged | No endpoint default; supply a template when enabling post-call SMS. Maximum 600 characters. |
+| `transfer_number` | string or null | No | Unchanged | E.164 number, null or empty; text limit 32 characters. Maximum 32 characters. |
+| `transfer_whisper` | string or null | No | Unchanged | Up to 16,000 characters. Maximum 16000 characters. |
+| `timezone` | string | No | Unchanged | Nonempty IANA time zone. When omitted, use the valid account time zone or UTC. Maximum 100 characters. |
+| `boosted_keywords` | string or null | No | Unchanged | Changed values: 20 terms, 50 characters each, 450-byte safety budget. See keyterms rules below. |
+| `voicemail_message` | string or null | No | Unchanged | Required and nonblank when voicemail_leave_enabled is true; no endpoint default. Maximum 600 characters. |
+| `temperature` | number | No | Unchanged | 0–0.7 inclusive. Minimum 0. Maximum 0.7. |
+| `response_eagerness` | integer | No | Unchanged | Response delay, 0–1,000 milliseconds. Minimum 0. Maximum 1000. |
+| `stt_confidence` | number | No | Unchanged | 0–1; stored compatibility setting. Minimum 0. Maximum 1. |
+| `stt_max_silence_ms` | integer | No | Unchanged | 0–2,147,483,647 milliseconds; not response delay. Minimum 0. Maximum 2147483647. |
+| `interruption_sensitivity` | integer | No | Unchanged | Stored compatibility value; does not tune current interruption decisions. Minimum 0. Maximum 100. |
+| `max_call_duration_seconds` | integer or null | No | Unchanged | Null uses the runtime fallback; it does not mean unlimited. Minimum 1. Maximum 2147483. |
+| `silence_hangup_seconds` | integer or null | No | Unchanged | Null uses the runtime fallback. Minimum 1. Maximum 2147483. |
+| `wait_tag_seconds` | integer or null | No | Unchanged | 30–120 seconds for a wait tag; null leaves it unset. Minimum 30. Maximum 120. |
+| `ivr_timeout_seconds` | integer | No | Unchanged | 1–1,800 seconds for phone-menu navigation. Minimum 1. Maximum 1800. |
+| `voice_speed` | number | No | Unchanged | Compatibility-only; use speaking_rate. Minimum 0.01. Maximum 100. |
+| `speaking_rate` | one of the shapes below | No | Unchanged | Existing numeric clamp to 0.5..1.5. Null or empty clears. |
+| `pickup_delay` | legacy value | No | Unchanged | Legacy write-through value with no API type or range enforcement. Omit it to retain the current pickup delay. |
+| `dtmf_enabled` | boolean or null | No | Unchanged | Keypad input; null leaves the preference unset. |
+| `response_length` | string | No | Unchanged | `short`, `medium` or `long`. Allowed: `"short"`, `"medium"`, `"long"`. |
+| `transfer_type` | string | No | Unchanged | `cold` or `warm`. Allowed: `"cold"`, `"warm"`. |
+| `recording_source` | string or null | No | Unchanged | provider or nixflex (case/space normalized); null/empty clears to provider. |
+| `data_extraction_fields` | array of object | No | Unchanged | Up to 50 definitions, described below. Maximum 50 items. |
+| `data_extraction_fields[].name` | string | Yes | None | Unique; __proto__, constructor and prototype forbidden. Pattern: `^[A-Za-z_][A-Za-z0-9_]{0,63}$`. |
+| `data_extraction_fields[].type` | string | Yes | None | Allowed: `"text"`, `"selector"`, `"boolean"`, `"number"`. |
+| `data_extraction_fields[].description` | string | No | Unchanged | Maximum 2000 characters. |
+| `data_extraction_fields[].optional` | boolean | No | Unchanged | Saved value. |
+| `data_extraction_fields[].format_example` | string | No | Unchanged | Maximum 2000 characters. |
+| `data_extraction_fields[].choices` | array of string | No | Unchanged | Required non-empty for selector; whitespace-only choices rejected. Maximum 100 items. |
+| `call_retention_days` | integer | No | Unchanged | Update-only retention in days. Zero means delete eligible content after each call; this is not immediate proof of erasure. Allowed: `90`, `30`, `7`, `1`, `0`. |
+
+Send JSON booleans and numbers, not strings. A null value is allowed only where stated. Changing voice_key, voice_id or language revalidates the resulting voice selection; use one identifier or a matching pair. A language-only update rechecks the existing voice. Enabling voicemail is checked against the merged saved/request state. Unknown fields are ignored only alongside a supported field and appear in warnings.
+
+The system_prompt limit is 3,000 tokens with knowledge enabled, otherwise 16,000 characters. A 100,000-character parsing ceiling is not the accepted prompt size. Extraction definitions reject unknown nested fields and reserve __proto__, constructor and prototype. Compatibility fields remain stored settings and do not necessarily select runtime behaviour.
+
+Customer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. On update, omitted values are retained. An exact unchanged saved string is kept even if it exceeds the newer count, term-length, size or text limits. Any change must meet all current limits.
+
+The safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).
+
+More than 20 changed terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords". The count check runs before term-length and safety-byte checks. DELETE switches is_active to false; it does not remove the record. GET by owned agent ID still returns the inactive agent. The default active-only list omits it; status=disabled or status=all includes it.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `is_active` | boolean | Saved value. |
+| `ai_speaks_first` | boolean | Saved value. |
+| `dynamic_greeting` | boolean | Saved value. |
+| `func_end_call` | boolean | Saved value. |
+| `func_cold_transfer` | boolean | Saved value. |
+| `func_send_sms` | boolean | Saved value. |
+| `record_call` | boolean | Saved value. |
+| `post_call_sms_enabled` | boolean | Saved value. |
+| `incall_sms_enabled` | boolean | Saved value. |
+| `amd_enabled` | boolean | Saved value. |
+| `greet_by_name` | boolean | Saved value. |
+| `remember_callers` | boolean | Saved value. |
+| `require_booking_confirmation` | boolean | Saved value. |
+| `voicemail_leave_enabled` | boolean | Saved value. |
+| `name` | string | Saved value. |
+| `system_prompt` | string | Saved value. |
+| `welcome_message` | string | Saved value. |
+| `voice_id` | string or null | Saved value. |
+| `voice_key` | string or null | Saved value. |
+| `language` | string | Saved value. |
+| `webhook_url` | string or null | Saved value. |
+| `phone_number` | string or null | Saved value. |
+| `llm_model` | string | Saved value. |
+| `fallback_message` | string | Saved value. |
+| `post_call_sms_template` | string | Saved value. |
+| `transfer_number` | string or null | Saved value. |
+| `transfer_whisper` | string or null | Saved value. |
+| `timezone` | string | Saved value. |
+| `boosted_keywords` | string or null | Changed values: 20 terms, 50 characters each, 450-byte safety budget. See keyterms rules below. |
+| `voicemail_message` | string or null | Saved value. |
+| `temperature` | number | Saved value. |
+| `response_eagerness` | integer | Saved value. |
+| `stt_confidence` | number | Saved value. |
+| `stt_max_silence_ms` | integer | Saved value. |
+| `interruption_sensitivity` | integer | Saved value. |
+| `max_call_duration_seconds` | integer or null | Saved value. |
+| `silence_hangup_seconds` | integer or null | Saved value. |
+| `wait_tag_seconds` | integer or null | Saved value. |
+| `ivr_timeout_seconds` | integer | Saved value. |
+| `voice_speed` | number | Saved value. |
+| `dtmf_enabled` | boolean or null | Saved value. |
+| `response_length` | string | Allowed: `"short"`, `"medium"`, `"long"`. |
+| `transfer_type` | string | Allowed: `"cold"`, `"warm"`. |
+| `recording_source` | string or null | Allowed: `"provider"`, `"nixflex"`, `null`. |
+| `data_extraction_fields` | array of object | Saved value. |
+| `data_extraction_fields[].name` | string | Unique; __proto__, constructor and prototype forbidden. Pattern: `^[A-Za-z_][A-Za-z0-9_]{0,63}$`. |
+| `data_extraction_fields[].type` | string | Allowed: `"text"`, `"selector"`, `"boolean"`, `"number"`. |
+| `data_extraction_fields[].description` | string | Maximum 2000 characters. |
+| `data_extraction_fields[].optional` | boolean | Saved value. |
+| `data_extraction_fields[].format_example` | string | Maximum 2000 characters. |
+| `data_extraction_fields[].choices` | array of string | Required non-empty for selector; whitespace-only choices rejected. Maximum 100 items. |
+| `pickup_delay` | integer or null | Saved value. |
+| `speaking_rate` | number or null | Saved value. |
+| `id` | string | Saved value. |
+| `agent_id` | string | Saved value. |
+| `api_key_id` | string | Saved value. |
+| `created_at` | string | Saved value. |
+| `updated_at` | string | Saved value. |
+| `greeting_language` | string or null | Saved value. |
+| `precall_webhook_url` | string or null | Saved value. |
+| `tester_scenarios` | legacy value | Stored compatibility metadata; not a create input. |
+| `outbound_transfer_numbers` | array or null | Saved value. |
+| `outbound_warm_transfer_numbers` | array or null | Saved value. |
+| `outbound_post_call_sms_templates` | legacy value | Stored compatibility message template data; not a create input. |
+| `outbound_max_duration_seconds` | integer or null | Saved value. |
+| `outbound_silence_hangup_seconds` | integer or null | Saved value. |
+| `call_retention_days` | integer or null | Allowed: `90`, `30`, `7`, `1`, `0`, `null`. |
+| `warnings` | array of object | Saved value. |
+| `warnings[].code` | string | Allowed: `"unknown_fields"`. |
+| `warnings[].fields` | array of string | Saved value. |
+| `warnings[].message` | string | Saved value. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the supplied Node/CLI 0.11.0 and Python 0.4.0 candidates; these versions are unpublished. Set `NXF_AGENT_ID` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request PUT \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agents/$NXF_AGENT_ID" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"Support","call_retention_days":30,"boosted_keywords":"Nixflex, Sam, appointment"}'
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.agents.update(process.env.NXF_AGENT_ID, {name:"Support",call_retention_days:30,boosted_keywords:"Nixflex, Sam, appointment"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.agents.update(os.environ["NXF_AGENT_ID"], name="Support",call_retention_days=30,boosted_keywords="Nixflex, Sam, appointment")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex agents update "$NXF_AGENT_ID" --name Support --set call_retention_days=30 --set 'boosted_keywords=Nixflex, Sam, appointment' --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "agent_id": "agent_0123456789abcdef",
+  "name": "Updated example agent",
+  "temperature": 0.2,
+  "max_call_duration_seconds": 300,
+  "silence_hangup_seconds": 10,
+  "dynamic_greeting": true,
+  "is_active": true,
+  "boosted_keywords": "Nixflex, Sam, appointment"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`empty_agent_update`](/api-reference/errors#empty_agent_update) | No supported field was supplied. | Send at least one documented field. |
+| 400 | [`invalid_agent_field`](/api-reference/errors#invalid_agent_field) | A field has the wrong type or exceeds its limit, including more than 20 changed keyterms. | Read error.details.field. For boosted_keywords, keep 20 or fewer terms. |
+| 400 | [`invalid_call_retention_days`](/api-reference/errors#invalid_call_retention_days) | Retention is not one of the supported day values. | Use 90, 30, 7, 1 or 0. |
+| 400 | [`prompt_too_long`](/api-reference/errors#prompt_too_long) | The prompt exceeds the applicable limit. | Shorten the prompt; a character estimate is not a token count. |
+| 400 | [`voicemail_message_required`](/api-reference/errors#voicemail_message_required) | Voicemail would be enabled without a message. | Supply a nonblank message or disable voicemail in the same request. |
+| 400 | [`invalid_recording_source`](/api-reference/errors#invalid_recording_source) | The recording source is not supported. | Use provider, nixflex, null or an empty string. |
+| 400 | [`deprecated_field`](/api-reference/errors#deprecated_field) | An old agent credential field was supplied. | Remove credentials from the agent request. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | The agent does not belong to this account or does not exist. | Use an agent ID returned by this account. |
+| 503 | [`agent_store_unavailable`](/api-reference/errors#agent_store_unavailable) | The saved result could not be confirmed. | Read the agent and reconcile its settings before another write. |
+| 503 | [`catalog_unavailable`](/api-reference/errors#catalog_unavailable) | Voice validation is unavailable. | Wait for the catalog before deliberately submitting a new request. |
+| 503 | [`prompt_check_unavailable`](/api-reference/errors#prompt_check_unavailable) | The prompt check did not finish. | Wait for recovery; inspect the saved agent before another attempt. |
+| 400 | [`invalid_voice_key`](/api-reference/errors#invalid_voice_key) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_not_found`](/api-reference/errors#voice_not_found) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_selection_conflict`](/api-reference/errors#voice_selection_conflict) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_unavailable`](/api-reference/errors#voice_unavailable) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_temporarily_unavailable`](/api-reference/errors#voice_temporarily_unavailable) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_not_available`](/api-reference/errors#voice_not_available) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`voice_incompatible_language`](/api-reference/errors#voice_incompatible_language) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`no_approved_languages`](/api-reference/errors#no_approved_languages) | The selected catalog voice cannot serve this update. | Choose an available voice compatible with the language; use matching voice identifiers. |
+| 400 | [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long) | Keep each word or phrase within 50 characters to save | Shorten the term. details.field is boosted_keywords; details.limit is 50. |
+| 400 | [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large) | This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. | Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Never automatically retry PUT. Read the agent after a timeout and compare the fields you intended to change. Repeating a setting is not a guarantee that audit, validation, or retention effects are absent.
+
+## Related endpoints
+
+- [Create an agent](/api-reference/agents/create)
+- [List agents](/api-reference/agents/list)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,4 +1,31 @@
-# API operation coverage — C11
+# API operation coverage — C15
+
+**Current C15, 12 November 2026:** the coordinated local draft contains 353 pages across five tabs, including 164 API pages and all **151 public operations**. The inventory contains 201 numbered rows: 151 public and 50 intentionally non-public. Row 200 adds `DELETE /v1/calls/batch/:id`; row 201 adds B59 `GET /v1/campaigns/:id`. All 149 prior operation IDs remain stable. C14 and exact D7 are merged; the approved B57/B58 source governs deletion and new voice bookings. This is documentation coverage, not a deployment or live-test result.
+
+The public pages contain the final behaviour, without B57 waiting notes. Historical batch reports below preserve their original evidence; their old counts, old deletion contracts and old client inventories are superseded. The final source, native and client evidence is recorded in `notes/codex/2026-11-11-chat-c-C15` outside the published tree.
+
+**Final K9 alignment, 12 November:** Node/CLI `d941138`, Python `9fd177e` and MCP `f255b28` are pinned in `spec-source/c15-pages.json`. The current directories cover 140 Node methods, 137 shared Python methods, 146 CLI command entries and 97 MCP tools. Six supplied archives were hash-verified. The actual new page examples passed 130 isolated cases; the existing client-guide examples passed 44 more. These checks use synthetic transports, not staging credentials.
+
+| Row | Current deletion route | Public page | Node / Python / CLI / MCP | Successful live write |
+| --- | --- | --- | --- | --- |
+| 86 | `DELETE /v1/calls/:id` | [Delete a call](/api-reference/calls/delete) | yes, exact K9 candidate | pending manual test |
+| 177 | `DELETE /v1/sms/campaigns/:id` | [Delete an SMS campaign](/api-reference/sms/campaigns-delete) | yes, exact K9 candidate | pending manual test |
+| 200 | `DELETE /v1/calls/batch/:id` | [Delete a voice campaign](/api-reference/voice-campaigns/delete) | yes, exact K9 candidate | pending manual test |
+| 201 | `GET /v1/campaigns/:id` | [Get a voice campaign](/api-reference/voice-campaigns/get) | HTTP examples; no dedicated K9 method | 13 isolated real-handler cases PASS; not a hosted test |
+
+| Row / case | Status | Remaining controlled check |
+| --- | --- | --- |
+| 200 / voice campaign delete | pending manual test | Approved disposable campaign: waiting work cancelled, running calls hung up, campaign/recipients hidden, prior call history and used charges retained. |
+| B57 / single-call deletion | pending manual test | Approved disposable call: running and finished cases, 200 recording flags, 503 hangup_pending, automatic completion and same-account/same-ID resume. |
+| B57 / SMS campaign deletion | pending manual test | Approved disposable campaign: waiting work cancelled, campaign/recipients hidden, sent SMS history and used charges retained; same-ID resume. |
+| B57 / access and uncertainty | pending manual test | Owner/Admin allowed, Member refused, foreign/missing same 404, lost acknowledgement and unavailable deletion reconciled without a write polling loop. |
+| B57 / recording cleanup | pending manual test | Controlled Nixflex-copy cleanup and carrier best-effort/queued outcomes; verify customer-managed storage is not deleted. |
+| B58 / new voice booking | pending manual test | Approved test booking: full name spelled, email local part spelled, domain spoken as words, one combined read-back and one yes even with the old setting off. Correction re-asks only the wrong part. |
+| B58 / existing flows | pending manual test | Controlled SMS booking and existing-booking lookup, move and cancel keep their established flow. |
+
+The user's report says finished-call and waiting voice/SMS-campaign staging tests passed on 11 November. This run does not turn that report into independently executed successful-write evidence. All earlier account creation, key rotation, number import/removal/routing and other successful writes remain **pending manual test**. Never rotate the staging key, create real accounts, or import/remove/re-route either protected staging number. No credentials or live API writes are needed for this docs review.
+
+## Historical C11 handover
 
 **Current C11:** D2 and D3 (cae52b1) joined. The five tabs contain 274 pages: Business 37, Developer 66, API 159, SDKs & CLI 7, AI tools 5. API coverage remains 147 endpoint templates and 12 shared pages. All 66 repository tests pass; OpenAPI validates 1,083 schemas, 315 examples and 25 accepted/refused cases. K6 supplied candidates (Node/CLI 0.11.0, Python 0.4.0, MCP 0.5.0 / 94 tools) are documented in SDKs & CLI. Six artifact hashes and five packaged operations per kit were checked. No live staging requests or writes were run in C11. The earlier C10 GET-only result (1 PASS, 0 FAIL, 150 PENDING without a staging key) is historical. Successful writes remain individually pending manual test below. Generated-site proof and D-owned content issues are listed in the C11 SEO-CHECK and AI-TOOLS-REVIEW; this is not publication approval.
 

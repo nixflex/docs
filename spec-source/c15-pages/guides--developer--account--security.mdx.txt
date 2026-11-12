@@ -1,0 +1,55 @@
+---
+title: "Separate login security and API authority"
+sidebarTitle: "Login and API security"
+description: "Keep Nixflex personal sessions, two-factor authentication and organisation API keys separate when designing access to your application."
+canonical: "https://docs.nixflex.com/guides/developer/account/security"
+---
+
+Use personal dashboard sessions for people and keep the organisation API credential on your server.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A Member session and an organisation key have different authority.
+- Personal two-factor authentication does not add a role restriction to a copied API key.
+- Check ownership in your application before calling Nixflex for a customer.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/account-security) · [Glossary](/guides/glossary)
+
+</div>
+
+## Choose the right identity
+
+| Identity | Intended use | Boundary |
+| --- | --- | --- |
+| Personal dashboard login | A teammate using the dashboard | Current organisation membership, role and personal authentication checks. |
+| Organisation API key | Your trusted server integrating with Nixflex | Owner authority for documented API operations; keep it out of browsers. |
+| Short-lived media access | An eligible dashboard listening session | Scoped access; it is not the organisation API key. |
+
+Do not expose a shared key to a browser to work around a Member refusal. A server that holds the key must enforce its own signed-in-user permissions and account-to-resource mapping.
+
+## Personal two-factor setup
+
+The dashboard's **Settings → Security** flow verifies an authenticator code before enabling two-factor authentication. A second authenticator can provide a backup. This is a personal-login workflow, not a public `/v1` API for enrolling users or changing their roles. Link people to [account security](/guides/business/account-security).
+
+## Handle authentication failures
+
+Stop on invalid credentials and verify the API host and complete key privately. For 403, check the operation's role requirement. For a fresh-login requirement, let the person complete the dashboard sign-in flow; never collect their password or one-time code in an agent prompt.
+
+Log a request ID and safe error code. Omit account keys, auth headers, signed media URLs and customer content. Rotate a key only through the Owner's deliberate key-management workflow and update dependent servers together.
+
+## Next steps
+
+- [Authenticate API requests](/authentication)
+- [Team permissions](/guides/developer/team/invitations-and-roles)
+- [Build a customer app](/guides/developer/build-with-ai)

@@ -1,0 +1,61 @@
+---
+title: "Investigate a request in dashboard Logs"
+sidebarTitle: "Dashboard logs"
+description: "Filter API requests and webhook delivery attempts in Nixflex Logs, read safe error details, and investigate an uncertain result without repeating work."
+canonical: "https://docs.nixflex.com/guides/business/logs"
+---
+
+Use Logs to find a request or delivery attempt, then check the affected call, campaign or integration for its actual result.
+
+<div className="nxf-facts">
+  <div><small>Where</small><strong>Logs</strong></div>
+  <div><small>Shows</small><strong>Request metadata</strong></div>
+  <div><small>Result proof</small><strong>Affected record</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A successful request is not proof that a call connected, a message arrived or a booking completed.
+- Logs show metadata and safe explanations, not full private request and response bodies.
+- An uncertain write needs a state check before another action.
+
+</div>
+
+<div className="nxf-audience">
+
+[Developer guide](/guides/developer/logs) · [Glossary](/guides/glossary)
+
+</div>
+
+## Find the request
+
+1. Open **Logs** and choose the API request view or **Errors**.
+2. Search for an endpoint, or paste an exact request ID beginning with `req_`.
+3. Narrow the list by method, status family or date range when needed.
+4. Open a row to read its time, method, endpoint, status, duration, error code and request ID.
+5. Load more rows for earlier results. Keep the same filters while checking a particular incident.
+
+The list refreshes periodically. A failed refresh or an empty filter result does not prove no request was made.
+
+## Read the status
+
+| Status | Meaning | Next step |
+| --- | --- | --- |
+| 2xx | The HTTP operation returned success. | Check its returned record or corresponding history for completion. |
+| 4xx | Authentication, input, permissions or current state blocked the request. | Read the error code and correct its cause. |
+| 429 | Too many requests. | Respect the retry delay; do not repeat a write automatically. |
+| 5xx or unknown | The result may be incomplete or uncertain. | Check the saved call or campaign before trying again. |
+
+## Check webhook deliveries
+
+Open the webhook delivery view to review the call, agent, attempt count, response status and delivery times. A destination rejection needs its receiver settings checked. An unconfirmed delivery does not prove the business action failed or that replaying it is safe.
+
+Use the request ID, approximate time and safe error code when asking a developer or support for help. Do not copy keys, signed URLs, customer transcripts or full request bodies into a support message.
+
+## Next steps
+
+- [Check Call History](/guides/business/call-history)
+- [Review integration results](/guides/business/integrations)
+- [Read request errors](/guides/developer/errors)

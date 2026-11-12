@@ -16,7 +16,7 @@ Find whether a booking failed at connection, approval, availability or result ha
 
 **The important part**
 
-- Confirm the spoken name and full email separately before creating a booking.
+- New voice bookings require spelling followed by one combined read-back and one clear yes.
 - A call summary is not proof that the calendar mutation succeeded.
 - processing, deleted and unavailable are different from confirmed no bookings.
 
@@ -36,9 +36,13 @@ For Google, check the explicit number time zone, complete hours map, slot length
 
 ## Check the required approvals
 
-For creation, ask the name, read it back and wait for a clear yes. Then ask the email, spell its local part and obtain a separate yes for the whole address. A correction clears that field’s earlier approval. Looking up, moving or cancelling an existing appointment requires email approval without a new name question.
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
 
-These approvals are separate from optional final action/time confirmation controlled by `require_booking_confirmation`. A yes to one corrected letter is not approval of the complete address or of the booking action.
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
+
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
 
 ## Diagnose the action result
 
@@ -67,3 +71,8 @@ Google invitations are requested according to `send_invites`; inbox delivery and
 - [Review booking approval rules](/actions/booking-confirmation)
 - [Set Google availability and invitations](/guides/developer/bookings/google-calendar-settings)
 - [Recover missed booking events](/guides/developer/webhooks/delivery-and-recovery)
+
+## Related dashboard and AI tasks
+
+- [Fix a Cal.com booking problem](/guides/business/calcom/fix-bookings)
+- [Fix a Google Calendar booking problem](/guides/business/google-calendar/fix-bookings)

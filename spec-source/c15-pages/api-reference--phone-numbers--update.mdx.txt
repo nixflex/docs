@@ -1,0 +1,218 @@
+---
+title: "Update a phone number"
+sidebarTitle: "Update phone number"
+description: "Update an owned Nixflex number's settings or move it to another active agent on the account. Review routing and uncertain outcomes before retrying."
+openapi: "/api-reference/public.openapi.json PATCH /phone-numbers/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/phone-numbers/update"
+---
+Change per-number settings, or move the number to another active agent on the same account. A move and a settings update are separate requests.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PATCH</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Change only the fields you intend; omission preserves saved values.
+- Read back the number and check its effective agent assignment.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Business number. Use E.164 and URL-encode the leading + as %2B. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `inbound_enabled` | boolean | No | Unchanged | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `outbound_enabled` | boolean | No | Unchanged | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `monitor_enabled` | boolean | No | Unchanged | Saved monitor permission; not a live listener control. Must be a JSON boolean. |
+| `web_calls_enabled` | boolean | No | Unchanged | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `web_agent_enabled` | boolean | No | Unchanged | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `web_functions_enabled` | boolean | No | Unchanged | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `custom_prompt` | string or null | No | Unchanged | Number prompt override. Null or empty clears to null. Maximum 8000 characters. |
+| `voice_id` | string or null | No | Unchanged | Existing voice alias override. Trimmed; null or empty clears to null. No route-level length cap is declared. |
+| `sms_reply_enabled` | boolean | No | Unchanged | SMS auto-reply switch. Legacy input also recognises the string true; use JSON booleans. |
+| `sms_prompt` | string or null | No | Unchanged | SMS prompt override. Null or empty stores an empty string. Maximum 20000 characters. |
+| `web_prompt` | string or null | No | Unchanged | Web prompt override. Null or empty stores an empty string. Maximum 16000 characters. |
+| `speaking_rate` | number or null or string | No | Unchanged | Number values are clamped to 0.5–1.5. Null or an empty string clears to inheritance; use 1 for normal speed. |
+| `dtmf_enabled` | boolean or null | No | Unchanged | Keypad override. Null or empty clears to inheritance; legacy true strings are accepted. |
+| `require_booking_confirmation` | boolean or null | No | Unchanged | Saved confirmation override; null inherits the agent. New voice bookings always need one combined approval, even when false. |
+| `record_call` | boolean or null | No | Unchanged | Recording override; null inherits the agent. |
+| `recording_source` | string or null | No | Unchanged | provider or nixflex; null or empty inherits the agent. Case and surrounding whitespace are normalised. Allowed: `"provider"`, `"nixflex"`, `null`, `""`. |
+| `voicemail_leave_enabled` | boolean or null | No | Unchanged | Number-specific voicemail setting; null is unset. When enabled, the merged message must be nonblank. |
+| `voicemail_message` | string or null | No | Unchanged | Number-specific message. Null or empty clears to null. Maximum 2000 characters. |
+
+For a move request, the body is instead exactly one field:
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes for a move | None | Trimmed, nonblank target agent ID; at most 200 characters. Do not combine it with settings. |
+
+Omitted settings remain unchanged. The six strict switches below accept only JSON booleans; sms_reply_enabled and older override fields retain their documented legacy coercion. Use canonical snake_case names. A saved web_calls_enabled value is not proof that all effective web-call prerequisites are satisfied.
+
+### Number controls
+
+The seven switches cover inbound, outbound, SMS reply, web agent, web calls, web functions and saved monitor permission. Off switches can prevent new work without ending an existing call. Read the number to confirm saved and effective state.
+
+### Move to another agent
+
+Send only `{ "agent_id": "agent_TARGET" }`. The move preserves number-specific settings and history and does not change carrier routing. New work uses the target agent. A busy number is refused. Repeating the same settled assignment returns changed: false. The move response contains agent_name and changed, while a settings response contains saved settings.
+
+Read web_calls_effective from the number detail endpoint to check effective website access. Saved permission does not start a monitor session. Never delete and re-import a number just to move it between agents.
+
+<span id="request"></span>
+<span id="what-changes-and-what-stays"></span>
+<span id="kits-localunpublished"></span>
+<span id="dashboard-integration-for-chat-b"></span>
+<span id="node-and-cli-local-unpublished-build"></span>
+<span id="python-local-unpublished-build"></span>
+<span id="mcp-local-unpublished-build"></span>
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | one of the shapes below | Saved value. |
+| `phone_number.phone_number` | string | Updated number. |
+| `phone_number.agent_id` | string | Current agent ID. |
+| `phone_number.inbound_enabled` | boolean or null | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `phone_number.outbound_enabled` | boolean or null | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `phone_number.monitor_enabled` | boolean or null | Saved monitor permission; not a live listener control. Must be a JSON boolean. |
+| `phone_number.web_calls_enabled` | boolean or null | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `phone_number.web_agent_enabled` | boolean or null | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `phone_number.web_functions_enabled` | boolean or null | Saved channel switch. Must be a JSON boolean. Omitted stays unchanged. |
+| `phone_number.custom_prompt` | string or null | Number prompt override. Null or empty clears to null. Maximum 8000 characters. |
+| `phone_number.voice_id` | string or null | Existing voice alias override. Trimmed; null or empty clears to null. No route-level length cap is declared. |
+| `phone_number.sms_reply_enabled` | boolean or null | SMS auto-reply switch. Legacy input also recognises the string true; use JSON booleans. |
+| `phone_number.sms_prompt` | string or null | SMS prompt override. Null or empty stores an empty string. Maximum 20000 characters. |
+| `phone_number.web_prompt` | string or null | Web prompt override. Null or empty stores an empty string. Maximum 16000 characters. |
+| `phone_number.speaking_rate` | number or null or string | Number values are clamped to 0.5–1.5. Null or an empty string clears to inheritance; use 1 for normal speed. |
+| `phone_number.dtmf_enabled` | boolean or null | Keypad override. Null or empty clears to inheritance; legacy true strings are accepted. |
+| `phone_number.require_booking_confirmation` | boolean or null | Saved confirmation override; null inherits the agent. New voice bookings always need one combined approval, even when false. |
+| `phone_number.record_call` | boolean or null | Recording override; null inherits the agent. |
+| `phone_number.recording_source` | string or null | provider or nixflex; null or empty inherits the agent. Case and surrounding whitespace are normalised. Allowed: `"provider"`, `"nixflex"`, `null`, `""`. |
+| `phone_number.voicemail_leave_enabled` | boolean or null | Number-specific voicemail setting; null is unset. When enabled, the merged message must be nonblank. |
+| `phone_number.voicemail_message` | string or null | Number-specific message. Null or empty clears to null. Maximum 2000 characters. |
+| `phone_number.phone_number` | string | Moved number. |
+| `phone_number.agent_id` | string | Target agent ID. |
+| `phone_number.agent_name` | string or null | Target agent name. |
+| `phone_number.changed` | boolean | False if already assigned to this agent; true if the assignment changed. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples use the supplied Node/CLI 0.11.0 and Python 0.4.0 candidates; these versions are unpublished. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"sms_reply_enabled":false}'
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.phoneNumbers.update(process.env.NXF_PHONE_NUMBER, {sms_reply_enabled:false});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.phone_numbers.update(os.environ["NXF_PHONE_NUMBER"], sms_reply_enabled=False)
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers update "$NXF_PHONE_NUMBER" --set sms_reply_enabled=false --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": {
+    "phone_number": "+12025550100",
+    "agent_id": "agent_0123456789abcdef",
+    "custom_prompt": "Example number instructions."
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | No recognised setting was supplied. | Send a documented setting, or agent_id alone for a move. |
+| 400 | [`invalid_number_control`](/api-reference/errors#invalid_number_control) | A strict switch is not a JSON boolean or aliases conflict. | Send true or false once for that switch. |
+| 400 | [`invalid_agent_move`](/api-reference/errors#invalid_agent_move) | A move contains other settings or an invalid agent ID. | Send only agent_id; update settings separately. |
+| 400 | [`invalid_number`](/api-reference/errors#invalid_number) | A move URL does not contain a complete E.164 number. | Correct and URL-encode the number. |
+| 400 | [`custom_prompt_too_long`](/api-reference/errors#custom_prompt_too_long) | The number prompt exceeds 8,000 characters. | Shorten it. |
+| 400 | [`sms_prompt_too_long`](/api-reference/errors#sms_prompt_too_long) | The SMS prompt exceeds 20,000 characters. | Shorten it. |
+| 400 | [`web_prompt_too_long`](/api-reference/errors#web_prompt_too_long) | The web prompt exceeds 16,000 characters. | Shorten it. |
+| 400 | [`voicemail_message_too_long`](/api-reference/errors#voicemail_message_too_long) | The voicemail message exceeds 2,000 characters. | Shorten it. |
+| 400 | [`voicemail_message_required`](/api-reference/errors#voicemail_message_required) | The merged settings enable voicemail without a message. | Supply the message or disable voicemail. |
+| 400 | [`invalid_recording_source`](/api-reference/errors#invalid_recording_source) | The recording source value is unsupported. | Use provider, nixflex or null. |
+| 404 | [`number_not_found`](/api-reference/errors#number_not_found) | The number is not owned by this account. | Use the exact number returned by an account list. |
+| 404 | [`agent_not_found`](/api-reference/errors#agent_not_found) | The move target is not an owned agent. | Use an owned agent ID. |
+| 409 | [`agent_unavailable`](/api-reference/errors#agent_unavailable) | The target agent is not active. | Choose an active agent. |
+| 409 | [`number_busy`](/api-reference/errors#number_busy) | A call, reply, campaign or number operation is active. | Wait for that work to finish before deciding on a move. |
+| 503 | [`number_move_disabled`](/api-reference/errors#number_move_disabled) | Number moves are not enabled. | Use the existing assignment until moves are enabled. |
+| 503 | [`number_move_unconfirmed`](/api-reference/errors#number_move_unconfirmed) | The move result could not be confirmed. | Read the number before another write. |
+| 500 | [`db_update_failed`](/api-reference/errors#db_update_failed) | Settings storage failed. | Read the number and reconcile the intended values. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The update result could not be confirmed. | Read current settings before another attempt. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Never automatically retry PATCH. Read the number after an uncertain settings write or move. Do not change routing to compensate for an unconfirmed move.
+
+## Related endpoints
+
+- [List phone numbers](/api-reference/phone-numbers/list)
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Errors and recovery](/api-reference/errors#error-envelope)

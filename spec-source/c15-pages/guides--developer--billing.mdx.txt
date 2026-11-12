@@ -1,0 +1,125 @@
+---
+title: "Read usage and plan call capacity"
+description: "Read Nixflex usage and call capacity, interpret optional reservation fields and separate account counters from invoices and external telephone charges."
+canonical: "https://docs.nixflex.com/guides/developer/billing"
+sidebarTitle: "Usage and capacity"
+---
+
+Read the account’s usage and capacity without treating counters as invoices or a promise that the next call will start.
+
+<div className="nxf-facts">
+  <div><small>Public read</small><strong>GET /usage</strong></div>
+  <div><small>Capacity</small><strong>Current max_concurrent</strong></div>
+  <div><small>Payments</small><strong>Dashboard workflow</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Null or absent values mean unknown, not zero.
+- Call capacity and HTTP request limits are separate.
+- Payments and saved payment methods use the permitted dashboard workflow.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Examples copied from the reviewed kit candidates need Node/CLI 0.11.0 or Python 0.4.0, which are not yet published. Use cURL until the matching release is available. Set all identifiers and the API host for the intended account and environment.
+
+## 1. Read current usage
+
+Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
+
+<CodeGroup>
+
+```bash cURL
+curl --fail-with-body --request GET \
+  --url "https://api.nixflex.com/v1/usage" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+const response = await fetch('https://api.nixflex.com/v1/usage', {
+  method: 'GET',
+  redirect: 'error',
+  signal: AbortSignal.timeout(30_000),
+  headers: { Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}` },
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result?.error?.code ?? "unavailable"}`);
+// Handle the private result without logging the full response.
+```
+
+```python Python
+import os, json
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file, code, message, headers, new_url):
+        return None
+
+request = Request(
+    'https://api.nixflex.com/v1/usage',
+    method='GET',
+    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']},
+)
+with build_opener(NoRedirect).open(request, timeout=30) as response:
+    result = json.load(response)
+    # Handle the private result without logging it.
+```
+
+```powershell CLI (PowerShell)
+nixflex usage --json --base-url https://api.nixflex.com
+```
+
+</CodeGroup>
+
+## 2. Preserve unknown values
+
+Keep null and absent fields distinct from zero. `total_cost` is a stored account value, not an invoice or complete total of external telephone charges. Avoid exposing money fields to Member dashboard sessions.
+
+## 3. Use current capacity
+
+Use the returned `max_concurrent`, not a hard-coded unlimited promise. The legacy fallback is 10 when no positive limit is stored. Optional `occupied_call_slots` includes unresolved owned reservations, not only connected conversations.
+
+## 4. Handle current admission
+
+Balance, capacity and active-state checks run when work is admitted. A successful usage read does not reserve a slot or guarantee the next call will start. Respect admission refusals and contact holds.
+
+## 5. Reconcile payment changes in Billing
+
+Owner and Admin can use Billing. A charge, top-up, auto top-up setting and saved payment method have separate confirmation states. Keep pending or uncertain outcomes visible and do not repeat a charge merely because a browser response was lost.
+
+## Example response
+
+For example, `{"total_calls":12,"total_minutes":18.5,"total_cost":null,"max_concurrent":10}` is a usage snapshot with an unknown cost, not a zero-cost invoice.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| 401 | Check account authentication. |
+| 429 | Respect effective request limits. |
+| Optional occupancy missing | Do not infer zero active work. |
+| Capacity reached | Wait for work to settle; a usage read is not a reservation. |
+| Payment pending | Reconcile in Billing before another payment. |
+
+## Next steps
+
+- [Usage reference](/api-reference/account/usage)
+- [Call results](/guides/developer/call-history)
+- [Team permissions](/concepts/organisations)
+
+## Related dashboard and AI tasks
+
+- [Add credit and set up automatic recharge](/guides/business/billing/add-credit)
+- [Check charges and download billing documents](/guides/business/billing/check-charges)
+- [Resolve an uncertain or failed payment](/guides/business/billing/fix-payments)
+- [Understand usage and your business costs](/guides/pricing-basics)

@@ -1,0 +1,57 @@
+---
+title: "Connect call instructions to actions"
+description: "Understand Nixflex calendar, text, transfer, wait and call-ending actions, including the permissions and actual results needed before an agent confirms success."
+canonical: "https://docs.nixflex.com/actions/overview"
+sidebarTitle: "Overview"
+---
+
+Connect a phone agent’s instructions to configured actions and use each action’s result to decide what the agent may confirm.
+
+<div className="nxf-facts">
+  <div><small>Instructions</small><strong>Describe intent</strong></div>
+  <div><small>Permissions</small><strong>Separate checks</strong></div>
+  <div><small>Result</small><strong>Confirm before saying done</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- A prompt cannot grant an action that its switch or connection blocks.
+- Verify booking, sending and transfer results before claiming success.
+- Website visitors have a different action boundary from telephone callers.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+| Action | Guide | Result to check |
+| --- | --- | --- |
+| Calendar booking | [Cal.com](/actions/calcom) · [Google Calendar](/actions/google-calendar) | Calendar mutation succeeded |
+| Booking read-back | [Confirmation](/actions/booking-confirmation) | Current details approved before mutation |
+| Text during a call | [In-call SMS](/actions/in-call-sms) | Accepted send, then delivery if available |
+| Human handoff | [Transfer](/actions/transfer) | Actual handoff state |
+| End a conversation | [End call](/actions/end-call) | Confirmed terminal call state |
+| Give a caller time | [Wait](/actions/wait) | Bounded expected silence |
+| Navigate a switchboard | [Phone menus](/actions/ivr-navigation) | Menu exit or timeout |
+| Call your service | [Custom functions](/advanced/custom-functions) | Your authenticated action result |
+
+## Tags request work
+
+Tags such as `[SEND_SMS: message]`, `[END_CALL]` and `[WAIT]` are interpreted by the relevant call path rather than spoken as ordinary text. They are not proof that the requested work completed. Multiple actions in one response are not an atomic transaction; one can succeed while another fails.
+
+Keep instructions narrow. Describe the trigger, required information and what to say when an action cannot be confirmed. A booking success should not be described as a delivered confirmation text, and an accepted transfer should not be described as an answered human call.
+
+## Channels have different capabilities
+
+Telephone actions do not automatically become website actions. Public website visitors cannot use the built-in telephone booking, SMS, transfer, keypad or menu functions. Enabled custom functions need separate review for public visitor access.
+
+Using the dashboard? See [manage call actions](/guides/business/call-actions). For API workflows, use the linked task guide and the exact [agent contract](/api-reference/agents/contract).
+
+## Related dashboard and AI tasks
+
+- [Check call actions and test their fallbacks](/guides/business/call-actions/check-results)

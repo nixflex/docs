@@ -4,6 +4,7 @@ sidebarTitle: "Node SDK"
 description: "Install the reviewed Node SDK candidate, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries."
 canonical: "https://docs.nixflex.com/sdks/node"
 ---
+
 Use the Node SDK for server-side reads and deliberate writes, with durable outbound request records for uncertain call outcomes.
 
 <div className="nxf-facts">
@@ -168,3 +169,365 @@ For webhooks, use the strict raw-byte verifier and durable receiver in the [webh
 <span id="retries"></span>
 <span id="typescript"></span>
 <span id="versioning"></span>
+
+{/* C15 K9 deletion */}
+
+## Delete content deliberately
+
+The reviewed candidate supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
+
+The exact queued response raises `NixflexServerError`: status 503, code `hangup_pending`, and details `deleted:false` plus `retry_pending:true`. It is not success. The server continues automatically; a later deliberate repeat of the same DELETE is safe. Other uncertain failures use `outcome_unknown`; inspect `details.original_code` and current state privately. No error or 404 is converted into deletion success.
+
+Bulk call cleanup keeps its separate guard and counters. It does not use this queue classification. See [delete a call](/api-reference/calls/delete), [delete a voice campaign](/api-reference/voice-campaigns/delete) and [delete an SMS campaign](/api-reference/sms/campaigns-delete).
+
+Set `NXF_CAMPAIGN_ID` to the voice campaign you explicitly intend to delete. The example sends one request:
+
+```javascript
+import Nixflex, { NixflexServerError } from 'nixflex';
+
+const apiKey = process.env.NIXFLEX_API_KEY;
+const baseUrl = process.env.NIXFLEX_BASE_URL;
+const campaignId = process.env.NXF_CAMPAIGN_ID;
+if (!apiKey || !baseUrl || !campaignId) throw new Error('Configure the account, host and approved campaign ID.');
+const client = new Nixflex({apiKey, baseUrl, maxRetries: 0});
+try {
+  const receipt = await client.campaigns.delete(campaignId);
+  if (receipt.deleted !== true || receipt.campaign_id !== campaignId || typeof receipt.message !== 'string') {
+    throw new Error('Deletion is not confirmed.');
+  }
+  console.log('Campaign deletion confirmed; history and used charges remain.');
+} catch (error) {
+  if (error instanceof NixflexServerError && error.status === 503 &&
+      error.code === 'hangup_pending' && error.details?.deleted === false &&
+      error.details?.retry_pending === true) {
+    console.log('Deletion queued; the server continues after hang-up.');
+  } else {
+    // Keep the error private. Reconcile an unknown result before a deliberate repeat.
+    throw error;
+  }
+}
+```
+
+The current voice and SMS methods return `CampaignDeleteResponse`. The older exported `SmsCampaignDeleteResponse` alias remains source-compatible with old receipts; it is not the current success proof. The call type includes the required `recording_cleanup` union.
+
+{/* C15 complete method directory */}
+
+## Public method directory
+
+This directory lists all 140 public resource methods in the reviewed candidate. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
+
+<AccordionGroup>
+
+<Accordion title="agents">
+
+[Fields, results and workflow](/concepts/agents).
+
+| Method | Signature |
+| --- | --- |
+| `client.agents.create` | `create(params: AgentCreateParams = {}, opts?: RequestOptions): Promise<Agent>` |
+| `client.agents.list` | `list(params: AgentListParams = {}, opts?: RequestOptions): Promise<Agent[]>` |
+| `client.agents.iter` | `iter(pageSize = 100, opts?: RequestOptions): AsyncGenerator<Agent>` |
+| `client.agents.get` | `get(agentId: string, opts?: RequestOptions): Promise<Agent>` |
+| `client.agents.update` | `update(agentId: string, params: AgentUpdateParams, opts?: RequestOptions): Promise<Agent>` |
+| `client.agents.delete` | `delete(agentId: string, opts?: RequestOptions): Promise<AgentDeleteResponse>` |
+
+</Accordion>
+
+<Accordion title="callers">
+
+[Fields, results and workflow](/concepts/caller-context).
+
+| Method | Signature |
+| --- | --- |
+| `client.callers.get` | `get(phoneNumber: string, callerNumber: string, opts?: RequestOptions): Promise<CallerContextResponse>` |
+| `client.callers.set` | `set(phoneNumber: string, callerNumber: string, params: CallerContextSetParams, opts?: RequestOptions): Promise<CallerContextResponse>` |
+| `client.callers.delete` | `delete(phoneNumber: string, callerNumber: string, opts?: RequestOptions): Promise<CallerContextDeleteResponse>` |
+| `client.callers.import` | `import(phoneNumber: string, callers: CallerImportRow[], opts?: RequestOptions): Promise<CallerImportResponse>` |
+
+</Accordion>
+
+<Accordion title="calls">
+
+[Fields, results and workflow](/guides/developer/calls).
+
+| Method | Signature |
+| --- | --- |
+| `client.calls.prepare` | `prepare(params: OutboundCallParams)` |
+| `client.calls.bookings` | `bookings(callId: string, opts?: RequestOptions)` |
+| `client.calls.outboundRequest` | `outboundRequest(requestId: string, opts?: RequestOptions)` |
+| `client.calls.create` | `create(params: OutboundCallParams, opts?: RequestOptions): Promise<OutboundCallResponse \| OutboundRequestReceipt>` |
+| `client.calls.list` | `list(params: ListParams = {}, opts?: RequestOptions): Promise<Call[]>` |
+| `client.calls.history` | `history(params: CallHistoryParams = {}, opts?: RequestOptions): Promise<CallHistoryPage>` |
+| `client.calls.read` | `read(callId: string, opts?: RequestOptions): Promise<CallRead>` |
+| `client.calls.recording` | `recording(callId: string, opts?: RequestOptions): Promise<CallRecording>` |
+| `client.calls.iter` | `iter(pageSize = 100, opts?: RequestOptions): AsyncGenerator<Call>` |
+| `client.calls.get` | `get(callId: string, opts?: RequestOptions): Promise<Call>` |
+| `client.calls.delete` | `delete(callId: string, opts?: RequestOptions): Promise<CallDeleteResponse>` |
+| `client.calls.deleteAll` | `deleteAll(opts?: RequestOptions): Promise<CallDeleteAllResponse>` |
+
+</Accordion>
+
+<Accordion title="campaigns">
+
+[Fields, results and workflow](/guides/developer/campaigns).
+
+| Method | Signature |
+| --- | --- |
+| `client.campaigns.delete` | `delete(id: string, opts?: RequestOptions): Promise<CampaignDeleteResponse>` |
+| `client.campaigns.cancel` | `cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse>` |
+| `client.campaigns.consent` | `consent(id: string, params: C5.CampaignConsentParams, opts?: RequestOptions): Promise<C5.CampaignConsentResponse>` |
+| `client.campaigns.resume` | `resume(id: string, opts?: RequestOptions): Promise<C5.CampaignResumeResponse>` |
+| `client.campaigns.list` | `list(params: C5.CampaignListQuery = {}, opts?: RequestOptions): Promise<C5.CampaignListResponse>` |
+| `client.campaigns.create` | `create(params: BatchCampaignParams, opts?: RequestOptions): Promise<BatchCreateResponse>` |
+| `client.campaigns.launch` | `launch(campaignId: string, opts?: RequestOptions): Promise<BatchLaunchResponse>` |
+
+</Accordion>
+
+<Accordion title="contacts">
+
+[Fields, results and workflow](/guides/developer/contact-controls).
+
+| Method | Signature |
+| --- | --- |
+| `client.contacts.preview` | `preview(params: C.ContactPreviewParams, opts?: RequestOptions): Promise<C.ContactPreviewResponse>` |
+| `client.contacts.list` | `list(params: C.ContactListQuery = {}, opts?: RequestOptions): Promise<C.ContactListResponse>` |
+| `client.contacts.add` | `add(params: C.ContactAddParams, opts?: RequestOptions): Promise<C.ContactAddResponse>` |
+| `client.contacts.remove` | `remove(params: C.ContactRemoveParams, opts?: RequestOptions): Promise<C.ContactRemoveResponse>` |
+
+</Accordion>
+
+<Accordion title="account">
+
+[Fields, results and workflow](/guides/developer/account).
+
+| Method | Signature |
+| --- | --- |
+| `client.account.retention` | `retention(opts?: RequestOptions): Promise<AccountRetention>` |
+
+</Accordion>
+
+<Accordion title="voices">
+
+[Fields, results and workflow](/concepts/voices).
+
+| Method | Signature |
+| --- | --- |
+| `client.voices.list` | `list(params: VoiceListParams = {}, opts?: RequestOptions): Promise<VoiceListResponse>` |
+| `client.voices.get` | `get(voiceKey: string, params: VoiceContext = {}, opts?: RequestOptions): Promise<Voice>` |
+
+</Accordion>
+
+<Accordion title="inbox">
+
+[Fields, results and workflow](/guides/developer/agent-inbox).
+
+| Method | Signature |
+| --- | --- |
+| `client.inbox.list` | `list(channel: 'sms' \| 'web', number: string, params: C.InboxListQuery = {}, opts?: RequestOptions): Promise<C.InboxListResponse>` |
+| `client.inbox.thread` | `thread(channel: 'sms' \| 'web', number: string, thread: string, params: C.InboxThreadQuery = {}, opts?: RequestOptions): Promise<C.InboxThreadResponse>` |
+| `client.inbox.update` | `update(channel: 'sms' \| 'web', number: string, thread: string, params: C.InboxUpdateParams, opts?: RequestOptions): Promise<C.InboxUpdateResponse>` |
+| `client.inbox.features` | `features(opts?: RequestOptions): Promise<C.InboxFeaturesResponse>` |
+| `client.inbox.numbers` | `numbers(params: C.InboxNumbersQuery = {}, opts?: RequestOptions): Promise<C.InboxNumbersResponse>` |
+| `client.inbox.retention` | `retention(params: C.InboxRetentionQuery = {}, opts?: RequestOptions): Promise<C.InboxRetentionResponse>` |
+
+</Accordion>
+
+<Accordion title="integrations">
+
+[Fields, results and workflow](/integrations/overview).
+
+| Method | Signature |
+| --- | --- |
+| `client.integrations.connectGoogleCalendar` | `connectGoogleCalendar(number: string, returnUrl: string, opts?: RequestOptions): Promise<GoogleCalendarConnect>` |
+| `client.integrations.getGoogleCalendar` | `getGoogleCalendar(number: string, opts?: RequestOptions): Promise<GoogleCalendarStatus>` |
+| `client.integrations.disconnectGoogleCalendar` | `disconnectGoogleCalendar(number: string, opts?: RequestOptions): Promise<GoogleCalendarDisconnect>` |
+| `client.integrations.updateGoogleCalendarSettings` | `updateGoogleCalendarSettings(number: string, body: GoogleCalendarSettingsPatch, opts?: RequestOptions): Promise<GoogleCalendarSettings>` |
+| `client.integrations.get` | `get<P extends IntegrationProvider>(provider: P, number: string, opts?: RequestOptions): Promise<IntegrationReads[P]>` |
+| `client.integrations.set` | `set<P extends IntegrationProvider>(provider: P, number: string, body: IntegrationSettings[P], opts?: RequestOptions): Promise<IntegrationReceipt>` |
+| `client.integrations.delete` | `delete(provider: IntegrationProvider, number: string, opts?: RequestOptions): Promise<IntegrationReceipt>` |
+| `client.integrations.getAgentPrecall` | `getAgentPrecall(agentId: string, opts?: RequestOptions): Promise<AgentPrecall>` |
+| `client.integrations.setAgentPrecall` | `setAgentPrecall(agentId: string, url: string, opts?: RequestOptions): Promise<IntegrationReceipt>` |
+| `client.integrations.deleteAgentPrecall` | `deleteAgentPrecall(agentId: string, opts?: RequestOptions): Promise<IntegrationReceipt>` |
+| `client.integrations.listFunctions` | `listFunctions(number: string, opts?: RequestOptions): Promise<{ phone_number: string; functions: CustomFunctionView[] }>` |
+| `client.integrations.createFunction` | `createFunction(number: string, body: CustomFunctionInput, opts?: RequestOptions): Promise<FunctionReceipt>` |
+| `client.integrations.updateFunction` | `updateFunction(number: string, id: string, body: Partial<CustomFunctionInput>, opts?: RequestOptions): Promise<FunctionReceipt>` |
+| `client.integrations.deleteFunction` | `deleteFunction(number: string, id: string, opts?: RequestOptions): Promise<FunctionReceipt>` |
+
+</Accordion>
+
+<Accordion title="knowledge">
+
+[Fields, results and workflow](/guides/developer/knowledge).
+
+| Method | Signature |
+| --- | --- |
+| `client.knowledge.deleteScope` | `deleteScope(target: string, body: RevisionInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.getScope` | `getScope(target: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.putScope` | `putScope(target: string, body: ScopeInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.measureSource` | `measureSource(target: string, body: { text: string }, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.startSession` | `startSession(target: string, body: SessionInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.getBase` | `getBase(kb: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.discardDraft` | `discardDraft(kb: string, id: string, body: { expected_draft_revision: number }, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.getDraft` | `getDraft(kb: string, id: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.updateDraft` | `updateDraft(kb: string, id: string, body: DraftEdit, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.acceptDraft` | `acceptDraft(kb: string, id: string, body: DraftAcceptance, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.createExport` | `createExport(kb: string, body: EmptyInput, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.overview` | `overview(kb: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.updateSettings` | `updateSettings(kb: string, body: SettingsInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.listSources` | `listSources(kb: string, query: PageQuery = {}, opts?: RequestOptions): Promise<KnowledgePage>` |
+| `client.knowledge.addSource` | `addSource(kb: string, body: SourceInput, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.deleteSource` | `deleteSource(kb: string, id: string, body: SourceDeletion, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.renameSource` | `renameSource(kb: string, id: string, body: { expected_revision: number; title: string }, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.replaceSource` | `replaceSource(kb: string, id: string, body: SourceReplacement, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.refreshSources` | `refreshSources(kb: string, body: { source_ids: string[]; review?: boolean }, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.searchTopics` | `searchTopics(kb: string, body: { query: string }, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.listTopics` | `listTopics(kb: string, query: PageQuery = {}, opts?: RequestOptions): Promise<KnowledgePage>` |
+| `client.knowledge.createTopic` | `createTopic(kb: string, body: TopicInput, opts: KnowledgeWriteOptions): Promise<KnowledgeTopicResult>` |
+| `client.knowledge.deleteTopic` | `deleteTopic(kb: string, id: string, body: RevisionInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.getTopic` | `getTopic(kb: string, id: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.updateTopic` | `updateTopic(kb: string, id: string, body: TopicInput, opts: KnowledgeWriteOptions): Promise<KnowledgeTopicResult>` |
+| `client.knowledge.unanswered` | `unanswered(kb: string, query: PageQuery = {}, opts?: RequestOptions): Promise<KnowledgePage>` |
+| `client.knowledge.discoverWebsite` | `discoverWebsite(kb: string, body: { url: string }, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.importWebsite` | `importWebsite(kb: string, body: WebsiteInput, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.capabilities` | `capabilities(opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.events` | `events(query: { cursor?: string } = {}, opts?: RequestOptions): Promise<KnowledgeObject[]>` |
+| `client.knowledge.downloadExport` | `downloadExport(id: string, query: { format?: 'json' \| 'text' } = {}, opts?: RequestOptions): AsyncGenerator<Uint8Array>` |
+| `client.knowledge.getJob` | `getJob(id: string, opts?: RequestOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.cancelJob` | `cancelJob(id: string, body: EmptyInput, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.retryJob` | `retryJob(id: string, body: EmptyInput, opts: KnowledgeWriteOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.targets` | `targets(query: TargetQuery = {}, opts?: RequestOptions): Promise<KnowledgePage>` |
+| `client.knowledge.getSession` | `getSession(id: string, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.cancelSession` | `cancelSession(id: string, body: EmptyInput, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.ask` | `ask(id: string, body: { text: string }, opts: KnowledgeWriteOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.usage` | `usage(query: { kb?: string } = {}, opts?: RequestOptions): Promise<KnowledgeObject>` |
+| `client.knowledge.keyterms` | `keyterms(target: string, opts?: RequestOptions): Promise<KnowledgeKeyterms>` |
+| `client.knowledge.uploadSource` | `uploadSource(kb: string, file: string, opts: KnowledgeUploadOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.replaceSourceFile` | `replaceSourceFile(kb: string, id: string, file: string, opts: KnowledgeUploadOptions): Promise<KnowledgeJob>` |
+| `client.knowledge.measureFile` | `measureFile(target: string, file: string, opts: RequestOptions = {}): Promise<KnowledgeObject>` |
+| `client.knowledge.waitJob` | `waitJob(id: string, options: JobPollOptions = {}): Promise<KnowledgeJob>` |
+
+</Accordion>
+
+<Accordion title="organisation">
+
+[Fields, results and workflow](/guides/developer/organisations).
+
+| Method | Signature |
+| --- | --- |
+| `client.organisation.get` | `get(opts?:RequestOptions):Promise<OrganisationContext>` |
+| `client.organisation.members` | `members(opts?:RequestOptions):Promise<OrganisationMembers>` |
+| `client.organisation.invite` | `invite(email:string,role:'admin'\|'member'='member',opts?:RequestOptions):Promise<InvitationReceipt>` |
+| `client.organisation.resend` | `resend(inviteId:string,opts?:RequestOptions):Promise<InvitationReceipt>` |
+| `client.organisation.revoke` | `revoke(inviteId:string,opts?:RequestOptions):Promise<{id:string;state:string}>` |
+| `client.organisation.removeMember` | `removeMember(userId:string,opts?:RequestOptions):Promise<MembershipReceipt>` |
+| `client.organisation.setRole` | `setRole(userId:string,role:'admin'\|'member',opts?:RequestOptions):Promise<MembershipReceipt>` |
+| `client.organisation.activity` | `activity(params:ActivityFilters={},opts?:RequestOptions):Promise<ActivityPage>` |
+| `client.organisation.activityCsv` | `activityCsv(params:ActivityFilters={},opts?:RequestOptions):AsyncGenerator<Uint8Array>` |
+| `client.organisation.rename` | `rename(name:string,opts?:RequestOptions):Promise<{name:string}>` |
+| `client.organisation.claimInvite` | `claimInvite(email:string,opts?:RequestOptions):Promise<InvitationReceipt>` |
+
+</Accordion>
+
+<Accordion title="phoneNumbers">
+
+[Fields, results and workflow](/guides/developer/phone-numbers).
+
+| Method | Signature |
+| --- | --- |
+| `client.phoneNumbers.updateCredentials` | `updateCredentials(phoneNumber: string, body: NumberCredentials, opts?: RequestOptions): Promise<NumberCredentialsUpdated>` |
+| `client.phoneNumbers.usage` | `usage(phoneNumber: string, params: NumberUsageParams = {}, opts?: RequestOptions): Promise<NumberUsageResponse>` |
+| `client.phoneNumbers.import` | `import(params: PhoneNumberImportParams, opts?: RequestOptions): Promise<{ phone_number: PhoneNumber }>` |
+| `client.phoneNumbers.list` | `list(params: PhoneNumberListParams = {}, opts?: RequestOptions): Promise<PhoneNumberListResponse>` |
+| `client.phoneNumbers.get` | `get(phoneNumber: string, opts?: RequestOptions): Promise<{ phone_number: PhoneNumberDetails }>` |
+| `client.phoneNumbers.update` | `update(phoneNumber: string, params: PhoneNumberUpdateParams \| PhoneNumberMoveParams, opts?: RequestOptions): Promise<{ phone_number: PhoneNumber } \| PhoneNumberMoveResponse>` |
+| `client.phoneNumbers.move` | `move(phoneNumber: string, agentId: string, opts?: RequestOptions): Promise<PhoneNumberMoveResponse>` |
+| `client.phoneNumbers.delete` | `delete(phoneNumber: string, opts?: RequestOptions): Promise<PhoneNumberDeleteResponse>` |
+| `client.phoneNumbers.setWebCalls` | `setWebCalls(phoneNumber: string, enabled: boolean, opts?: RequestOptions): Promise<WebCallsToggleResponse>` |
+| `client.phoneNumbers.getWebCalls` | `getWebCalls(phoneNumber: string, opts?: RequestOptions): Promise<WebCallsToggleResponse>` |
+
+</Accordion>
+
+<Accordion title="sms.campaigns">
+
+[Fields, results and workflow](/guides/developer/sms-campaigns/prepare-and-send).
+
+| Method | Signature |
+| --- | --- |
+| `client.sms.campaigns.cancel` | `cancel(id: string, opts?: RequestOptions): Promise<C5.CampaignCancelResponse>` |
+| `client.sms.campaigns.consent` | `consent(id: string, params: C5.CampaignConsentParams, opts?: RequestOptions): Promise<C5.CampaignConsentResponse>` |
+| `client.sms.campaigns.resume` | `resume(id: string, opts?: RequestOptions): Promise<C5.CampaignResumeResponse>` |
+| `client.sms.campaigns.update` | `update(id: string, params: C5.SmsCampaignUpdateParams, opts?: RequestOptions): Promise<C5.SmsCampaignUpdateResponse>` |
+| `client.sms.campaigns.create` | `create(params: SmsCampaignCreateParams, opts?: RequestOptions): Promise<SmsCampaignCreateResponse>` |
+| `client.sms.campaigns.launch` | `launch(campaignId: string, opts?: RequestOptions): Promise<SmsCampaignLaunchResponse>` |
+| `client.sms.campaigns.list` | `list(params: { status?: string; limit?: number; before?: string } = {}, opts?: RequestOptions): Promise<SmsCampaignListResponse>` |
+| `client.sms.campaigns.get` | `get(campaignId: string, opts?: RequestOptions & SmsCampaignDetailParams): Promise<SmsCampaignDetail>` |
+| `client.sms.campaigns.delete` | `delete(campaignId: string, opts?: RequestOptions): Promise<CampaignDeleteResponse>` |
+
+</Accordion>
+
+<Accordion title="sms">
+
+[Fields, results and workflow](/sms/send-sms).
+
+| Method | Signature |
+| --- | --- |
+| `client.sms.send` | `send(params: SmsSendParams, opts?: RequestOptions): Promise<SmsSendResponse>` |
+
+</Accordion>
+
+<Accordion title="keys">
+
+[Fields, results and workflow](/authentication).
+
+| Method | Signature |
+| --- | --- |
+| `client.keys.activity` | `activity(params: KeyActivityParams = {}, opts?: RequestOptions): Promise<KeyActivity>` |
+| `client.keys.rotate` | `rotate(opts?: RequestOptions): Promise<KeyRotateResponse>` |
+
+</Accordion>
+
+<Accordion title="usage">
+
+[Fields, results and workflow](/guides/developer/billing).
+
+| Method | Signature |
+| --- | --- |
+| `client.usage.get` | `get(opts?: RequestOptions): Promise<Usage>` |
+
+</Accordion>
+
+<Accordion title="webhooks">
+
+[Fields, results and workflow](/advanced/webhooks).
+
+| Method | Signature |
+| --- | --- |
+| `client.webhooks.verify` | `verify(rawBody: string \| Buffer, signatureHeader: string \| null \| undefined, keySecret: string, options?: import('../webhook-verify.js').VerifyOptions): boolean` |
+| `client.webhooks.set` | `set(phoneNumber: string, url: string, slot: 1 \| 2 = 1, opts?: RequestOptions): Promise<WebhookConfigResponse>` |
+| `client.webhooks.get` | `get(phoneNumber: string, slot: 1 \| 2 = 1, opts?: RequestOptions): Promise<WebhookConfigResponse>` |
+| `client.webhooks.delete` | `delete(phoneNumber: string, slot: 1 \| 2 = 1, opts?: RequestOptions): Promise<WebhookConfigResponse>` |
+
+</Accordion>
+
+<Accordion title="webAgent">
+
+[Fields, results and workflow](/guides/developer/website/install-and-verify).
+
+| Method | Signature |
+| --- | --- |
+| `client.webAgent.get` | `get(number: string, opts?: RequestOptions): Promise<C.WebAgentReadResponse>` |
+| `client.webAgent.update` | `update(number: string, params: C.WebAgentUpdateParams, opts?: RequestOptions): Promise<C.WebAgentUpdateResponse>` |
+
+</Accordion>
+
+</AccordionGroup>
+
+### Client helpers
+
+| Helper | Purpose |
+| --- | --- |
+| `new Nixflex(options)` | Create a server-side client with an explicit API host and private credential. |
+| `Nixflex.createKey(params, baseUrl)` | Create a new account credential only when account creation is intended; see [create an account key](/api-reference/account/create-key). It is not a connectivity check. |
+| `prepareOutboundCall(params)` | The exported equivalent of `client.calls.prepare`; creates and validates an intention locally. |
+| `verifyWebhookSignature(rawBody, signatureHeader, keySecret, options)` | The exported equivalent of `client.webhooks.verify`; see [webhook verification](/advanced/webhooks). |
+| `HttpClient.request(method, path, body, query, options)` | Low-level transport for a documented route. Prefer a typed resource method; the public API contract still applies. |

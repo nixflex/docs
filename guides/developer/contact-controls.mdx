@@ -4,6 +4,7 @@ description: "Preview recipient contact hours, manage business suppressions and 
 canonical: "https://docs.nixflex.com/guides/developer/contact-controls"
 sidebarTitle: "Contact controls"
 ---
+
 Preview recipient-local contact hours and enforce suppression decisions before requesting calls or messages.
 
 <div className="nxf-facts">
@@ -99,6 +100,8 @@ GET `/v1/contact-suppressions` for the intended channel. `both`, `voice` and `sm
 ## 4. Change business entries deliberately
 
 Use the documented POST/DELETE routes for business-added suppressions. A locked recipient opt-out cannot be removed by the business. If management is paused, existing opt-outs stay enforced; a refusal must not be displayed as removal.
+
+Inbound SMS checks the normalised whole message before any AI reply or its billing. Recognised English keywords are `stop`, `stopall`, `unsubscribe`, `cancel`, `end`, `quit`, `revoke` and `optout`. Arabic keywords are `توقف`, `وقف`, `ايقاف`, `الغاء`, `الغاء الاشتراك`, `وقف الرسائل` and `ايقاف الرسائل`. The check normalises case, spacing, selected punctuation and Arabic spelling marks; it is not a substring search. A match records a locked opt-out for both voice and SMS and sends no Nixflex confirmation reply. Handle free-text withdrawal requests through a separate review process; do not treat a non-match as consent.
 
 ## 5. Handle dispatch refusals
 

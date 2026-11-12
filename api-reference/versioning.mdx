@@ -57,7 +57,7 @@ These changes are confirmed in the reviewed staging engine. Publish and deploy t
 | Single-call deletion | A narrowly verified ended, settled call with a skipped, proven-empty recording can complete cleanup. Missing recording links or uncertain evidence still do not prove deletion. Bulk and account deletion are unchanged. |
 | Knowledge draft reads | Legacy repairs are projected without saving. Explicit save or accept persists them. Keep the returned revision; MCP support still depends on registered client tools. |
 | Automatic keyterms | URL and API-path text is excluded from automatic speech hints. Older hints refresh in the background; manual terms and limits are unchanged. |
-| Booking contact approval | Spell the email local part; say an exact familiar domain as words. Name and email need separate approvals. A yes to one clarified letter does not approve the full address. |
+| Booking contact approval | New voice bookings collect the spelled full name and email local part, say the domain as words, then require one combined read-back and one clear yes. SMS and existing-booking flows are unchanged. |
 
 The existing `call.completed` and `sms.booking` shapes remain unchanged. There is no new SMS-thread aggregate event or new HTTP operation for `call.bookings`. The updated email design introduces no public API change.
 
@@ -89,7 +89,7 @@ The reference now includes four per-number Google Calendar operations: [connect]
 
 **Compatibility change:** single-SMS suppression now returns HTTP 409 `do_not_contact`, type `conflict`, instead of 400 `invalid_request`. Stop on an opt-out. Campaigns continue to hold affected recipients individually.
 
-[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. Contact approvals ask the name first, then spell the email, with a separate yes for each. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.
+[Booking events](/api-reference/webhooks#booking-object) expose a consistent object with actual interval and attendee fields. New voice bookings use full-name spelling, email-local-part spelling and a spoken domain before one combined approval. A correction repeats only the wrong part. Google controls invite delivery. Check your environment's rollout and client release before relying on newly added operations.
 
 ## Next steps
 

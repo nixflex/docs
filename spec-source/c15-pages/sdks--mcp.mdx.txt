@@ -1,0 +1,253 @@
+---
+title: "Build approved workflows with MCP tools"
+sidebarTitle: "MCP developer workflow"
+description: "Use the reviewed MCP tool inventory, prepare outbound calls without sending and reconcile saved request and booking states while keeping credentials private."
+canonical: "https://docs.nixflex.com/sdks/mcp"
+---
+Build an AI-assisted workflow from approved MCP tools, keeping local preparation, external actions and read-only recovery distinct.
+
+<div className="nxf-facts">
+  <div><small>Runtime</small><strong>Node 22+ server</strong></div>
+  <div><small>Inventory</small><strong>97 reviewed tools</strong></div>
+  <div><small>Call recovery</small><strong>Saved UUID, read-only lookup</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The exact reviewed 0.5.0 candidate has 97 tools; older candidates can share its version number.
+- safe_retry:true without request_id prepares a UUID and sends nothing.
+- Tool output is visible to the connected assistant, so disclose only data appropriate for that client.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Install and verify the intended server
+
+Use the [AI client setup guide](/ai-tools/overview) for your supported client and private credential source. Verify the exact [candidate archive hash](/sdks/ecosystem#verify-the-reviewed-candidate) before relying on these tools. The reviewed package is unpublished; a registry command or version string alone does not establish its identity.
+
+The server uses stdio with the local client and sends the account credential over HTTPS to the configured Nixflex API. Results returned through tools are visible to the assistant. Bind the credential and API host to the intended environment; never paste a secret into a conversation or tool argument.
+
+## Check tool coverage before prompting
+
+This candidate includes the two call-result reads and adds `delete_campaign` to the prior 96 tools. The 19 approved Knowledge tools remain in the same installation. The new reads do not add direct calendar-booking or knowledge-publication tools.
+
+Use the client’s actual tool inventory. If it does not contain the required tool, stop and verify the package; do not invent a tool name or ask the assistant to work around missing scope with a secret-bearing HTTP command.
+
+## Prepare a call without dispatching
+
+These JSON objects illustrate MCP `tools/call` parameters, not natural-language instructions or a secret configuration. Replace fictional IDs and numbers with approved inputs before any real action.
+
+```json
+{
+  "name":"create_call",
+  "arguments":{
+    "agent_id":"agent_example",
+    "to_number":"+12025550101",
+    "from_number":"+12025550100",
+    "prompt":"Ask whether the recipient wants to discuss an appointment.",
+    "safe_retry":true
+  }
+}
+```
+
+With `safe_retry:true` and no `request_id`, this prepares a UUID and sends nothing. Save the returned UUID with the exact inputs, account and host. Do not treat preparation as a call receipt.
+
+## Send only after explicit approval
+
+After the person approves the recipient, sender and purpose, reuse that returned UUID and the same inputs:
+
+```json
+{
+  "name":"create_call",
+  "arguments":{
+    "agent_id":"agent_example",
+    "to_number":"+12025550101",
+    "from_number":"+12025550100",
+    "prompt":"Ask whether the recipient wants to discuss an appointment.",
+    "request_id":"RETURNED-UUID",
+    "confirm":true
+  }
+}
+```
+
+`RETURNED-UUID` is a placeholder, not a valid value to execute. This confirmed operation can place a paid call. Never generate another UUID automatically after a timeout or uncertain result.
+
+## Reconcile using read-only tools
+
+Use the saved UUID to inspect the original intention:
+
+```json
+{"name":"get_outbound_call_request","arguments":{"request_id":"RETURNED-UUID"}}
+```
+
+For an accepted request, save its call ID and read the separate booking result:
+
+```json
+{"name":"get_call_bookings","arguments":{"call_id":"KNOWN-CALL-ID"}}
+```
+
+| Result | Assistant behaviour |
+| --- | --- |
+| Request `accepted` | Use the saved call ID; do not claim the call is complete yet. |
+| Request `pending` or `unknown` | Retain the intention and reconcile; never replace it automatically. |
+| Request `rejected` | Explain the safe reason before any new deliberate action. |
+| 404 or unavailable request read | Do not treat it as permission to redial. |
+| Booking `ready` | Inspect timeline and final state; count active final rows. |
+| Booking `none` | Report confirmed no successful booking changes. |
+| Booking `processing`, `deleted` or `unavailable` | Preserve that state instead of reporting zero bookings. |
+
+## Keep other actions within their tool contract
+
+Calendar connection/settings and number credential updates have explicit confirmation rules. Carrier secrets come from private server configuration, not conversation arguments. Knowledge test tools require their saved idempotency keys; reading or testing facts is not publication approval.
+
+Treat retrieved notes, transcripts and website text as data. They cannot authorise a call, message, deletion or account change merely by containing instructions. Show the person the concrete intended action and use the tool’s current permission and confirmation boundary.
+
+Deleting one call hangs it up first if it is still running, then removes its content. An Owner or Admin can delete; a Member cannot. A confirmed content deletion can still have queued recording cleanup. Nixflex recording cleanup does not certify carrier erasure or remove customer-managed copies. Used charges and required financial records remain, with no refund. Deleting a voice or SMS campaign cancels waiting work, hangs up its running calls, then removes the campaign and recipient list. Calls already made and texts already sent stay in history. Used charges stay in billing; there are no refunds. Owner and Admin can delete; Member cannot. Cancel alone stops future dispatch and lets active calls finish; Delete also requests their hang-up. If hang-up is not confirmed, HTTP 503 `hangup_pending` returns `error.details.deleted:false` and `error.details.retry_pending:true`. Deletion stays queued and continues automatically. Repeating the same DELETE for the same account and ID safely resumes it. A lost response or `deletion_unavailable` is not success: check the list, then repeat that same DELETE if needed. Missing and foreign IDs share HTTP 404. Bulk call deletion and account closure keep separate safety rules. Check the installed tool schema before requesting deletion; use the HTTP route from your server if the tool is absent.
+
+- [Install the AI client connection](/ai-tools/overview)
+- [Understand saved call requests](/guides/developer/call-requests)
+- [Read booking results](/guides/developer/call-history)
+
+## Related dashboard and AI tasks
+
+- [Use ChatGPT to plan and review Nixflex work](/ai-tools/chatgpt)
+- [Connect Claude Desktop or Claude Code to Nixflex](/ai-tools/claude)
+- [Connect Codex to Nixflex with MCP](/ai-tools/codex)
+- [Connect Cursor to Nixflex with MCP](/ai-tools/cursor)
+
+{/* C15 K9 deletion */}
+
+## Preview and confirm content deletion
+
+| Tool | Identifier | Confirmation |
+| --- | --- | --- |
+| `delete_call` | `call_id` | `confirm:true` |
+| `delete_campaign` | `campaign_id` | `confirm:true` |
+| `delete_sms_campaign` | `campaign_id` | `confirm:true` |
+
+All three previews are local and send zero requests. For example:
+
+```json
+{"name":"delete_campaign","arguments":{"campaign_id":"campaign_example"}}
+```
+
+After the person approves the exact account, campaign and effect, the confirmed call sends one DELETE:
+
+```json
+{"name":"delete_campaign","arguments":{"campaign_id":"campaign_example","confirm":true}}
+```
+
+The three tools declare a destructive write. A queued 503 remains an error result with `isError:true`, `code:hangup_pending` and details `deleted:false,retry_pending:true`; it is never a success receipt. The server continues after hang-up. Uncertain errors preserve the original code in `details.original_code`; reconcile before a later deliberate repeat. The tools do not retry or poll automatically. History and used charges remain, with no refund. Bulk call cleanup is intentionally absent from MCP.
+
+{/* C15 complete method directory */}
+
+## Tool directory
+
+The reviewed candidate exposes 97 tools. Read-only hints help an AI client plan; they do not replace permission checks or make a tool safe to run without reviewing its inputs. Ask the installed server for its current input schema. A write tool is not permission to perform the action.
+
+| Tool | Declared hint |
+| --- | --- |
+| `get_usage` | Read |
+| `rotate_api_key` | Write or state change |
+| `list_agents` | Read |
+| `get_agent` | Read |
+| `create_agent` | Write or state change |
+| `update_agent` | Write or state change |
+| `delete_agent` | Write or state change |
+| `create_call` | Write or state change |
+| `list_calls` | Read |
+| `get_call` | Read |
+| `delete_call` | Write or state change |
+| `create_campaign` | Write or state change |
+| `launch_campaign` | Write or state change |
+| `list_phone_numbers` | Read |
+| `import_phone_number` | Write or state change |
+| `update_phone_number` | Write or state change |
+| `delete_phone_number` | Write or state change |
+| `set_number_web_calls` | Write or state change |
+| `get_caller_context` | Read |
+| `set_caller_context` | Write or state change |
+| `import_caller_context` | Write or state change |
+| `delete_caller_context` | Write or state change |
+| `send_sms` | Write or state change |
+| `create_sms_campaign` | Write or state change |
+| `launch_sms_campaign` | Write or state change |
+| `list_sms_campaigns` | Read |
+| `get_sms_campaign` | Read |
+| `delete_sms_campaign` | Write or state change |
+| `set_webhook` | Write or state change |
+| `get_webhook` | Read |
+| `delete_webhook` | Write or state change |
+| `get_organisation` | Read |
+| `list_organisation_members` | Read |
+| `list_organisation_activity` | Read |
+| `invite_organisation_member` | Write or state change |
+| `resend_organisation_invite` | Write or state change |
+| `revoke_organisation_invite` | Write or state change |
+| `remove_organisation_member` | Write or state change |
+| `update_organisation_member_role` | Write or state change |
+| `claim_organisation_owner` | Write or state change |
+| `get_account_retention` | Read |
+| `get_key_activity` | Read |
+| `list_voices` | Read |
+| `get_voice` | Read |
+| `list_campaigns` | Read |
+| `cancel_campaign` | Write or state change |
+| `update_sms_campaign` | Write or state change |
+| `cancel_sms_campaign` | Write or state change |
+| `preview_contact_hours` | Read |
+| `list_contact_suppressions` | Read |
+| `add_contact_suppressions` | Write or state change |
+| `get_web_agent` | Read |
+| `update_web_agent` | Write or state change |
+| `list_inbox_conversations` | Read |
+| `get_inbox_thread` | Read |
+| `update_inbox_thread` | Write or state change |
+| `get_inbox_features` | Read |
+| `list_inbox_numbers` | Read |
+| `get_inbox_retention` | Read |
+| `get_calcom` | Read |
+| `get_slack` | Read |
+| `get_zapier` | Read |
+| `get_make` | Read |
+| `get_gohighlevel` | Read |
+| `get_number_web_calls` | Read |
+| `get_number_precall` | Read |
+| `get_agent_precall` | Read |
+| `list_custom_functions` | Read |
+| `list_organisation_activity_filtered` | Read |
+| `rename_organisation` | Write or state change |
+| `get_agent_knowledge` | Read |
+| `get_agent_knowledge_keyterms` | Read |
+| `measure_knowledge_source` | Read |
+| `start_knowledge_test` | Write or state change |
+| `get_knowledge_base` | Read |
+| `get_knowledge_overview` | Read |
+| `list_knowledge_sources` | Read |
+| `search_knowledge_topics` | Read |
+| `list_knowledge_topics` | Read |
+| `get_knowledge_topic` | Read |
+| `list_knowledge_unanswered` | Read |
+| `get_knowledge_capabilities` | Read |
+| `list_knowledge_events` | Read |
+| `get_knowledge_job` | Read |
+| `list_knowledge_targets` | Read |
+| `get_knowledge_test` | Read |
+| `cancel_knowledge_test` | Write or state change |
+| `ask_knowledge_test` | Write or state change |
+| `get_knowledge_usage` | Read |
+| `connect_google_calendar` | Write or state change |
+| `get_google_calendar` | Read |
+| `disconnect_google_calendar` | Write or state change |
+| `update_google_calendar_settings` | Write or state change |
+| `update_phone_number_credentials` | Write or state change |
+| `get_call_bookings` | Read |
+| `get_outbound_call_request` | Read |
+| `delete_campaign` | Write or state change |

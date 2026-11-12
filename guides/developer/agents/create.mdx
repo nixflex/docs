@@ -1,0 +1,73 @@
+---
+title: "Create and verify an agent with the API"
+sidebarTitle: "Create an agent"
+description: "Create a Nixflex agent from your server, save its identifier, verify the configuration and connect an owned number without duplicating an uncertain request."
+canonical: "https://docs.nixflex.com/guides/developer/agents/create"
+---
+
+Create the agent, retain its ID and verify its saved settings before connecting customer traffic.
+
+<div className="nxf-facts">
+  <div><small>Audience</small><strong>Developers</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Create is a write; a lost response can conceal success.
+- An agent contains shared behaviour and knowledge, while a number owns routing and channels.
+- A created agent is not proof that a real call will work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agents) · [Glossary](/guides/glossary)
+
+</div>
+
+## Before you send
+
+Keep `NIXFLEX_API_KEY` on the server for the intended account. Choose a clear name and reviewed instructions. Creating an agent does not import a phone number or connect a calendar.
+
+## Create once
+
+```javascript Node HTTP
+const response = await fetch('https://api.nixflex.com/v1/agents', {
+  method: 'POST', redirect: 'error', signal: AbortSignal.timeout(30_000),
+  headers: {Authorization: `Bearer ${process.env.NIXFLEX_API_KEY}`, 'Content-Type':'application/json'},
+  body: JSON.stringify({name:'Willow reception', system_prompt:'Answer business enquiries using reviewed facts. Ask the team when a fact is missing.'}),
+});
+const result = await response.json();
+if (!response.ok) throw new Error(`HTTP ${response.status}: ${result.error?.code || 'unknown'}`);
+// Persist the returned agent ID privately before continuing.
+```
+
+See [Create agent](/api-reference/agents/create) for the response envelope and all accepted fields. There is no general Idempotency-Key replay guarantee. If the response is lost, inspect the owned agent list and reconcile the intended creation before another POST. A matching display name alone is not a unique identity.
+
+## Verify and connect
+
+Read the saved agent by ID. Set the voice, language and conversation controls you actually need, respecting the [agent contract](/api-reference/agents/contract). Connect an owned number through [number setup](/guides/developer/phone-numbers/import-and-connect), then read its assigned agent and channel switches.
+
+Keep frequent essential facts in the main instructions and detailed material in the agent’s Knowledge base. SMS and Web agent instructions live in their own number-level settings; do not assume an agent prompt change rewrites them.
+
+## Check behaviour
+
+Use the dashboard Knowledge Test for factual retrieval, then a controlled call for the full interaction. Check the actual calendar, SMS or transfer result for an enabled action. Do not treat an accepted call as successful delivery.
+
+| Problem | Recovery |
+| --- | --- |
+| Invalid field | Correct the field from the endpoint contract. |
+| Personal session cannot write | Use an authorised Owner or Admin workflow. |
+| Unknown creation result | Reconcile the existing list; do not retry POST automatically. |
+| Agent appears inactive | Read the saved state before routing more calls. |
+
+Deleting an agent soft-disables it. It does not erase history, delete a number or close the account.
+
+## Next steps
+
+- [Write instructions](/best-practices/prompting-guide)
+- [Set number overrides](/concepts/agent-inheritance)
+- [Test in the dashboard](/guides/business/agents/test)

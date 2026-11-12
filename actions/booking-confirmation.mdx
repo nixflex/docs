@@ -1,14 +1,14 @@
 ---
-title: "Require booking approval in code"
-sidebarTitle: "Booking approval"
+title: "Handle voice booking approval"
+sidebarTitle: "Booking confirmation"
 description: "Require clear customer approval before a calendar change, handle number overrides, and separate saved settings from confirmed booking results."
 canonical: "https://docs.nixflex.com/actions/booking-confirmation"
 ---
-Require a clear read-back and customer approval before the agent makes a supported calendar change.
+For a new voice booking, collect the spelled contact details and wait for one clear yes after the combined read-back. The older setting still controls its other supported calendar-change flows.
 
 <div className="nxf-facts">
-  <div><small>Setting</small><strong>require_booking_confirmation</strong></div>
-  <div><small>Scope</small><strong>Agent + number override</strong></div>
+  <div><small>New voice booking</small><strong>One combined approval</strong></div>
+  <div><small>Scope</small><strong>Every number</strong></div>
   <div><small>Proof</small><strong>Calendar result</strong></div>
 </div>
 
@@ -16,8 +16,8 @@ Require a clear read-back and customer approval before the agent makes a support
 
 **The important part**
 
-- Name and full-email approvals are separate and always come first for a new booking.
-- The setting controls the optional final action/time approval on calls; it does not replace contact approval.
+- New voice bookings collect the spelled full name and email local part before one combined read-back and one clear yes.
+- The combined approval is required on every number, even when require_booking_confirmation is false.
 - A saved setting or spoken promise is not proof that the calendar accepted a booking.
 
 </div>
@@ -29,21 +29,21 @@ Require a clear read-back and customer approval before the agent makes a support
 </div>
 
 <div className="nxf-flow">
-  <div><strong>1. Confirm contact</strong>Name, then full email.</div>
-  <div><strong>2. Read back the plan</strong>Service, date, time and zone.</div>
+  <div><strong>1. Collect spelling</strong>Full name, then email local part and spoken domain.</div>
+  <div><strong>2. Read back the plan</strong>Service, date, time, zone, name and email.</div>
   <div><strong>3. Wait for approval</strong>A correction needs a new read-back.</div>
   <div><strong>4. Check the result</strong>Only claim a confirmed action.</div>
 </div>
 
 ## Prerequisites
 
-Keep the account credential in `NIXFLEX_API_KEY` on your server. Use an owned agent and a number with the intended calendar connection. Match the host and key to the same environment. This update changes future agent behaviour.
+Keep the account credential in `NIXFLEX_API_KEY` on your server. Use an owned agent and a number with the intended calendar connection. Match the host and key to the same environment. The setting below is for the other supported calendar-change flows; a new voice booking always requires the combined approval.
 
 ## 1. Read the current settings
 
 Read the agent and any relevant number override before changing shared behaviour. A prompt alone cannot grant an action capability.
 
-## 2. Save the intended setting
+## 2. Save the other-flow setting
 
 Node and Python below use their standard HTTP clients. Keep `NIXFLEX_API_KEY` on the server. The CLI examples require a kit version supporting the command; see [release status](/sdks/ecosystem). No example retries a mutation automatically.
 
@@ -95,43 +95,30 @@ nixflex agents update agent_example --set require_booking_confirmation=true --js
 
 </CodeGroup>
 
-The agent default is false. A number can store true, false or null; null inherits the agent. Apply a number override with the number PATCH endpoint when it needs a different policy.
+The saved agent default is false. A number can store true, false or null; null inherits the agent. These saved values do not turn off the mandatory combined approval for a new voice booking. The existing setting still applies to its other supported calendar-change flows.
 
-## Contact approval always comes first
+## Use the mandatory new-booking flow
 
-For a new booking, ask the name, read it back and get a clear yes. Then ask the email, spell its local part, and get a separate yes for the full address. Say an exact familiar domain as words, for example `s-a-m at gmail dot com`; spell an unusual domain too. Apply the same rule to saved addresses. A correction repeats only that field. Clarifying one uncertain letter clears the old email approval; a yes to that letter does not approve the complete address. Once the address is approved, ordinary later mentions use words and booking success messages can omit it. Appointment lookup, move and cancel require email approval without asking for a new name.
+For a new voice booking, ask the caller to spell their full name, first and last, letter by letter. Then ask them to spell the email part before @ letter by letter and say the domain as words, such as “at gmail dot com”.
 
-This flow applies to calls and SMS for both calendars, independently of `require_booking_confirmation`. That setting controls the optional final approval of the action and time on calls. Email domain checks do not prove a mailbox exists; a suggested spelling correction requires the person's approval.
+Read the booking, name and email back together once. Wait for one clear yes before booking. This applies to every number even when the old optional final-confirmation setting is off.
 
-When Google invitations are on, say “Google will email you an invite” (or update/cancellation). Google controls delivery. Cal.com handles its own mail. Do not claim inbox delivery or owner notification without evidence. In-call SMS must be enabled and a matching carrier acceptance received before saying “I've texted you the details.”
+If something is wrong, ask only for that part again. If the caller only says no, ask which part is wrong. A yes about one unclear letter does not approve the booking. Say it is booked only after the calendar confirms success.
+
+SMS booking keeps its separate name and email checks. Looking up, moving or cancelling an existing booking keeps its current email-approval flow without collecting a new name. After a successful booking, do not spell the address again. A notification request does not prove delivery to an inbox.
 
 <div className="nxf-conversation">
-
-**Example conversation**
-
-**Agent:** “What name should I use?”
-
-**Caller:** “Sam Carter.”
-
-**Agent:** “Sam Carter. Is that right?”
-
-**Caller:** “Yes.”
-
-**Agent:** “What email should I use?”
-
-**Caller:** “sam at example dot test.”
-
-**Agent:** “s-a-m at e-x-a-m-p-l-e dot t-e-s-t. Is that full email correct?”
-
-**Caller:** “Yes.”
-
-**Agent:** “A consultation on 4 November at 10am, London time. Shall I book it?”
-
-**Caller:** “Yes.”
-
-**App:** Submit the approved action. Only after a confirmed calendar result may the agent say the appointment is booked.
-
+  <p><strong>Caller</strong><br />Can I book Saturday at 10:00?</p>
+  <p><strong>Your agent</strong><br />Please spell your full name, first and last, letter by letter.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h K-h-a-n.</p>
+  <p><strong>Your agent</strong><br />Please spell the part of your email before at, letter by letter, then say the domain as words.</p>
+  <p><strong>Caller</strong><br />S-a-r-a-h, at example dot com.</p>
+  <p><strong>Your agent</strong><br />The booking details are Saturday at 10:00 in your selected time zone, for Sarah Khan, s-a-r-a-h at example dot com. Is that right?</p>
+  <p><strong>Caller</strong><br />Yes.</p>
+  <p><strong>Your agent, after confirmed success</strong><br />You’re booked for Saturday at 10:00.</p>
 </div>
+
+Email-domain checks do not prove that a mailbox exists. Never silently change the address. Google invitations follow the saved send-invites setting; Cal.com handles its own mail. In-call SMS needs its own capability and confirmed send result.
 
 ## 3. Write a narrow instruction
 
