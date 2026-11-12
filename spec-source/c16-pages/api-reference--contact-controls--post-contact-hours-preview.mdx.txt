@@ -1,0 +1,257 @@
+---
+title: "Preview contact hours"
+sidebarTitle: "Preview contact hours"
+description: "Preview recipient-local Nixflex contact windows without sending calls or SMS. Treat the result as advisory and recheck policy at dispatch."
+openapi: "/api-reference/public.openapi.json POST /contact-hours/preview"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/contact-controls/post-contact-hours-preview"
+---
+
+Preview recipient-local contact windows without sending calls, SMS or campaign work. The result is advisory and expires after one minute; final dispatch checks still apply.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The preview is advice for the supplied recipient location and time.
+- It neither sends a message nor reserves a future contact window.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/contact-controls) · [Developer guide](/guides/developer/contact-controls) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Unknown root fields are ignored.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Owned agent with a configured valid IANA time zone. Pattern: `^[A-Za-z0-9_-]{1,64}$`. |
+| `recipients` | array of object | Yes | None | Between one and 20 recipients. Maximum 20 items. Minimum 1 items. |
+| `recipients[].phone` | string | Yes | None | Input number used for location estimates. Maximum 32 characters. |
+| `recipients[].country` | string | No | Omitted | Optional two-letter country. Maximum 2 characters. |
+| `recipients[].timezone` | string | No | Omitted | Optional recipient time zone. Maximum 80 characters. |
+| `campaign` | object | No | Omitted | Optional preview assumptions; unknown keys are ignored. |
+| `campaign.allow_wider_hours` | boolean | No | `false` | Preview assumption only; does not record permission. |
+| `campaign.start` | string | No | Omitted | HH:mm start; provide end too. Pattern: `^(?:[01][0-9]&#124;2[0-3]):[0-5][0-9]$`. |
+| `campaign.end` | string | No | Omitted | HH:mm end; must differ from start. Pattern: `^(?:[01][0-9]&#124;2[0-3]):[0-5][0-9]$`. |
+| `campaign.days` | array of string | No | Omitted | Optional selected weekdays. Maximum 7 items. Minimum 1 items. Allowed items: `"sun"`, `"mon"`, `"tue"`, `"wed"`, `"thu"`, `"fri"`, `"sat"`. |
+| `campaign.scheduled_date` | string | No | Omitted | Valid calendar date in YYYY-MM-DD form. Format: date. |
+
+The campaign preview uses start and end as HH:mm, unlike campaign creation’s minute fields. Omitted period settings use the current policy. Unknown or ambiguous locations, holidays and unverified policy data can hold a row rather than promise a future window. Multiple possible zones must satisfy the applicable checks.
+
+next_allowed is a bounded estimate: computation can stop for budget, horizon or missing policy data. windows describe current recipient-local-date windows, not an unlimited future schedule. allow_wider_hours only changes the preview assumption; it does not save the required campaign confirmation. The example versions and times are illustrative.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `preview_only` | boolean | No contact is sent. Value: `true`. |
+| `mode` | string | Current preview policy mode. Allowed: `"global"`, `"legacy_recipient_estimate"`. |
+| `policy_version` | string | Contact policy version. |
+| `runtime_timezone_version` | string | Runtime time-zone data version. |
+| `as_of` | string | Server calculation time. Format: date-time. |
+| `expires_at` | string | One minute after as_of. Format: date-time. |
+| `agent_timezone` | string | Configured agent zone. |
+| `rows` | array of object | Saved value. |
+| `rows[].index` | integer | Zero-based input row. |
+| `rows[].country` | string or null | Resolved country. |
+| `rows[].possible_zones` | array of string | Saved value. |
+| `rows[].display_reason` | string or null | Human-display reason such as weekend or outside_hours. |
+| `rows[].message` | string | Advisory explanation. |
+| `rows[].next_allowed` | object or null | Saved value. |
+| `rows[].next_allowed.at_utc` | string | Next estimated allowed time in UTC. Format: date-time. |
+| `rows[].next_allowed.local` | array of object | Saved value. |
+| `rows[].next_allowed.local[].zone` | string | IANA time zone. |
+| `rows[].next_allowed.local[].date` | string | Local calendar date. |
+| `rows[].next_allowed.local[].time` | string | Local HH:mm time. |
+| `rows[].next_unavailable` | string or null | Why no future estimate is available, such as budget or horizon. |
+| `rows[].advisory_only` | boolean | Always true. Value: `true`. |
+| `rows[].local_now` | array of object | Saved value. |
+| `rows[].local_now[].zone` | string | IANA time zone. |
+| `rows[].local_now[].date` | string | Local calendar date. |
+| `rows[].local_now[].time` | string | Local HH:mm time. |
+| `rows[].hold_reason` | string or null | Current policy hold code. |
+| `rows[].allowed_now` | boolean | Current time-window estimate, not permission to dispatch. |
+| `rows[].windows` | array of object | Saved value. |
+| `rows[].windows[].start_utc` | string | UTC window start. Format: date-time. |
+| `rows[].windows[].end_utc` | string | UTC window end. Format: date-time. |
+| `rows[].windows[].recipient` | array of object | Saved value. |
+| `rows[].windows[].recipient[].zone` | string | Recipient zone. |
+| `rows[].windows[].recipient[].start` | object | Saved value. |
+| `rows[].windows[].recipient[].start.date` | string | Local calendar date. |
+| `rows[].windows[].recipient[].start.time` | string | Local HH:mm time. |
+| `rows[].windows[].recipient[].end` | object | Saved value. |
+| `rows[].windows[].recipient[].end.date` | string | Local calendar date. |
+| `rows[].windows[].recipient[].end.time` | string | Local HH:mm time. |
+| `rows[].windows[].agent` | object | Saved value. |
+| `rows[].windows[].agent.zone` | string | Agent zone. |
+| `rows[].windows[].agent.start` | object | Saved value. |
+| `rows[].windows[].agent.start.date` | string | Local calendar date. |
+| `rows[].windows[].agent.start.time` | string | Local HH:mm time. |
+| `rows[].windows[].agent.end` | object | Saved value. |
+| `rows[].windows[].agent.end.date` | string | Local calendar date. |
+| `rows[].windows[].agent.end.time` | string | Local HH:mm time. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/contact-hours/preview" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"agent_id":"agent_fixture","recipients":[{"phone":"+12025550101","country":"US","timezone":"America/New_York"}]}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.contacts.preview({"agent_id": "agent_fixture", "recipients": [{"phone": "+12025550101", "country": "US", "timezone": "America/New_York"}]});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.contacts.preview(agent_id='agent_fixture', recipients=[{'phone': '+12025550101', 'country': 'US', 'timezone': 'America/New_York'}])
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+$body = @'
+{
+  "agent_id": "agent_fixture",
+  "recipients": [
+    {
+      "phone": "+12025550101",
+      "country": "US",
+      "timezone": "America/New_York"
+    }
+  ]
+}
+'@
+[IO.File]::WriteAllText('request-98.json', $body, (New-Object Text.UTF8Encoding $false))
+nixflex contacts preview --body '@request-98.json' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "preview_contact_hours",
+  "arguments": {
+    "agent_id": "agent_fixture",
+    "recipients": [
+      {
+        "phone": "+12025550101",
+        "country": "US",
+        "timezone": "America/New_York"
+      }
+    ]
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "preview_only": true,
+  "mode": "global",
+  "policy_version": "example-version",
+  "runtime_timezone_version": "example-tz-version",
+  "as_of": "2026-11-01T12:00:00Z",
+  "expires_at": "2026-11-01T12:01:00Z",
+  "agent_timezone": "Europe/London",
+  "rows": [
+    {
+      "index": 0,
+      "country": "US",
+      "possible_zones": [
+        "America/New_York"
+      ],
+      "display_reason": "outside_hours",
+      "message": "Outside calling hours - next start time could not be confirmed",
+      "next_allowed": null,
+      "next_unavailable": "budget",
+      "advisory_only": true,
+      "local_now": [
+        {
+          "zone": "America/New_York",
+          "date": "2026-11-01",
+          "time": "07:00"
+        }
+      ],
+      "hold_reason": "outside_hours",
+      "allowed_now": false,
+      "windows": []
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_contact_preview`](/api-reference/errors#invalid_contact_preview) | The preview request has an invalid shape or limit. | Correct agent, recipients and campaign preview fields. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching object belongs to this account. | Check the account and identifier. |
+| 422 | [`agent_timezone_required`](/api-reference/errors#agent_timezone_required) | The owned agent has no valid configured time zone. | Configure the intended time zone before requesting a preview. |
+| 429 | [`contact_preview_busy`](/api-reference/errors#contact_preview_busy) | The preview worker is busy. | Wait and retry with bounded backoff. |
+| 503 | [`contact_preview_unavailable`](/api-reference/errors#contact_preview_unavailable) | Policy or preview data could not be confirmed. | Retry later; do not treat failure as permission to contact. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This POST is read-only and can be retried with bounded backoff. Its result expires after one minute and is never a send-permission token. Respect 429 and compute a fresh preview when inputs or timing change.
+
+## Related endpoints
+
+- [List contact suppressions](/api-reference/contact-controls/get-contact-suppressions)
+- [Add contact suppressions](/api-reference/contact-controls/post-contact-suppressions)
+- [Errors and recovery](/api-reference/errors#error-envelope)

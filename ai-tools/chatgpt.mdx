@@ -15,7 +15,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 <div className="nxf-facts">
   <div><small>Without connection</small><strong>Documentation and drafts</strong></div>
-  <div><small>Local candidate</small><strong>97 tools over stdio</strong></div>
+  <div><small>Local server</small><strong>97 tools over stdio</strong></div>
   <div><small>ChatGPT connection</small><strong>Separate setup</strong></div>
   <div><small>Hosted Nixflex endpoint</small><strong>Not supplied</strong></div>
 </div>
@@ -25,7 +25,7 @@ Building an app? [Developer version](/sdks/mcp).
 **The important part**
 
 - Reading documentation does not connect ChatGPT to your account or prove any action happened.
-- The unpublished MCP 0.5.0 candidate runs locally over stdio with 97 tools. No hosted endpoint or tested ChatGPT connector is included.
+- MCP 0.5.0 runs locally over stdio with 97 tools. No hosted endpoint or tested ChatGPT connector is included.
 - A tunnel needs an administrator’s setup, private credentials and compatibility checks.
 - Use only discovered tools and approved actions. Never invent account data or a completed result.
 
@@ -53,10 +53,10 @@ Ask it to explain steps and draft content. It cannot read your real calls, creat
 
 ## Advanced: an admin-managed tunnel
 
-The current [Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) supports forwarding a **stdio** server to ChatGPT. This is an additional operator-managed connection, not a Nixflex-tested candidate feature.
+The current [Secure MCP Tunnel guide](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels) supports forwarding a **stdio** server to ChatGPT. This is an additional operator-managed connection, not a Nixflex-tested connection.
 
 1. Have your administrator confirm tunnel permissions and association with the intended ChatGPT workspace. Follow the official guide to create or reuse a tunnel and install `tunnel-client`.
-2. [Install the Nixflex candidate](/ai-tools/overview#install-the-supplied-local-package). Configure the tunnel's stdio command to run Node with that package's absolute `index.js` path. Provide the Nixflex key, API URL and environment credential source privately to the server process. The tunnel also needs its own runtime credential; keep both secrets out of chats and config values.
+2. [Set up the MCP server](/ai-tools/overview#install-the-mcp-server). Configure the tunnel's stdio command as `npx` with arguments `["-y", "nixflex-mcp"]`. Provide the Nixflex key, API URL and environment credential source privately to the server process. The tunnel also needs its own runtime credential; keep both secrets out of chats and config values.
 3. Use the documented `tunnel-client doctor` check, then keep `tunnel-client run` active. Check readiness before discovery.
 4. In ChatGPT Plugins, add a custom MCP server and select **Tunnel**. Choose the authorised tunnel and complete its authentication settings. Restrict the plugin to authorised people: the Nixflex key gives organisation authority, not each user's dashboard role.
 5. Inspect the discovered tools and try `get_usage` only. Treat compatibility and write behaviour as unverified until tested. A tunnel connection does not add missing booking or knowledge-write tools.
@@ -67,7 +67,7 @@ ChatGPT web supports remote MCP through streaming HTTP or SSE, subject to worksp
 
 The current kit supplies no hosted URL. If Nixflex later supplies a supported option, obtain its exact URL, authentication and tool list. In ChatGPT **Plugins → Add custom MCP server**, use those details, complete sign-in and install the plugin. Keep the key out of chat and URLs, and keep private account tools authenticated.
 
-Inspect the discovered tools; do not assume they match the local kit’s 96. Start with an approved `get_usage` read, if available, before allowing changes.
+Inspect the discovered tools; do not assume they match the local kit’s 97. Start with an approved `get_usage` read, if available, before allowing changes.
 
 ## Five prompts to try
 

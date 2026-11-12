@@ -1,0 +1,149 @@
+---
+title: "Rename an organisation"
+sidebarTitle: "Rename an organisation"
+description: "Rename a Nixflex organisation using its API key or the Owner's personal session. Set the business name shown for that organisation."
+openapi: "/api-reference/public.openapi.json PATCH /organisation/name"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/organisation/patch-organisation-name"
+---
+
+Set the business name shown for this organisation. Only the Owner personal session or the organisation API key can rename it.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PATCH</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This changes the organisation display name.
+- It does not change account identity, credentials or ownership.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `name` | string | Yes | None | Trimmed business name, 2–100 characters; control characters are rejected. Maximum 100 characters. Minimum 2 characters. |
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | string | Saved trimmed business name. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Save the request JSON fields from the example below in request-155.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
+
+```json request-155.json
+{
+  "name": "Fixture business"
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/name" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @request-155.json
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.organisation.rename("Fixture business");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.organisation.rename('Fixture business')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the documented JSON fields privately as request-155.json first.
+nixflex organisation rename --body '@request-155.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "rename_organisation",
+  "arguments": {
+    "name": "Fixture business",
+    "confirm": true
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "name": "Example team"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled in this environment. | Check deployment availability; do not retry unchanged. |
+| 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The organisation action could not be confirmed. | Refresh the current state before trying again. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The current personal role does not allow this action. | Use an authorised personal session; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal membership has ended. | Sign in again or contact the Owner. |
+| 401 | [`invalid_token`](/api-reference/errors#invalid_token) | The personal session is invalid or expired. | Sign in with your own login again. |
+| 503 | [`auth_unavailable`](/api-reference/errors#auth_unavailable) | The personal session could not be verified. | Retry the read later; reconcile uncertain changes. |
+| 409 | [`invalid_business_name`](/api-reference/errors#invalid_business_name) | The trimmed name is invalid. | Correct the request before retrying. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is accepted. After a timeout or 503, read the current team or organisation state before repeating the action. Invitation creation and resend can send email and consume quota; never replay them blindly.
+
+## Related endpoints
+
+- [Get organisation context](/api-reference/organisation/get-organisation)
+- [List organisation members](/api-reference/organisation/get-organisation-members)
+- [Errors and recovery](/api-reference/errors#error-envelope)

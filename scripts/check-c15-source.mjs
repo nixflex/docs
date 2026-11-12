@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 const root=path.resolve(import.meta.dirname,'..'),args=process.argv.slice(2);
 const read=p=>fs.readFileSync(path.join(root,p),'utf8').replaceAll('\r\n','\n');
 const json=p=>JSON.parse(read(p));
@@ -93,7 +94,13 @@ for(const [old,target]of Object.entries(plan.retired)){
 }
 const tracked=execFileSync('git',['ls-tree','-r','--name-only',plan.baseline,'tests','scripts'],{cwd:root,encoding:'utf8'}).trim().split(/\r?\n/);
 const locked=tracked.filter(p=>p.startsWith('tests/')||/\/(?:check-|validate-|C[3-8]-TEST)/.test(p)||p==='scripts/c11-content-policy.mjs');
-for(const file of locked)check(read(file)===git(file==='scripts/c11-content-policy.mjs'?'208e3e1':plan.baseline,file),file+' frozen except approved D7 policy');
+// 509e7d8 includes Fahim's approved C15 reconciliation. C16 permits only the
+// three recorded release-wording test edits; every other locked file stays exact.
+for(const file of locked){
+ const approved=plan.approvedC16LockedHashes?.[file];
+ const unchanged=approved?createHash('sha256').update(read(file)).digest('hex')===approved:read(file)===git(plan.lockedBaseline,file);
+ check(unchanged,file+' matches approved C15 baseline or exact C16 wording edit');
+}
 check(fs.existsSync(path.join(root,'logo/light.svg'))&&fs.existsSync(path.join(root,'logo/dark.svg'))&&read('favicon.svg').includes('#050706'),'Final voice-ring logo assets present');
 check(read('.mintignore').includes('spec-source/')&&read('.mintignore').includes('scripts/')&&read('.mintignore').includes('DOCS-STYLE-GUIDE.md'),'Authoring sources excluded from public output');
 result.counts={pages:nav.length,apiPages:api.length,operations:ops.length,authoredSources:Object.keys(plan.sources).length,audiencePairs:Object.keys(plan.audiencePairs).length,lockedFiles:locked.length,redirects:redirects.size,checks:result.checks.length,tabs:Object.fromEntries(config.navigation.tabs.map(t=>[t.tab,flatten(t).length]))};

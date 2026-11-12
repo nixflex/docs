@@ -1,0 +1,206 @@
+---
+title: "Get a call"
+sidebarTitle: "Get call"
+description: "Read one account-owned call. Call completion is separate from recording, analysis and booking finalisation."
+openapi: "/api-reference/public.openapi.json GET /calls/{id}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/calls/get"
+---
+
+Read one account-owned call. Use view=detail for the explicit nullable detail shape, failed-start IDs and retained metadata stubs. Omitting view keeps the legacy row response.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the returned call ID to reconcile this call.
+- Call completion is separate from recording, analysis and booking finalisation.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-history) · [Developer guide](/guides/developer/call-history) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Call ID from this account. Detail mode accepts up to 200 characters, including failed: IDs. Maximum 200 characters. |
+| `view` (query) | string | No | Omitted | detail selects the explicit detail response. Omitted or another value selects the legacy response. |
+
+Do not send a request body.
+
+Nullable fields remain null; a retained stub may omit fields. Detail mode masks expired or scheduled-for-deletion content and always returns recording_url: null. Use the recording endpoint for a fresh link. This read does not restore erased content. The response example is illustrative, not a claim that a recording exists.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `call_id` | string | Call identifier. Failed starts can use the failed: prefix. |
+| `id` | string | Internal row identifier when present. Format: uuid. |
+| `agent_id` | string or null | Agent identifier, if retained. |
+| `from_number` | string or null | Origin number, if retained. |
+| `to_number` | string or null | Destination number, if retained. |
+| `call_type` | string or null | Call channel/type, such as inbound, outbound or web. |
+| `call_direction` | string or null | Direction recorded for the call. |
+| `call_status` | string or null | Recorded lifecycle state; unknown future states must be tolerated. |
+| `duration_ms` | integer or null | Connected duration in milliseconds; not elapsed ringing time or proof of billed time. |
+| `created_at` | string or null | Creation time when retained. Format: date-time. |
+| `start_timestamp` | integer or null | Start time in Unix milliseconds. |
+| `end_timestamp` | integer or null | End time in Unix milliseconds. |
+| `answered_at` | integer or null | Answer time in Unix milliseconds, when known. |
+| `ended_reason` | string or null | Recorded end/failure reason. A null value is unknown, not success. |
+| `call_successful` | boolean or null | Assessment of success. Null means unknown. |
+| `caller_sentiment` | string or null | Post-call sentiment, if retained. |
+| `cost` | number or null | Stored cost value. Null must remain unknown. |
+| `charged_minutes` | number or null | Stored charged-minute value, when known. |
+| `campaign_id` | string or null | Associated campaign, if any. |
+| `test_requested_by` | string or null | Retained test source marker, if any. |
+| `caller_name` | string or null | Caller name, if retained. |
+| `payload_deleted_at` | string or null | Time content was erased. Format: date-time. |
+| `payload_deleted_reason` | string or null | Recorded erasure reason. |
+| `payload_in_own_storage` | boolean or null | Whether payload was stored in account-connected storage; its current contents are not inspected. |
+| `call_retention_days` | integer or null | Retention policy recorded for this call. |
+| `payload_scheduled_for_deletion` | boolean | Content is hidden while deletion processing finishes. |
+| `call_summary` | string or null | Retained summary; can be absent or null. |
+| `transcript` | string or null | Retained transcript; hidden/erased content is null. |
+| `extracted_data` | legacy value | Retained extracted JSON data, or null. |
+| `call_events` | legacy value | Retained event JSON data, or null. |
+| `recording_url` | string or null | Legacy recording pointer. Prefer the recording endpoint; detail view always returns null. |
+| `recording_status` | string | Recording availability state when supplied. |
+| `recording_endpoint` | string or null | Optional API path for a recording read; not itself a download URL. |
+| `recording_availability` | string or null | Stored recording processing state. |
+| `recording_availability_reason` | string or null | Stored recording processing reason. |
+| `call_id` | string | Call identifier. Failed starts can use the failed: prefix. |
+| `id` | string | Internal row identifier when present. Format: uuid. |
+| `agent_id` | string or null | Agent identifier, if retained. |
+| `from_number` | string or null | Origin number, if retained. |
+| `to_number` | string or null | Destination number, if retained. |
+| `call_type` | string or null | Call channel/type, such as inbound, outbound or web. |
+| `call_direction` | string or null | Direction recorded for the call. |
+| `call_status` | string or null | Recorded lifecycle state; unknown future states must be tolerated. |
+| `duration_ms` | integer or null | Connected duration in milliseconds; not elapsed ringing time or proof of billed time. |
+| `created_at` | string or null | Creation time when retained. Format: date-time. |
+| `start_timestamp` | integer or null | Start time in Unix milliseconds. |
+| `end_timestamp` | integer or null | End time in Unix milliseconds. |
+| `answered_at` | integer or null | Answer time in Unix milliseconds, when known. |
+| `ended_reason` | string or null | Recorded end/failure reason. A null value is unknown, not success. |
+| `call_successful` | boolean or null | Assessment of success. Null means unknown. |
+| `caller_sentiment` | string or null | Post-call sentiment, if retained. |
+| `cost` | number or null | Stored cost value. Null must remain unknown. |
+| `charged_minutes` | number or null | Stored charged-minute value, when known. |
+| `campaign_id` | string or null | Associated campaign, if any. |
+| `test_requested_by` | string or null | Retained test source marker, if any. |
+| `caller_name` | string or null | Caller name, if retained. |
+| `payload_deleted_at` | string or null | Time content was erased. Format: date-time. |
+| `payload_deleted_reason` | string or null | Recorded erasure reason. |
+| `payload_in_own_storage` | boolean or null | Whether payload was stored in account-connected storage; its current contents are not inspected. |
+| `call_retention_days` | integer or null | Retention policy recorded for this call. |
+| `payload_scheduled_for_deletion` | boolean | Content is hidden while deletion processing finishes. |
+| `call_summary` | string or null | Retained summary; can be absent or null. |
+| `transcript` | string or null | Retained transcript; hidden/erased content is null. |
+| `extracted_data` | legacy value | Retained extracted JSON data, or null. |
+| `call_events` | legacy value | Retained event JSON data, or null. |
+| `recording_url` | null | Detail view never returns a raw recording URL. Use Get a call recording. |
+| `recording_status` | string | Recording availability state when supplied. |
+| `recording_availability` | string or null | Stored recording processing state. |
+| `recording_availability_reason` | string or null | Stored recording processing reason. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_CALL_ID` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/$NXF_CALL_ID?view=detail" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.read(process.env.NXF_CALL_ID);
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.read(os.environ["NXF_CALL_ID"])
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex calls read "$NXF_CALL_ID" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "call_id": "call_example",
+  "agent_id": "agent_0123456789abcdef",
+  "call_status": "completed",
+  "duration_ms": 45000,
+  "call_successful": null,
+  "call_summary": null,
+  "transcript": null,
+  "recording_url": null,
+  "recording_status": "unknown"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_call_id`](/api-reference/errors#invalid_call_id) | The detail-mode ID is empty or exceeds 200 characters. | Use the exact ID returned by a list. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | The call is absent, explicitly deleted or owned by another account. | Check the account and call ID; do not infer another account’s data. |
+| 503 | [`call_data_unavailable`](/api-reference/errors#call_data_unavailable) | Call data could not be read safely. | Retry the read after recovery; absence has not been proved. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [List calls](/api-reference/calls/list)
+- [Get call history](/api-reference/calls/get-calls-history)
+- [Errors and recovery](/api-reference/errors#error-envelope)

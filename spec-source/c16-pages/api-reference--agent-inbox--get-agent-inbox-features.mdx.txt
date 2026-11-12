@@ -1,0 +1,133 @@
+---
+title: "Check inbox availability"
+sidebarTitle: "Check inbox availability"
+description: "Check whether the Nixflex agent inbox is enabled in this environment. The feature check remains available when other inbox operations are disabled."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/features"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-features"
+---
+
+Read whether the agent inbox feature is enabled in this environment. This check remains available when inbox operations are disabled.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the enabled boolean to decide whether to show the inbox.
+- A failed availability request is not the same as enabled:false.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [Developer guide](/guides/developer/agent-inbox) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+No request body or query fields are required.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `enabled` | boolean | Current inbox feature flag. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/features" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.inbox.features();
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.inbox.features()
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex inbox features --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_inbox_features",
+  "arguments": {}
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "enabled": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [List inbox conversations](/api-reference/agent-inbox/get-agent-inbox-channel-number)
+- [Errors and recovery](/api-reference/errors#error-envelope)

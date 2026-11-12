@@ -1,0 +1,152 @@
+---
+title: "Import caller context"
+sidebarTitle: "Import caller context"
+description: "Import caller context for an owned Nixflex business number. Each row merges supplied customer context into the caller's existing record."
+openapi: "/api-reference/public.openapi.json POST /phone-numbers/{phoneNumber}/callers/import"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/caller-context/import"
+---
+
+Import customer-supplied context for callers on one account-owned business number. Each row merges supplied fields into that caller’s saved record; omitted fields stay unchanged.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Review the rows and their exact caller-number pairing.
+- Inspect row-level results; one accepted request does not prove every row succeeded.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/caller-context) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned business number. Use E.164 and encode it as one URL path segment. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `callers` | array of object | Yes | None | Caller rows to validate and then write in order. Maximum 1000 items. |
+| `callers[].caller_number` | string | Yes | None | Caller identifier. Use E.164. Whitespace is removed and + is added when missing; the route does not enforce a numeric length limit. |
+| `callers[].name` | string or number or null | No | Omitted | Up to 120 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. |
+| `callers[].email` | string or number or null | No | Omitted | Up to 120 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. Nonempty email must have a local part, @, domain and dot. |
+| `callers[].phone` | string or number or null | No | Omitted | Up to 40 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. |
+| `callers[].location` | string or number or null | No | Omitted | Up to 120 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. |
+| `callers[].reference_id` | string or number or null | No | Omitted | Up to 64 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. |
+| `callers[].preference` | string or number or null | No | Omitted | Up to 200 characters after conversion to text and trimming. Null clears; empty text is ignored; omitted keeps the saved value. |
+
+Use a business number that belongs to the authenticated account. Each caller row must supply or clear at least one of the six context fields. Numbers used as field values are converted to text before length checks. An empty string is ignored; use null to clear a field. Duplicate caller rows are applied in order, so later supplied values win. All rows are validated before writing, but storage writes are sequential and are not atomic: a database failure can leave earlier rows saved. The error message identifies progress; read affected callers before retrying. Top-level extra fields are ignored; unknown fields inside a row are refused.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | string | Normalized business number. |
+| `imported` | integer | Number of rows written, not unique callers. Minimum 1. Maximum 1000. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running. Prepare `callers.json` with the same JSON body shown by cURL. The CLI JSON form preserves null values. MCP bulk import accepts strings only; clear a single field with set_caller_context after an explicit request.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER/callers/import" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"callers":[{"caller_number":"+12025550101","name":"Sam","preference":null}]}'
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+import { readFileSync } from 'node:fs';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.callers.import(process.env.NXF_PHONE_NUMBER,JSON.parse(readFileSync("callers.json","utf8")).callers);
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.callers.import_(os.environ["NXF_PHONE_NUMBER"],json.loads(Path("callers.json").read_text())["callers"])
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex callers import "$NXF_PHONE_NUMBER" --body @callers.json --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": "+12025550100",
+  "imported": 1
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_body`](/api-reference/errors#invalid_body) | The callers array is missing or empty. | Send one to 1,000 caller objects. |
+| 400 | [`too_many_rows`](/api-reference/errors#too_many_rows) | More than 1,000 rows were supplied. | Split the import into bounded requests. |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 400 | [`invalid_field`](/api-reference/errors#invalid_field) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 400 | [`field_too_long`](/api-reference/errors#field_too_long) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 400 | [`invalid_email`](/api-reference/errors#invalid_email) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 400 | [`unknown_field`](/api-reference/errors#unknown_field) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 400 | [`engine_only_field`](/api-reference/errors#engine_only_field) | A caller row fails the field rules above. | Correct the row and field named in the message before resending. |
+| 404 | [`phone_number_not_found`](/api-reference/errors#phone_number_not_found) | The business number is not owned by this account. | Use an owned business number. |
+| 500 | [`database_error`](/api-reference/errors#database_error) | A read or write failed; earlier rows may be saved. | Read affected records and reconcile before any repeat. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+There is no documented idempotency-key replay guarantee. After a database error or timeout, read the affected caller records before a deliberate retry: some rows may already be saved. A repeat can overwrite newer context. Disable automatic write retries.
+
+## Related endpoints
+
+- [Delete caller context](/api-reference/caller-context/delete)
+- [Get caller context](/api-reference/caller-context/get)
+- [Errors and recovery](/api-reference/errors#error-envelope)

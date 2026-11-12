@@ -1,16 +1,16 @@
-# API operation coverage — C15
+# API operation coverage — C16
 
 **Current C15, 12 November 2026:** the coordinated local draft contains 353 pages across five tabs, including 164 API pages and all **151 public operations**. The inventory contains 201 numbered rows: 151 public and 50 intentionally non-public. Row 200 adds `DELETE /v1/calls/batch/:id`; row 201 adds B59 `GET /v1/campaigns/:id`. All 149 prior operation IDs remain stable. C14 and exact D7 are merged; the approved B57/B58 source governs deletion and new voice bookings. This is documentation coverage, not a deployment or live-test result.
 
 The public pages contain the final behaviour, without B57 waiting notes. Historical batch reports below preserve their original evidence; their old counts, old deletion contracts and old client inventories are superseded. The final source, native and client evidence is recorded in `notes/codex/2026-11-11-chat-c-C15` outside the published tree.
 
-**Final K9 alignment, 12 November:** Node/CLI `d941138`, Python `9fd177e` and MCP `f255b28` are pinned in `spec-source/c15-pages.json`. The current directories cover 140 Node methods, 137 shared Python methods, 146 CLI command entries and 97 MCP tools. Six supplied archives were hash-verified. The actual new page examples passed 130 isolated cases; the existing client-guide examples passed 44 more. These checks use synthetic transports, not staging credentials.
+**Published kits, 12 November (C16):** Node/CLI `10b0e4e`, Python `1259fbd` and MCP `e3ffd7d` are pinned in `spec-source/c15-pages.json`. These K9 commits change documentation only. The directories cover 140 Node methods, 137 Python methods, 146 CLI entries and 97 MCP tools. Public setup uses npm and PyPI installs; Claude must confirm npm `nixflex` 0.11.0, npm `nixflex-mcp` 0.5.0 and PyPI `nixflex` 0.4.0 before pushing. This update makes no customer API requests. All successful-write checks below remain pending manual test. C15 synthetic client evidence remains in its original report; C16 gate evidence is in `notes/codex/2026-11-12-chat-c-C16`.
 
 | Row | Current deletion route | Public page | Node / Python / CLI / MCP | Successful live write |
 | --- | --- | --- | --- | --- |
-| 86 | `DELETE /v1/calls/:id` | [Delete a call](/api-reference/calls/delete) | yes, exact K9 candidate | pending manual test |
-| 177 | `DELETE /v1/sms/campaigns/:id` | [Delete an SMS campaign](/api-reference/sms/campaigns-delete) | yes, exact K9 candidate | pending manual test |
-| 200 | `DELETE /v1/calls/batch/:id` | [Delete a voice campaign](/api-reference/voice-campaigns/delete) | yes, exact K9 candidate | pending manual test |
+| 86 | `DELETE /v1/calls/:id` | [Delete a call](/api-reference/calls/delete) | yes, published K9 versions | pending manual test |
+| 177 | `DELETE /v1/sms/campaigns/:id` | [Delete an SMS campaign](/api-reference/sms/campaigns-delete) | yes, published K9 versions | pending manual test |
+| 200 | `DELETE /v1/calls/batch/:id` | [Delete a voice campaign](/api-reference/voice-campaigns/delete) | yes, published K9 versions | pending manual test |
 | 201 | `GET /v1/campaigns/:id` | [Get a voice campaign](/api-reference/voice-campaigns/get) | HTTP examples; no dedicated K9 method | 13 isolated real-handler cases PASS; not a hosted test |
 
 | Row / case | Status | Remaining controlled check |

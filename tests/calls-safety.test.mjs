@@ -7,7 +7,7 @@ test('calls safety draft aligns four client variables and one-attempt policy',()
   for(const term of ['dynamic_vars','{{name}}','CLI','Python','MCP','POST/PUT/PATCH/DELETE','NixflexOutcomeUnknownError','1–200'])a.ok(safety.includes(term),term);
   a.match(safety,/not\s+a\s+snapshot/);
   a.match(outbound,/client-safety/);a.doesNotMatch(outbound,/stored nowhere/);
-  a.match(safety,/not an exactly-once/);a.match(safety,/not a claim/);
+  a.match(safety,/not an exactly-once/);a.match(safety,/documented minimum client versions/);
   a.match(read('sdks/python.mdx'),/GET-only/);a.doesNotMatch(read('sdks/python.mdx'),/GET\/HEAD/);
 });
 test('single deletion resumes queued hang-up while bulk deletion keeps its guarded contract',()=>{

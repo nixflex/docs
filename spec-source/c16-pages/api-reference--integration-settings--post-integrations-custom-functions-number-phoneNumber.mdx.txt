@@ -1,0 +1,175 @@
+---
+title: "Create a custom function"
+sidebarTitle: "Create custom function"
+description: "Create a custom function for an owned Nixflex number. Each number allows up to 15 functions with names unique within that number."
+openapi: "/api-reference/public.openapi.json POST /integrations/custom-functions/number/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber"
+---
+
+Create one function for an owned number. Each number can have at most 15 functions; names must be unique for that number.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save the setting for the exact owned target, then read it back to confirm.
+- Verify signed inputs before executing consequential work.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/advanced/custom-functions) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `name` | string | Yes | None | Lowercase snake_case function name. Maximum 64 characters. Pattern: `^[a-z][a-z0-9_]*$`. |
+| `description` | string | No | `""` | Description supplied to the agent. |
+| `url` | string | Yes | None | HTTPS destination; required on create. |
+| `method` | string | No | `"POST"` | Uppercased before validation. Allowed: `"GET"`, `"POST"`, `"PUT"`, `"PATCH"`, `"DELETE"`. |
+| `headers` | object | No | `{}` | Private HTTP headers. GET returns only has_headers. |
+| `parameters` | object | No | `{"type":"object","properties":{}}` | Function parameter JSON schema. |
+| `speak_during` | string or null | No | `null` | Optional phrase; a falsey value clears it. |
+| `timeout_ms` | integer | No | `5000` | Parsed as an integer and clamped to 1,000–45,000 ms. Zero or nonnumeric values fall back to 5,000. |
+| `is_active` | boolean | No | `true` | Only literal false disables the function. |
+
+Headers are private and never returned by the list route. Timeout inputs are parsed and clamped; the stored range is 1,000–45,000 ms. A supplied falsey description becomes an empty string, falsey headers become an empty object, falsey parameters restore the default schema, and falsey speak_during clears the phrase.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ok` | boolean | Request succeeded. Value: `true`. |
+| `id` | string | Function identifier. |
+| `phone_number` | string | Owned phone number. |
+| `name` | string | Saved function name. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Save the request JSON fields from the example below in request-46.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
+
+```json request-46.json
+{
+  "name": "lookup_fixture",
+  "url": "https://example.invalid/tool",
+  "method": "POST",
+  "headers": {
+    "X-Fixture": "private_fixture_value"
+  },
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  },
+  "speak_during": null,
+  "timeout_ms": 0,
+  "is_active": false
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/custom-functions/number/%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @request-46.json
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.integrations.createFunction("+12025550123", {"name": "lookup_fixture", "url": "https://example.invalid/tool", "method": "POST", "headers": {"X-Fixture": "private_fixture_value"}, "parameters": {"type": "object", "properties": {}}, "speak_during": null, "timeout_ms": 0, "is_active": false});
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.integrations.create_function('+12025550123', name='lookup_fixture', url='https://example.invalid/tool', method='POST', headers={'X-Fixture': 'private_fixture_value'}, parameters={'type': 'object', 'properties': {}}, speak_during=None, timeout_ms=0, is_active=False)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the documented JSON fields privately as request-46.json first.
+nixflex integrations createFunction '+12025550123' --body '@request-46.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+
+</RequestExample>
+
+MCP does not offer this operation because it accepts private credentials or executable settings; use the API, Node, CLI or Python.
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "ok": true,
+  "id": "11111111-1111-4111-8111-111111111111",
+  "phone_number": "+12025550100",
+  "name": "lookup_booking"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 400 | [`invalid_phone`](/api-reference/errors#invalid_phone) | The number is not valid E.164. | Correct the request before retrying. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 400 | [`invalid_url`](/api-reference/errors#invalid_url) | The destination URL is not accepted. | Use the required HTTPS destination. |
+| 400 | [`invalid_name`](/api-reference/errors#invalid_name) | The function name is invalid. | Correct the request before retrying. |
+| 400 | [`invalid_method`](/api-reference/errors#invalid_method) | The HTTP method is not accepted. | Correct the request before retrying. |
+| 409 | [`duplicate_function`](/api-reference/errors#duplicate_function) | Another function on this number uses that name. | Correct the request before retrying. |
+| 400 | [`limit_reached`](/api-reference/errors#limit_reached) | The number already has 15 functions. | Remove an unused function before creating another. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency token is supported. Read the function list after a timeout before resending. Creation can conflict with an existing name, and repeating a delete may remove a function recreated under the same ID.
+
+## Related endpoints
+
+- [List custom functions](/api-reference/integration-settings/get-integrations-custom-functions-number-phoneNumber)
+- [Update a custom function](/api-reference/integration-settings/patch-integrations-custom-functions-number-phoneNumber-id)
+- [Errors and recovery](/api-reference/errors#error-envelope)

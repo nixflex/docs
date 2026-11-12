@@ -1,0 +1,157 @@
+---
+title: "Get organisation context"
+sidebarTitle: "Get context"
+description: "Read the Nixflex organisation selected by the authenticated credential, including its current permissions and account context."
+openapi: "/api-reference/public.openapi.json GET /organisation"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/organisation/get-organisation"
+---
+
+Read the organisation selected by the authenticated credential. The result includes current permissions and identity fields, without a signing secret or balance.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use this context to render the current organisation and role.
+- An account API key and a personal session have different authority.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner, Admin and Member personal sessions may read their own context. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.
+
+## Request fields
+
+No request body or query fields are required.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `organisation_id` | string | UUID identifier. Format: uuid. |
+| `key_id` | string | Account key ID, not the secret. |
+| `name` | string | Business name. |
+| `role` | string | Current personal role. API-key authority is owner. Allowed: `"owner"`, `"admin"`, `"member"`. |
+| `user_id` | string or null | UUID identifier. Format: uuid. |
+| `membership_version` | integer or null | Personal membership version; null for an API key. |
+| `joined_at` | string or null | UTC timestamp. Format: date-time. |
+| `is_active` | boolean | The account is active. Value: `true`. |
+| `dashboard_state` | string | Active account state. Value: `"active"`. |
+| `permissions` | array of string | Saved value. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/organisation" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.organisation.get();
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.organisation.get()
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex organisation get --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_organisation",
+  "arguments": {}
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "organisation_id": "11111111-1111-4111-8111-111111111111",
+  "key_id": "example-account",
+  "name": "Example team",
+  "role": "owner",
+  "user_id": null,
+  "membership_version": null,
+  "joined_at": null,
+  "is_active": true,
+  "dashboard_state": "active",
+  "permissions": [
+    "activity",
+    "billing",
+    "close",
+    "key",
+    "normal",
+    "team",
+    "transfer",
+    "write"
+  ]
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled in this environment. | Check deployment availability; do not retry unchanged. |
+| 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The organisation action could not be confirmed. | Refresh the current state before trying again. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The current personal role does not allow this action. | Use an authorised personal session; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal membership has ended. | Sign in again or contact the Owner. |
+| 401 | [`invalid_token`](/api-reference/errors#invalid_token) | The personal session is invalid or expired. | Sign in with your own login again. |
+| 503 | [`auth_unavailable`](/api-reference/errors#auth_unavailable) | The personal session could not be verified. | Retry the read later; reconcile uncertain changes. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [List organisation members](/api-reference/organisation/get-organisation-members)
+- [List organisation activity](/api-reference/organisation/get-organisation-activity)
+- [Errors and recovery](/api-reference/errors#error-envelope)

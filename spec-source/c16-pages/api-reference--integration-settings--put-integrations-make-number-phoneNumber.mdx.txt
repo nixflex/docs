@@ -1,0 +1,170 @@
+---
+title: "Set Make settings"
+sidebarTitle: "Set Make settings"
+description: "Replace saved Make settings for an owned Nixflex number. Supply the complete intended configuration and review omitted-field behaviour."
+openapi: "/api-reference/public.openapi.json PUT /integrations/make/number/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/put-integrations-make-number-phoneNumber"
+---
+
+Save Make settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PUT</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Save the setting for the exact owned target, then read it back to confirm.
+- An automation destination must handle retries without repeating business actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/integrations/zapier-make) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Send a JSON object. Credential values must stay private.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `is_active` | boolean | No | `true` | Only literal false disables this configuration. |
+| `agent_id` | string | No | Omitted | Fallback agent ID used only when the number has no assigned agent; does not move the number. |
+| `post_call_url` | string | No | Omitted | HTTPS destination for post-call events. Supply this or in_call_url. |
+| `in_call_url` | string | No | Omitted | HTTPS destination called by the in-call tool. Supply this or post_call_url. |
+| `tool_name` | string | No | `"make_action"` | Used only when in_call_url is supplied. |
+| `tool_description` | string | No | `"Send the details collected on this call to an external workflow and use the response in the conversation."` | In-call tool description; ignored without in_call_url. |
+| `parameters` | object | No | `{"type":"object","properties":{}}` | In-call tool JSON schema. Used only with in_call_url. |
+
+At least one of post_call_url or in_call_url is required. Only supplied URLs are saved; omitting an old URL removes it from this configuration.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ok` | boolean | Request succeeded. Value: `true`. |
+| `phone_number` | string | Owned phone number. |
+| `provider` | string | Integration identifier. Value: `"make"`. |
+| `is_active` | boolean | Whether the saved integration is enabled. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Save the request JSON fields from the example below in request-21.json privately before using cURL or CLI; replace fixture credentials only in that private file. Review the target and payload before this write.
+
+```json request-21.json
+{
+  "post_call_url": "https://example.invalid/after",
+  "in_call_url": "https://example.invalid/action",
+  "tool_name": "lookup",
+  "tool_description": "Fixture",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      }
+    }
+  },
+  "is_active": false
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --request PUT \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/make/number/%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data-binary @request-21.json
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.integrations.set("make", "+12025550123", {"post_call_url": "https://example.invalid/after", "in_call_url": "https://example.invalid/action", "tool_name": "lookup", "tool_description": "Fixture", "parameters": {"type": "object", "properties": {"id": {"type": "string"}}}, "is_active": false});
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.integrations.set('make', '+12025550123', post_call_url='https://example.invalid/after', in_call_url='https://example.invalid/action', tool_name='lookup', tool_description='Fixture', parameters={'type': 'object', 'properties': {'id': {'type': 'string'}}}, is_active=False)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+# Save the documented JSON fields privately as request-21.json first.
+nixflex integrations set make '+12025550123' --body '@request-21.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+
+</RequestExample>
+
+MCP does not offer this operation because it accepts private credentials or executable settings; use the API, Node, CLI or Python.
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "ok": true,
+  "phone_number": "+12025550100",
+  "provider": "make",
+  "is_active": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 400 | [`invalid_phone`](/api-reference/errors#invalid_phone) | The number is not valid E.164. | Correct the request before retrying. |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | A required field is missing or has the wrong type. | Correct the request before retrying. |
+| 400 | [`invalid_url`](/api-reference/errors#invalid_url) | The destination URL is not accepted. | Use the required HTTPS destination. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | The JSON body could not be parsed. | Correct the request before retrying. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request body is too large. | Reduce the request body. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a replacement write with no idempotency token. Read the current settings after a timeout before deciding whether to resend. Never overwrite a newer configuration blindly.
+
+## Related endpoints
+
+- [Get Zapier settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber)
+- [Set Zapier settings](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber)
+- [Errors and recovery](/api-reference/errors#error-envelope)

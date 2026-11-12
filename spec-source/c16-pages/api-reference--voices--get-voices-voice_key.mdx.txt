@@ -1,0 +1,162 @@
+---
+title: "Get a voice"
+sidebarTitle: "Get voice"
+description: "Read a voice visible to the Nixflex account and its compatibility with an optional agent language. A successful read does not guarantee compatibility."
+openapi: "/api-reference/public.openapi.json GET /voices/{voice_key}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/voices/get-voices-voice_key"
+---
+
+Read a voice visible to this account and its compatibility with an optional agent language. A successful read can return selectable: false; read the reason before using the voice.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the exact voice key from the catalogue.
+- A missing or unavailable voice needs a deliberate alternative, not a guessed key.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/your-own-voice) · [Developer guide](/concepts/voices) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `voice_key` (path) | string | Yes | None | Voice key returned by List voices. Lookup is case-insensitive. |
+| `agent_id` (query) | string | No | Omitted | Optional owned agent whose saved language provides the compatibility context. Ignored when agent_language is supplied. |
+| `agent_language` (query) | string | No | Omitted | Optional supported language code or multi for a draft agent. Takes precedence over agent_id. |
+
+Do not send a request body.
+
+agent_language takes precedence over agent_id. Without either, selectable reflects availability and approved languages, not a particular agent. A fixed-language agent needs approval for that language; a multi-language agent uses its server-derived language set. Preview absence is separate from availability. Accent language, locale and label can each be null; keep unknown metadata as null.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `voice_key` | string | Stable neutral catalog identifier; use this value when selecting a voice. |
+| `displayName` | string | Display label, not an identifier. |
+| `gender` | string | Catalog gender label. Allowed: `"male"`, `"female"`, `"unknown"`. |
+| `nativeLanguage` | string or null | Native language code, when known. |
+| `locale` | string or null | Locale label, when known. |
+| `accents` | array of object | Available accent labels. |
+| `accents[].language` | string or null | Accent language. Null when not supplied in the catalog. |
+| `accents[].locale` | string or null | Accent locale. |
+| `accents[].label` | string or null | Neutral accent label. Null when not supplied in the catalog. |
+| `languages` | array of string | Languages approved for this voice. |
+| `origin` | string | Standard catalog or a connection belonging to this account. Allowed: `"standard"`, `"connected"`. |
+| `availability` | string | Current catalog availability. Allowed: `"active"`, `"temporarily_unavailable"`, `"unavailable"`. |
+| `selectable` | boolean | Whether a new selection is compatible with the supplied agent context. |
+| `incompatibilityReason` | string or null | Reason when not selectable: voice_unavailable, voice_temporarily_unavailable, no_approved_languages, native_language_not_in_multi_set or language_not_approved. These are response values, not HTTP errors. |
+| `previewLanguage` | string or null | Preview language, or null when no preview exists. |
+| `previewStatus` | string | Preview state; none when no preview is available. |
+| `previewUrl` | string or null | Preview URL when present. Null does not imply that the voice is unavailable. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_VOICE_KEY` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/voices/$NXF_VOICE_KEY?agent_language=multi" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.voices.get(process.env.NXF_VOICE_KEY, {agent_language:"multi"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.voices.get(os.environ["NXF_VOICE_KEY"], agent_language="multi")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex voices get "$NXF_VOICE_KEY" --agent-language multi --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "voice_key": "00000000-0000-4000-8000-000000000001",
+  "displayName": "Example voice",
+  "gender": "female",
+  "nativeLanguage": "en",
+  "locale": "en-GB",
+  "accents": [],
+  "languages": [
+    "en"
+  ],
+  "origin": "standard",
+  "availability": "active",
+  "selectable": true,
+  "incompatibilityReason": null,
+  "previewLanguage": null,
+  "previewStatus": "none",
+  "previewUrl": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`voice_not_found`](/api-reference/errors#voice_not_found) | The voice is unknown or not visible to this account. | Select a key from this account’s catalog. |
+| 400 | [`invalid_agent_language`](/api-reference/errors#invalid_agent_language) | The agent language context is invalid. | Use a supported code or multi. |
+| 400 | [`agent_not_found`](/api-reference/errors#agent_not_found) | The supplied agent context could not be read for this account. | Use an owned agent ID or a draft language. |
+| 503 | [`catalog_unavailable`](/api-reference/errors#catalog_unavailable) | The catalog is not loaded. | Retry the read after recovery. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [List voices](/api-reference/voices/get-voices)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,0 +1,144 @@
+---
+title: "Get Make settings"
+sidebarTitle: "Get Make settings"
+description: "Read the saved Make settings for an owned phone number. Secret values are represented by configuration flags."
+openapi: "/api-reference/public.openapi.json GET /integrations/make/number/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/get-integrations-make-number-phoneNumber"
+---
+
+Read the saved Make settings for an owned phone number. Secret values are represented by configuration flags.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the current setting for this exact owned target before changing it.
+- An automation destination must handle retries without repeating business actions.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/integrations/zapier-make) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Do not send a request body.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | string | Owned phone number. |
+| `is_active` | boolean | Whether the saved integration is enabled. |
+| `post_call_url_set` | boolean | A post-call URL is saved. |
+| `in_call_url_set` | boolean | An in-call URL is saved. |
+| `tool_name` | string or null | Saved tool name. |
+| `tool_description` | string or null | Saved tool description. |
+| `parameters` | object or null | JSON object; nested properties are supplied by your integration. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/make/number/%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.integrations.get("make", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.integrations.get('make', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex integrations get make '+12025550123' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_make",
+  "arguments": {
+    "phone_number": "+12025550123"
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": "+12025550100",
+  "is_active": true,
+  "post_call_url_set": true,
+  "in_call_url_set": false,
+  "tool_name": null,
+  "tool_description": null,
+  "parameters": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Get Zapier settings](/api-reference/integration-settings/get-integrations-zapier-number-phoneNumber)
+- [Set Zapier settings](/api-reference/integration-settings/put-integrations-zapier-number-phoneNumber)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,0 +1,128 @@
+---
+title: "Understand agent settings and defaults"
+description: "Understand Nixflex agent fields, defaults, limits and nullable values. Configure call behavior, prompts, keyterms, retention and supported channel settings."
+sidebarTitle: "Settings and defaults"
+canonical: "https://docs.nixflex.com/api-reference/agents/contract"
+---
+
+Use saved agent values and number overrides to determine the effective call settings.
+
+<div className="nxf-facts">
+  <div><small>Guide</small><strong>API reference</strong></div>
+  <div><small>Topic</small><strong>Settings and defaults</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Omitted update fields keep saved values.
+- Number overrides can change the effective settings for one phone number.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [Developer guide](/concepts/agent-inheritance) · [Glossary](/guides/glossary)
+
+</div>
+
+Use these fields with the matching engine and client versions.
+See [settings by channel](/concepts/agent-channels) and
+[privacy/action inheritance](/concepts/agent-inheritance) before treating a saved field
+as an effective behaviour on every channel.
+All four read/write responses use the same reviewed projection. Responses never contain
+`twilio_auth_token`; `twilio_account_sid` is a legacy readable account identifier.
+
+
+## Inputs
+
+No coercion of strings into booleans/numbers. Valid 0/false values are preserved.
+Omitted fields retain defaults (create) or the saved value (update).
+Pickup delay is the deliberate legacy exception: this release does not alter its
+validation, values or defaults.
+
+| Fields | Contract |
+|---|---|
+| name | string, max 200 |
+| system_prompt, welcome_message | strings, max 16000 each |
+| language | supported language code or multi; existing empty create default retained |
+| voice_id / voice_key | string or null; key max 36, alias max 200; resolve one catalog voice, reject conflicting pair |
+| is_active, ai_speaks_first, dynamic_greeting, record_call, amd_enabled, greet_by_name, remember_callers, require_booking_confirmation | booleans |
+| func_end_call, func_cold_transfer, func_send_sms | booleans; last two are compatibility fields, not runtime permission switches |
+| temperature | finite number 0..0.7, omitted create default 0.3 |
+| response_length | short / medium / long |
+| response_eagerness | whole milliseconds 0..1000, not pickup delay |
+| stt_confidence | finite number 0..1 |
+| stt_max_silence_ms | whole number 0..2147483647 (stored control; not the response-delay slider) |
+| interruption_sensitivity | whole number 0..100; retained compatibility setting |
+| max_call_duration_seconds / silence_hangup_seconds | whole seconds 1..2147483 or null (avoids milliseconds-timer overflow); null preserves existing runtime fallback; new-create defaults 300 / 10 |
+| wait_tag_seconds / ivr_timeout_seconds | whole seconds 30..120 or null / whole seconds 1..1800 |
+| timezone | valid IANA name, max 100; new create uses valid account zone or UTC when omitted; no existing row or calling-hours policy is changed |
+| incall_sms_enabled / post_call_sms_enabled | booleans |
+| post_call_sms_template | string, max 600 |
+| voicemail_leave_enabled | boolean; true requires a non-blank merged voicemail_message |
+| voicemail_message | string max 600 or null |
+| transfer_type | cold / warm |
+| transfer_number / phone_number | E.164, null or empty; phone_number is legacy, not an import |
+| transfer_whisper | string max 16000 or null |
+| webhook_url | HTTP(S) without user-info, max 2048, null or empty; URL shape validation is not an outbound fetch |
+| boosted_keywords | Customer keyterms: at most 20 nonempty comma-separated terms, at most 50 Unicode characters per trimmed term, and a conservative 450-byte total safety budget for changed values. The text field also has a 2,000-character ceiling. Empty entries do not count; repeated nonempty terms count separately toward 20. Null clears the list. On update, omitted values are retained. An exact unchanged saved string is kept even if it exceeds the newer count, term-length, size or text limits. Any change must meet all current limits. |
+| dtmf_enabled | true / false / null; null retains inheritance |
+| recording_source | provider / nixflex, case/space-normalized by the existing parser; null/empty normalizes to provider; invalid_recording_source retained |
+| speaking_rate | finite number (existing clamp 0.5..1.5), null or empty (clear) |
+| voice_speed | finite number 0.01..100; compatibility only, not used for speech |
+| llm_model / fallback_message | strings max 200 / 16000; compatibility only, not runtime model/fallback selection |
+| call_retention_days | PUT only: 90 / 30 / 7 / 1 / 0. POST inherits account default |
+| twilio_account_sid / twilio_auth_token | deprecated input: real values fail; null/empty may clear on PUT, never echo a token |
+| data_extraction_fields | array of up to 50 definitions below; [] clears |
+
+`func_end_call` governs duration/silence timers; it is not a blanket prohibition on model END_CALL.
+This release does not turn inert compatibility settings into features, and does not
+change channel rules, billing, recording, pickup timing or the dashboard's direct writes.
+
+Extraction entries: required `name` (unique identifier, 1-64 letters/digits/underscores,
+starting with a letter/underscore; __proto__/constructor/prototype forbidden) and
+`type` (text / selector / boolean / number). Optional `description` and
+`format_example` are strings up to 2000; `optional` is boolean.
+`choices` is up to 100 unique non-blank strings, each at most 200 characters;
+a selector requires at least one. Unknown nested properties reject the whole request.
+
+## Errors and warnings
+
+Empty/unknown-only PUT: 400 empty_agent_update.
+Mixed supported/unknown fields: supported fields save, with a JSON `warnings` array
+containing code unknown_fields, unknown names, and "These fields were not saved."
+Unknown input values are not echoed. Empty POST still creates defaults.
+
+Known invalid input fails before writing. Dedicated prompt, recording-source,
+remember-callers, retention, voice-selection and credential errors remain.
+Missing/foreign agent: 404 not_found. Database failure: 503 agent_store_unavailable.
+Catalog lookup outage: 503 catalog_unavailable. No blind write retries.
+
+## Kits
+
+Use the [SDK and CLI installation guide](/sdks/ecosystem#install-a-client)
+for Node, Python, CLI and MCP at the documented minimum versions.
+The CLI passes write fields via repeated `--set` or `--body`. Agent list supports
+`--offset`, `--status` and `--search`. Do not automatically replay a mutation after
+an uncertain response. MCP exposes named settings while retaining unknown keys
+so the engine can return its warning.
+
+DELETE soft-disables only and retains the legacy response `{"message":"Agent deleted"}`.
+It does not detach numbers, erase history or make GET of an owned disabled agent return 404.
+
+The safety byte count normalizes each trimmed term (NFKD, removes combining marks, lowercases, removes whitespace) to detect duplicates. Each unique normalized term costs the UTF-8 bytes of its first trimmed original spelling plus 4 bytes. Empty and duplicate normalized terms add no bytes. This conservative count is not a tokenizer. Term length counts Unicode code points, not UTF-16 code units.
+
+Automatic knowledge terms are read-only. They come from valid, unsuppressed live pieces, keep source spelling, and are ranked by importance, essential identity, repeated support and stable tie-breaks. Generic terms are filtered. The default limit is 80 per agent; platform configuration can choose 0–100. Customer terms take priority and stay first on calls; duplicates and weaker automatic terms are removed to fit the call limits. The returned list is not a promise that every term will be sent on a call. Read [automatic keyterms](/api-reference/knowledge/get-agents-target-knowledge-keyterms).
+
+More than 20 terms returns 400 invalid_agent_field with message "Keep up to 20 words - remove some to save" and details.field "boosted_keywords".
+
+- [`keyterms_term_too_long`](/api-reference/errors#keyterms_term_too_long): Keep each word or phrase within 50 characters to save Shorten the term. details.field is boosted_keywords; details.limit is 50.
+- [`keyterms_list_too_large`](/api-reference/errors#keyterms_list_too_large): This list is {over_bytes} bytes over the 450-byte safety limit. Shorten or remove some words to save. Shorten the list. details.field is boosted_keywords, limit is 450, actual_bytes is the calculated size, and over_bytes is the excess. For one excess byte the message uses byte.
+
+## Next steps
+
+- [API overview](/api-reference/introduction)
+- [Errors and recovery](/api-reference/errors)
+- [Retry rules](/api-reference/retries)

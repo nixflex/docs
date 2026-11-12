@@ -1,7 +1,7 @@
 ---
 title: "Connect Cursor to Nixflex with MCP"
 sidebarTitle: "Connect Cursor"
-description: "Connect Cursor to the Nixflex MCP candidate using private environment variables, verify the tools and try five prompts with clear approval and action limits."
+description: "Connect Cursor to the Nixflex MCP server using private environment variables, verify the tools and try five prompts with clear approval and action limits."
 canonical: "https://docs.nixflex.com/ai-tools/cursor"
 ---
 
@@ -16,7 +16,7 @@ Building an app? [Developer version](/sdks/mcp).
 <div className="nxf-facts">
   <div><small>Connection</small><strong>Local Node process</strong></div>
   <div><small>Configuration</small><strong>mcp.json</strong></div>
-  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Tools</small><strong>97</strong></div>
   <div><small>Secrets</small><strong>Environment references</strong></div>
 </div>
 
@@ -24,7 +24,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 **The important part**
 
-- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Use MCP 0.5.0 or later. MCP 0.5.0 exposes 97 tools.
 - Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
 - Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
 - Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
@@ -43,10 +43,10 @@ Illustrative conversation between colleagues.
 
 ## Connect
 
-1. [Install the supplied package](/ai-tools/overview#install-the-supplied-local-package) with Node 22 or later.
+1. [Set up the MCP server](/ai-tools/overview#install-the-mcp-server) with Node 22 or later.
 2. Have your private launcher or secret manager provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` to Cursor. Fully restart Cursor from that environment. Never paste the key into chat or a config file.
 3. Add the entry below to your user `~/.cursor/mcp.json`, preserving other servers. For project-only use, Cursor also supports `.cursor/mcp.json` in the project. The example contains variable references, not credentials.
-4. Replace the package path with your actual absolute path. On macOS or Linux, use the installed path under your home directory from the setup guide, written in full.
+4. Ensure npx is available to Cursor. On Windows, use `"command": "cmd.exe"` and `"args": ["/c", "npx", "-y", "nixflex-mcp"]` if the client needs an executable wrapper.
 5. Open Cursor's MCP settings, check that Nixflex connects, and inspect the tool list before approving the read below.
 
 ```json
@@ -54,9 +54,9 @@ Illustrative conversation between colleagues.
   "mcpServers": {
     "nixflex": {
       "type": "stdio",
-      "command": "node",
+      "command": "npx",
       "args": [
-        "C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
+        "-y", "nixflex-mcp"
       ],
       "env": {
         "NIXFLEX_API_KEY": "${env:NIXFLEX_API_KEY}",
@@ -68,13 +68,13 @@ Illustrative conversation between colleagues.
 }
 ```
 
-Cursor expands the environment references when starting the server. If Node is not on its path, use the full Node executable path. See [Cursor's MCP configuration](https://cursor.com/docs/mcp) for configuration locations and environment interpolation.
+Cursor expands the environment references when starting the server. If npx is not on its path, use the full executable path. See [Cursor's MCP configuration](https://cursor.com/docs/mcp) for configuration locations and environment interpolation.
 
 ## Verify before editing anything
 
 > Use Nixflex get_usage only. Summarise usage without changing the account, making a call or sending a message. Do not show credentials.
 
-Check for **97 tools** in this candidate. Keep approval of tool calls enabled. Not every older write tool has its own confirmation field. If a write times out, inspect current state instead of repeating it automatically. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request.
+Check for **97 tools** in this server. Keep approval of tool calls enabled. Not every older write tool has its own confirmation field. If a write times out, inspect current state instead of repeating it automatically. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request.
 
 ## Five prompts to try
 
@@ -104,7 +104,7 @@ Use `get_call_bookings` for a known call ID and `get_outbound_call_request` for 
 
 ## What stays outside MCP
 
-The candidate can create a ten-minute Google consent link for a human to open, check the connection, update settings and disconnect a number. The status read can refresh or check an existing connection internally. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not proof of delivery. Knowledge publishing and direct booking remain unavailable.
+The server can create a ten-minute Google consent link for a human to open, check the connection, update settings and disconnect a number. The status read can refresh or check an existing connection internally. Disconnect cannot recall dispatched work or guarantee remote revocation; `send_invites` is not proof of delivery. Knowledge publishing and direct booking remain unavailable.
 
 The number-credential tool takes only number, provider and confirmation; it reads the selected carrier pair from the server's private environment. If enabling it, add only that pair's variable references to the existing `env` object, using the same `${env:NAME}` form as above. Never insert their values or ask Cursor to inspect them. Follow [the exact private variable names and limits](/ai-tools/overview#google-calendar-and-number-credentials). A request to create a call is a real outbound action and can spend credit. Review [capabilities and permissions](/ai-tools/overview) before enabling writes.
 

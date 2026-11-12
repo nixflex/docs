@@ -50,9 +50,9 @@ test('C6 covers only the approved groups and keeps all successful writes pending
  const previous=spawnSync('git',['show','ad36141:docs.json'],{cwd:root,encoding:'utf8'});assert.equal(previous.status,0);
  const config=JSON.parse(read('docs.json')),old=JSON.parse(previous.stdout);assert.deepEqual(config.navigation.tabs.map(t=>t.tab),['Business guide','Developer guide','API reference','SDKs & CLI','AI tools']);
 });
-test('all 19 C4 pages use K2 methods with explicit unpublished candidate limits',()=>{
+test('all 19 C4 pages use K2 methods with explicit minimum client versions',()=>{
  const core=Object.values(JSON.parse(read('spec-source/c4-core.json')).operations);assert.equal(core.length,19);
- for(const d of core){const p=read(d.slug+'.mdx');assert.doesNotMatch(p,/direct HTTP/);assert.match(p,/unpublished/);assert.ok(d.kitExamples.node&&d.kitExamples.python&&d.kitExamples.cli);}
+ for(const d of core){const p=read(d.slug+'.mdx');assert.doesNotMatch(p,/direct HTTP/);assert.match(p,/Node\/CLI 0\.11\.0 or later/);assert.match(p,/Python 0\.4\.0 or later/);assert.doesNotMatch(p.replace(/<span id="[^"]+"><\/span>/g,''),/unpublished/);assert.ok(d.kitExamples.node&&d.kitExamples.python&&d.kitExamples.cli);}
  assert.match(read('api-reference/account/create-key.mdx'),/signup is intentionally absent from MCP/);
  assert.match(read('api-reference/caller-context/import.mdx'),/--body @callers.json/);
  assert.match(coverageText(),/44 tools/);

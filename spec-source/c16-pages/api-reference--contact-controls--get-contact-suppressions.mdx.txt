@@ -1,0 +1,155 @@
+---
+title: "List contact suppressions"
+sidebarTitle: "List contact suppressions"
+description: "List stored Nixflex do-not-contact entries in a channel bucket. Understand the all-channel bucket and how it differs from a combined list."
+openapi: "/api-reference/public.openapi.json GET /contact-suppressions"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/contact-controls/get-contact-suppressions"
+---
+
+List stored do-not-contact entries in one channel bucket. channel=all selects entries stored for all channels; it does not combine the voice and SMS buckets.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Check the saved scope and contact identifiers.
+- A missing row is not proof of consent to contact that person.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/contact-controls) · [Developer guide](/guides/developer/contact-controls) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `channel` (query) | string | No | `"all"` | Channel bucket. Allowed: `"all"`, `"voice"`, `"sms"`. |
+| `after` (query) | string | No | Omitted | Continue after this E.164 number from next_cursor. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+Do not send a request body.
+
+Pages contain at most 200 rows in phone_number ascending order. There is no configurable limit. Nonempty pages return their last number as next_cursor even when short; pass it as after until an empty page returns null. For a full inventory, page all, voice and sms separately. Contact checks can apply an all-channel entry as well as a channel-specific entry.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `entries` | array of object | Saved value. |
+| `entries[].phone_number` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `entries[].channel` | string | Stored channel bucket. Allowed: `"all"`, `"voice"`, `"sms"`. |
+| `entries[].source` | string | Why it was suppressed, for example owner or sms_optout. |
+| `entries[].created_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `entries[].removal_locked` | boolean | Only false for an explicitly removable owner-created entry. |
+| `entries[].opted_out_message` | string or null | For SMS opt-outs: retained text, limited to 160 code points. |
+| `entries[].opted_out_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `entries[].opted_out_business_number` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `next_cursor` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/contact-suppressions?channel=sms&after=%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.contacts.list({"channel": "sms", "after": "+12025550123"});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.contacts.list(channel='sms', after='+12025550123')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex contacts list --channel sms --after '+12025550123' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "list_contact_suppressions",
+  "arguments": {
+    "channel": "sms",
+    "after": "+12025550123"
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "entries": [],
+  "next_cursor": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The identifier or request fields are invalid. | Correct the documented fields before resending. |
+| 503 | [`unavailable`](/api-reference/errors#unavailable) | Suppression entries could not be read. | Retry with bounded backoff; do not assume an unread list is empty. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview)
+- [Add contact suppressions](/api-reference/contact-controls/post-contact-suppressions)
+- [Errors and recovery](/api-reference/errors#error-envelope)

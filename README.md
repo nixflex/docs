@@ -8,7 +8,7 @@ Read [DOCS-STYLE-GUIDE.md](DOCS-STYLE-GUIDE.md) before changing content. Update 
 
 - `docs.json` holds the published menu, branding and redirects.
 - `spec-source/c15-pages.json` holds the final menu plan, metadata, audience pairs, retired duplicates and authoritative page-source paths.
-- `spec-source/c15-pages/` holds C15 page sources. Change the source named by the plan; editing only generated MDX will be overwritten.
+- `spec-source/c15-pages/` and `spec-source/c16-pages/` hold final page sources. Change the source named by the plan; editing only generated MDX will be overwritten.
 - Other page sources and API contract builders remain in the earlier `spec-source` plans and `scripts/build-*.mjs` files. The final C15 stage applies the current metadata and coordinated content.
 - `api-reference/public.openapi.json` is generated. Public operation scope is declared in `spec-source/public-operations.json`; B57 deletion, B58 booking and B59 campaign detail are in `scripts/c15-contracts.mjs`.
 - `COVERAGE.md` records test scope and unperformed successful writes. Documentation coverage is not evidence of a live mutation test.
@@ -35,7 +35,7 @@ Run `scripts/validate-c15-campaign-detail.mjs` with the same arguments for B59's
 
 The build is local and makes no customer API requests. `validate-c15-contracts.mjs` uses pinned source with fake dependencies. Do not run staging mutation runners against real account data as part of a routine docs check.
 
-Historical tests and checkers are locked. C15 applies only the expressly approved D7 policy adjustment. The remaining old-count and old-deletion assertions are documented in the C15 handoff's `BEFORE-AFTER.md`; their proposed patch is not applied. Preserve failures honestly until the assertion changes are approved and rerun.
+Historical tests and checkers are locked at the approved C15 reconciliation, commit `509e7d8`. Fahim pre-approved C16 changes only to release wording, local installs, archive hashes, kit pins and MCP counts. C16 changes three test files for minimum-version wording; their exact normalized hashes are recorded in `spec-source/c15-pages.json`. Other locked assertions remain byte-for-byte at the approved baseline. Propose any further assertion change in BEFORE-AFTER.md before editing it.
 
 `scripts/C8-TEST.ps1` is a frozen artifact. The normal build intentionally does not regenerate it when public operation scope changes.
 
@@ -48,3 +48,5 @@ The native development runtime may return temporary redirect statuses to avoid b
 Mintlify was recorded as deploying `nixflex/docs` branch `main` to `docs.nixflex.com`. Confirm current hosting settings before release. A push to that branch can publish the site. Follow the reviewed release handoff; do not push as part of a content-only task.
 
 The C15 handoff is in `D:\Nixflex Voice Engine\voice engine files\notes\codex\2026-11-11-chat-c-C15`, including the final menu, page inventory, test logs, old-URL map, Search Console steps, exact push command and rollback instructions.
+
+C16 publication wording and registry installs are recorded in `notes/codex/2026-11-12-chat-c-C16`. Its PUBLISH-STEPS.md requires the three exact registry versions before Claude pushes. The final client pins are documentation-only K9 updates; method and tool inventories remain 140 Node, 137 Python, 146 CLI entries and 97 MCP tools.

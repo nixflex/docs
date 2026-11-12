@@ -1,7 +1,7 @@
 ---
 title: "Use the Python SDK with sync or async code"
 sidebarTitle: "Python SDK"
-description: "Install the reviewed Python candidate, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states."
+description: "Install the Python SDK, manage sync and async clients, save outbound request IDs and preserve unknown write and booking states."
 canonical: "https://docs.nixflex.com/sdks/python"
 ---
 
@@ -29,15 +29,17 @@ Use the Python SDK with a managed synchronous or asynchronous client, keeping re
 
 </div>
 
-## Install the reviewed wheel
+<span id="install-the-reviewed-wheel"></span>
 
-Compare the supplied wheel with its [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your virtual environment:
+## Install the SDK
+
+Install the package in your virtual environment:
 
 ```bash
-python -m pip install ./nixflex-0.4.0-py3-none-any.whl
+pip install nixflex
 ```
 
-A registry installation alone does not establish this candidate’s availability. Use the exact reviewed archive when testing its newer call and calendar methods.
+These examples require Python SDK 0.4.0 or later.
 
 ## Read usage with a synchronous client
 
@@ -195,7 +197,7 @@ Use the [strict raw-byte webhook verifier](/advanced/webhooks#3-verify-exact-req
 
 ## Delete content deliberately
 
-The reviewed candidate supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
+The client supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
 
 The exact queued response raises `NixflexServerError`: status 503, code `hangup_pending`, and details `deleted:false` plus `retry_pending:true`. It is not success. The server continues automatically; a later deliberate repeat of the same DELETE is safe. Other uncertain failures use `outcome_unknown`; inspect `details.original_code` and current state privately. No error or 404 is converted into deletion success.
 
@@ -230,7 +232,7 @@ with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"],
 
 ## Public method directory
 
-This directory lists all 137 public resource methods in the reviewed candidate. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
+This directory lists all 137 public resource methods in the client. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
 
 The same resource names work with `Nixflex` and `AsyncNixflex`. Await asynchronous JSON operations; use `async for` for asynchronous streams. `prepare` builds an intention locally.
 

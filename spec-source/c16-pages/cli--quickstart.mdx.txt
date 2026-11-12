@@ -1,0 +1,121 @@
+---
+title: "Make a safe CLI read and prepare a call"
+sidebarTitle: "CLI quickstart"
+description: "Verify the CLI account connection with a usage read, prepare an outbound UUID locally and keep any approved send separate from read-only recovery."
+canonical: "https://docs.nixflex.com/cli/quickstart"
+---
+
+Verify the CLI with one safe read, then prepare a recoverable call intention locally before deciding whether to send it.
+
+<div className="nxf-facts">
+  <div><small>First request</small><strong>Read usage</strong></div>
+  <div><small>Preparation</small><strong>Local file, no send</strong></div>
+  <div><small>Recovery</small><strong>Original UUID</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The first request reads usage and does not create an account, call or message.
+- Use `--output` for prepared JSON; do not rely on PowerShell redirection encoding.
+- Never put preparation and sending inside an automatic retry loop.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+<span id="check-the-installed-candidate"></span>
+
+## Check the installed version
+
+[Install the CLI](/cli/overview#install-the-cli), version 0.11.0 or later. Provision the credential and API host privately. In PowerShell:
+
+```powershell
+if (-not $env:NIXFLEX_API_KEY -or -not $env:NIXFLEX_BASE_URL) {
+    throw 'Configure the intended account and API host privately.'
+}
+nixflex --version
+if ($LASTEXITCODE -ne 0) { throw 'CLI version check failed.' }
+$usageText = nixflex usage --base-url $env:NIXFLEX_BASE_URL --json
+if ($LASTEXITCODE -ne 0) { throw 'Usage read failed; inspect safe diagnostics privately.' }
+$usage = $usageText | ConvertFrom-Json
+Write-Output 'Usage read succeeded.'
+```
+
+Keep `$usage` private. A successful read confirms this account connection; it is not permission for a write.
+
+## Prepare a complete intention
+
+Create a private UTF-8 `intent.json` with the reviewed call fields. This illustrative file uses fictional numbers and must be replaced with approved owned resources and a permitted recipient before a send:
+
+```json
+{
+  "agent_id":"agent_example",
+  "to_number":"+12025550101",
+  "from_number":"+12025550100",
+  "prompt":"Ask {{name}} whether they want to discuss an appointment.",
+  "dynamic_vars":{"name":"Sam"}
+}
+```
+
+Run local preparation once. It needs no API key, sends nothing and refuses to overwrite an existing output file:
+
+```powershell
+nixflex calls prepare --body '@intent.json' --output prepared-call.json --json
+if ($LASTEXITCODE -ne 0) { throw 'Preparation failed; no send should follow.' }
+$saved = Get-Content -LiteralPath 'prepared-call.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+if (-not $saved.request_id) { throw 'Prepared UUID is missing.' }
+```
+
+Use `--output` instead of `>` so Windows PowerShell 5.1 does not write UTF-16 JSON that the CLI expects to read as UTF-8. Protect the directory and retain the account/base-URL binding with this intention.
+
+## Send only after approval
+
+The following separate command places a paid call using the saved payload. Run it only after approving the sender, recipient and purpose; it is not part of a read-only quickstart test.
+
+```powershell
+$receiptText = nixflex calls create --body '@prepared-call.json' --base-url $env:NIXFLEX_BASE_URL --json
+if ($LASTEXITCODE -ne 0) { throw 'Send outcome needs review; do not send again automatically.' }
+$receipt = $receiptText | ConvertFrom-Json
+# Persist the returned receipt privately in your application record.
+```
+
+Save a known `call_id`, including when request confirmation is incomplete. A local parsing or storage failure after this command can happen after the call was accepted. Do not rerun preparation or sending as recovery.
+
+## Read the same request separately
+
+Load the existing prepared file and inspect its saved UUID. These reads cannot place another call:
+
+```powershell
+$saved = Get-Content -LiteralPath 'prepared-call.json' -Raw -Encoding UTF8 | ConvertFrom-Json
+$stateText = nixflex calls outboundRequest $saved.request_id --base-url $env:NIXFLEX_BASE_URL --json
+if ($LASTEXITCODE -ne 0) { throw 'Request read failed; retain the original UUID.' }
+$state = $stateText | ConvertFrom-Json
+if ($state.state -eq 'accepted' -and $state.call_id) {
+    $bookingText = nixflex calls bookings $state.call_id --base-url $env:NIXFLEX_BASE_URL --json
+    if ($LASTEXITCODE -ne 0) { throw 'Booking result is unavailable; do not infer zero.' }
+    $bookings = $bookingText | ConvertFrom-Json
+}
+```
+
+| Request state | Decision |
+| --- | --- |
+| `accepted` | Read the saved call ID and its separate result states. |
+| `pending` or `unknown` | Keep the same intention and reconcile; never allocate a replacement automatically. |
+| `rejected` | Review the reason before a new deliberate decision. |
+| 404 or failed read | Do not treat it as permission to redial. |
+
+Only a ready booking result carries the confirmed timeline/final data. Preserve none, processing, deleted and unavailable as different states.
+
+- [Choose another command](/cli/commands)
+- [Understand outbound request recovery](/guides/developer/call-requests)
+- [Read call and booking results](/guides/developer/call-history)
+
+{/* Preserve existing task links after reorganising the guide. */}
+<span id="everything-as-json"></span>
+<span id="load-a-customer-list"></span>

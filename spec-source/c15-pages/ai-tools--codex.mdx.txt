@@ -1,7 +1,7 @@
 ---
 title: "Connect Codex to Nixflex with MCP"
 sidebarTitle: "Connect Codex"
-description: "Configure the Nixflex MCP candidate in Codex without saving a key in TOML. Verify a read and try five prompts for agents, knowledge, calls, booking and usage."
+description: "Configure the Nixflex MCP server in Codex without saving a key in TOML. Verify a read and try five prompts for agents, knowledge, calls, booking and usage."
 canonical: "https://docs.nixflex.com/ai-tools/codex"
 ---
 
@@ -16,7 +16,7 @@ Building an app? [Developer version](/sdks/mcp).
 <div className="nxf-facts">
   <div><small>Connection</small><strong>Local Node process</strong></div>
   <div><small>Configuration</small><strong>Your MCP settings</strong></div>
-  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Tools</small><strong>97</strong></div>
   <div><small>Secrets</small><strong>Private environment</strong></div>
 </div>
 
@@ -24,7 +24,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 **The important part**
 
-- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Use MCP 0.5.0 or later. MCP 0.5.0 exposes 97 tools.
 - Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
 - Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
 - Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
@@ -43,16 +43,16 @@ Illustrative conversation between colleagues.
 
 ## Connect
 
-1. [Install the supplied package](/ai-tools/overview#install-the-supplied-local-package) with Node 22 or later.
+1. [Set up the MCP server](/ai-tools/overview#install-the-mcp-server) with Node 22 or later.
 2. Provide `NIXFLEX_API_KEY` and the matching `NIXFLEX_BASE_URL` privately in the environment used to launch Codex. Never ask Codex to read the key or put its value in a chat, command argument or TOML file.
-3. Add this server to `~/.codex/config.toml`, preserving existing settings. Replace the Windows path with your actual installed path. For macOS or Linux, write the absolute path under your home directory in full.
+3. Add this server to `~/.codex/config.toml`, preserving existing settings. The example below uses npx; on Windows, use the command and arguments shown after it.
 4. Restart Codex from the prepared environment. Use `codex mcp list` or `/mcp` to inspect the connection and tools.
 5. Run the read-only prompt below and approve only that action.
 
 ```toml
 [mcp_servers.nixflex]
-command = "node"
-args = ["C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"]
+command = "npx"
+args = ["-y", "nixflex-mcp"]
 startup_timeout_sec = 30
 env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
 
@@ -60,7 +60,9 @@ env_vars = ["NIXFLEX_API_KEY", "NIXFLEX_BASE_URL"]
 NIXFLEX_CREDENTIAL_SOURCE = "environment"
 ```
 
-The `env_vars` names forward values from the launching environment; they are not the values themselves. Use a full Node executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
+On Windows, replace `command` with `"cmd.exe"` and `args` with `["/c", "npx", "-y", "nixflex-mcp"]`.
+
+The `env_vars` names forward values from the launching environment; they are not the values themselves. Ensure npx is available to the client process; use its full executable path if required. See the current [Codex MCP configuration guide](https://learn.chatgpt.com/docs/extend/mcp) for local server options. Hosted chats do not automatically read your local configuration.
 
 ### Optional private number-credential updates
 
@@ -84,7 +86,7 @@ Restart from that prepared environment. The tool accepts only `phone_number`, `p
 
 > Use Nixflex get_usage only. Explain the usage returned without changing anything or printing credentials. Do not use shell commands to inspect my secret environment.
 
-Expect **97 tools** for the candidate. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
+Expect **97 tools** for the server. Keep approvals enabled, including when a tool does not expose a `confirm` argument. The four calendar and credential writes—calendar connect, settings, disconnect and number-credential update—require `confirm: true`; missing confirmation sends no request. Never automatically retry an uncertain write; reconcile it first.
 
 ## Five prompts to try
 
@@ -110,11 +112,11 @@ Expect **97 tools** for the candidate. Keep approvals enabled, including when a 
 
 ## Check a call without repeating it
 
-The candidate’s `get_outbound_call_request` reads the original saved request ID without dialling. `get_call_bookings` reads the retained booking result for a known call ID. Keep `ready`, `none`, `processing`, `deleted` and `unavailable` distinct. Follow [the saved-request workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests) before any new approved outbound call; never prepare a replacement ID for an uncertain launch.
+The server’s `get_outbound_call_request` reads the original saved request ID without dialling. `get_call_bookings` reads the retained booking result for a known call ID. Keep `ready`, `none`, `processing`, `deleted` and `unavailable` distinct. Follow [the saved-request workflow](/ai-tools/overview#check-bookings-and-uncertain-call-requests) before any new approved outbound call; never prepare a replacement ID for an uncertain launch.
 
 ## Limits and documentation
 
-Use the dashboard for knowledge publication and personal ownership actions. The candidate supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
+Use the dashboard for knowledge publication and personal ownership actions. The server supports human calendar consent, status, settings and confirmed disconnection. Status can refresh an existing connection internally; `needs_reconnect: true` still needs consent. Disconnect cannot recall dispatched work or guarantee remote revocation, and `send_invites` is not proof of delivery. Tools that call, text or launch campaigns can spend credit. See [the full MCP limits](/ai-tools/overview#what-the-tools-can-do).
 
 Give Codex [llms.txt](https://docs.nixflex.com/llms.txt) and [this page as Markdown](https://docs.nixflex.com/ai-tools/codex.md). Ask it to read the relevant page and inspect the available tool schema before proposing an action. Documentation is context, not account permission.
 

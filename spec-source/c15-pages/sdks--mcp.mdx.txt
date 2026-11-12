@@ -16,7 +16,7 @@ Build an AI-assisted workflow from approved MCP tools, keeping local preparation
 
 **The important part**
 
-- The exact reviewed 0.5.0 candidate has 97 tools; older candidates can share its version number.
+- MCP 0.5.0 exposes 97 tools. Use version 0.5.0 or later for these examples.
 - safe_retry:true without request_id prepares a UUID and sends nothing.
 - Tool output is visible to the connected assistant, so disclose only data appropriate for that client.
 
@@ -30,13 +30,13 @@ Build an AI-assisted workflow from approved MCP tools, keeping local preparation
 
 ## Install and verify the intended server
 
-Use the [AI client setup guide](/ai-tools/overview) for your supported client and private credential source. Verify the exact [candidate archive hash](/sdks/ecosystem#verify-the-reviewed-candidate) before relying on these tools. The reviewed package is unpublished; a registry command or version string alone does not establish its identity.
+Run `npx -y nixflex-mcp` with Node 22 or later. These examples require MCP 0.5.0 or later. Use the [AI client setup guide](/ai-tools/overview) to set the command, arguments and private environment fields for your client.
 
 The server uses stdio with the local client and sends the account credential over HTTPS to the configured Nixflex API. Results returned through tools are visible to the assistant. Bind the credential and API host to the intended environment; never paste a secret into a conversation or tool argument.
 
 ## Check tool coverage before prompting
 
-This candidate includes the two call-result reads and adds `delete_campaign` to the prior 96 tools. The 19 approved Knowledge tools remain in the same installation. The new reads do not add direct calendar-booking or knowledge-publication tools.
+MCP 0.5.0 exposes 97 tools, including two call-result reads and `delete_campaign`. The 19 approved Knowledge tools remain in the same installation. The new reads do not add direct calendar-booking or knowledge-publication tools.
 
 Use the client’s actual tool inventory. If it does not contain the required tool, stop and verify the package; do not invent a tool name or ask the assistant to work around missing scope with a secret-bearing HTTP command.
 
@@ -150,7 +150,7 @@ The three tools declare a destructive write. A queued 503 remains an error resul
 
 ## Tool directory
 
-The reviewed candidate exposes 97 tools. Read-only hints help an AI client plan; they do not replace permission checks or make a tool safe to run without reviewing its inputs. Ask the installed server for its current input schema. A write tool is not permission to perform the action.
+The client exposes 97 tools. Read-only hints help an AI client plan; they do not replace permission checks or make a tool safe to run without reviewing its inputs. Ask the installed server for its current input schema. A write tool is not permission to perform the action.
 
 | Tool | Declared hint |
 | --- | --- |

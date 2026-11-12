@@ -1,0 +1,103 @@
+---
+title: "Connect call results to GoHighLevel"
+description: "Configure Nixflex GoHighLevel for the correct business number, protect credentials and verify external records before treating an automation as complete."
+canonical: "https://docs.nixflex.com/integrations/gohighlevel"
+sidebarTitle: "GoHighLevel"
+---
+
+Connect the intended GoHighLevel workspace to an owned number and check the resulting contact or call update.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Target</small><strong>Selected workspace</strong></div>
+  <div><small>Recovery</small><strong>Read before repeating</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the exact workspace and permissions required by the saved connection.
+- Connection success and a later business update are separate results.
+- Keep uncertain outcomes visible instead of creating duplicate records.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Use an authorised test destination with fictional business data.
+
+## 1. Read the saved connection
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/gohighlevel/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("gohighlevel", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('gohighlevel', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get gohighlevel '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Save the intended destination
+
+
+Use the [GoHighLevel PUT route](/api-reference/integration-settings/put-integrations-gohighlevel-number-phoneNumber) with the private integration token in `pit` and the intended `location_id`. Keep both in the authorised server configuration flow; GET never returns the full token.
+
+Optional tags are trimmed, blank entries removed and duplicates collapsed. `is_active` defaults to true; only literal false disables it. Optional `agent_id` is a fallback when the number has no assigned agent and does not move the number. Confirm the destination business before enabling updates.
+
+## 3. Define what success means
+
+Review the actual external record and workflow result. A saved integration is not proof that a later contact update or automation ran. Keep duplicate and partial-failure handling in the receiving workflow.
+
+## 4. Test a complete workflow
+
+Use one approved test call and inspect both its Nixflex result and the receiving system. Check missing fields, delayed processing and duplicate delivery. Do not promise a notification arrives within a fixed number of seconds.
+
+## 5. Disconnect and reconcile
+
+Use the documented integration DELETE route to stop future use. Previously delivered external records remain subject to that system’s controls. If a save or deletion response is lost, read the current settings before repeating it.
+
+## Example response
+
+GET returns the safe saved integration configuration. The settings response confirms configuration state; external delivery and business-action results must be checked separately.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid credentials/destination | Correct configuration before retrying. |
+| Saved but no notification | Inspect call state and external delivery separately. |
+| Duplicate event | Deduplicate before repeating a side effect. |
+| Unknown save/delete result | Read current configuration. |
+| Data deleted in Nixflex | Manage previously sent external copies separately. |
+
+## Next steps
+
+- [Read settings](/api-reference/integration-settings/get-integrations-gohighlevel-number-phoneNumber)
+- [Signed event receiver](/advanced/webhooks)
+- [Call history](/guides/developer/call-history)

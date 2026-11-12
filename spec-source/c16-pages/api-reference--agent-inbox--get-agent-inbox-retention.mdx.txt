@@ -1,0 +1,163 @@
+---
+title: "Read inbox retention"
+sidebarTitle: "Read inbox retention"
+description: "Read the Nixflex account retention default and inbox cleanup availability. Include a number to resolve retention for its assigned agent."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/retention"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-retention"
+---
+
+Read the account retention default and inbox cleanup availability. Include a number to resolve its assigned agent’s web-message retention policy.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the returned policy for inbox history.
+- A retention setting does not prove that every background deletion has finished.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [Developer guide](/guides/developer/agent-inbox) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `number` (query) | string | No | Omitted | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+Do not send a request body.
+
+Only number is accepted as a query field. URL-encode + in a query value. Without number, web_days is null rather than the account default. Zero days means cleanup on the next cleanup run after reply, not an immediate response-time deletion guarantee. Archiving does not extend retention. Requests return Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `call_retention_days` | integer | Account retention default, 90 when unset. |
+| `web_days` | integer or null | Effective agent or account web days when number is supplied; null without number. |
+| `web_expiry_confirmed` | boolean | Web cleanup database prerequisites are confirmed. |
+| `applies_to` | string | Policy scope. Value: `"new_messages_agent_policy"`. |
+| `legacy_web_policy` | string | Legacy-message fallback. Value: `"account_policy_at_creation_or_90_days"`. |
+| `zero_days_means` | string | Zero-day cleanup timing. Value: `"next_cleanup_after_reply"`. |
+| `archive_changes_retention` | boolean | Archiving does not change retention. Value: `false`. |
+| `sms_days` | integer | SMS retention days. Value: `90`. |
+| `sms_processing_enabled` | boolean | SMS cleanup processing is enabled. |
+| `web_processing_enabled` | boolean | Cleanup enabled and web prerequisites confirmed. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/retention?number=%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.inbox.retention({"number": "+12025550123"});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.inbox.retention(number='+12025550123')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex inbox retention --number '+12025550123' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_inbox_retention",
+  "arguments": {
+    "number": "+12025550123"
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "call_retention_days": 90,
+  "web_days": null,
+  "web_expiry_confirmed": true,
+  "applies_to": "new_messages_agent_policy",
+  "legacy_web_policy": "account_policy_at_creation_or_90_days",
+  "zero_days_means": "next_cleanup_after_reply",
+  "archive_changes_retention": false,
+  "sms_days": 90,
+  "sms_processing_enabled": true,
+  "web_processing_enabled": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Check inbox availability](/api-reference/agent-inbox/get-agent-inbox-features)
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [Errors and recovery](/api-reference/errors#error-envelope)

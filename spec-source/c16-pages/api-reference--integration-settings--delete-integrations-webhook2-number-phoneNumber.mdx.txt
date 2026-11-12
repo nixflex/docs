@@ -1,0 +1,140 @@
+---
+title: "Clear second webhook"
+sidebarTitle: "Clear second webhook"
+description: "Clear the secondary webhook setting for an owned Nixflex number. This request targets the secondary slot independently of the primary slot."
+openapi: "/api-reference/public.openapi.json DELETE /integrations/webhook2/number/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/integration-settings/delete-integrations-webhook2-number-phoneNumber"
+---
+
+Clear the saved second webhook setting for an owned number. Each webhook slot is independent. Saved destinations receive call events when the relevant delivery feature is available.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Clear only the intended target setting; already dispatched work cannot be recalled.
+- Verify raw-body signatures and deduplicate durably before acknowledging events.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [Developer guide](/advanced/webhooks) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. When personal dashboard sessions are enabled, Owner and Admin sessions can write these settings; Member sessions can read only. Ownership checks still apply.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Owned E.164 number. URL-encode the leading plus sign. |
+
+Do not send a request body.
+
+The GET response returns the saved URL. Keep URLs private because they can contain credentials. Setting a URL does not test delivery or verify the destination. MCP delete preview masks the configured webhook URL; it does not expose the destination.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `ok` | boolean | Request succeeded. Value: `true`. |
+| `deleted` | boolean | Delete request completed. Value: `true`. |
+| `phone_number` | string | Owned phone number. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host. Review the target and payload before this write.
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/integrations/webhook2/number/%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.integrations.delete("webhook2", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.integrations.delete('webhook2', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex integrations delete webhook2 '+12025550123' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "delete_webhook",
+  "arguments": {
+    "phone_number": "+12025550123",
+    "slot": 2,
+    "confirm": true
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "ok": true,
+  "deleted": true,
+  "phone_number": "+12025550100"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+The operation writes one saved setting and has no idempotency token. Read the current value after an uncertain response. Repeating it can overwrite a newer change, so reconcile before resending.
+
+## Related endpoints
+
+- [Get first webhook](/api-reference/integration-settings/get-integrations-webhook-number-phoneNumber)
+- [Get second webhook](/api-reference/integration-settings/get-integrations-webhook2-number-phoneNumber)
+- [Errors and recovery](/api-reference/errors#error-envelope)

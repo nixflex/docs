@@ -1,0 +1,154 @@
+---
+title: "List organisation activity"
+sidebarTitle: "List activity"
+description: "Read Nixflex organisation activity, newest first, with up to 50 events per JSON page. Check role permissions and paging rules."
+openapi: "/api-reference/public.openapi.json GET /organisation/activity"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/organisation/get-organisation-activity"
+---
+
+Read current organisation activity, newest first. JSON pages contain up to 50 events. Owner and Admin personal sessions can read activity.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use activity as an audit trail within its retention limits.
+- An activity row is not a complete provider delivery or billing record.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `before` (query) | string | No | Omitted | Decimal event cursor. Pattern: `^\d{1,18}$`. |
+| `actor` (query) | string | No | Omitted | Filter by person UUID. Format: uuid. |
+| `from` (query) | string | No | Omitted | Inclusive UTC start day; clamped to retained activity, at most 12 months. Format: date. |
+| `to` (query) | string | No | Omitted | Inclusive UTC end day; capped at now. Format: date. |
+| `format` (query) | string | No | Omitted | Use csv for a streamed export; other values keep JSON. The examples use JSON. |
+
+Do not send a request body.
+
+The from date must precede the exclusive day after to and cannot be in the future. Dates must be real YYYY-MM-DD dates. CSV uses 500-row chunks and streams the full matching result; 500 is not a total export limit. Permissions are checked for every chunk. An interrupted download is incomplete. CSV columns are When, Action and Result. K4 supports date filters and streamed CSV; activity IDs are strings. The filtered MCP tool accepts an 18-digit cursor; the older frozen MCP activity tool retains its 19-digit input limit.
+
+For CSV, Node uses `organisation.activityCsv` and Python uses `organisation.activity_csv` as byte iterators; the CLI uses `organisation activityCsv --set from=2026-10-01 --set to=2026-10-31 --output activity.csv`. The CLI publishes only a completed new file and never overwrites. Discard partial SDK output on failure. CSV is not an MCP tool.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `events` | array of object | Up to 50 events. Maximum 50 items. |
+| `events[].id` | string | Decimal event ID. Treat as an opaque string. |
+| `events[].created_at` | string | UTC timestamp. Format: date-time. |
+| `events[].actor_id` | string or null | UUID identifier. Format: uuid. |
+| `events[].actor` | string | Human-readable actor label. |
+| `events[].sentence` | string | Human-readable action sentence. |
+| `events[].result` | string | Displayed outcome. Allowed: `"Done"`, `"Not allowed"`, `"Not confirmed"`. |
+| `next_cursor` | string or null | Pass as before on the next JSON request; null when no full page remains. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/activity?from=2026-10-01&to=2026-10-31" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.organisation.activity({from:"2026-10-01",to:"2026-10-31"});
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.organisation.activity(from_='2026-10-01', to='2026-10-31')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex organisation activity --set from=2026-10-01 --set to=2026-10-31 --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "list_organisation_activity_filtered",
+  "arguments": {
+    "from": "2026-10-01",
+    "to": "2026-10-31"
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "events": [],
+  "next_cursor": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled in this environment. | Check deployment availability; do not retry unchanged. |
+| 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The organisation action could not be confirmed. | Refresh the current state before trying again. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The current personal role does not allow this action. | Use an authorised personal session; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal membership has ended. | Sign in again or contact the Owner. |
+| 401 | [`invalid_token`](/api-reference/errors#invalid_token) | The personal session is invalid or expired. | Sign in with your own login again. |
+| 503 | [`auth_unavailable`](/api-reference/errors#auth_unavailable) | The personal session could not be verified. | Retry the read later; reconcile uncertain changes. |
+| 400 | [`invalid_filter`](/api-reference/errors#invalid_filter) | An activity cursor, actor or date filter is invalid. | Correct the request before retrying. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Get organisation context](/api-reference/organisation/get-organisation)
+- [List organisation members](/api-reference/organisation/get-organisation-members)
+- [Errors and recovery](/api-reference/errors#error-envelope)

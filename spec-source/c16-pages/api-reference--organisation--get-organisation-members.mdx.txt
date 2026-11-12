@@ -1,0 +1,155 @@
+---
+title: "List organisation members"
+sidebarTitle: "List members"
+description: "List Nixflex organisation members, up to 100 pending or expired invitations, and current safety limits. Review role permissions before changes."
+openapi: "/api-reference/public.openapi.json GET /organisation/members"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/organisation/get-organisation-members"
+---
+
+Read active members, up to 100 pending or expired invitations, and current safety limits. The Owner and Admin can view the team; Members cannot.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use member IDs from this organisation for later actions.
+- Do not expose private membership data in public pages or logs.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team) · [Developer guide](/guides/developer/organisations) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Owner and Admin personal sessions are allowed. Members are refused. The environment must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.
+
+## Request fields
+
+No request body or query fields are required.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `members` | array of object | Active members, ordered by join time. |
+| `members[].user_id` | string | UUID identifier. Format: uuid. |
+| `members[].email` | string | Member email. |
+| `members[].name` | string | Display name; may be empty. |
+| `members[].role` | string | Current personal role. API-key authority is owner. Allowed: `"owner"`, `"admin"`, `"member"`. |
+| `members[].joined_at` | string | UTC timestamp. Format: date-time. |
+| `members[].last_active_at` | string or null | UTC timestamp. Format: date-time. |
+| `invites` | array of object | Up to 100 rows, newest first; no cursor. Maximum 100 items. |
+| `invites[].id` | string | UUID identifier. Format: uuid. |
+| `invites[].email` | string | Invited email. |
+| `invites[].role` | string | Current personal role. API-key authority is owner. Allowed: `"owner"`, `"admin"`, `"member"`. |
+| `invites[].state` | string | Pending rows whose expiry passed are displayed as expired. Allowed: `"pending"`, `"expired"`. |
+| `invites[].delivery` | string | Delivery status. Allowed: `"pending"`, `"sent"`, `"failed"`, `"unknown"`. |
+| `invites[].expires_at` | string | UTC timestamp. Format: date-time. |
+| `limits` | object | Saved value. |
+| `limits.members` | integer | Maximum active members plus unexpired pending invitations. |
+| `limits.invites_per_day` | integer | Daily invitation limit. |
+| `limits.invites_used_today` | integer | Invitations used today in UTC. |
+| `limits.seats_used` | integer | Active members plus unexpired pending invitations. |
+
+## Example request
+
+Examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep the staging key in `NXF_STAGING_KEY`; the PowerShell CLI reads it through `NIXFLEX_API_KEY`. The cURL example uses Bash. Use approved owned fixtures and keep configuration responses private. Python shows sync usage; AsyncNixflex uses the same method with async with and await. Configure the existing MCP installation for the same account and staging host.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/organisation/members" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl:'https://nixflex-voice-engine-staging.up.railway.app',maxRetries:0});
+const result = await c.organisation.members();
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NXF_STAGING_KEY"], base_url="https://nixflex-voice-engine-staging.up.railway.app", max_retries=0) as c:
+    result = c.organisation.members()
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex organisation members --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "list_organisation_members",
+  "arguments": {}
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "members": [],
+  "invites": [],
+  "limits": {
+    "members": 50,
+    "invites_per_day": 20,
+    "invites_used_today": 0,
+    "seats_used": 0
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are not enabled in this environment. | Check deployment availability; do not retry unchanged. |
+| 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The organisation action could not be confirmed. | Refresh the current state before trying again. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | The current personal role does not allow this action. | Use an authorised personal session; do not share the organisation key. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal membership has ended. | Sign in again or contact the Owner. |
+| 401 | [`invalid_token`](/api-reference/errors#invalid_token) | The personal session is invalid or expired. | Sign in with your own login again. |
+| 503 | [`auth_unavailable`](/api-reference/errors#auth_unavailable) | The personal session could not be verified. | Retry the read later; reconcile uncertain changes. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Get organisation context](/api-reference/organisation/get-organisation)
+- [List organisation activity](/api-reference/organisation/get-organisation-activity)
+- [Errors and recovery](/api-reference/errors#error-envelope)

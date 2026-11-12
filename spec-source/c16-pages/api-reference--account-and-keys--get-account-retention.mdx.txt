@@ -1,0 +1,126 @@
+---
+title: "Get account retention"
+sidebarTitle: "Get account retention"
+description: "Read the Nixflex account retention default for new agents. Existing agents retain their saved settings until explicitly updated."
+openapi: "/api-reference/public.openapi.json GET /account/retention"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/account-and-keys/get-account-retention"
+---
+
+Read the account retention default for new agents. Existing agents keep their saved retention settings; use Update an agent to change one agent.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the saved account retention policy.
+- Policy values alone do not prove pending cleanup is complete.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/billing) · [Developer guide](/guides/developer/billing) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+No request body or query fields are required.
+
+No path, query or body fields are required. A new account defaults to 90 days if no account retention default has been saved.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `call_retention_days` | integer | Saved account default: 90, 30, 7, 1 or 0 days. Zero means delete eligible content after each call. Allowed: `90`, `30`, `7`, `1`, `0`. |
+| `applies_to` | string | Only new agents inherit this default. |
+| `processing_enabled` | boolean | Whether the retention processing feature is enabled. This does not prove that a particular record has been erased. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/account/retention" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.account.retention();
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.account.retention()
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex account retention --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "call_retention_days": 90,
+  "applies_to": "new_agents",
+  "processing_enabled": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 503 | [`retention_unavailable`](/api-reference/errors#retention_unavailable) | The saved retention default could not be read. | Retry a bounded read after recovery; do not assume a default from the failure. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Get account usage](/api-reference/account/usage)
+- [Errors and recovery](/api-reference/errors#error-envelope)

@@ -1,0 +1,116 @@
+---
+title: "Send one SMS with the API"
+description: "Send one text through the Nixflex API with an explicit owned sender, respect recipient contact checks and distinguish accepted messages from confirmed delivery."
+canonical: "https://docs.nixflex.com/sms/send-sms"
+sidebarTitle: "Send one SMS"
+---
+
+Send one requested message from an explicit owned sender and retain the acceptance result without assuming delivery.
+
+<div className="nxf-facts">
+  <div><small>Effect</small><strong>One message</strong></div>
+  <div><small>Sender</small><strong>Explicit owned number</strong></div>
+  <div><small>Acceptance</small><strong>Not delivery proof</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This request can contact a real recipient; it has no dry-run mode.
+- Use to for the recipient and from_number for the owned sender.
+- Do not resend an unknown outcome or bypass a do_not_contact refusal.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the active agent, owned sender and approved recipient.
+
+## 1. Prepare the message
+
+Keep the purpose and sender clear. Encoding and segmentation affect transport charges; the API does not declare one universal character cap or price for all destinations.
+
+## 2. Send once
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST \
+  --url "https://api.nixflex.com/v1/sms" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to\":\"$NXF_TO_NUMBER\",\"message\":\"Your requested update\"}"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.sms.send({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to:process.env.NXF_TO_NUMBER,message:"Your requested update"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.sms.send(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to=os.environ["NXF_TO_NUMBER"],message="Your requested update")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex sms send --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --message "Your requested update" --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 3. Save the acceptance result
+
+The recipient field is `to`, not `to_number`. `from_number` is required and must belong to this account and agent; no agent-number fallback is used. Save receipt identities when returned.
+
+## 4. Interpret uncertainty
+
+`201` with `status:sent` means accepted for sending, not delivery. History persistence can fail after acceptance. Preserve `outcome`, `work_id`, `message_id` and `safe_to_retry` when present. A generic 500 is not proof the text was never sent.
+
+## 5. Handle replies and events
+
+Enable and configure the number’s SMS agent if automatic replies are wanted. Inspect available conversations through the inbox. The reviewed webhook contract includes `sms.booking` for calendar actions; it does not define general `sms.received` or `sms.delivered` events. There is no documented single-message GET route to invent from the send response.
+
+## Example response
+
+Illustrative accepted response:
+
+```json
+{"status":"sent","to":"+12025550101","from":"+12025550100"}
+```
+
+Optional receipt fields depend on the enabled implementation.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Missing sender or incorrect assignment | Correct the explicit owned sender. |
+| Contact restriction | Respect opt-out and local-hours checks. |
+| safe_to_retry false | Do not resend. |
+| Unknown error/network outcome | Reconcile receipts and history first. |
+| Long or non-basic text | Review segmentation and current external rates. |
+
+## Next steps
+
+- [Send reference](/api-reference/sms/send)
+- [SMS auto-reply](/sms/sms-agent)
+- [Contact controls](/guides/developer/contact-controls)
+
+## Single-SMS suppression response change
+
+Single `POST /v1/sms` now returns **409 `do_not_contact`**, type `conflict`, when the recipient is suppressed. It previously returned **400 `invalid_request`**. Nothing was sent. Stop and respect the opt-out; never automatically retry or remove the suppression. SMS campaigns still hold affected recipients individually with `hold_reason: do_not_contact`.

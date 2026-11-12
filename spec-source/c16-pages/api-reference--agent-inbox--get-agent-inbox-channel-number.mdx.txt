@@ -1,0 +1,176 @@
+---
+title: "List inbox conversations"
+sidebarTitle: "List inbox conversations"
+description: "List conversations for one owned number and channel. Read-only listing does not mark messages as read."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/{channel}/{number}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-channel-number"
+---
+
+List conversations for one owned number and channel. Read-only listing does not mark messages as read.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the channel and number fixed while paging.
+- A conversation summary is not the full message thread.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [Developer guide](/guides/developer/agent-inbox) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `channel` (path) | string | Yes | None | Conversation channel. Allowed: `"sms"`, `"web"`. |
+| `number` (path) | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `archived` (query) | boolean | No | `false` | false selects unarchived conversations; true selects archived only. |
+| `unread` (query) | boolean | No | `false` | true selects unread conversations; false includes both read and unread. |
+| `search` (query) | string | No | `""` | Literal case-insensitive search across message text, thread key and visitor name/phone. Maximum 160 characters. |
+| `since` (query) | string | No | Omitted | Only conversations whose last message is at or after this timestamp. Do not combine with period. Format: date-time. |
+| `period` (query) | string | No | `"all"` | UTC calendar range: today, or the last N calendar dates including today; all has no time floor. Allowed: `"all"`, `"today"`, `"7"`, `"30"`, `"90"`. |
+| `limit` (query) | integer | No | `30` | Conversation page size. Minimum 1. Maximum 100. |
+| `offset` (query) | integer | No | `0` | Offset in the filtered list. Minimum 0. Maximum 10000. |
+
+Do not send a request body.
+
+Unknown query fields are refused. Boolean query values must be the literal strings true or false. period and since are mutually exclusive. Sort order is last_at descending then thread_key ascending. There is no cursor; continue by offset while needed, recognising that incoming messages can move rows between pages. archived_new and unread_total count conversations, not messages. Requests return Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `conversations` | array of object | Saved value. |
+| `conversations[].thread_key` | string | Opaque thread key. |
+| `conversations[].last_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `conversations[].msg_count` | integer | Conversation message count. |
+| `conversations[].unread_count` | integer | Unread incoming message count. |
+| `conversations[].archived` | boolean | Archived state. |
+| `conversations[].visits` | integer | Distinct visits, minimum one. |
+| `conversations[].visitor_name` | string or null | Latest visitor name when present. |
+| `conversations[].visitor_phone` | string or null | Latest visitor phone when present. |
+| `conversations[].matched` | boolean | Whether this conversation matches the search. |
+| `conversations[].last_message` | string or null | Latest message content. |
+| `total` | integer | Filtered conversations across all pages. |
+| `archived_new` | integer | Archived conversations with unread messages, regardless of the current filters. |
+| `unread_total` | integer | Unarchived conversations with unread messages, regardless of current filters. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/web/%2B12025550123?archived=false&unread=true&search=one%20%2B%20two&period=7&limit=2&offset=0" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.inbox.list("web", "+12025550123", {"archived": false, "unread": true, "search": "one + two", "period": "7", "limit": 2, "offset": 0});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.inbox.list('web', '+12025550123', archived=False, unread=True, search='one + two', period='7', limit=2, offset=0)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex inbox list web '+12025550123' --archived false --unread true --search 'one + two' --period 7 --limit 2 --offset 0 --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "list_inbox_conversations",
+  "arguments": {
+    "channel": "web",
+    "number": "+12025550123",
+    "archived": false,
+    "unread": true,
+    "search": "one + two",
+    "period": "7",
+    "limit": 2,
+    "offset": 0
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "conversations": [],
+  "total": 0,
+  "archived_new": 0,
+  "unread_total": 0
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Check inbox availability](/api-reference/agent-inbox/get-agent-inbox-features)
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [Errors and recovery](/api-reference/errors#error-envelope)

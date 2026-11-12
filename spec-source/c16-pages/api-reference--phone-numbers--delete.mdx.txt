@@ -1,0 +1,140 @@
+---
+title: "Remove a phone number"
+sidebarTitle: "Remove phone number"
+description: "Disconnect an owned number from Nixflex and clear routing managed by its import. This does not release the number from your carrier account."
+openapi: "/api-reference/public.openapi.json DELETE /phone-numbers/{phoneNumber}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/phone-numbers/delete"
+---
+
+Disconnect an owned number from Nixflex and clear the routing managed by this import. This does not release the number from its carrier account or end that account’s charges.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>DELETE</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Removal changes the number connection; check the exact target first.
+- Tracked cleanup may remain pending after the request is accepted.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/phone-numbers) · [Developer guide](/guides/developer/phone-numbers) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `phoneNumber` (path) | string | Yes | None | Business number. Use E.164 and URL-encode the leading + as %2B. |
+
+Do not send a request body.
+
+No request body is required. Use the exact owned business number and URL-encode the leading +. Removal can affect new calls and messages using this number. Do not use it as a request to erase all call history, account data, or copies in external storage. After an unclear removal write, the engine can make one exact-resource read. Only explicit proof that all routing and application/trunk overrides are empty can finish that same removal. A missing resource (404), changed identity, missing routing fields, remaining routing or read failure is not proof. No second carrier write is sent by this recovery check.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | object | Saved value. |
+| `phone_number.phone_number` | string | Removed business number. |
+| `phone_number.deleted` | boolean | The number removal completed. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_PHONE_NUMBER` to the intended account-owned identifiers or approved recipient before running.
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/phone-numbers/$NXF_PHONE_NUMBER" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.phoneNumbers.delete(process.env.NXF_PHONE_NUMBER);
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.phone_numbers.delete(os.environ["NXF_PHONE_NUMBER"])
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex numbers delete "$NXF_PHONE_NUMBER" --confirm --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": {
+    "phone_number": "+12025550100",
+    "deleted": true
+  }
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | The number format is invalid. | Use a complete E.164 number. |
+| 403 | [`account_unavailable`](/api-reference/errors#account_unavailable) | The account is not active. | Resolve account access before attempting another number operation. |
+| 404 | [`number_not_found`](/api-reference/errors#number_not_found) | The number is not on this account. | Check the owning account and exact number. |
+| 409 | [`number_operation_pending`](/api-reference/errors#number_operation_pending) | Another import or removal is pending. | Read the current number and wait; do not change its routing. |
+| 409 | [`number_cleanup_uncertain`](/api-reference/errors#number_cleanup_uncertain) | A previous routing change is unconfirmed. | Contact support to reconcile it before importing or removing again. |
+| 503 | [`number_cleanup_uncertain`](/api-reference/errors#number_cleanup_uncertain) | The routing outcome from this attempt is unconfirmed. | Do not resend or change routing; reconcile through support. |
+| 503 | [`number_save_pending`](/api-reference/errors#number_save_pending) | Routing changed but local completion could not be confirmed. | Read current state and contact support; never replay automatically. |
+| 503 | [`number_operation_unavailable`](/api-reference/errors#number_operation_unavailable) | The operation could not be confirmed. | Reconcile the number before another write. |
+| 409 | [`number_cleanup_credentials_missing`](/api-reference/errors#number_cleanup_credentials_missing) | The existing connection lacks the credentials needed to clear routing. | Restore the existing connection through the supported account workflow before removal. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Never automatically repeat removal. Initial unconfirmed cleanup returns 503 number_cleanup_uncertain; an exact retry while still unclear returns 409 with the same code. A conflicting operation returns 409 number_operation_pending. Confirmed carrier change with database completion unknown returns 503 number_save_pending; an exact deliberate retry resumes completion without another carrier write. Keep unknown operations held and reconcile through support; do not delete and reimport to recover.
+
+## Related endpoints
+
+- [List phone numbers](/api-reference/phone-numbers/list)
+- [Get a phone number](/api-reference/phone-numbers/get)
+- [Errors and recovery](/api-reference/errors#error-envelope)

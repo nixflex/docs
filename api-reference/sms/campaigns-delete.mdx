@@ -59,7 +59,7 @@ HTTP 200 confirms content deletion. It does not erase billing or every external 
 
 These examples use the existing Node, Python, CLI and MCP delete methods. They target staging and use an owned fixture ID. Set `NXF_STAGING_KEY` privately for that account; configure MCP for the same host. The request changes the campaign. The CLI and MCP require explicit confirmation.
 
-Use the exact [reviewed candidate](/sdks/ecosystem#verify-the-reviewed-candidate). Its Node/Python clients preserve a proved 503 `hangup_pending` as `NixflexServerError`; other uncertain failures use `outcome_unknown` with the server code in `details.original_code`. A client exception for HTTP 503 does not mean deletion has stopped. Read its error code and details: `hangup_pending` is queued, while `deletion_unavailable` does not confirm a queue. Show deletion as complete only after HTTP 200 with `deleted:true`. See the response and recovery sections below.
+Use the exact [supported client version](/sdks/ecosystem#install-a-client). Its Node/Python clients preserve a proved 503 `hangup_pending` as `NixflexServerError`; other uncertain failures use `outcome_unknown` with the server code in `details.original_code`. A client exception for HTTP 503 does not mean deletion has stopped. Read its error code and details: `hangup_pending` is queued, while `deletion_unavailable` does not confirm a queue. Show deletion as complete only after HTTP 200 with `deleted:true`. See the response and recovery sections below.
 
 <RequestExample>
 

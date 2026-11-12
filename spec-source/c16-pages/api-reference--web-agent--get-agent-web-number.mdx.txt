@@ -1,0 +1,245 @@
+---
+title: "Read web agent settings"
+sidebarTitle: "Read web agent settings"
+description: "Read website agent settings for one owned number, including its current revision and optional appearance configuration."
+openapi: "/api-reference/public.openapi.json GET /agent-web/{number}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/web-agent/get-agent-web-number"
+---
+
+Read website agent settings for one owned number, including its current revision and optional appearance configuration.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read the web settings for the owned number.
+- A saved setting is not a live browser connection test.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/voice-widget) · [Developer guide](/web-assistant/overview) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `number` (path) | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+
+Do not send a request body.
+
+Read defaults describe the displayed value, not necessarily a persisted setting. web_agent_enabled is read-only on this endpoint. The inbox feature must be enabled; responses use Cache-Control: no-store. The appearance object is null until saved. Its footer is always returned as Powered by Nixflex. Installation timestamps can be null when the widget has not been seen.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `phone_number` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `agent_id` | string or null | Assigned agent. |
+| `web_prompt` | string or null | Saved website instructions. |
+| `web_appearance` | object or null | Complete appearance value, not a nested merge. Database JSON representation must be at most 32,000 bytes. |
+| `web_appearance.version` | integer | Appearance schema version. Value: `1`. |
+| `web_appearance.launcher` | string | Launcher identifier. Pattern: `^[a-z][a-z0-9-]{0,31}$`. |
+| `web_appearance.window` | string | Window layout. Allowed: `"compact"`, `"side"`, `"centre"`, `"full"`. |
+| `web_appearance.visit` | string | Initial visit action. Allowed: `"nothing"`, `"greeting"`, `"open"`. |
+| `web_appearance.theme` | string | Colour theme. Allowed: `"dark"`, `"light"`. |
+| `web_appearance.colourMode` | string | Colour mode. Allowed: `"solid"`, `"gradient"`. |
+| `web_appearance.colour` | string | Primary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `web_appearance.colour2` | string | Secondary RGB hex colour. Pattern: `^#[0-9a-fA-F]{6}$`. |
+| `web_appearance.text` | object | Allowed wording keys; omitted keys are not automatically preserved when replacing appearance. |
+| `web_appearance.text.greeting` | string | Optional greeting wording. Maximum 500 characters. |
+| `web_appearance.text.button` | string | Optional button wording. Maximum 500 characters. |
+| `web_appearance.text.title` | string | Optional title wording. Maximum 500 characters. |
+| `web_appearance.text.subtitle` | string | Optional subtitle wording. Maximum 500 characters. |
+| `web_appearance.text.call` | string | Optional call wording. Maximum 500 characters. |
+| `web_appearance.text.chat` | string | Optional chat wording. Maximum 500 characters. |
+| `web_appearance.text.welcome` | string | Optional welcome wording. Maximum 500 characters. |
+| `web_appearance.text.placeholder` | string | Optional placeholder wording. Maximum 500 characters. |
+| `web_appearance.text.status` | string | Optional status wording. Maximum 500 characters. |
+| `web_appearance.text.send` | string | Optional send wording. Maximum 500 characters. |
+| `web_appearance.text.close` | string | Optional close wording. Maximum 500 characters. |
+| `web_appearance.text.footer` | string | Always normalised to Powered by Nixflex on write and read. Maximum 500 characters. |
+| `web_appearance.text.typing` | string | Optional typing wording. Maximum 500 characters. |
+| `web_appearance.text.error` | string | Optional error wording. Maximum 500 characters. |
+| `web_appearance.text.contact` | string | Optional contact wording. Maximum 500 characters. |
+| `web_appearance.text.contactNote` | string | Optional contactNote wording. Maximum 500 characters. |
+| `web_appearance.text.contactName` | string | Optional contactName wording. Maximum 500 characters. |
+| `web_appearance.text.contactPhone` | string | Optional contactPhone wording. Maximum 500 characters. |
+| `web_appearance.text.avatar` | string | Optional avatar wording. Maximum 500 characters. |
+| `web_appearance.text.voiceConnecting` | string | Optional voiceConnecting wording. Maximum 500 characters. |
+| `web_appearance.text.voicePrivacy` | string | Optional voicePrivacy wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMute` | string | Optional voiceMute wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnmute` | string | Optional voiceUnmute wording. Maximum 500 characters. |
+| `web_appearance.text.voiceEnd` | string | Optional voiceEnd wording. Maximum 500 characters. |
+| `web_appearance.text.voiceAllow` | string | Optional voiceAllow wording. Maximum 500 characters. |
+| `web_appearance.text.voiceCancel` | string | Optional voiceCancel wording. Maximum 500 characters. |
+| `web_appearance.text.voiceEnded` | string | Optional voiceEnded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceYouEnded` | string | Optional voiceYouEnded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnavailable` | string | Optional voiceUnavailable wording. Maximum 500 characters. |
+| `web_appearance.text.voiceUnavailableNote` | string | Optional voiceUnavailableNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceDisabled` | string | Optional voiceDisabled wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInsecure` | string | Optional voiceInsecure wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInsecureNote` | string | Optional voiceInsecureNote wording. Maximum 500 characters. |
+| `web_appearance.text.voicePermission` | string | Optional voicePermission wording. Maximum 500 characters. |
+| `web_appearance.text.voicePermissionNote` | string | Optional voicePermissionNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceChecking` | string | Optional voiceChecking wording. Maximum 500 characters. |
+| `web_appearance.text.voiceNeeded` | string | Optional voiceNeeded wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBlocked` | string | Optional voiceBlocked wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMissing` | string | Optional voiceMissing wording. Maximum 500 characters. |
+| `web_appearance.text.voiceInUse` | string | Optional voiceInUse wording. Maximum 500 characters. |
+| `web_appearance.text.voiceMicError` | string | Optional voiceMicError wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBusy` | string | Optional voiceBusy wording. Maximum 500 characters. |
+| `web_appearance.text.voiceBusyNote` | string | Optional voiceBusyNote wording. Maximum 500 characters. |
+| `web_appearance.text.voiceRinging` | string | Optional voiceRinging wording. Maximum 500 characters. |
+| `web_appearance.text.voiceLive` | string | Optional voiceLive wording. Maximum 500 characters. |
+| `web_appearance.text.voiceError` | string | Optional voiceError wording. Maximum 500 characters. |
+| `web_appearance.text.contactSave` | string | Optional contactSave wording. Maximum 500 characters. |
+| `web_appearance.text.contactSavedEdit` | string | Optional contactSavedEdit wording. Maximum 500 characters. |
+| `web_appearance.text.contactRequired` | string | Optional contactRequired wording. Maximum 500 characters. |
+| `web_appearance.text.beforeCallStart` | string | Optional beforeCallStart wording. Maximum 500 characters. |
+| `web_appearance.text.beforeCallCancel` | string | Optional beforeCallCancel wording. Maximum 500 characters. |
+| `web_appearance.contactFields` | array of object | Up to nine fields; IDs must be unique. Maximum 9 items. |
+| `web_appearance.contactFields[].id` | string | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `web_appearance.contactFields[].label` | string | Nonblank label, no control characters; trimmed and raw length at most 60. Maximum 60 characters. Minimum 1 characters. |
+| `web_appearance.contactFields[].enabled` | boolean | Field enabled. |
+| `web_appearance.contactFields[].required` | boolean | Field required. |
+| `web_appearance.contactFields[].askInChat` | boolean | Optional request-in-chat flag. If absent, a disabled field cannot be required. |
+| `web_appearance.beforeCall` | object | Saved value. |
+| `web_appearance.beforeCall.enabled` | boolean | Use a contact form before a web call. |
+| `web_appearance.beforeCall.message` | string | Before-call message. Maximum 500 characters. |
+| `web_appearance.beforeCall.fields` | array of object | Up to nine unique IDs. Each custom ID must exist in contactFields. Maximum 9 items. |
+| `web_appearance.beforeCall.fields[].id` | string | Built-in field or one of five custom fields. Pattern: `^(name&#124;phone&#124;email&#124;order&#124;custom_[1-5])$`. |
+| `web_appearance.beforeCall.fields[].required` | boolean | Required before starting. |
+| `appearance_version` | integer | Current appearance schema version. Value: `1`. |
+| `web_design` | integer | Saved design, displayed as 1 when unset. |
+| `web_color` | string | Saved colour, displayed as #25D366 when unset. |
+| `web_name` | string | Saved name, displayed as empty when unset. |
+| `web_chips` | string | Saved comma-separated questions, empty when unset. |
+| `web_calls_enabled` | boolean | Saved voice setting, false when unset. |
+| `web_agent_enabled` | boolean or null | Current chat enabled setting; read-only here. |
+| `revision` | string | Opaque decimal settings revision. Send current value in PATCH; 0 before an installation exists. |
+| `install_id` | string or null | Public widget installation ID, not an API credential. |
+| `first_seen_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `last_seen_at` | string or null | Saved timestamp, or null. Format: date-time. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-web/%2B12025550123" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.webAgent.get("+12025550123");
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.web_agent.get('+12025550123')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex web-agent get '+12025550123' --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_web_agent",
+  "arguments": {
+    "number": "+12025550123"
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "phone_number": "+12025550101",
+  "agent_id": "agent_example",
+  "web_prompt": null,
+  "web_appearance": null,
+  "appearance_version": 1,
+  "web_design": 1,
+  "web_color": "#25D366",
+  "web_name": "",
+  "web_chips": "",
+  "web_calls_enabled": false,
+  "web_agent_enabled": true,
+  "revision": "0",
+  "install_id": null,
+  "first_seen_at": null,
+  "last_seen_at": null
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Update web agent settings](/api-reference/web-agent/patch-agent-web-number)
+- [Get web calls](/api-reference/integration-settings/get-integrations-web-calls-number-phoneNumber)
+- [Errors and recovery](/api-reference/errors#error-envelope)

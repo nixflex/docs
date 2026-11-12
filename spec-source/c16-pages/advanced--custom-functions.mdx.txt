@@ -1,0 +1,100 @@
+---
+title: "Connect an agent to your business API"
+description: "Connect Nixflex to a custom HTTPS function, verify signed requests, enforce business permissions and handle timeouts without repeating uncertain actions."
+canonical: "https://docs.nixflex.com/advanced/custom-functions"
+sidebarTitle: "Custom functions"
+---
+
+Expose a narrowly scoped business function to an agent and treat its response as the authority for whether the action succeeded.
+
+<div className="nxf-facts">
+  <div><small>Arguments</small><strong>Validate server-side</strong></div>
+  <div><small>Result</small><strong>Explicit success</strong></div>
+  <div><small>Website</small><strong>Separate number grant</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Describe exact arguments and validate them in your service.
+- Public website access requires all enabled number functions to be safe for visitors.
+- A timeout can follow a successful business write; reconcile before repeating it.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-actions) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Prepare a public HTTPS endpoint you control and a signing credential for request verification.
+
+## 1. Read functions on the number
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/custom-functions/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.listFunctions("+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.list_functions('+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations listFunctions '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Define a narrow function
+
+Use the documented POST route with a clear name, description, argument schema, URL and method. Store secrets only in protected configuration. A number can have up to 15 functions. Avoid exposing broad administrative actions to a conversation.
+
+## 3. Verify and validate the request
+
+A non-GET request carries `name`, `args` and `variables`. Current engine requests can carry the signed-body header described in [webhook verification](/advanced/webhooks). Reject unsigned or invalid requests. GET arguments travel in the query while its signature covers an empty body; do not treat that signature as proof of argument integrity.
+
+## 4. Return a concise result
+
+Return a clear 2xx JSON result only after your action reaches the stated state. A `result` member supplies the agent’s result text; otherwise JSON is serialised, or plain text is truncated to 2,000 characters. Do not report an appointment or payment as complete while it is only queued.
+
+## 5. Handle timing and public access
+
+Timeout is bounded to 1–45 seconds, default 5. Requests require public HTTPS, bounded bodies and no redirects; the response limit is 64 KiB. The call is checked before sending, but a timeout cannot undo an action already performed. Website use needs the number’s separate switch and all enabled functions must be safe for public visitors.
+
+## Example response
+
+Example service response: `{"result":"The requested appointment change is pending review."}`. The runtime reports success for a 2xx response; that HTTP success must accurately describe your business state.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid/missing signature | Reject before executing. |
+| GET with sensitive arguments | Use signed-body POST or independent authentication. |
+| Redirect/private destination | Fix the configured public HTTPS endpoint. |
+| Timeout/unknown outcome | Reconcile using your action identity; do not repeat a side effect blindly. |
+| Function list on website | Review every enabled function before enabling public access. |
+
+## Next steps
+
+- [Create function](/api-reference/integration-settings/post-integrations-custom-functions-number-phoneNumber)
+- [Verify signatures](/advanced/webhooks)
+- [Website settings](/web-assistant/overview)

@@ -1,0 +1,103 @@
+---
+title: "Send call results to Slack"
+description: "Configure Nixflex Slack notifications for the intended number, protect the destination and distinguish a saved connection from successful notification delivery."
+canonical: "https://docs.nixflex.com/integrations/slack"
+sidebarTitle: "Slack notifications"
+---
+
+Connect an owned number’s Slack notification settings and test the result with approved call data.
+
+<div className="nxf-facts">
+  <div><small>Scope</small><strong>Owned number</strong></div>
+  <div><small>Data</small><strong>Call results</strong></div>
+  <div><small>Verification</small><strong>Test destination</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep connection credentials and private workspace data on the server.
+- A saved connection is not proof that every future notification will arrive.
+- Reconcile an uncertain update before changing the same connection again.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/integrations) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Use an authorised test destination with fictional business data.
+
+## 1. Read the saved connection
+
+<CodeGroup>
+
+```bash cURL
+curl --request GET \
+  --url "https://api.nixflex.com/v1/integrations/slack/number/%2B12025550123" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+const c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});
+const result = await c.integrations.get("slack", "+12025550123");
+// Keep private responses out of logs and AI conversations.
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+with Nixflex(api_key=os.environ["NIXFLEX_API_KEY"], base_url="https://api.nixflex.com", max_retries=0) as c:
+    result = c.integrations.get('slack', '+12025550123')
+```
+
+```powershell CLI (PowerShell)
+nixflex integrations get slack '+12025550123' --json --base-url "https://api.nixflex.com"
+```
+
+</CodeGroup>
+
+## 2. Save the intended destination
+
+
+Use the [Slack PUT route](/api-reference/integration-settings/put-integrations-slack-number-phoneNumber) with `webhook_url` from the authorised workspace. It must use HTTPS with the exact host `hooks.slack.com`. Treat the URL as a credential and keep it out of logs, prompts and shared screenshots.
+
+`is_active` defaults to true; send the JSON boolean false to disable it. Optional `agent_id` is a fallback only when the number has no assigned agent. It does not move the number or override its existing assignment.
+
+## 3. Define what success means
+
+Treat a posted notification as a copy of available call information, not proof the call or every follow-up action succeeded. External message retention is separate from Nixflex call retention.
+
+## 4. Test a complete workflow
+
+Use one approved test call and inspect both its Nixflex result and the receiving system. Check missing fields, delayed processing and duplicate delivery. Do not promise a notification arrives within a fixed number of seconds.
+
+## 5. Disconnect and reconcile
+
+Use the documented integration DELETE route to stop future use. Previously delivered external records remain subject to that system’s controls. If a save or deletion response is lost, read the current settings before repeating it.
+
+## Example response
+
+GET returns the safe saved integration configuration. The settings response confirms configuration state; external delivery and business-action results must be checked separately.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Invalid credentials/destination | Correct configuration before retrying. |
+| Saved but no notification | Inspect call state and external delivery separately. |
+| Duplicate event | Deduplicate before repeating a side effect. |
+| Unknown save/delete result | Read current configuration. |
+| Data deleted in Nixflex | Manage previously sent external copies separately. |
+
+## Next steps
+
+- [Read settings](/api-reference/integration-settings/get-integrations-slack-number-phoneNumber)
+- [Signed event receiver](/advanced/webhooks)
+- [Call history](/guides/developer/call-history)

@@ -1,0 +1,163 @@
+---
+title: "Send an SMS"
+sidebarTitle: "Send an SMS"
+description: "Send one SMS through Nixflex using an explicit, owned sender assigned to the agent. Distinguish acceptance from delivery and handle uncertain results."
+openapi: "/api-reference/public.openapi.json POST /sms"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/sms/send"
+---
+
+Send one SMS using an explicit sender owned by the account and assigned to the requested agent. A 201 sent response means the send was accepted; it is not proof of delivery to the recipient.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>201</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This request can send a real text; there is no general replay guarantee.
+- Carrier acceptance is not proof that the recipient read or received the message.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-agent) · [Developer guide](/sms/send-sms) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Owned agent ID. Minimum 1 characters. |
+| `from_number` | string | Yes | None | Explicit owned, settled sender assigned to this agent. There is no agent-number fallback. Minimum 1 characters. |
+| `to` | string | Yes | None | Recipient number. This field is to, not to_number. Minimum 1 characters. |
+| `message` | string | Yes | None | Nonempty text. This route declares no fixed character cap; encoding, segmentation and connection limits still apply. Minimum 1 characters. |
+| `context` | object | No | Omitted | Optional JSON context saved with the accepted outbound message. |
+| `context.reply_context` | string or null | No | Omitted | Optional instructions for a later reply context. |
+| `recipient_timezone` | string | No | Omitted | Optional recipient IANA time zone for contact checks. |
+| `recipient_country` | string | No | Omitted | Optional two-letter recipient country code. |
+
+The endpoint has no dry-run mode. Only send to an authorised recipient. Do not infer a sender from agent settings, and do not send API credentials to a browser. The response can gain receipt fields when that feature is enabled; older successful responses contain only status, to and from.
+
+An accepted message can still return 201 if later local history persistence fails. A receipt-path failure can include outcome, work_id, message_id and safe_to_retry both alongside the error and inside details. Do not infer not-sent from a generic 500 response. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
+
+Compatibility change: suppressed single SMS now returns HTTP 409, error.type=conflict, error.code=do_not_contact. It previously returned HTTP 400 invalid_request. The message was not sent. Stop; never automatically retry a known opt-out. SMS campaigns keep per-recipient hold_reason:do_not_contact instead of returning a blanket 409.
+
+## Response fields
+
+`201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `status` | string | Accepted send state; not a delivery receipt. |
+| `to` | string | Recipient. |
+| `from` | string | Sender. |
+| `message_id` | string or null | Optional accepted message identity when account receipts are enabled. |
+| `work_id` | string or null | Optional work receipt identity. |
+| `persistence` | string | Optional persistence state returned by the receipt path. |
+| `safe_to_retry` | boolean | False when supplied; do not resend an accepted message. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER`, `NXF_TO_NUMBER` to the intended account-owned identifiers or approved recipient before running. Running a successful example contacts the recipient; use only an approved test destination.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to\":\"$NXF_TO_NUMBER\",\"message\":\"Your requested update\"}"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.sms.send({agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to:process.env.NXF_TO_NUMBER,message:"Your requested update"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.sms.send(agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to=os.environ["NXF_TO_NUMBER"],message="Your requested update")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex sms send --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --message "Your requested update" --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "status": "sent",
+  "to": "+12025550101",
+  "from": "+12025550100"
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | An agent, recipient, message or sender is missing. | Provide all four required fields. |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The sender, assignment, connection or recipient is not permitted. | Read the refusal; use the correct owned sender and respect suppression. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | The agent could not be found for this account. | Use an owned agent ID. |
+| 409 | [`auto_topup_unsupported`](/api-reference/errors#auto_topup_unsupported) | The current account funding configuration is not supported for this send. | Resolve the account configuration before sending. |
+| 500 | [`sms_outcome_unknown`](/api-reference/errors#sms_outcome_unknown) | The send outcome was not confirmed. | Check the receipt/history before any deliberate new send; do not auto-retry. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The legacy send path failed or could not confirm a result. | Treat the result as uncertain until reconciled. |
+| 409 | [`needs_timezone`](/api-reference/errors#needs_timezone) | Time zone unknown - add their time zone or country. Nothing was sent or charged for this attempt. | Supply a valid recipient_timezone or recipient_country and recheck policy. |
+| 409 | [`invalid_recipient_timezone`](/api-reference/errors#invalid_recipient_timezone) | The recipient time zone is invalid. | Use a valid IANA time zone. |
+| 409 | [`invalid_recipient_country`](/api-reference/errors#invalid_recipient_country) | The recipient country is invalid. | Use a valid two-letter country code. |
+| 409 | [`outside_hours`](/api-reference/errors#outside_hours) | This recipient is outside the permitted local contact hours. Nothing was sent or charged for this attempt. | Use the contact-hours advice and wait for an allowed window. Do not automatically resend. |
+| 409 | [`not_due_local`](/api-reference/errors#not_due_local) | The recipient is not due for contact in the current local window. | Follow the returned contact-hours guidance. |
+| 409 | [`country_policy_review`](/api-reference/errors#country_policy_review) | The recipient country requires policy review. | Resolve that review before contacting the recipient. |
+| 409 | [`holiday_data_unavailable`](/api-reference/errors#holiday_data_unavailable) | Holiday checks could not confirm an allowed window. | Wait for a confirmed policy result. |
+| 409 | [`public_holiday`](/api-reference/errors#public_holiday) | The recipient-local date is a restricted holiday. | Use the next permitted contact window. |
+| 503 | [`contact_policy_unavailable`](/api-reference/errors#contact_policy_unavailable) | Contact hours could not be checked. Try again later. Nothing was sent or charged for this attempt. | Wait and recheck; resend only after confirming this attempt was not sent. |
+| 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | Dispatch safety could not be confirmed. | Reconcile any existing receipt before deciding on a new request. |
+| 409 | [`do_not_contact`](/api-reference/errors#do_not_contact) | The recipient is suppressed; the message was not sent. | Stop. Respect the opt-out; do not retry or remove it automatically. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Never automatically retry an SMS write. Preserve the accepted message/work IDs where available. If a timeout, connection failure or sms_outcome_unknown occurs, inspect receipts/history before deliberately sending again. An error’s retry hint does not override the no-automatic-write-retry rule.
+
+## Related endpoints
+
+- [Retry rules](/api-reference/retries)
+- [Errors and recovery](/api-reference/errors#error-envelope)

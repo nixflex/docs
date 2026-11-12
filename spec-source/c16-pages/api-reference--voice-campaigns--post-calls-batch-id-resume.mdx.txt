@@ -1,0 +1,171 @@
+---
+title: "Resume voice campaign"
+sidebarTitle: "Resume voice campaign"
+description: "Resume a bounded page of verified, unattempted recipients in a running Nixflex voice campaign. Review consent and current campaign state first."
+openapi: "/api-reference/public.openapi.json POST /calls/batch/{id}/resume"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/voice-campaigns/post-calls-batch-id-resume"
+---
+
+Resume one bounded page of verified unattempted recipients in the current running voice campaign. This can dispatch contact and keeps the existing launch generation.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- This resumes a bounded page of verified unattempted recipients in the current running campaign.
+- It can dispatch contact and keeps the existing launch generation; uncertain recipients must not become fresh contacts.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [Developer guide](/guides/developer/campaigns) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Account-owned campaign identifier. Maximum 100 characters. Minimum 1 characters. Pattern: `^[A-Za-z0-9_-]+$`. |
+
+Do not send a request body.
+
+The body is unused and there is no public cursor field. At most 100 verified unattempted recipients are processed per request. Only status running with a current launch claim is resumable; paused, cancelled and finished campaigns are refused. A 200 may still contain paused or held in page_result. Queued jobs still pass final permission, local-hours and capacity checks.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Campaign ID. |
+| `status` | string | Same running generation. Value: `"running"`. |
+| `page_result` | object | Branch-specific page result; at most 100 verified unattempted rows. |
+| `page_result.enqueued` | integer | Voice jobs queued in this page. |
+| `page_result.next` | string or null | Internal continuation hint. This public endpoint accepts no continuation input. |
+| `page_result.paused` | boolean | Dispatch processing is paused. |
+| `page_result.held` | integer or string | Held count or reason, depending on the returned branch. |
+| `page_result.outcome` | string | SMS page outcome, such as completed, held or stopped_safety. |
+| `page_result.reason` | string or null | Page hold or stop reason. |
+| `page_result.sent` | integer | SMS accepted sends in this page. |
+| `page_result.failed` | integer | SMS known failures in this page. |
+| `page_result.segments` | integer | SMS segments in this page. |
+| `page_result.campaign_done` | boolean or null | Whether completion was confirmed. |
+| `page_result.dispatchSafety` | boolean | This page stopped before its current attempted recipient. |
+| `page_result.attempt_outcome` | string | Current attempted recipient result. |
+| `page_result.attempt_sent` | boolean | Current attempt sent flag. |
+| `page_result.attempt_charged` | boolean | Current attempt charged flag. |
+| `page_result.attempt_safe_to_retry` | boolean | Applies only to the current attempt, never the whole page. |
+| `page_result.safe_to_retry` | boolean | Whole-page replay is not safe. |
+| `page_result.stop_message` | string | Current attempt refusal explanation. |
+| `page_result.not_sent` | integer | Remaining recipients in the page. |
+| `page_result.stop_recorded` | boolean | Whether the stop evidence was saved. |
+| `page_result.attempted_recipient_id` | string | Current recipient ID. |
+| `safe_to_retry` | boolean | Do not automatically replay this response. Value: `false`. |
+| `message` | string | Admission explanation; inspect page_result for actual holds or sends. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/resume" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.campaigns.resume("campaign_fixture");
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.campaigns.resume('campaign_fixture')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex campaigns resume campaign_fixture --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+
+</RequestExample>
+
+MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python.
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "status": "running",
+  "page_result": {
+    "enqueued": 0,
+    "next": null
+  },
+  "safe_to_retry": false,
+  "message": "Queued for final permission, local-hours and capacity checks; queued does not mean sent."
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The identifier or request fields are invalid. | Correct the documented fields before resending. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | No matching object belongs to this account. | Check the account and identifier. |
+| 503 | [`feature_paused`](/api-reference/errors#feature_paused) | This control is paused. | Wait for availability; do not work around the refusal. |
+| 503 | [`outcome_unknown`](/api-reference/errors#outcome_unknown) | The write result could not be confirmed. | Read current state; do not resend automatically. |
+| 409 | [`not_resumable`](/api-reference/errors#not_resumable) | Only a running campaign with a current launch claim can resume. | Read the campaign. Do not relaunch completed or cancelled work. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Do not automatically repeat resume after a timeout, 5xx or safe_to_retry:false. Inspect the same campaign and its recipient evidence first. Resume selects verified unattempted work; it never grants permission to replay accepted or uncertain attempts.
+
+## Related endpoints
+
+- [List voice campaigns](/api-reference/voice-campaigns/get-campaigns)
+- [Create a voice campaign](/api-reference/calls/batch-create)
+- [Errors and recovery](/api-reference/errors#error-envelope)

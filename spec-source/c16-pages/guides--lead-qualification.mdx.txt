@@ -1,0 +1,112 @@
+---
+title: "Build a single outbound call"
+description: "Build an outbound Nixflex call for an approved recipient, supply a purpose and dynamic variables, then track it without repeating uncertain requests."
+canonical: "https://docs.nixflex.com/guides/lead-qualification"
+sidebarTitle: "Single outbound call"
+---
+
+Create one authorised outbound call with a specific purpose, then reconcile its request and call results without automatic redial.
+
+<div className="nxf-facts">
+  <div><small>Effect</small><strong>One outbound call</strong></div>
+  <div><small>Identity</small><strong>Saved request UUID</strong></div>
+  <div><small>Result</small><strong>Read and reconcile</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Creating the request can place a real call and incur charges.
+- Save a UUID with the exact account, base URL and call inputs before the first send.
+- An accepted request, a completed call and a confirmed booking are different results.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+## Prerequisites
+
+Keep `NIXFLEX_API_KEY` private on the server and choose the matching API host. Use owned identifiers; SDK and CLI examples need the [documented minimum versions](/sdks/ecosystem#install-a-client). Set `NXF_AGENT_ID`, `NXF_PHONE_NUMBER` and `NXF_TO_NUMBER` to the intended owned sender and approved recipient.
+
+## 1. Prepare a clear purpose
+
+Describe the business, reason for calling, two or three questions and a polite finish. Include `prompt` on the call request. Supply `dynamic_vars` for known values and validate required placeholders before sending.
+
+## 2. Create the call
+
+Before dispatch, generate and persist a UUID with the complete inputs, account and base URL. Use the [local preparation examples](/guides/developer/call-requests), then load that saved UUID into `NXF_REQUEST_ID`. Never generate a fresh UUID inside a send or retry loop. These examples use that existing identity.
+
+<CodeGroup>
+
+```bash cURL
+: "${NXF_REQUEST_ID:?Load the saved request UUID before sending}"
+curl --request POST \
+  --url "https://api.nixflex.com/v1/calls/outbound" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data "{\"request_id\":\"$NXF_REQUEST_ID\",\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\"}"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://api.nixflex.com';
+const requestId = process.env.NXF_REQUEST_ID;
+if (!requestId) throw new Error('Load the saved request UUID before sending');
+const client = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl,maxRetries:0});
+const result = await client.calls.create({request_id:requestId,agent_id:process.env.NXF_AGENT_ID,from_number:process.env.NXF_PHONE_NUMBER,to_number:process.env.NXF_TO_NUMBER,prompt:"Confirm the requested appointment"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://api.nixflex.com"
+with Nixflex(os.environ["NIXFLEX_API_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.calls.create(request_id=os.environ["NXF_REQUEST_ID"],agent_id=os.environ["NXF_AGENT_ID"],from_number=os.environ["NXF_PHONE_NUMBER"],to_number=os.environ["NXF_TO_NUMBER"],prompt="Confirm the requested appointment")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+: "${NXF_REQUEST_ID:?Load the saved request UUID before sending}"
+NIXFLEX_API_KEY="$NIXFLEX_API_KEY" nixflex calls create --request-id "$NXF_REQUEST_ID" --agent "$NXF_AGENT_ID" --from "$NXF_PHONE_NUMBER" --to "$NXF_TO_NUMBER" --prompt "Confirm the requested appointment" --base-url https://api.nixflex.com --json
+```
+
+</CodeGroup>
+
+## 3. Save the returned identity
+
+Persist `call_id` with the existing UUID and operation record. Keep a known call ID even if the receipt reports `request_status:unconfirmed`; it still says `safe_to_retry:false`. Acceptance is not a connected call. If the network response is lost, reconcile before repeating; do not enable automatic transport retries for call creation.
+
+## 4. Read the outcome
+
+Read the [saved outbound request](/api-reference/calls/get-outbound-request), then read its accepted call or consume the signed event. Pending, unknown and an unavailable request read do not authorise a replacement call. Use observed answers and analysis as reviewable data. A summary can be delayed or unavailable and is not a guarantee every requested question was answered.
+
+## 5. Plan follow-up deliberately
+
+Respect contact restrictions and the person’s wishes. If you send a follow-up text, use an explicit eligible sender and approved wording. A failed wait in your client does not hang up the call or prove it was never placed.
+
+## Example response
+
+The create response identifies the accepted call and current state. Read the [create schema](/api-reference/calls/create-outbound) and retain any safe outcome or retry fields returned on failure.
+
+## Errors and limits
+
+| Condition | Handling |
+| --- | --- |
+| Contact refusal | Respect suppression, location and local-hours reasons. |
+| Capacity or balance refusal | Resolve the account condition before new work. |
+| Unknown transport outcome | Reconcile existing work; do not blindly resend. |
+| Client wait expired | Keep tracking the original call. |
+| Missing analysis | Preserve unknown fields and review the conversation. |
+
+## Next steps
+
+- [Client safety](/api-reference/calls/client-safety)
+- [Call results](/guides/developer/call-history)
+- [Voice campaigns](/guides/developer/campaigns)

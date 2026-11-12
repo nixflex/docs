@@ -13,5 +13,5 @@ test('Group3 OpenAPI exposes only an authenticated GET with defaulted periods/zo
 });
 test('Group3 draft includes every client surface and honest usage, unused, timezone and generation semantics',()=>{
  const doc=read('api-reference/phone-numbers/usage.mdx'),nav=read('docs.json');a.ok(nav.includes('api-reference/phone-numbers/usage'));
- for(const phrase of ['phoneNumbers.usage','phone_numbers.usage','numbers usage','list_phone_numbers','"usage":true','not a billing ledger','Same-owner re-import','UTC','Unused','local/unpublished'])a.ok(doc.includes(phrase),phrase);
+ for(const phrase of ['phoneNumbers.usage','phone_numbers.usage','numbers usage','list_phone_numbers','"usage":true','not a billing ledger','Same-owner re-import','UTC','Unused','Node/CLI 0.11.0 or later','Python 0.4.0 or later','MCP 0.5.0 or later'])a.ok(doc.includes(phrase),phrase);
 });

@@ -1,0 +1,157 @@
+---
+title: "Get key activity"
+sidebarTitle: "Get key activity"
+description: "Read a snapshot of retained Nixflex API request activity for the account. Distinguish request logs from call history and billing usage."
+openapi: "/api-reference/public.openapi.json GET /keys/activity"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/account-and-keys/get-keys-activity"
+---
+
+Read a single snapshot of retained API request activity for the authenticated account. This is request activity, separate from organisation audit events and call usage.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read key activity without exposing the credential itself.
+- Activity is bounded by its available history and retention.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/team-ownership) · [Developer guide](/authentication) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `period` (query) | string | No | `"today"` | UTC reporting period. Allowed: `"today"`, `"7d"`. |
+
+Do not send a request body.
+
+Counts cover retained request logs. Logging happens after responses and is asynchronous, so the request fetching this page may appear only in a later snapshot. Responses use Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `period` | string | Selected UTC reporting period. Allowed: `"today"`, `"7d"`. |
+| `timezone` | string | Reporting time zone. |
+| `requests` | integer | Retained requests in the chosen period. Minimum 0. |
+| `errors` | integer | Retained error responses in the chosen period. Minimum 0. |
+| `requests_today` | integer | Retained requests since the current UTC midnight. Minimum 0. |
+| `errors_today` | integer | Retained error responses since the current UTC midnight. Minimum 0. |
+| `day_start` | string | Current UTC day start. Format: date-time. |
+| `period_start` | string | Beginning of the selected reporting interval. Format: date-time. |
+| `as_of` | string | Snapshot time for these counts. Format: date-time. |
+| `last_used_at` | string or null | Last retained request time, or null. Format: date-time. |
+| `top_endpoints` | array of object | Up to five busiest endpoint/method pairs. Maximum 5 items. |
+| `top_endpoints[].method` | string | HTTP method. |
+| `top_endpoints[].endpoint` | string | Recorded endpoint label. |
+| `top_endpoints[].requests` | integer | Retained request count. Minimum 0. |
+
+## Example request
+
+The examples use staging. Keep `NXF_STAGING_KEY` in your environment; the CLI uses it through `NIXFLEX_API_KEY`. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/keys/activity?period=7d" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import Nixflex from 'nixflex';
+const baseUrl = 'https://nixflex-voice-engine-staging.up.railway.app';
+const client = new Nixflex({apiKey:process.env.NXF_STAGING_KEY,baseUrl,maxRetries:0});
+const result = await client.keys.activity({period:"7d"});
+// Handle result privately; do not log secrets or call content.
+```
+
+```python Python
+import os, json
+from pathlib import Path
+from nixflex import Nixflex
+base_url = "https://nixflex-voice-engine-staging.up.railway.app"
+with Nixflex(os.environ["NXF_STAGING_KEY"], base_url=base_url,max_retries=0) as client:
+    result = client.keys.activity(period="7d")
+# AsyncNixflex supports the same calls with await (and async with).
+```
+
+```bash CLI
+NIXFLEX_API_KEY="$NXF_STAGING_KEY" nixflex keys activity --period 7d --base-url https://nixflex-voice-engine-staging.up.railway.app --json
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "period": "today",
+  "timezone": "UTC",
+  "requests": 12,
+  "errors": 1,
+  "requests_today": 12,
+  "errors_today": 1,
+  "day_start": "2026-11-01T00:00:00.000Z",
+  "period_start": "2026-11-01T00:00:00.000Z",
+  "as_of": "2026-11-01T12:00:00.000Z",
+  "last_used_at": "2026-11-01T11:59:00.000Z",
+  "top_endpoints": [
+    {
+      "method": "GET",
+      "endpoint": "/v1/agents",
+      "requests": 12
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_period`](/api-reference/errors#invalid_period) | The period is not today or 7d. | Use one of the two documented values. |
+| 503 | [`key_activity_unavailable`](/api-reference/errors#key_activity_unavailable) | A complete activity snapshot could not be confirmed. | Retry a bounded read later; do not substitute zero counts. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Create an API account](/api-reference/account/create-key)
+- [Rotate the API key](/api-reference/account/rotate-key)
+- [Errors and recovery](/api-reference/errors#error-envelope)

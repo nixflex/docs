@@ -1,11 +1,11 @@
 ---
 title: "Connect Claude Desktop or Claude Code to Nixflex"
 sidebarTitle: "Connect Claude"
-description: "Set up the Nixflex MCP candidate in Claude Desktop or Code, verify a safe read and try five prompts for agents, knowledge, calls, calendars and usage."
+description: "Set up the Nixflex MCP server in Claude Desktop or Code, verify a safe read and try five prompts for agents, knowledge, calls, calendars and usage."
 canonical: "https://docs.nixflex.com/ai-tools/claude"
 ---
 
-Use the supplied Desktop bundle or a local Claude Code process to connect to Nixflex.
+Use `npx -y nixflex-mcp` to connect Claude Desktop or Claude Code to Nixflex.
 
 <div className="nxf-audience">
 
@@ -14,9 +14,9 @@ Building an app? [Developer version](/sdks/mcp).
 </div>
 
 <div className="nxf-facts">
-  <div><small>Desktop</small><strong>Supplied private bundle</strong></div>
+  <div><small>Desktop</small><strong>Local npx process</strong></div>
   <div><small>Claude Code</small><strong>Local Node process</strong></div>
-  <div><small>Candidate tools</small><strong>96</strong></div>
+  <div><small>Tools</small><strong>97</strong></div>
   <div><small>Verification</small><strong>get_usage read</strong></div>
 </div>
 
@@ -24,7 +24,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 **The important part**
 
-- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Use MCP 0.5.0 or later. MCP 0.5.0 exposes 97 tools.
 - Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
 - Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
 - Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
@@ -43,31 +43,65 @@ Illustrative conversation between colleagues.
 
 ## Claude Desktop
 
-1. Obtain the reviewed **0.5.0** desktop bundle for your intended environment from Nixflex. Check its hash and displayed environment. It is a supplied candidate, not a claim of directory approval.
-2. In Claude settings, open **Desktop app**, manage **Extensions**, then use the advanced option to install the `.mcpb` file. Workspace policy may need to allow custom extensions.
-3. Enter the matching full Nixflex key only in the bundle's **Nixflex API key** field. Do not enter it in a conversation or JSON file. The bundle fixes its API destination; a staging bundle must use a staging key.
-4. Finish setup and restart Claude. The bundle uses Claude's Node runtime; if it is below 22, update Claude.
-5. Check the connection and tool list, then use the read-only verification prompt below.
-
-See the current [Claude Desktop installation guide](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) if its settings layout differs. Removing the extension does not revoke the Nixflex API key. Its only private setup field is the Nixflex API key; it does not add carrier-secret fields. Number-credential updates need the selected pair privately supplied to the server process by its host. If that is unavailable, use the dashboard, CLI or SDK.
-
-## Claude Code
-
-First [install the supplied package](/ai-tools/overview#install-the-supplied-local-package). Have your private launcher supply `NIXFLEX_API_KEY`, the matching `NIXFLEX_BASE_URL` and `NIXFLEX_CREDENTIAL_SOURCE=environment`, then start Claude Code from that environment. Register the local server with no secret on the command line:
+Install Node 22 or later. In Claude Desktop settings, open **Developer**, then **Edit Config**. Add this server to your private `claude_desktop_config.json`, preserving any other servers. Replace the key placeholder only in this private configuration, and choose the API host that matches the key.
 
 <CodeGroup>
 
-```powershell Windows PowerShell
-claude mcp add --transport stdio --scope user nixflex -- node "C:/NixflexTools/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
+```json macOS or Linux
+{
+  "mcpServers": {
+    "nixflex": {
+      "command": "npx",
+      "args": ["-y", "nixflex-mcp"],
+      "env": {
+        "NIXFLEX_API_KEY": "YOUR_PRIVATE_NIXFLEX_KEY",
+        "NIXFLEX_BASE_URL": "https://api.nixflex.com",
+        "NIXFLEX_CREDENTIAL_SOURCE": "environment"
+      }
+    }
+  }
+}
 ```
 
-```bash macOS or Linux
-claude mcp add --transport stdio --scope user nixflex -- node "$HOME/.local/share/nixflex/mcp-0.5.0/node_modules/nixflex-mcp/index.js"
+```json Windows
+{
+  "mcpServers": {
+    "nixflex": {
+      "command": "cmd.exe",
+      "args": ["/c", "npx", "-y", "nixflex-mcp"],
+      "env": {
+        "NIXFLEX_API_KEY": "YOUR_PRIVATE_NIXFLEX_KEY",
+        "NIXFLEX_BASE_URL": "https://api.nixflex.com",
+        "NIXFLEX_CREDENTIAL_SOURCE": "environment"
+      }
+    }
+  }
+}
 ```
 
 </CodeGroup>
 
-Use your actual install path. Reopen Claude Code and inspect `/mcp`. Keep tool approvals enabled. The [Claude Code MCP guide](https://code.claude.com/docs/en/mcp) describes local server setup and configuration scope.
+The private `env` field supplies the key to the server process. This file is not an encrypted vault: restrict access and keep it out of projects, shared folders, screenshots and chats. Restart Claude Desktop, inspect the Nixflex tools, then use the read-only prompt below. See the [local MCP setup guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers) if the settings layout differs.
+
+Removing this server does not revoke the Nixflex key. Number-credential updates also need the selected carrier pair privately supplied to the server process; see [private number credentials](/ai-tools/number-credentials).
+
+## Claude Code
+
+Install Node 22 or later. Have your private launcher supply `NIXFLEX_API_KEY`, the matching `NIXFLEX_BASE_URL` and `NIXFLEX_CREDENTIAL_SOURCE=environment`, then start Claude Code from that environment. Register the server with no secret on the command line:
+
+<CodeGroup>
+
+```powershell Windows PowerShell
+claude mcp add --transport stdio --scope user nixflex -- cmd /c npx -y nixflex-mcp
+```
+
+```bash macOS or Linux
+claude mcp add --transport stdio --scope user nixflex -- npx -y nixflex-mcp
+```
+
+</CodeGroup>
+
+Reopen Claude Code and inspect `/mcp`. Keep tool approvals enabled. The [Claude Code MCP guide](https://code.claude.com/docs/en/mcp) describes local server setup and configuration scope.
 
 ## Verify with one read
 

@@ -1,0 +1,155 @@
+---
+title: "Record voice consent"
+sidebarTitle: "Record voice consent"
+description: "Record consent or withdrawal for the current Nixflex voice campaign policy revision. Review the audience and policy before confirming."
+openapi: "/api-reference/public.openapi.json POST /calls/batch/{id}/consent"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/voice-campaigns/post-calls-batch-id-consent"
+---
+
+Record a consent or consent-withdrawal decision for the current voice campaign policy revision. The owner confirms the selected event explicitly.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Record actual consent for the intended campaign.
+- This record does not bypass suppression or recipient-local contact checks.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [Developer guide](/guides/developer/campaigns) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Account-owned campaign identifier. Maximum 100 characters. Minimum 1 characters. Pattern: `^[A-Za-z0-9_-]+$`. |
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `event` | string | Yes | None | Decision to record. Allowed: `"consent"`, `"consent_withdrawn"`. |
+| `confirmed` | boolean | Yes | None | Explicitly confirm the selected event, including withdrawal. Value: `true`. |
+
+confirmed must be true for either event. Omitted fields and false are refused. This endpoint does not launch a campaign or clear suppression. Recording consent can unblock otherwise eligible scheduled or running work. Missing campaigns and unconfirmed database results currently return 503 outcome_unknown.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Campaign ID. |
+| `recorded` | boolean | The decision was recorded. Value: `true`. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch/campaign_fixture/consent" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"event":"consent","confirmed":true}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.campaigns.consent("campaign_fixture", {"event": "consent", "confirmed": true});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.campaigns.consent('campaign_fixture', event='consent', confirmed=True)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+$body = @'
+{
+  "event": "consent",
+  "confirmed": true
+}
+'@
+[IO.File]::WriteAllText('request-92.json', $body, (New-Object Text.UTF8Encoding $false))
+nixflex campaigns consent campaign_fixture --body '@request-92.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+
+</RequestExample>
+
+MCP does not offer this operation because it can enable outreach; use the API, Node, CLI or Python.
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "recorded": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The identifier or request fields are invalid. | Correct the documented fields before resending. |
+| 503 | [`outcome_unknown`](/api-reference/errors#outcome_unknown) | The write result could not be confirmed. | Read current state; do not resend automatically. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is documented. A timeout or 5xx can follow a committed change. Read the current state before deciding whether to submit again; never automatically repeat an uncertain write. Each accepted request appends a decision event; it is not a deduplicated update.
+
+## Related endpoints
+
+- [List voice campaigns](/api-reference/voice-campaigns/get-campaigns)
+- [Create a voice campaign](/api-reference/calls/batch-create)
+- [Errors and recovery](/api-reference/errors#error-envelope)

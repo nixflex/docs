@@ -1,7 +1,7 @@
 ---
 title: "Use the Node SDK in a server application"
 sidebarTitle: "Node SDK"
-description: "Install the reviewed Node SDK candidate, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries."
+description: "Install the Node SDK, make a safe read, persist outbound call intent and reconcile typed results without automatic mutation retries."
 canonical: "https://docs.nixflex.com/sdks/node"
 ---
 
@@ -9,7 +9,7 @@ Use the Node SDK for server-side reads and deliberate writes, with durable outbo
 
 <div className="nxf-facts">
   <div><small>Runtime</small><strong>Node 18+</strong></div>
-  <div><small>Package</small><strong>nixflex 0.11.0 candidate</strong></div>
+  <div><small>Package</small><strong>nixflex 0.11.0</strong></div>
   <div><small>Write retries</small><strong>Disabled by the client</strong></div>
 </div>
 
@@ -18,7 +18,7 @@ Use the Node SDK for server-side reads and deliberate writes, with durable outbo
 **The important part**
 
 - Keep the complete account credential on the server and supply the intended base URL.
-- Install the exact reviewed 0.11.0 candidate; the version alone is not its identity.
+- Use Node SDK 0.11.0 or later for these examples.
 - Prepare and save a call locally before a separately approved send.
 
 </div>
@@ -29,15 +29,17 @@ Use the Node SDK for server-side reads and deliberate writes, with durable outbo
 
 </div>
 
-## Install the reviewed package
+<span id="install-the-reviewed-package"></span>
 
-Compare the supplied archive with the [release hash](/sdks/ecosystem#verify-the-reviewed-candidate), then install it in your application:
+## Install the SDK
+
+Install the package in your server application:
 
 ```bash
-npm install ./nixflex-0.11.0.tgz
+npm install nixflex
 ```
 
-This is a local candidate installation, not a promise that a registry install resolves to the reviewed code. The SDK uses native fetch and has no runtime dependencies. The CLI ships in the same package.
+These examples require Node SDK 0.11.0 or later. The SDK uses native fetch and has no runtime dependencies. The CLI ships in the same package.
 
 ## Make one safe read
 
@@ -174,7 +176,7 @@ For webhooks, use the strict raw-byte verifier and durable receiver in the [webh
 
 ## Delete content deliberately
 
-The reviewed candidate supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
+The client supports `calls.delete`, `campaigns.delete` and `sms.campaigns.delete`. Each invocation sends one DELETE and never repeats it automatically. Authorise the exact account and identifier first. A voice/SMS campaign success requires `campaign_id`, `deleted:true` and `message`; a call success requires `call_id`, `deleted:true`, `recording_deleted` and `recording_cleanup`.
 
 The exact queued response raises `NixflexServerError`: status 503, code `hangup_pending`, and details `deleted:false` plus `retry_pending:true`. It is not success. The server continues automatically; a later deliberate repeat of the same DELETE is safe. Other uncertain failures use `outcome_unknown`; inspect `details.original_code` and current state privately. No error or 404 is converted into deletion success.
 
@@ -214,7 +216,7 @@ The current voice and SMS methods return `CampaignDeleteResponse`. The older exp
 
 ## Public method directory
 
-This directory lists all 140 public resource methods in the reviewed candidate. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
+This directory lists all 140 public resource methods in the client. Use the matching feature guide for fields, limits and results. Methods that prepare inputs, verify signatures, stream pages or poll jobs are client helpers, not extra API operations.
 
 <AccordionGroup>
 

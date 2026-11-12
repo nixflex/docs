@@ -1,7 +1,7 @@
 ---
 title: "Connect an AI assistant to your Nixflex account"
 sidebarTitle: "Choose an AI assistant"
-description: "Choose a local AI client for the Nixflex MCP candidate, verify its 97 tools and understand approvals, private credentials and call-result limits."
+description: "Choose a local AI client for the Nixflex MCP server, verify its 97 tools and understand approvals, private credentials and call-result limits."
 canonical: "https://docs.nixflex.com/ai-tools/overview"
 ---
 
@@ -14,8 +14,8 @@ Building an app? [Developer version](/sdks/mcp).
 </div>
 
 <div className="nxf-facts">
-  <div><small>Package</small><strong>MCP 0.5.0 candidate</strong></div>
-  <div><small>Tools</small><strong>96</strong></div>
+  <div><small>Package</small><strong>MCP 0.5.0</strong></div>
+  <div><small>Tools</small><strong>97</strong></div>
   <div><small>Local connection</small><strong>Private process</strong></div>
   <div><small>First task</small><strong>One approved read</strong></div>
 </div>
@@ -24,7 +24,7 @@ Building an app? [Developer version](/sdks/mcp).
 
 **The important part**
 
-- MCP 0.5.0 is an unpublished candidate. Check that your client can load all 97 tools.
+- Use MCP 0.5.0 or later. MCP 0.5.0 exposes 97 tools.
 - Keep the organisation key private. It gives account authority and does not inherit a Member’s dashboard restrictions.
 - Approve the exact recipients and changes before actions that call, text, change settings or spend credit.
 - Check an uncertain write before repeating it. Keep a saved call request ID and its exact inputs together.
@@ -41,13 +41,13 @@ Illustrative conversation between colleagues.
   <p><strong>Owner</strong><br />After that, show me any proposed change before asking to carry it out.</p>
 </div>
 
-Use the reviewed candidate package or Desktop bundle supplied by Nixflex. Its 19 knowledge tools cover reads and confirmed tests.
+Use `npx -y nixflex-mcp` to launch the published MCP server. Its 19 knowledge tools cover reads and confirmed tests.
 
 ## Choose your assistant
 
 | Tool | Connection in this kit |
 | --- | --- |
-| [Claude Desktop or Code](/ai-tools/claude) | Desktop bundle or local process |
+| [Claude Desktop or Code](/ai-tools/claude) | Local npx process |
 | [Cursor](/ai-tools/cursor) | Local process on your computer |
 | [Codex](/ai-tools/codex) | Local process using your MCP configuration |
 | [ChatGPT](/ai-tools/chatgpt) | Web needs hosted MCP or an admin-managed tunnel; no tested ChatGPT connector is supplied |
@@ -96,7 +96,7 @@ Use `get_call_bookings` for a known call ID and `get_outbound_call_request` for 
 
 Only the Owner can see the organisation API key. It grants organisation authority, including changes with immediate effects.
 
-Keep keys out of chats, screenshots and configuration JSON. Use the Desktop bundle’s private key field, or have your secret manager supply these values to a local client process:
+Keep keys out of chats, screenshots and shared files. Use your client’s private environment field or have your secret manager supply these values to the local client process:
 
 | Variable | Value |
 | --- | --- |
@@ -108,25 +108,19 @@ For approved staging tests, pair the staging key with `https://nixflex-voice-eng
 
 Environment injection keeps keys out of these examples but does not make every local process a secret vault. Legacy CLI credential files are plaintext; keep them out of projects and cloud-synced folders.
 
-## Install the supplied local package
+<span id="install-the-supplied-local-package"></span>
 
-Skip this section for the Claude Desktop bundle. Other local clients need **Node.js 22 or later** and Nixflex’s supplied `nixflex-mcp-0.5.0.tgz`. Check its supplied SHA-256 before installing.
+## Install the MCP server
 
-Use a dedicated folder and replace the download path with your actual file:
+Install **Node.js 22 or later**, which includes npm and npx. Configure your AI client to launch the published server with:
 
-<CodeGroup>
-
-```powershell Windows PowerShell
-npm.cmd install --prefix "C:/NixflexTools/mcp-0.5.0" "C:/Downloads/nixflex-mcp-0.5.0.tgz"
+```bash
+npx -y nixflex-mcp
 ```
 
-```bash macOS or Linux
-npm install --prefix "$HOME/.local/share/nixflex/mcp-0.5.0" "$HOME/Downloads/nixflex-mcp-0.5.0.tgz"
-```
+Use MCP 0.5.0 or later. In a client configuration, set the command to `npx` and the arguments to `["-y", "nixflex-mcp"]`. On Windows, use `cmd.exe` with arguments `["/c", "npx", "-y", "nixflex-mcp"]` when the client needs an executable wrapper.
 
-</CodeGroup>
-
-Start `node` with the absolute installed `node_modules/nixflex-mcp/index.js` path. Use Node’s full executable path if needed. Keep the tested package version fixed.
+Supply `NIXFLEX_API_KEY`, the matching `NIXFLEX_BASE_URL` and `NIXFLEX_CREDENTIAL_SOURCE=environment` through the client's private environment settings. Follow the [Claude](/ai-tools/claude), [Cursor](/ai-tools/cursor) or [Codex](/ai-tools/codex) instructions for that client's format. Restart the client after configuration; do not enter a key in a conversation or tool argument.
 
 ## Verify with one read
 
@@ -144,7 +138,7 @@ Use [llms.txt](https://docs.nixflex.com/llms.txt) to find pages, or append `.md`
 
 ## If connection fails
 
-Check Node, the absolute package path, private environment setup and client policy, then restart. Fewer tools may mean an older package. Send support only redacted errors and package/client versions, never environment dumps or keys.
+Check Node 22+, npx on the client process path, private environment setup and client policy, then restart. Fewer tools may mean an older package. Send support only redacted errors and package/client versions, never environment dumps or keys.
 
 ## Voice booking approval
 

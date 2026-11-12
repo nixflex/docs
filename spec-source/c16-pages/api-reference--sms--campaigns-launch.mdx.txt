@@ -1,0 +1,169 @@
+---
+title: "Launch an SMS campaign"
+sidebarTitle: "Launch an SMS campaign"
+description: "Request the first launch of an owned Nixflex SMS campaign. Check readiness, consent and launch state before dispatching messages."
+openapi: "/api-reference/public.openapi.json POST /sms/campaigns/{id}/launch"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/sms/campaigns-launch"
+---
+
+Request the first launch of an owned SMS campaign. Ownership, readiness and launch state are checked before dispatch; each recipient still passes current contact checks.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Launching can send real messages to the saved recipients.
+- After a lost response, read campaign state before a deliberate next action.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/sms-campaigns) · [Developer guide](/sms/sms-campaigns) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `id` (path) | string | Yes | None | Exact saved campaign_id owned by this account. This operation does not declare a route-level length or character validator. |
+
+Do not send a request body.
+
+No request body is used. This can contact real recipients. A second launch is refused after a campaign has been claimed, including finished runs. A missing or foreign campaign is reported as 400 invalid_request.
+
+Consent, suppression, recipient-local windows and capacity remain normal contact gates. A manual launch is not permission to bypass them. A 200 response may report running with held recipients. A refusal after some sends does not undo those sends.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Campaign ID. |
+| `status` | string | running while held; otherwise done or failed. |
+| `sent` | integer | Accepted sends; not delivery proof. |
+| `failed` | integer | Known failures, distinct from accepted sends. |
+| `total_segments` | integer | Segment count for this run. |
+| `held` | integer | Held recipients when present. |
+| `reason` | string | Hold reason when present. |
+| `safe_to_retry` | boolean | False when held or outcome requires reconciliation. |
+| `stopped` | boolean | Present when number changes stop a legacy run. |
+| `stop_reason` | string | Why sending stopped. |
+| `not_sent` | integer | Remaining unattempted recipients when known. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/sms/campaigns/campaign_fixture/launch" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.sms.campaigns.launch("campaign_fixture");
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.sms.campaigns.launch('campaign_fixture')
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex sms campaigns launch campaign_fixture --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "launch_sms_campaign",
+  "arguments": {
+    "campaign_id": "campaign_fixture",
+    "confirm": true
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "status": "running",
+  "sent": 0,
+  "failed": 0,
+  "total_segments": 0,
+  "held": 1,
+  "reason": "recipients_held",
+  "safe_to_retry": false
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_request`](/api-reference/errors#invalid_request) | The identifier or request fields are invalid. | Correct the documented fields before resending. |
+| 500 | [`campaign_outcome_unknown`](/api-reference/errors#campaign_outcome_unknown) | A campaign save or launch result is uncertain. | Use details.campaign_id to reconcile; safe_to_retry is false. |
+| 503 | [`campaigns_paused`](/api-reference/errors#campaigns_paused) | Campaign admission is temporarily paused. | Wait before a deliberate retry; check any saved campaign first. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 503 | [`dispatch_safety_unavailable`](/api-reference/errors#dispatch_safety_unavailable) | The current recipient was refused before sending because its safety record was unavailable. | Reconcile earlier accepted sends; do not replay the whole campaign. |
+| 409 | [`account_inactive`](/api-reference/errors#account_inactive) | Account sending is disabled. | Read details for this attempt and reconcile earlier accepted messages. |
+| 409 | [`number_changed`](/api-reference/errors#number_changed) | The sending number changed. | Read details for this attempt and reconcile earlier accepted messages. |
+| 409 | [`do_not_contact`](/api-reference/errors#do_not_contact) | The current recipient is suppressed. | Read details for this attempt and reconcile earlier accepted messages. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+No idempotency key is documented. A launch claim prevents a second first launch, but it does not make blind HTTP retries safe. After a timeout or uncertain result, read the same campaign before acting. Resume only verified unattempted rows of the current running campaign; create a new campaign only as an intentional new run.
+
+## Related endpoints
+
+- [List SMS campaigns](/api-reference/sms/campaigns-list)
+- [Create an SMS campaign](/api-reference/sms/campaigns-create)
+- [Errors and recovery](/api-reference/errors#error-envelope)

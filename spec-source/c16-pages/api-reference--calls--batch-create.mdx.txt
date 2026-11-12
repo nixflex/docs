@@ -1,0 +1,276 @@
+---
+title: "Create a voice campaign"
+sidebarTitle: "Create voice campaign"
+description: "Create a Nixflex voice campaign and its recipients. Default now mode requests launch immediately; use schedule mode to prepare a later launch."
+openapi: "/api-reference/public.openapi.json POST /calls/batch"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/calls/batch-create"
+---
+
+Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>POST</strong></div>
+  <div><small>Success</small><strong>201</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The default now mode immediately requests launch; scheduled work can run automatically. There is no public draft-only mode.
+- Review recipients, consent and contact rules before creating the campaign, because creation can contact people.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/voice-campaigns) · [Developer guide](/guides/developer/campaigns) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential. Send `Content-Type: application/json`.
+
+## Request fields
+
+Send a JSON object.
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `agent_id` | string | Yes | None | Active agent owned by this account. |
+| `from_number` | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `name` | string | No | Omitted | Campaign label. Empty or omitted uses the channel-specific Untitled campaign label. |
+| `recipients` | array of object | Yes | None | At least one accepted recipient; atomic storage allows at most 100,000. The HTTP body limit still applies. Maximum 100000 items. Minimum 1 items. |
+| `recipients[].phone` | string | Yes | None | Trimmed E.164 string, 8–15 digits after +; country numbering-plan validation also applies. Pattern: `^\+[1-9][0-9]{7,14}$`. |
+| `recipients[].variables` | object | No | `{}` | Per-recipient template values. |
+| `recipients[].country` | string | No | Omitted | Uppercase supported two-letter country. Omitted uses conservative number inference. Maximum 2 characters. Minimum 2 characters. |
+| `recipients[].timezone` | string | No | Omitted | Explicit recipient IANA Area/City zone; preferred over number inference. Unknown location is held, never replaced by the campaign clock. Maximum 80 characters. |
+| `recipients[].prompt_override` | string or null | No | `null` | Optional instructions for this recipient instead of the campaign prompt. Empty inherits the campaign prompt. |
+| `schedule_type` | string | No | `"now"` | now requests launch immediately after creation. schedule saves scheduled work that the scheduler can launch. Allowed: `"now"`, `"schedule"`. |
+| `scheduled_date` | string or null | No | `null` | Required for schedule; YYYY-MM-DD calendar date. Recipient-local eligibility still applies. Format: date. |
+| `window_start_minutes` | integer or null | No | `null` | Start minute after midnight; supply both ends. Zero means midnight. Minimum 0. Maximum 1439. |
+| `window_end_minutes` | integer or null | No | `null` | End minute after midnight; supply both ends. A lower end denotes an overnight window. Minimum 0. Maximum 1439. |
+| `window_days` | array or null | No | `null` | Optional selected weekdays; duplicate values are collapsed and empty means unset. Allowed items: `"mon"`, `"tue"`, `"wed"`, `"thu"`, `"fri"`, `"sat"`, `"sun"`. |
+| `timezone` | string or null | No | `null` | Optional valid IANA campaign time zone. It does not replace a recipient’s location. |
+| `source` | string | No | `"api"` | Origin label only; API clients should keep api. Allowed: `"api"`, `"dashboard"`. |
+| `skip_invalid` | boolean | No | `false` | When true, omit invalid phone rows only. At least one valid row remains required; other validation failures still refuse. |
+| `duplicate_policy` | string | No | `"warn"` | warn retains duplicate rows and reports them; allow explicitly keeps them; reject refuses duplicates. warn is advisory and does not prevent automatic launch. No silent deduplication. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `consent_confirmed` | boolean | No | `false` | Record confirmation for this campaign. Missing consent holds contact until recorded. |
+| `allow_wider_hours` | boolean | No | `false` | Request wider hours with a recorded explanation. Recipient policy and other checks still apply. |
+| `hours_confirmation` | string | No | Omitted | Required when wider hours is true: trimmed explanation at least 20 characters; raw maximum 1,000. Maximum 1000 characters. Minimum 20 characters. |
+| `prompt` | string | Yes | None | Nonblank default instructions used by every row without a prompt override. |
+| `reuse_campaign_id` | string or null | No | `null` | Replace an owned never-launched draft or scheduled voice campaign atomically. Launched campaigns are refused; this is not an idempotency key. |
+
+### Scheduling, consent and duplicate rows
+
+The scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.
+
+Choose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.
+
+The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. No public voice campaign delete route is available. Reuse replaces the recipient list and settings only while the owned campaign has never launched.
+
+JSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.
+
+## Response fields
+
+`201 Created` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+### Scheduled creation
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Saved campaign ID. |
+| `total` | integer | Original input row count. |
+| `total_recipients` | integer | Accepted saved rows. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `status` | string | Saved campaign state. |
+
+### Immediate launch
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `campaign_id` | string | Saved campaign ID. |
+| `status` | string | Usually running; queue admission is not completed calls. |
+| `valid_count` | integer | Accepted recipient rows. |
+| `invalid_count` | integer | Rejected phone rows. |
+| `invalid` | array of object | Saved value. |
+| `invalid[].phone` | legacy value | Original rejected phone input, which may be null or a non-string value. |
+| `invalid[].reason` | string | Why this row failed. |
+| `invalid[].row_index` | integer | Zero-based original row. Minimum 0. |
+| `invalid[].variables` | object | Original variables when present. |
+| `duplicates` | array of object | Repeated accepted destinations. |
+| `duplicates[].phone` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `duplicates[].row_indices` | array of integer | Saved value. |
+| `duplicates[].different_content` | boolean | Duplicate rows have different variables or prompts. |
+| `duplicate_policy` | string | Applied duplicate decision. Allowed: `"allow"`, `"warn"`, `"reject"`. |
+| `duplicate_choice_required` | boolean | Advisory flag for repeated rows under warn; it is not a server-side launch lock. |
+| `total` | integer | Original input rows. |
+| `dialed` | integer | Legacy count of enqueued jobs, not actual calls. |
+| `queued` | integer | Enqueued jobs. |
+| `failed` | integer | Confirmed enqueue failures. |
+| `message` | string | Queue admission explanation. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This example changes state. Review the target and payload before running it. Running it can contact recipients immediately or when scheduled; scheduled creation is executable, not a draft. The existing MCP create tool does not expose nullable timezone as a typed argument, so its example omits that field.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/calls/batch" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"agent_id":"agent_fixture","from_number":"+12025550123","prompt":"Confirm the appointment requested by the recipient.","recipients":[{"phone":"+12025550124","variables":{"name":"Example customer"},"country":"GB","timezone":"Europe/London"}],"schedule_type":"schedule","scheduled_date":"2030-11-04","duplicate_policy":"reject","consent_confirmed":true,"window_start_minutes":0,"timezone":null}'
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.campaigns.create({"agent_id": "agent_fixture", "from_number": "+12025550123", "prompt": "Confirm the appointment requested by the recipient.", "recipients": [{"phone": "+12025550124", "variables": {"name": "Example customer"}, "country": "GB", "timezone": "Europe/London"}], "schedule_type": "schedule", "scheduled_date": "2030-11-04", "duplicate_policy": "reject", "consent_confirmed": true, "window_start_minutes": 0, "timezone": null});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', prompt='Confirm the appointment requested by the recipient.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, timezone=None)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+$body = @'
+{
+  "agent_id": "agent_fixture",
+  "from_number": "+12025550123",
+  "prompt": "Confirm the appointment requested by the recipient.",
+  "recipients": [
+    {
+      "phone": "+12025550124",
+      "variables": {
+        "name": "Example customer"
+      },
+      "country": "GB",
+      "timezone": "Europe/London"
+    }
+  ],
+  "schedule_type": "schedule",
+  "scheduled_date": "2030-11-04",
+  "duplicate_policy": "reject",
+  "consent_confirmed": true,
+  "window_start_minutes": 0,
+  "timezone": null
+}
+'@
+[IO.File]::WriteAllText('request-90.json', $body, (New-Object Text.UTF8Encoding $false))
+nixflex campaigns create --body '@request-90.json' --confirm --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "create_campaign",
+  "arguments": {
+    "agent_id": "agent_fixture",
+    "from_number": "+12025550123",
+    "prompt": "Confirm the appointment requested by the recipient.",
+    "recipients": [
+      {
+        "phone": "+12025550124",
+        "variables": {
+          "name": "Example customer"
+        },
+        "country": "GB",
+        "timezone": "Europe/London"
+      }
+    ],
+    "schedule_type": "schedule",
+    "scheduled_date": "2030-11-04",
+    "duplicate_policy": "reject",
+    "consent_confirmed": true,
+    "window_start_minutes": 0
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `201` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "campaign_id": "campaign_example",
+  "total": 1,
+  "total_recipients": 1,
+  "valid_count": 1,
+  "invalid_count": 0,
+  "invalid": [],
+  "status": "scheduled",
+  "duplicates": [],
+  "duplicate_policy": "reject",
+  "duplicate_choice_required": false
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`missing_field`](/api-reference/errors#missing_field) | A nonblank prompt is missing. | Send the default campaign prompt. |
+| 400 | [`campaign_creation_failed`](/api-reference/errors#campaign_creation_failed) | Required settings, ownership, template values, duplicate policy or recipient metadata failed validation. | Read error.details when present; correct the request before creating again. |
+| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | Phone validation failed or no valid recipients remain. | Fix invalid rows; skip_invalid only skips invalid phone rows. |
+| 400 | [`campaign_launch_failed`](/api-reference/errors#campaign_launch_failed) | Creation succeeded but immediate launch was refused. | Read details.campaign_id and reconcile the saved campaign. |
+| 500 | [`campaign_outcome_unknown`](/api-reference/errors#campaign_outcome_unknown) | A campaign save or launch result is uncertain. | Use details.campaign_id to reconcile; safe_to_retry is false. |
+| 503 | [`campaigns_paused`](/api-reference/errors#campaigns_paused) | Campaign admission is temporarily paused. | Wait before a deliberate retry; check any saved campaign first. |
+| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before repeating a write. |
+| 409 | [`number_disabled`](/api-reference/errors#number_disabled) | Outbound voice is disabled for the campaign number. | Use an intentionally enabled number; do not repeat the request unchanged. |
+| 400 | [`invalid_json`](/api-reference/errors#invalid_json) | Invalid JSON body. | Correct JSON syntax. |
+| 413 | [`payload_too_large`](/api-reference/errors#payload_too_large) | The request exceeds the JSON body limit. | Send a smaller request. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+Creation is not idempotent. Do not automatically retry after a timeout, 5xx, or saved-but-refused launch. Read the campaign list/detail using the returned campaign_id when available; ask support to reconcile an unknown result. Duplicate detection compares input rows, not repeated HTTP requests. Queue admission or a sent count does not prove contact or delivery.
+
+## Related endpoints
+
+- [List voice campaigns](/api-reference/voice-campaigns/get-campaigns)
+- [Launch a voice campaign](/api-reference/calls/batch-launch)
+- [Errors and recovery](/api-reference/errors#error-envelope)

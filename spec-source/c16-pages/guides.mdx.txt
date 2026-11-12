@@ -1,0 +1,63 @@
+---
+title: "Build a Nixflex integration"
+sidebarTitle: "Introduction"
+description: "Start a Nixflex server integration with one authenticated read, then learn errors, pagination, webhooks, knowledge and calendar workflows."
+canonical: "https://docs.nixflex.com/guides"
+---
+
+Build an integration by verifying one authenticated read, then adding a workflow whose results you can track.
+
+<div className="nxf-facts">
+  <div><small>First task</small><strong>One safe read</strong></div>
+  <div><small>Next step</small><strong>Choose a workflow</strong></div>
+  <div><small>Credential</small><strong>Server only</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Keep the account credential on your server and match it to the intended API host.
+- Record a write before sending it; a lost response may conceal success.
+- Use the task guides below and the API reference for exact fields.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/business) · [API reference](/api-reference/introduction) · [Glossary](/guides/glossary)
+
+</div>
+
+1. Store the full organisation API key in your server's secret store. Read [authentication](/authentication).
+2. Follow the [quickstart](/quickstart) to read an owned resource without changing it.
+3. Handle [errors](/guides/developer/errors), [pagination](/guides/developer/pagination), [rate limits](/guides/developer/rate-limits) and [duplicate work](/guides/developer/idempotency).
+4. Receive [signed webhooks](/advanced/webhooks), verifying the exact raw bytes before parsing JSON.
+
+| Build next | Guide |
+| --- | --- |
+| Business knowledge | [Sources, jobs, pieces and keyterms](/guides/developer/knowledge) |
+| Calendar booking | [Google Calendar](/actions/google-calendar) · [Cal.com](/actions/calcom) |
+| Calls and messages | [One saved call request](/guides/developer/call-requests) · [SMS](/sms/send-sms) |
+| Recipient policy | [Contact controls](/guides/developer/contact-controls) |
+| Team access | [Owner, Admin and Member](/guides/developer/organisations) |
+| Clients and automation | [SDK release status](/sdks/ecosystem) · [MCP](/sdks/mcp) |
+
+## Before sending work
+
+Use an owned agent and number, verify recipient permission, and check the route's retry rules. An unknown network result does not prove a call or message was never sent. Store returned identifiers and reconcile before repeating a mutation.
+
+SDK and CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later. See [installation and supported clients](/sdks/ecosystem).
+
+Prefer the dashboard? Start with [business setup](/business) and its five-step task guides.
+
+## Understand the behaviour behind each workflow
+
+| Topic | Read more |
+| --- | --- |
+| Agents and number ownership | [Agents](/concepts/agents) · [Phone numbers](/concepts/phone-numbers) |
+| Outbound purposes and personalisation | [Outbound calls](/concepts/outbound-calls) · [Variables](/concepts/variables) |
+| Live call access | [Monitoring](/concepts/live-monitor) · [Live Listen](/concepts/live-monitor) |
+| Information after a call | [Analysis](/advanced/post-call-analysis) · [Post-call texts](/sms/post-call-sms) |
+| Telephone input and answering systems | [Keypad input](/advanced/keypad-input) · [Voicemail](/advanced/voicemail-detection) |
+| Reaching a department | [Phone-menu instructions](/actions/ivr-navigation) |

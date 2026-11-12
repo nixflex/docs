@@ -1,0 +1,159 @@
+---
+title: "List inbox numbers"
+sidebarTitle: "List inbox numbers"
+description: "List owned numbers available to the Nixflex inbox and their active agent labels. Pending number imports are excluded from the list."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/numbers"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-numbers"
+---
+
+List owned numbers available to the inbox and active agent labels. Pending number imports are excluded; both API and dashboard number sources can appear.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Use the returned eligible channel and number combination.
+- Do not infer inbox access from an unrelated phone-number list.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [Developer guide](/guides/developer/agent-inbox) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `offset` (query) | integer | No | `0` | Skip this many numbers; fixed page size 100. Minimum 0. Maximum 10000. |
+
+Do not send a request body.
+
+Numbers are ordered by phone_number ascending. Increase offset by 100 while has_more is true, up to the offset limit. Agent labels are a separate list capped at 1,000 and have no pagination field here. Requests return Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `numbers` | array of object | Saved value. |
+| `numbers[].phone_number` | string | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `numbers[].agent_id` | string or null | Assigned agent ID. |
+| `numbers[].source` | string or null | Saved source. |
+| `numbers[].sms_prompt` | string or null | SMS instructions. |
+| `numbers[].web_prompt` | string or null | Website instructions. |
+| `numbers[].sms_reply_enabled` | boolean or null | SMS reply setting. |
+| `numbers[].web_agent_enabled` | boolean or null | Web chat setting. |
+| `numbers[].web_calls_enabled` | boolean or null | Website voice setting. |
+| `agents` | array of object | At most 1,000 active agents, ordered by agent_id. |
+| `agents[].agent_id` | string | Active agent ID. |
+| `agents[].name` | string or null | Agent label. |
+| `has_more` | boolean | True when the number page contains exactly 100 rows; another page may be empty. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/numbers?offset=0" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.inbox.numbers({"offset": 0});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.inbox.numbers(offset=0)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex inbox numbers --offset 0 --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "list_inbox_numbers",
+  "arguments": {
+    "offset": 0
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "numbers": [],
+  "agents": [],
+  "has_more": false
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Check inbox availability](/api-reference/agent-inbox/get-agent-inbox-features)
+- [List inbox conversations](/api-reference/agent-inbox/get-agent-inbox-channel-number)
+- [Errors and recovery](/api-reference/errors#error-envelope)

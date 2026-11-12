@@ -1,0 +1,170 @@
+---
+title: "Read an inbox thread"
+sidebarTitle: "Read inbox thread"
+description: "Read retained messages in one owned Nixflex inbox thread. The newest page is selected first, with its messages returned in chronological order."
+openapi: "/api-reference/public.openapi.json GET /agent-inbox/{channel}/{number}/thread/{thread}"
+playground: "simple"
+canonical: "https://docs.nixflex.com/api-reference/agent-inbox/get-agent-inbox-channel-number-thread-thread"
+---
+
+Read retained messages in one owned inbox conversation. The newest page is selected first and returned in chronological order; this read does not mark messages as read.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>GET</strong></div>
+  <div><small>Success</small><strong>200</strong></div>
+  <div><small>Scope</small><strong>Owning account</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- Read only an account-owned thread in its original channel.
+- Keep private messages out of logs and shared AI prompts.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/agent-inbox) · [Developer guide](/guides/developer/agent-inbox) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s server-side credential.
+
+## Request fields
+
+| Field | Type | Required | Default | Limits and meaning |
+| --- | --- | --- | --- | --- |
+| `channel` (path) | string | Yes | None | Conversation channel. Allowed: `"sms"`, `"web"`. |
+| `number` (path) | string | Yes | None | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+| `thread` (path) | string | Yes | None | Opaque thread key from the conversation list. URL-encode it. Maximum 160 characters. Minimum 1 characters. |
+| `limit` (query) | integer | No | `100` | Messages per page. Minimum 1. Maximum 200. |
+| `before` (query) | string | No | Omitted | Oldest returned created_at for the next older page; supply before_id too. Format: date-time. |
+| `before_id` (query) | string | No | Omitted | Oldest returned message ID paired with before. Web IDs must contain 1–19 digits. Maximum 80 characters. |
+
+Do not send a request body.
+
+Use both created_at and id from the oldest message in the returned page to request older messages. Rows are selected newest-first with an ID tie-break, then returned oldest-first within the selected page. With SMS, thread is the contact key; with web, it is the session key from the list response. URL-encode either.
+
+An owned number with no matching messages can return 200 and an empty list. Retention can remove content between reads. read_version covers the entire thread, not only the returned page: acknowledge it only if your application intends to mark all messages through that version read. Requests return Cache-Control: no-store.
+
+## Response fields
+
+`200 OK` returns the shape below. Nullable fields can be unknown or unset; do not turn null into zero or false.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `messages` | array of object | Saved value. |
+| `messages[].id` | string | Message ID; use verbatim in the before_id cursor. |
+| `messages[].thread_key` | string | Conversation key. |
+| `messages[].content` | string or null | Retained message content. |
+| `messages[].created_at` | string or null | Saved timestamp, or null. Format: date-time. |
+| `messages[].incoming` | boolean | Incoming visitor or customer message. |
+| `messages[].inbox_version` | integer or null | Per-message sequence when tracked; use the string read_version for acknowledgements. |
+| `messages[].visit_id` | string or null | Web visit ID; null for SMS. |
+| `messages[].visitor_name` | string or null | Visitor label when present. |
+| `messages[].visitor_phone` | string or null | Visitor phone when present. |
+| `messages[].visitor_fields` | array or null | Web messages only; up to nine saved fields. Maximum 9 items. |
+| `messages[].knowledge_given` | object or array or null | Optional saved outgoing knowledge evidence when available. This additive data does not change thread pagination. |
+| `read_version` | string | Maximum tracked version across the whole thread, including messages outside this page. Opaque decimal string; default 0. |
+| `has_more` | boolean | More older messages remain before this page boundary. |
+
+## Example request
+
+These examples require Node/CLI 0.11.0 or later, Python 0.4.0 or later and MCP 0.5.0 or later. Keep `NXF_STAGING_KEY` private. cURL uses Bash; CLI uses PowerShell and reads the key through `NIXFLEX_API_KEY`. Replace fixture identifiers and reserved example numbers with approved account-owned values. Configure the existing MCP installation for the same staging host and account before using the shown tool arguments. Python shows the synchronous client; `AsyncNixflex` uses the same method with `async with` and `await`. This is the first page; use only cursors returned by the API for subsequent pages.
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url "https://nixflex-voice-engine-staging.up.railway.app/v1/agent-inbox/web/%2B12025550123/thread/visitor%2Fplus%2B%20%C3%BC?limit=2" \
+  --header "Authorization: Bearer $NXF_STAGING_KEY"
+```
+
+```javascript Node
+import { Nixflex } from 'nixflex';
+
+const c = new Nixflex({
+  apiKey: process.env.NXF_STAGING_KEY,
+  baseUrl: 'https://nixflex-voice-engine-staging.up.railway.app',
+  maxRetries: 0,
+});
+const result = await c.inbox.thread("web", "+12025550123", "visitor/plus+ \u00fc", {"limit": 2});
+```
+
+```python Python
+import os
+from nixflex import Nixflex
+
+with Nixflex(
+    api_key=os.environ["NXF_STAGING_KEY"],
+    base_url="https://nixflex-voice-engine-staging.up.railway.app",
+    max_retries=0,
+) as c:
+    result = c.inbox.thread('web', '+12025550123', 'visitor/plus+ ü', limit=2)
+```
+
+```powershell CLI (PowerShell)
+$env:NIXFLEX_API_KEY = $env:NXF_STAGING_KEY
+nixflex inbox thread web '+12025550123' --thread 'visitor/plus+ ü' --limit 2 --json --base-url "https://nixflex-voice-engine-staging.up.railway.app"
+```
+
+```json MCP
+{
+  "name": "get_inbox_thread",
+  "arguments": {
+    "channel": "web",
+    "number": "+12025550123",
+    "thread": "visitor/plus+ ü",
+    "limit": 2
+  }
+}
+```
+
+</RequestExample>
+
+## Example response
+
+Illustrative `200` response. Identifiers and values are examples; some optional or compatibility fields are omitted.
+
+<ResponseExample>
+
+```json Response
+{
+  "messages": [],
+  "read_version": "0",
+  "has_more": false
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+Failures return an `error` object with `code`, `message`, `doc_url` and optional details. Each code links to the shared error catalog. Read the message and details before deciding whether to resend.
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_inbox_request`](/api-reference/errors#invalid_inbox_request) | A path, query, body or settings value is invalid. | Correct the documented shape and limits. |
+| 404 | [`inbox_not_found`](/api-reference/errors#inbox_not_found) | The number or thread is unavailable to this account. | Check the number, thread and account state. |
+| 503 | [`agent_inbox_disabled`](/api-reference/errors#agent_inbox_disabled) | The inbox feature is disabled. | Wait for feature availability. |
+| 503 | [`inbox_unavailable`](/api-reference/errors#inbox_unavailable) | The inbox read or write could not be confirmed. | Retry reads with bounded backoff; reconcile writes first. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the account credential and environment. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+
+</div>
+
+## Retry and idempotency
+
+This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+
+## Related endpoints
+
+- [Check inbox availability](/api-reference/agent-inbox/get-agent-inbox-features)
+- [List inbox numbers](/api-reference/agent-inbox/get-agent-inbox-numbers)
+- [Errors and recovery](/api-reference/errors#error-envelope)
