@@ -11,7 +11,7 @@
       "id": "act-tags",
       "kind": "fixed",
       "scope": "platform",
-      "text": "Use the listed developer-facing outbound tag forms exactly. The IVR and keypad navigation forms are outbound only.",
+      "text": "Developers can name their own variables. The outbound engine recognises exactly seven action tags. [[act-tags]]. The last three are outbound-only menu controls. Texting requires incall_sms_enabled on the agent. For a new action, configure a supported booking integration or a custom function. Inventing a tag does nothing.",
       "why": "The engine recognises particular markers in the reply and dispatches the matching action. A different label has no action handler.",
       "sourceList": "outbound.publicTags",
       "value": [
@@ -26,7 +26,9 @@
       "evidence": [
         "outbound/providers/outboundClaude.js:89-102",
         "inbound/providers/claude.js:71-77",
-        "outbound/call/conversation.js:267-318"
+        "outbound/call/conversation.js:267-318",
+        "outbound/call/callManager.js:485-508",
+        "outbound/features/midCallSms.js:32-39"
       ]
     },
     {
@@ -55,7 +57,7 @@
       "id": "act-builtins",
       "kind": "fixed",
       "scope": "call",
-      "text": "The engine fills these outbound variables. Use their exact names inside double braces. The engine writes these values after merging recipient variables.",
+      "text": "The engine fills these double-brace variables after merging recipient data, so its values win.",
       "why": "The call supplies identity, direction and time context for each recipient.",
       "sourceList": "outbound.systemVariables",
       "value": [
@@ -105,7 +107,7 @@
       "id": "act-variables",
       "kind": "change",
       "scope": "recipient",
-      "text": "Choose case-sensitive ASCII letters, digits and underscores, for example {{appointment_time}}. Use dynamic_vars on a single call and map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name yourself when referenced. Validate every row before submitting.",
+      "text": "Use case-sensitive ASCII letters, digits and underscores for names such as {{pickup_time}}. Send dynamic_vars for one call. Map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name when referenced.",
       "evidence": [
         "shared/features/singleContactPolicy.js:15-25",
         "api/routes.js:1033-1045",
@@ -128,8 +130,8 @@
       "id": "act-custom",
       "kind": "unavailable",
       "scope": "platform",
-      "text": "Developers cannot add or rename an action tag.",
-      "instead": "Use the supported tag. For a custom integration, configure a custom function on the number and have the agent use the tool.",
+      "text": "You cannot register a new action tag in a prompt.",
+      "instead": "For your own workflow, configure a number-level custom function with defined arguments.",
       "evidence": [
         "outbound/providers/outboundClaude.js:89-111",
         "api/routes.js:2237-2255",
@@ -141,8 +143,8 @@
       "id": "act-history",
       "kind": "unavailable",
       "scope": "call",
-      "text": "caller_history is not automatically populated on outbound. caller_name and business_name are not engine-filled outbound variables either.",
-      "instead": "Supply the recipient facts you actually need in dynamic_vars or the batch row’s variables.",
+      "text": "Outbound does not fill caller_history, caller_name or business_name.",
+      "instead": "Supply needed facts in dynamic_vars or recipients[].variables.",
       "evidence": [
         "shared/utils/callVariables.js:31-49",
         "shared/utils/callVariables.js:55-76",
@@ -153,7 +155,7 @@
       "id": "act-min",
       "kind": "limit",
       "scope": "call",
-      "text": "Provide a meaningful call purpose meeting the minimum trimmed character count below. The HTTP route rejects blank input. Shorter nonblank input can trigger the no-purpose apology and ending instruction.",
+      "text": "Supply at least [[act-min]] trimmed characters of meaningful purpose. Blank input is rejected. Shorter input can trigger an apology and hang-up.",
       "sourceList": "outbound.purposeMin",
       "value": 10,
       "evidence": [
@@ -188,13 +190,14 @@
       "id": "act-missing",
       "kind": "error",
       "scope": "recipient",
-      "text": "With required voice-detail validation enabled, absent, null or blank custom values produce 409 missing_voice_details before dispatch. Read details.missing, fill the named fields and submit the corrected request.",
+      "text": "Validate every row before sending. The required voice-details flag can be off. Reject absent, null or blank non-system values and malformed names yourself. When on, the engine refuses before dispatch with 409 missing_voice_details (see details.missing) or 409 unsupported_voice_placeholder. Rename a bad key in both template and row. Never rely on a literal placeholder being spoken.",
       "value": "missing_voice_details",
       "evidence": [
         "shared/features/singleContactPolicy.js:15-25",
         "shared/features/singleContactPolicy.js:45-47",
         "shared/config/campaignSafety.js:19-20",
-        "shared/config/campaignSafety.js:29-32"
+        "shared/config/campaignSafety.js:29-32",
+        "shared/utils/replaceVariables.js:12-23"
       ]
     },
     {

@@ -2,9 +2,7 @@
 
 Reviewed 2026-11-22 against production engine `0fd3f79bbc9acac787e5e3b31182e7987f3353e1`. Refresh project copies from https://docs.nixflex.com/ai-rules.md. Append the rules to your project instructions or attach the file to a chat that cannot read your workspace.
 
-A developer can run many customers on one shared agent. Give each customer its own number and number prompt. Separate agents are needed only when knowledge or agent settings must differ.
-
-Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts).
+Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts). Many customers can use one shared agent, each with its own number and number prompt. Use separate agents only for different knowledge or agent settings. List page size, knowledge-base quotas and simultaneous-call limits do not cap agent count.
 
 Always pass the customer’s verified from_number on a shared agent. If omitted the engine selects the oldest eligible number for the owning account and agent, ordered by created_at then id.
 
@@ -22,7 +20,7 @@ There is no per-number concurrent-call reservation. Queue or pace each tenant in
 
 **FIXED** Use https://api.nixflex.com/v1 for customer integrations. Keep the API credential on your server.
 
-**NOT OFFERED → do this instead** There is no self-service public sandbox. Use local fixtures or an owned test number for deliberate real traffic. Another environment requires access from Nixflex.
+**NOT OFFERED → do this instead** No self-service sandbox account or URL exists. Use fixtures locally or an owned test number for real traffic. Use another environment only when Nixflex provisions it. Staging exists for internal testing only.
 
 **YOU CAN CHANGE** Rotate the secret during a coordinated cutover. Update callers holding the old secret immediately.
 
@@ -46,13 +44,13 @@ The default allowance is 300 requests per minute. Observe the effective limit re
 
 ## Agent settings, languages and voices
 
-**FIXED** Language, general call timezone, pickup delay and fixed welcome_message belong to the agent. Numbers share those settings.
+**FIXED** For a different inbound opening on each number, use Dynamic greeting and put the opening in that number’s custom_prompt. Fixed welcome_message text, spoken language, pickup delay and general call timezone are shared agent settings. Use separate agents when those must differ. A booking timezone changes calendar times only.
 
-**NOT OFFERED → do this instead** A number cannot set a separate fixed welcome_message, language, general timezone or pickup delay. Use another agent for distinct settings. For a different business opening on the same agent use Dynamic greeting and the number prompt.
+**NOT OFFERED → do this instead** A number cannot override fixed agent settings. Use its dynamic opening for business-specific wording. Use different agents for different fixed settings.
 
 **YOU CAN CHANGE** Choose the supported catalogue voice and an eligible route. Select manual speech terms or configure structured values to extract from transcripts.
 
-**SCOPE · number** A configured primary/backup number voice pair wins as a whole. Inherit to use the agent pair. On legacy paths a number voice_id can clear an agent catalogue key. An incompatible partial pair can be unavailable.
+**SCOPE · number** Choose a complete primary and backup voice pair on the number. It overrides the agent pair as a whole. To use the saved agent pair, set voice_pair_inherit to true. A legacy voice_id can clear the agent’s catalogue key, and a partially migrated pair can be unavailable. Never choose by alias precedence.
 
 A changed manual list accepts up to 20 keyterms. Existing over-limit text can remain untouched on an unrelated edit.
 
@@ -60,17 +58,21 @@ A changed manual list accepts up to 20 keyterms. Existing over-limit text can re
 
 ## Phone numbers and bringing your own number
 
-**FIXED** A number belongs to the account and is assigned to an agent. An explicit outbound number must be eligible for that account and agent. On a shared agent always pass the intended customer’s from_number.
+**FIXED** A number belongs to an account and agent. On a shared agent always pass that customer’s eligible from_number.
 
-**NOT OFFERED → do this instead** A number cannot set its own fixed welcome_message, language, general call timezone or pickup delay. Use Dynamic greeting with that number’s custom_prompt for its business opening. Select a separate agent for different agent settings.
+**NOT OFFERED → do this instead** Fixed welcome_message, language, general timezone and pickup delay belong to the agent. Use Dynamic greeting and the number’s custom_prompt for its opening. Split agents for different fixed settings.
 
-**YOU CAN CHANGE** Import server-side with `POST /v1/phone-numbers`. Supply phone_number and agent_id. Pair twilio_sid with twilio_token or telnyx_api_key with telnyx_connection_id. telnyx_public_key is optional for the latter. custom_prompt is optional. `phone_number`, `agent_id`, `twilio_sid`, `twilio_token`, `telnyx_api_key`, `telnyx_connection_id`, `telnyx_public_key`, `custom_prompt`. These ordinary number settings are writable by PATCH. Text fields have individual clearing rules. Nullable recording and booking controls can inherit agent settings. Voicemail for an API-imported number uses the number’s controls. `custom_prompt`, `voice_id`, `sms_reply_enabled`, `sms_prompt`, `web_prompt`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation`, `record_call`, `recording_source`, `voicemail_leave_enabled`, `voicemail_message`. Select a complete catalogue voice pair on the number or request inheritance with voice_pair_inherit. A configured number pair overrides the whole agent pair. Legacy number aliases and partially migrated pairs follow separate compatibility rules. `voice_key`, `voice_route_key`, `backup_voice_key`, `backup_voice_route_key`.
+**YOU CAN CHANGE** Use `POST /v1/phone-numbers` on your server with the customer’s own `phone_number` and an active, owned `agent_id`. Send one complete pair. Twilio needs `twilio_sid` and `twilio_token`. Telnyx needs `telnyx_api_key` and `telnyx_connection_id` with optional `telnyx_public_key`. Keep secrets out of browsers and AI prompts. `custom_prompt` is optional.
 
-**SCOPE · number** Import an existing supported carrier number, assign it to an owned agent, inspect it, change its channel controls and remove its Nixflex connection.
+Other PATCH fields follow. Text clearing varies by field. A null recording or booking override inherits the agent setting. On imported numbers use the number’s voicemail controls. `custom_prompt`, `voice_id`, `sms_reply_enabled`, `sms_prompt`, `web_prompt`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation`, `record_call`, `recording_source`, `voicemail_leave_enabled`, `voicemail_message`.
 
-Write limits in characters for the inbound business profile, SMS prompt, website prompt and number voicemail message. `custom_prompt` 8,000 · `sms_prompt` 20,000 · `web_prompt` 16,000 · `voicemail_message` 2,000.
+Set a complete number pair with these fields, or use voice_pair_inherit for the agent pair. `voice_key`, `voice_route_key`, `backup_voice_key`, `backup_voice_route_key`.
 
-400 custom_prompt_too_long means the number profile exceeded its character limit. Shorten it to the custom_prompt limit shown above.
+**SCOPE · number** Import an owned carrier number, assign an agent, edit its channels or remove its Nixflex connection.
+
+Number text limits in characters. `custom_prompt` 8,000 · `sms_prompt` 20,000 · `web_prompt` 16,000 · `voicemail_message` 2,000.
+
+On import and PATCH, custom_prompt accepts up to 8,000 characters. A 12,000-character profile fails with 400 custom_prompt_too_long. Keep the number’s instructions short and put extra facts in agent knowledge. If those facts are private to one business, give it a separate agent.
 
 <a id="inbound-calls"></a>
 
@@ -78,7 +80,7 @@ Write limits in characters for the inbound business profile, SMS prompt, website
 
 **FIXED** Shared call mechanics and action permissions still apply when a number supplies business instructions.
 
-**NOT OFFERED → do this instead** There is no separate fixed welcome_message per number. A dynamic opener is generated and can incorporate the known caller’s name. Keep a common fixed message on the agent, or use separate agents when different verbatim messages are essential.
+**NOT OFFERED → do this instead** A number’s Dynamic greeting is generated and may include a known caller’s name. For a verbatim greeting use the agent’s fixed welcome_message. Use separate agents for different fixed greetings.
 
 **YOU CAN CHANGE** For a different greeting per business, keep Dynamic greeting on (the default) and put the opening line in that number’s custom_prompt. For example, “Start every call with: Thank you for calling Oak and Stone”.
 
@@ -108,19 +110,21 @@ from_number_not_found means the supplied sender is ineligible. Check account own
 
 ## Action tags and outbound variables
 
-**FIXED** Use the listed developer-facing outbound tag forms exactly. The IVR and keypad navigation forms are outbound only. `[SEND_SMS: message]`, `[TRANSFER: phone_number]`, `[WAIT]`, `[END_CALL]`, `[IVR]`, `[PRESS: digits]`, `[IVR_END]`. The engine fills these outbound variables. Use their exact names inside double braces. The engine writes these values after merging recipient variables. `caller_phone`, `business_phone`, `current_date`, `current_time`, `tomorrow_date`, `call_id`, `agent_id`, `call_direction`, `current_iso_date`, `current_iso_time`, `tomorrow_iso_date`, `current_day_of_week`, `current_timezone`, `upcoming_days`.
+**FIXED** Developers can name their own variables. The outbound engine recognises exactly seven action tags. `[SEND_SMS: message]`, `[TRANSFER: phone_number]`, `[WAIT]`, `[END_CALL]`, `[IVR]`, `[PRESS: digits]`, `[IVR_END]`. The last three are outbound-only menu controls. Texting requires incall_sms_enabled on the agent. For a new action, configure a supported booking integration or a custom function. Inventing a tag does nothing.
 
-**NOT OFFERED → do this instead** Developers cannot add or rename an action tag. Use the supported tag. For a custom integration, configure a custom function on the number and have the agent use the tool. caller_history is not automatically populated on outbound. caller_name and business_name are not engine-filled outbound variables either. Supply the recipient facts you actually need in dynamic_vars or the batch row’s variables.
+The engine fills these double-brace variables after merging recipient data, so its values win. `caller_phone`, `business_phone`, `current_date`, `current_time`, `tomorrow_date`, `call_id`, `agent_id`, `call_direction`, `current_iso_date`, `current_iso_time`, `tomorrow_iso_date`, `current_day_of_week`, `current_timezone`, `upcoming_days`.
 
-**YOU CAN CHANGE** Choose case-sensitive ASCII letters, digits and underscores, for example `{{appointment_time}}`. Use dynamic_vars on a single call and map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name yourself when referenced. Validate every row before submitting.
+**NOT OFFERED → do this instead** You cannot register a new action tag in a prompt. For your own workflow, configure a number-level custom function with defined arguments.
+
+Outbound does not fill caller_history, caller_name or business_name. Supply needed facts in dynamic_vars or recipients[].variables.
+
+**YOU CAN CHANGE** Use case-sensitive ASCII letters, digits and underscores for names such as `{{pickup_time}}`. Send dynamic_vars for one call. Map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name when referenced.
 
 **SCOPE · call** Outbound uses its call purpose for developer instructions. Inbound combines the shared agent instructions with the dialled number’s profile. Engine rules and eligible knowledge can also apply.
 
-Provide a meaningful call purpose meeting the minimum trimmed character count below. The HTTP route rejects blank input. Shorter nonblank input can trigger the no-purpose apology and ending instruction. 10.
+Supply at least 10 trimmed characters of meaningful purpose. Blank input is rejected. Shorter input can trigger an apology and hang-up.
 
-With required voice-detail validation enabled, absent, null or blank custom values produce 409 missing_voice_details before dispatch. Read details.missing, fill the named fields and submit the corrected request.
-
-With that validation enabled, spaces or punctuation in a placeholder produce 409 unsupported_voice_placeholder. Rename it in the template and the recipient data.
+Validate every row before sending. The required voice-details flag can be off. Reject absent, null or blank non-system values and malformed names yourself. When on, the engine refuses before dispatch with 409 missing_voice_details (see details.missing) or 409 unsupported_voice_placeholder. Rename a bad key in both template and row. Never rely on a literal placeholder being spoken.
 
 <a id="transfer-voicemail-keypad"></a>
 
@@ -140,7 +144,9 @@ With that validation enabled, spaces or punctuation in a placeholder produce 409
 
 **FIXED** reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
 
-**NOT OFFERED → do this instead** A finished campaign cannot be replayed or resumed. For Use again create a new campaign with a fresh ID, intended recipients and reviewed settings. There is no scheduled_at promise of dispatch at an exact second. Choose a date and a local window and track actual recipient status.
+**NOT OFFERED → do this instead** A finished campaign cannot be replayed or resumed. For Use again create a new campaign with a fresh ID, intended recipients and reviewed settings.
+
+There is no scheduled_at promise of dispatch at an exact second. Choose a date and a local window and track actual recipient status.
 
 **YOU CAN CHANGE** Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.
 
@@ -164,7 +170,7 @@ Voice deletion, cancellation and resume are separate operations. SMS has its own
 
 ## SMS, automatic replies and in-call texting
 
-**FIXED** With incall_sms_enabled on the agent, an SMS-capable imported number with valid credentials can send during a call. Inbound uses the dialled business number as sender. Outbound uses the originating business number. The other party receives the text.
+**FIXED** In-call texting requires incall_sms_enabled on the agent, an SMS-capable business number and valid carrier credentials. Inbound sends from the dialled number to its caller. Outbound sends from the originating number to the person called. Respect opt-outs on both paths. Never substitute another tenant’s sender.
 
 **NOT OFFERED → do this instead** SMS does not automatically inherit the inbound phone profile. Put this business’s SMS instructions in sms_prompt and configure automatic replies for its number.
 
@@ -184,7 +190,7 @@ sms_outcome_unknown means delivery could not be confirmed. Check the receipt and
 
 **YOU CAN CHANGE** Enable website custom functions only when every enabled function on that number is safe for public visitors. To offer booking, share the business’s booking link or hand off to phone or SMS.
 
-**SCOPE · number** Web chat and web voice use the number’s web_prompt. Configure sms_prompt separately for SMS. A phone profile alone does not configure either channel.
+**SCOPE · number** Configure each number’s sms_prompt for SMS and web_prompt for website chat and voice. Neither channel inherits its phone custom_prompt. Both still use the agent knowledge enabled for that channel and follow their own channel rules.
 
 Read widget settings and installation metadata for the owned number. `GET /v1/agent-web/{number}`.
 
@@ -206,11 +212,19 @@ For tenant deletion use `DELETE /v1/calls/{id}` for a verified call ID. `DELETE 
 
 ## Knowledge bases
 
-**FIXED** One live knowledge base belongs to an agent. Its attached numbers use that base on enabled channels. Only the active revision and eligible, unsuppressed pieces enter live retrieval. A small eligible base is supplied whole. Larger bases use question matches. Seeing all small-base pieces does not mean that they answer a particular question. Use the configured not-found response for missing information.
+**FIXED** One live knowledge base belongs to an agent. Its attached numbers use that base on enabled channels. Only the active revision and eligible, unsuppressed pieces enter live retrieval.
 
-**NOT OFFERED → do this instead** A separate base or knowledge opt-out for one attached number is unavailable. Use separate agents for different knowledge bases or for a customer who needs no knowledge. Choose knowledge channels on each agent. Knowledge Test accepts knowledge mode. It does not simulate the number’s whole call prompt or take a call purpose. Use Knowledge Test for source-backed answers. Use an actual test call to check the complete call instructions.
+A small eligible base is supplied whole. Larger bases use question matches. Seeing all small-base pieces does not mean that they answer a particular question. Use the configured not-found response for missing information.
 
-**YOU CAN CHANGE** Use pasted text, PDF, DOCX or plain UTF-8 text, or discover a website and import selected pages. API submissions can request review. Choose the enabled channels. The initial default is inbound only. `inbound`, `outbound`, `web_voice`, `web_chat`, `sms`. Choose the match setting from the supported options below. The default is Strict. Set not_found to nonblank wording within the indicated character limit. `match` `Strict`, `Normal` · `defaultMatch` Strict · `notFoundMaxChars` 500.
+**NOT OFFERED → do this instead** A separate base or knowledge opt-out for one attached number is unavailable. Use separate agents for different knowledge bases or for a customer who needs no knowledge. Choose knowledge channels on each agent.
+
+Knowledge Test accepts knowledge mode. It does not simulate the number’s whole call prompt or take a call purpose. Use Knowledge Test for source-backed answers. Use an actual test call to check the complete call instructions.
+
+**YOU CAN CHANGE** Use pasted text, PDF, DOCX or plain UTF-8 text, or discover a website and import selected pages. API submissions can request review.
+
+Choose the enabled channels. The initial default is inbound only. `inbound`, `outbound`, `web_voice`, `web_chat`, `sms`.
+
+Choose the match setting from the supported options below. The default is Strict. Set not_found to nonblank wording within the indicated character limit. `match` `Strict`, `Normal` · `defaultMatch` Strict · `notFoundMaxChars` 500.
 
 **SCOPE · agent** Prepare knowledge from text, a supported file or selected website pages. Review drafts, edit topics and publish approved material.
 
@@ -236,7 +250,7 @@ The limit is 20 nondeleted knowledge bases per account. Agent count is independe
 
 ## Bookings and calendars
 
-**FIXED** For a new Google Calendar or Cal.com voice booking, collect and spell contact details separately, finish the combined read-back, then obtain a later clear yes for that proposal. Confirm the booking only after a successful write. This applies even with require_booking_confirmation=false.
+**FIXED** For a new Google Calendar or Cal.com voice booking, ask the caller to spell their name and email one at a time. Finish playing the combined read-back, then get a clear yes on a later turn for that proposal. This holds with require_booking_confirmation=false. Confirm success only after the write succeeds. Rescheduling, cancellation and other existing-booking actions follow their own confirmation rules. SMS has a separate flow.
 
 **NOT OFFERED → do this instead** Cal.com does not offer an independent general call timezone for each number. It checks the agent timezone, its integration fallback, then Europe/London. Use separate agents for different Cal.com agent timezones. Google Calendar honours an explicit number-calendar timezone first, then uses the agent resolution.
 
@@ -276,9 +290,9 @@ On duplicate_function choose a unique name or update the intended existing funct
 
 ## Webhook verification and tenant routing
 
-**FIXED** With organisations enabled the signing secret belongs to the organisation. The organisation API credential or a personal Owner can retrieve it. Human Admin and Member cannot. Keep the secret server-side.
+**FIXED** With organisations enabled, one signing secret covers the organisation. Kit and AI users must send the human Owner to the dashboard. The server API also accepts an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Never ask for the secret in chat or return it through an AI tool. Store it on the receiving server.
 
-**NOT OFFERED → do this instead** call.bookings carries no account field or number-specific signing secret. Verify first. Map number to the customer in your server-side directory. For an inbound call use the business to number, for outbound use from.
+**NOT OFFERED → do this instead** call.bookings has no account field or per-number secret. After signature verification, look up number in your own tenant table. It is the business to number inbound and from number outbound.
 
 **YOU CAN CHANGE** Set delivery destinations per number. Pre-call settings can be scoped to an agent or number. Keep the delivery destination and your signature-verification secret separate.
 
@@ -286,7 +300,7 @@ On duplicate_function choose a unique name or update the intended existing funct
 
 These are the top-level call.bookings keys. Use call_id to correlate processing and design for redelivery. `event`, `call_id`, `agent_id`, `from`, `to`, `number`, `ended_at`, `timeline`, `final`.
 
-Authorised server access can retrieve the signing secret. For kit users direct the human Owner to the dashboard. Never paste the secret into an AI conversation. `GET /v1/organisation/signing-secret`.
+Owner-authorised server retrieval only. The kits omit this secret read. `GET /v1/organisation/signing-secret`.
 
 <a id="recordings-retention"></a>
 
@@ -304,13 +318,13 @@ Authorised server access can retrieve the signing secret. For kit users direct t
 
 ## Agent pricing and usage
 
-**FIXED** Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts).
+**FIXED** Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts). Many customers can use one shared agent, each with its own number and number prompt. Use separate agents only for different knowledge or agent settings. List page size, knowledge-base quotas and simultaneous-call limits do not cap agent count.
 
 **NOT OFFERED → do this instead** A separate agent does not create a separate account capacity budget. Pace customers’ work in your application. Use independent accounts for independent budgets.
 
 **YOU CAN CHANGE** For usage attribution save the intended customer and its verified business number when making a request.
 
-**SCOPE · agent** A developer can run many customers on one shared agent. Give each customer its own number and number prompt. Separate agents are needed only when knowledge or agent settings must differ.
+**SCOPE · agent** Group numbers by the knowledge and agent settings their customers need. Attribute each customer’s usage to its verified business number.
 
 <a id="limits-errors"></a>
 

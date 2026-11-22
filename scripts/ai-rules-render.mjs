@@ -44,7 +44,8 @@ function context(features){
   let s=fill(r.text)
   if(r.instead)s+=' '+fill(r.instead)
   if(options.why&&r.why)s+=' '+fill(r.why)
-  if(r.sourceList&&!internalTables.has(r.sourceList)&&!r.text.includes('[['+id+']]'))s+=' '+fields(r.value)+'.'
+  const listsEachField=Array.isArray(r.value)&&r.value.every(field=>s.includes(code(field)))
+  if(r.sourceList&&!internalTables.has(r.sourceList)&&!r.text.includes('[['+id+']]')&&!listsEachField)s+=' '+fields(r.value)+'.'
   if(r.kind==='api')s+=' '+fields([r.value].flat())+'.'
   return s.split(/(\x60[^\x60]*\x60)/).map((part,i)=>i%2?part:part.replace(/t=<timestamp>,v1=<hex>|\{\{\w+\}\}|(?:GET|POST|DELETE|PUT|PATCH) \/v1\/[\w/{\}-]+/g,code)).join('')
  }
@@ -73,7 +74,7 @@ function guide(facts,c){
   const rows=index.features[f.feature].short.map(id=>c.get(id).r),scope=f.rules.find(r=>r.kind==='does')
   for(const kind of Object.keys(labels)){
    const picked=rows.filter(r=>r.kind===kind);if(!picked.length)picked.push(f.rules.find(r=>r.kind===kind))
-   s+='**'+labels[kind]+'** '+picked.map(r=>c.describe(r.id)).join(' ')+'\n\n'
+   s+='**'+labels[kind]+'** '+picked.map(r=>c.describe(r.id,{why:kind==='unavailable'})).join('\n\n')+'\n\n'
   }
   s+='**SCOPE · '+scope.scope+'** '+c.describe(scope.id)+'\n'
   for(const r of rows.filter(r=>!Object.hasOwn(labels,r.kind)&&r.id!==scope.id))s+='\n'+c.describe(r.id)+'\n'

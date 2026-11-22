@@ -11,7 +11,7 @@
       "id": "num-owner",
       "kind": "fixed",
       "scope": "account",
-      "text": "A number belongs to the account and is assigned to an agent. An explicit outbound number must be eligible for that account and agent. On a shared agent always pass the intended customer’s from_number.",
+      "text": "A number belongs to an account and agent. On a shared agent always pass that customer’s eligible from_number.",
       "why": "Without a selection the resolver orders eligible numbers by creation time and ID. The first number can belong to another customer of the same SaaS account.",
       "evidence": [
         "api/routes.js:1055-1078",
@@ -37,8 +37,8 @@
       "id": "num-no-tenant",
       "kind": "unavailable",
       "scope": "number",
-      "text": "A number cannot set its own fixed welcome_message, language, general call timezone or pickup delay.",
-      "instead": "Use Dynamic greeting with that number’s custom_prompt for its business opening. Select a separate agent for different agent settings.",
+      "text": "Fixed welcome_message, language, general timezone and pickup delay belong to the agent.",
+      "instead": "Use Dynamic greeting and the number’s custom_prompt for its opening. Split agents for different fixed settings.",
       "evidence": [
         "shared/features/phoneNumberImport.js:95-112",
         "shared/features/numberControls.js:2-4",
@@ -63,7 +63,7 @@
       "id": "num-purpose",
       "kind": "does",
       "scope": "number",
-      "text": "Import an existing supported carrier number, assign it to an owned agent, inspect it, change its channel controls and remove its Nixflex connection.",
+      "text": "Import an owned carrier number, assign an agent, edit its channels or remove its Nixflex connection.",
       "evidence": [
         "api/routes.js:1548-1575",
         "api/routes.js:1583-1627",
@@ -75,7 +75,7 @@
       "id": "num-import",
       "kind": "change",
       "scope": "number",
-      "text": "Import server-side with POST /v1/phone-numbers. Supply phone_number and agent_id. Pair twilio_sid with twilio_token or telnyx_api_key with telnyx_connection_id. telnyx_public_key is optional for the latter. custom_prompt is optional.",
+      "text": "Use POST /v1/phone-numbers on your server with the customer’s own `phone_number` and an active, owned `agent_id`. Send one complete pair. Twilio needs `twilio_sid` and `twilio_token`. Telnyx needs `telnyx_api_key` and `telnyx_connection_id` with optional `telnyx_public_key`. Keep secrets out of browsers and AI prompts. `custom_prompt` is optional.",
       "sourceList": "numbers.importFields",
       "value": [
         "phone_number",
@@ -89,14 +89,16 @@
       ],
       "evidence": [
         "shared/features/numberImportInput.js:4-11",
-        "shared/features/numberImportInput.js:22-37"
+        "shared/features/numberImportInput.js:22-37",
+        "shared/features/numberOperationCarrier.js:9-22",
+        "sql/security-auth/097_01_number_operations.sql:59-67"
       ]
     },
     {
       "id": "num-settings",
       "kind": "change",
       "scope": "number",
-      "text": "These ordinary number settings are writable by PATCH. Text fields have individual clearing rules. Nullable recording and booking controls can inherit agent settings. Voicemail for an API-imported number uses the number’s controls.",
+      "text": "Other PATCH fields follow. Text clearing varies by field. A null recording or booking override inherits the agent setting. On imported numbers use the number’s voicemail controls.",
       "sourceList": "numbers.updateFields",
       "value": [
         "custom_prompt",
@@ -142,7 +144,7 @@
       "id": "num-pair",
       "kind": "change",
       "scope": "number",
-      "text": "Select a complete catalogue voice pair on the number or request inheritance with voice_pair_inherit. A configured number pair overrides the whole agent pair. Legacy number aliases and partially migrated pairs follow separate compatibility rules.",
+      "text": "Set a complete number pair with these fields, or use voice_pair_inherit for the agent pair.",
       "sourceList": "numbers.voicePairFields",
       "value": [
         "voice_key",
@@ -181,7 +183,7 @@
       "id": "num-prompt",
       "kind": "limit",
       "scope": "number",
-      "text": "Write limits in characters for the inbound business profile, SMS prompt, website prompt and number voicemail message.",
+      "text": "Number text limits in characters.",
       "sourceList": "numbers.textLimits",
       "value": {
         "custom_prompt": 8000,
@@ -279,11 +281,12 @@
       "id": "num-size",
       "kind": "error",
       "scope": "number",
-      "text": "400 custom_prompt_too_long means the number profile exceeded its character limit. Shorten it to the custom_prompt limit shown above.",
+      "text": "On import and PATCH, custom_prompt accepts up to [[num-prompt.custom_prompt]] characters. A 12,000-character profile fails with 400 custom_prompt_too_long. Keep the number’s instructions short and put extra facts in agent knowledge. If those facts are private to one business, give it a separate agent.",
       "value": "custom_prompt_too_long",
       "evidence": [
         "shared/features/numberImportInput.js:28-30",
-        "shared/features/phoneNumberImport.js:175-185"
+        "shared/features/phoneNumberImport.js:175-185",
+        "knowledge/agentOnly.js:3-7"
       ]
     },
     {

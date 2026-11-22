@@ -11,13 +11,16 @@
       "id": "bill-price",
       "kind": "fixed",
       "scope": "account",
-      "text": "Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts).",
+      "text": "Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts). Many customers can use one shared agent, each with its own number and number prompt. Use separate agents only for different knowledge or agent settings. List page size, knowledge-base quotas and simultaneous-call limits do not cap agent count.",
       "evidence": [
         "api/routes.js:657-699",
         "api/routes.js:769-779",
         "api/agents/list.js:9-20",
         "shared/payments/chargePricing.js:1-5",
-        "knowledge/scopes.js:21-26"
+        "knowledge/scopes.js:21-26",
+        "knowledge/agentOnly.js:3-12",
+        "shared/data/agentPrompt.js:20-51",
+        "shared/utils/concurrencyGuard.js:1-30"
       ],
       "why": "Agent creation carries no separate charge. The number of rows on a list page is a pagination setting.",
       "policy": "agent-pricing"
@@ -26,13 +29,15 @@
       "id": "bill-share",
       "kind": "does",
       "scope": "agent",
-      "text": "A developer can run many customers on one shared agent. Give each customer its own number and number prompt. Separate agents are needed only when knowledge or agent settings must differ.",
+      "text": "Group numbers by the knowledge and agent settings their customers need. Attribute each customer’s usage to its verified business number.",
       "evidence": [
         "knowledge/agentOnly.js:3-12",
         "knowledge/scopes.js:13-30",
         "knowledge/liveRead.js:20-28",
         "shared/data/agentPrompt.js:20-51",
-        "api/routes.js:657-699"
+        "api/routes.js:657-699",
+        "api/agents/list.js:9-20",
+        "knowledge/scopes.js:21-26"
       ]
     },
     {

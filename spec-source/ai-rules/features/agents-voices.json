@@ -11,13 +11,15 @@
       "id": "agent-common",
       "kind": "fixed",
       "scope": "agent",
-      "text": "Language, general call timezone, pickup delay and fixed welcome_message belong to the agent. Numbers share those settings.",
+      "text": "For a different inbound opening on each number, use Dynamic greeting and put the opening in that number’s custom_prompt. Fixed welcome_message text, spoken language, pickup delay and general call timezone are shared agent settings. Use separate agents when those must differ. A booking timezone changes calendar times only.",
       "evidence": [
         "api/agents/input.js:2-13",
         "api/agentFields.js:18-31",
         "api/routes.js:1583-1615",
         "shared/integrations/googleCalendarSettings.js:7-17",
-        "inbound/call/greeting.js:42-55"
+        "inbound/call/greeting.js:42-55",
+        "inbound/call/greeting.js:29-56",
+        "shared/data/agentPrompt.js:41-54"
       ],
       "why": "The fixed phone opener reads the agent’s saved welcome message."
     },
@@ -25,7 +27,7 @@
       "id": "agent-default",
       "kind": "unavailable",
       "scope": "number",
-      "text": "A number cannot set a separate fixed welcome_message, language, general timezone or pickup delay.",
+      "text": "A number cannot override fixed agent settings.",
       "evidence": [
         "api/agents/input.js:2-13",
         "api/agentFields.js:18-31",
@@ -33,13 +35,13 @@
         "shared/integrations/googleCalendarSettings.js:7-17",
         "inbound/call/greeting.js:42-55"
       ],
-      "instead": "Use another agent for distinct settings. For a different business opening on the same agent use Dynamic greeting and the number prompt."
+      "instead": "Use its dynamic opening for business-specific wording. Use different agents for different fixed settings."
     },
     {
       "id": "agent-voice",
       "kind": "does",
       "scope": "number",
-      "text": "A configured primary/backup number voice pair wins as a whole. Inherit to use the agent pair. On legacy paths a number voice_id can clear an agent catalogue key. An incompatible partial pair can be unavailable.",
+      "text": "Choose a complete primary and backup voice pair on the number. It overrides the agent pair as a whole. To use the saved agent pair, set voice_pair_inherit to true. A legacy voice_id can clear the agent’s catalogue key, and a partially migrated pair can be unavailable. Never choose by alias precedence.",
       "evidence": [
         "shared/tts/voicePair.js:2-18",
         "shared/tts/numberVoicePair.js:21-32",

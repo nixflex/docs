@@ -1,10 +1,10 @@
-**FIXED · account** A number belongs to the account and is assigned to an agent. An explicit outbound number must be eligible for that account and agent. On a shared agent always pass the intended customer’s from_number.
+**FIXED · account** A number belongs to an account and agent. On a shared agent always pass that customer’s eligible from_number.
 
-**NOT OFFERED → do this instead · number** A number cannot set its own fixed welcome_message, language, general call timezone or pickup delay. Use Dynamic greeting with that number’s custom_prompt for its business opening. Select a separate agent for different agent settings.
+**NOT OFFERED → do this instead · number** Fixed welcome_message, language, general timezone and pickup delay belong to the agent. Use Dynamic greeting and the number’s custom_prompt for its opening. Split agents for different fixed settings.
 
-**YOU CAN CHANGE · number** These ordinary number settings are writable by PATCH. Text fields have individual clearing rules. Nullable recording and booking controls can inherit agent settings. Voicemail for an API-imported number uses the number’s controls. `custom_prompt`, `voice_id`, `sms_reply_enabled`, `sms_prompt`, `web_prompt`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation`, `record_call`, `recording_source`, `voicemail_leave_enabled`, `voicemail_message`.
+**YOU CAN CHANGE · number** Other PATCH fields follow. Text clearing varies by field. A null recording or booking override inherits the agent setting. On imported numbers use the number’s voicemail controls. `custom_prompt`, `voice_id`, `sms_reply_enabled`, `sms_prompt`, `web_prompt`, `speaking_rate`, `dtmf_enabled`, `require_booking_confirmation`, `record_call`, `recording_source`, `voicemail_leave_enabled`, `voicemail_message`.
 
-**SCOPE · number** Import an existing supported carrier number, assign it to an owned agent, inspect it, change its channel controls and remove its Nixflex connection.
+**SCOPE · number** Import an owned carrier number, assign an agent, edit its channels or remove its Nixflex connection.
 
 For a different greeting per business, keep Dynamic greeting on (the default) and put the opening line in that number’s custom_prompt. For example, “Start every call with: Thank you for calling Oak and Stone”.
 

@@ -11,7 +11,7 @@
       "id": "hook-scope",
       "kind": "fixed",
       "scope": "organisation",
-      "text": "With organisations enabled the signing secret belongs to the organisation. The organisation API credential or a personal Owner can retrieve it. Human Admin and Member cannot. Keep the secret server-side.",
+      "text": "With organisations enabled, one signing secret covers the organisation. Kit and AI users must send the human Owner to the dashboard. The server API also accepts an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Never ask for the secret in chat or return it through an AI tool. Store it on the receiving server.",
       "evidence": [
         "api/routes.js:113",
         "api/organisationRoutes.js:14-21",
@@ -27,7 +27,7 @@
       "id": "hook-tenant",
       "kind": "unavailable",
       "scope": "number",
-      "text": "call.bookings carries no account field or number-specific signing secret.",
+      "text": "call.bookings has no account field or per-number secret.",
       "evidence": [
         "api/routes.js:113",
         "api/organisationRoutes.js:14-21",
@@ -37,7 +37,7 @@
         "shared/features/callBookings.js:45-48",
         "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
       ],
-      "instead": "Verify first. Map number to the customer in your server-side directory. For an inbound call use the business to number, for outbound use from."
+      "instead": "After signature verification, look up number in your own tenant table. It is the business to number inbound and from number outbound."
     },
     {
       "id": "hook-hmac",
@@ -89,7 +89,7 @@
       "id": "hook-api",
       "kind": "api",
       "scope": "organisation",
-      "text": "Authorised server access can retrieve the signing secret. For kit users direct the human Owner to the dashboard. Never paste the secret into an AI conversation.",
+      "text": "Owner-authorised server retrieval only. The kits omit this secret read.",
       "evidence": [
         "api/routes.js:113",
         "api/organisationRoutes.js:14-21",

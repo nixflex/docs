@@ -1,8 +1,8 @@
-**FIXED · platform** Use the listed developer-facing outbound tag forms exactly. The IVR and keypad navigation forms are outbound only. `[SEND_SMS: message]`, `[TRANSFER: phone_number]`, `[WAIT]`, `[END_CALL]`, `[IVR]`, `[PRESS: digits]`, `[IVR_END]`.
+**FIXED · platform** Developers can name their own variables. The outbound engine recognises exactly seven action tags. `[SEND_SMS: message]`, `[TRANSFER: phone_number]`, `[WAIT]`, `[END_CALL]`, `[IVR]`, `[PRESS: digits]`, `[IVR_END]`. The last three are outbound-only menu controls. Texting requires incall_sms_enabled on the agent. For a new action, configure a supported booking integration or a custom function. Inventing a tag does nothing.
 
-**NOT OFFERED → do this instead · platform** Developers cannot add or rename an action tag. Use the supported tag. For a custom integration, configure a custom function on the number and have the agent use the tool.
+**NOT OFFERED → do this instead · platform** You cannot register a new action tag in a prompt. For your own workflow, configure a number-level custom function with defined arguments.
 
-**YOU CAN CHANGE · recipient** Choose case-sensitive ASCII letters, digits and underscores, for example `{{appointment_time}}`. Use dynamic_vars on a single call and map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name yourself when referenced. Validate every row before submitting.
+**YOU CAN CHANGE · recipient** Use case-sensitive ASCII letters, digits and underscores for names such as `{{pickup_time}}`. Send dynamic_vars for one call. Map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name when referenced.
 
 **SCOPE · call** Outbound uses its call purpose for developer instructions. Inbound combines the shared agent instructions with the dialled number’s profile. Engine rules and eligible knowledge can also apply.
 
