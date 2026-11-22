@@ -17,6 +17,7 @@ test('DOC-AI-RENDER-01 checks first listing, exact bytes, scope boxes and determ
  for(const file of ['ai-rules.md','AGENTS.md','CLAUDE.md','snippets/ai-rules/agents-voices.mdx','snippets/ai-rules/billing-usage.mdx',data.index.guide+'.mdx'])assert.ok(out.get(file).includes(pricing),file)
  for(const f of data.features){
   const snippet='snippets/ai-rules/'+f.feature+'.mdx',box=out.get(snippet)
+  assert.equal(read(snippet),box,'Installed snippet '+snippet)
   for(const label of ['FIXED','NOT OFFERED','YOU CAN CHANGE','SCOPE'])assert.ok(box.includes(label),snippet+' '+label)
   assert.ok(data.index.features[f.feature].pages.length&&data.index.features[f.feature].pages.every(p=>out.get(p+'.mdx').includes('/'+snippet)))
  }

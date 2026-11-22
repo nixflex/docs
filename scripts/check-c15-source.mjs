@@ -101,9 +101,10 @@ const locked=tracked.filter(p=>p.startsWith('tests/')||/\/(?:check-|validate-|C[
 // C271451 is the live C16 baseline. Fahim approved C17 changes only to
 // production-only examples and the renamed/moved Build with AI navigation.
 for(const file of locked){
- const approved=plan.approvedDOC1aLockedHashes?.[file] ?? plan.approvedC17LockedHashes?.[file];
+ const doc2=file==='tests/c3-foundation.test.mjs'?plan.approvedDOC2LockedHashes?.[file]:undefined;
+ const approved=doc2 ?? plan.approvedDOC1aLockedHashes?.[file] ?? plan.approvedC17LockedHashes?.[file];
  const unchanged=approved?createHash('sha256').update(read(file)).digest('hex')===approved:read(file)===git(plan.lockedBaseline,file);
- check(unchanged,file+' matches live C16 baseline or an exact approved C17 or DOC1a edit');
+ check(unchanged,file+' matches live C16 baseline or an exact approved C17, DOC1a or DOC2 edit');
 }
 for(const file of ['docs.json','api-reference/public.openapi.json',...files('snippets').filter(f=>f!=='snippets/snippet-intro.mdx')]){
  check(productionOnly(read(file)),file+' production-only public asset');
