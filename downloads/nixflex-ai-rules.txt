@@ -110,7 +110,8 @@ from_number_not_found means the supplied sender is ineligible. Check account own
 
 ## Action tags and outbound variables
 
-**FIXED** Developers can name their own variables. The outbound engine recognises exactly seven action tags. `[SEND_SMS: message]`, `[TRANSFER: phone_number]`, `[WAIT]`, `[END_CALL]`, `[IVR]`, `[PRESS: digits]`, `[IVR_END]`. The last three are outbound-only menu controls. Texting requires incall_sms_enabled on the agent. For a new action, configure a supported booking integration or a custom function. Inventing a tag does nothing.
+**MUST** Use `[SEND_SMS: message]` only when the agent’s `incall_sms_enabled` is on. For transfer use `[TRANSFER: phone_number]`.\
+The other actions are `[WAIT]`, `[END_CALL]` and the outbound-only menu controls `[IVR]`, `[PRESS: digits]`, `[IVR_END]`. For another action configure a booking integration or custom function.
 
 The engine fills these double-brace variables after merging recipient data, so its values win. `caller_phone`, `business_phone`, `current_date`, `current_time`, `tomorrow_date`, `call_id`, `agent_id`, `call_direction`, `current_iso_date`, `current_iso_time`, `tomorrow_iso_date`, `current_day_of_week`, `current_timezone`, `upcoming_days`.
 
@@ -144,13 +145,13 @@ Validate every row before sending. The required voice-details flag can be off. R
 
 **FIXED** reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
 
-**NOT OFFERED → do this instead** A finished campaign cannot be replayed or resumed. For Use again create a new campaign with a fresh ID, intended recipients and reviewed settings.
+**NOT OFFERED → do this instead** Resume covers only unattempted work in the existing running launch. Neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
 
 There is no scheduled_at promise of dispatch at an exact second. Choose a date and a local window and track actual recipient status.
 
 **YOU CAN CHANGE** Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.
 
-**SCOPE · campaign** Cancel stops eligible future work. In-progress work may finish. Resume handles unattempted rows of the existing running launch. Deletion can wait for confirmed hang-up.
+**SCOPE · campaign** Cancel stops eligible future work. In-progress work may finish. Deletion can wait for confirmed hang-up.
 
 Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes. `DELETE /v1/calls/batch/{id}`, `POST /v1/calls/batch/{id}/cancel`, `POST /v1/calls/batch/{id}/resume`, `POST /v1/sms/campaigns/{id}/cancel`, `POST /v1/sms/campaigns/{id}/resume`.
 
@@ -198,7 +199,7 @@ Read widget settings and installation metadata for the owned number. `GET /v1/ag
 
 ## Inbox, history and tenant-scoped reads
 
-**FIXED** Inbox number discovery is account-wide. Address threads by channel and number. Use the number filter on call history. Validate each tenant’s number before returning records.
+**FIXED** Inbox number discovery is account-wide. Filter threads by channel and number, and call history by number. `DELETE /v1/calls` purges calls and related recordings account-wide and reports sms_deleted=0. For one customer verify each call ID before deletion.
 
 **NOT OFFERED → do this instead** Voice and SMS campaign lists and the suppression list do not provide a general tenant from_number filter. Keep a server-side mapping of customer, number and campaign IDs. Filter authorised results before displaying them.
 
@@ -216,7 +217,7 @@ For tenant deletion use `DELETE /v1/calls/{id}` for a verified call ID. `DELETE 
 
 A small eligible base is supplied whole. Larger bases use question matches. Seeing all small-base pieces does not mean that they answer a particular question. Use the configured not-found response for missing information.
 
-**NOT OFFERED → do this instead** A separate base or knowledge opt-out for one attached number is unavailable. Use separate agents for different knowledge bases or for a customer who needs no knowledge. Choose knowledge channels on each agent.
+**NOT OFFERED → do this instead** Knowledge and its enabled channels belong to the agent. Retired per-number knowledge operations return 410 number_knowledge_removed. Use separate agents when a number needs different knowledge or none.
 
 Knowledge Test accepts knowledge mode. It does not simulate the number’s whole call prompt or take a call purpose. Use Knowledge Test for source-backed answers. Use an actual test call to check the complete call instructions.
 
@@ -231,8 +232,6 @@ Choose the match setting from the supported options below. The default is Strict
 Maximum sources, original-text tokens and topics per base are shown below. `sources` 50 · `kbTokens` 100,000 · `topics` 1,000.
 
 The limit is 20 nondeleted knowledge bases per account. Agent count is independent.
-
-410 number_knowledge_removed means a retired number-knowledge operation was requested. Resolve the attached agent instead.
 
 <a id="caller-context"></a>
 
@@ -290,7 +289,8 @@ On duplicate_function choose a unique name or update the intended existing funct
 
 ## Webhook verification and tenant routing
 
-**FIXED** With organisations enabled, one signing secret covers the organisation. Kit and AI users must send the human Owner to the dashboard. The server API also accepts an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Never ask for the secret in chat or return it through an AI tool. Store it on the receiving server.
+**MUST** With organisations enabled, direct the human Owner to the dashboard for the signing secret. Never ask for it in chat or expose it through AI tools.\
+One secret covers the organisation. A server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.
 
 **NOT OFFERED → do this instead** call.bookings has no account field or per-number secret. After signature verification, look up number in your own tenant table. It is the business to number inbound and from number outbound.
 

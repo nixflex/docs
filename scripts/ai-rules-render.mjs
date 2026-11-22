@@ -74,7 +74,9 @@ function guide(facts,c){
   const rows=index.features[f.feature].short.map(id=>c.get(id).r),scope=f.rules.find(r=>r.kind==='does')
   for(const kind of Object.keys(labels)){
    const picked=rows.filter(r=>r.kind===kind);if(!picked.length)picked.push(f.rules.find(r=>r.kind===kind))
-   s+='**'+labels[kind]+'** '+picked.map(r=>c.describe(r.id,{why:kind==='unavailable'})).join('\n\n')+'\n\n'
+   const passages=picked.map(r=>c.describe(r.id,{why:kind==='unavailable'}))
+   const label=passages[0].startsWith('**MUST** ')?'':'**'+labels[kind]+'** '
+   s+=label+passages.join('\n\n')+'\n\n'
   }
   s+='**SCOPE · '+scope.scope+'** '+c.describe(scope.id)+'\n'
   for(const r of rows.filter(r=>!Object.hasOwn(labels,r.kind)&&r.id!==scope.id))s+='\n'+c.describe(r.id)+'\n'
