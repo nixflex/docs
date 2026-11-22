@@ -1,0 +1,106 @@
+---
+title: "Update outbound calling settings"
+sidebarTitle: "Update outbound settings"
+description: "Require an explicit sender on shared agents or restore automatic selection. Only the Owner or the organisation API key can change this setting."
+openapi: "/api-reference/public.openapi.json PATCH /organisation/outbound-settings"
+playground: "none"
+canonical: "https://docs.nixflex.com/api-reference/organisation/patch-outbound-settings"
+---
+
+Choose whether a single outbound call must name its sender when the agent has two or more settled numbers on this account.
+
+<div className="nxf-facts">
+  <div><small>Method</small><strong>PATCH</strong></div>
+  <div><small>Scope</small><strong>Organisation</strong></div>
+  <div><small>Result</small><strong>Current setting</strong></div>
+</div>
+
+<div className="nxf-important">
+
+**The important part**
+
+- The default is `false`. With `true`, two or more settled numbers on the same agent make `from_number` required, even if only one can make outbound calls.
+- Imports still in progress are excluded. An explicitly supplied number must belong to the account, be assigned to the agent and pass the usual outbound checks.
+- This setting applies to single calls. Campaigns use their saved sender.
+
+</div>
+
+<div className="nxf-audience">
+
+[Business guide](/guides/business/call-one-number) · [Developer guide](/guides/developer/calls) · [Glossary](/guides/glossary)
+
+</div>
+
+## Authentication
+
+Use the organisation API key on your server or the Owner’s verified personal session. An Admin or Member can read the setting. Only the Owner or the organisation key can update it. The organisation feature must be enabled.
+
+## Request fields
+
+Send a JSON object with exactly one property.
+
+| Field | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `require_from_number_for_shared_agent` | boolean | Yes | `true` requires an explicit sender on a shared agent. `false` restores automatic selection when the request omits the sender. |
+
+## Response fields
+
+`200 OK` returns the setting for the authenticated account.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `require_from_number_for_shared_agent` | boolean | Saved value, including `false` when the requirement is turned off. |
+
+## Example request
+
+Use the account’s credential from a private server environment. This example enables the requirement for the organisation.
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url "https://api.nixflex.com/v1/organisation/outbound-settings" \
+  --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"require_from_number_for_shared_agent":true}'
+```
+
+</RequestExample>
+
+## Example response
+
+<ResponseExample>
+
+```json 200
+{
+  "require_from_number_for_shared_agent": true
+}
+```
+
+</ResponseExample>
+
+## Errors
+
+<div className="agent-error-table">
+
+| Status | Code | Meaning | What to do |
+| --- | --- | --- | --- |
+| 400 | [`invalid_settings`](/api-reference/errors#invalid_settings) | The body is missing the boolean, contains a different type or has extra fields. | Send only `require_from_number_for_shared_agent` as `true` or `false`. |
+| 403 | [`permission_denied`](/api-reference/errors#permission_denied) | This person cannot change outbound settings. | Ask the Owner to make the change. |
+| 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The server credential could not be verified. | Check the organisation credential. For an expired personal session, sign in again. |
+| 403 | [`membership_revoked`](/api-reference/errors#membership_revoked) | The personal session no longer has access to this organisation. | Sign in with an active membership. |
+| 404 | [`not_found`](/api-reference/errors#not_found) | Organisation routes are unavailable. | Check that organisations are enabled. |
+| 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account reached its request limit. | Wait for `Retry-After`. |
+| 503 | [`organisation_unavailable`](/api-reference/errors#organisation_unavailable) | The service could not confirm the update. | Read the current setting before deciding whether to submit another change. |
+
+</div>
+
+## Retry and idempotency
+
+This operation assigns a boolean. It has no request-ID replay contract. If the response is lost, GET the saved value. Submit another PATCH only if the current value still needs changing.
+
+## Related endpoints
+
+- [Read outbound calling settings](/api-reference/organisation/get-outbound-settings)
+- [Create an outbound call](/api-reference/calls/create-outbound)
+- [Get organisation context](/api-reference/organisation/get-organisation)

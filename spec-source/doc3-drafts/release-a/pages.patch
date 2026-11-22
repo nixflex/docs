@@ -1,0 +1,133 @@
+--- a/spec-source/c16-pages/api-reference--calls--create-outbound.mdx.txt
++++ b/spec-source/c16-pages/api-reference--calls--create-outbound.mdx.txt
+@@ -20,7 +20,7 @@
+ **The important part**
+
+ - **Call purpose.** Send at least 10 characters after trimming. The agent and phone-number prompts do not supply a fallback purpose.
+-- **Per recipient.** You choose [variable names](/concepts/variables). Always send the customer’s `from_number` on a shared agent. Omitting it selects the oldest eligible number.
++- **Per recipient.** You choose [variable names](/concepts/variables). Always send the customer’s `from_number` on a shared agent. The [organisation’s outbound setting](/api-reference/organisation/get-outbound-settings) determines whether a call may omit it.
+
+ - Save one UUID request_id before a deliberate call intent if you need launch reconciliation.
+ - A 201 means initiated. A same-ID 200 replay returns the existing call; pending or unknown must never trigger a new UUID automatically.
+@@ -45,8 +45,9 @@
+ | --- | --- | --- | --- | --- |
+ | `agent_id` | string | Yes | None | Owned active agent ID. Minimum 1 characters. |
+ | `to_number` | string | Yes | None | Recipient in E.164 format. Minimum 1 characters. |
+-| `prompt` | string | Yes | None | At least 10 characters after trimming for a usable call purpose. A shorter nonblank string can pass the request check, but the agent is instructed to apologise and end the call. |
+-| `from_number` | string | No | Omitted | Optional owned outbound-enabled number assigned to this agent. If omitted, the oldest eligible number is selected. |
++| `prompt` | string | Yes | None | Supply a meaningful purpose. Missing or blank text is refused. With strict validation, a nonblank purpose under ten trimmed UTF-16 code units is refused before dialling. Without strict mode a short nonblank purpose can pass admission and cause the agent to apologise and end the call. |
++| `prompt_validation` | string | No | Omitted | Send `"strict"` to require a sufficient purpose before dispatch. The only supported value is `"strict"`. |
++| `from_number` | string | Conditional | Omitted | Use your customer’s owned, assigned outbound number in international format. Required with the organisation rule on and at least two settled numbers attached to this agent. |
+ | `dynamic_vars` | object | No | Omitted | Values for `{{name}}`-style placeholders in the call purpose. Choose custom names using ASCII letters, digits and underscores. The engine supplies its reserved names. |
+ | `campaign_id` | string or null | No | `null` | Optional campaign association. Omitted or empty becomes null. |
+ | `recipient_timezone` | string | No | Omitted | Optional recipient IANA time zone. Used for recipient-local contact checks, not the business clock. |
+@@ -55,9 +56,13 @@
+
+ Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.
+
+-Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
+-
+-Optional `request_id` is a UUID saved before one deliberate call intent. Required prompt and the existing behavior without a request ID remain unchanged. A same-ID accepted replay returns HTTP 200 with the same call_id and replayed:true; it does not return to/from. Pending/unknown repeats return 409 and never dispatch again. A 201 with request_status:unconfirmed still preserves the known call ID and safe_to_retry:false. Read the saved UUID through [outbound request status](/api-reference/calls/get-outbound-request).
++Use dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number.
++
++The sender rule is off by default. With no sender, the account normally uses the oldest eligible assigned number, ordered by creation time and then row ID. With the rule on, two or more settled numbers on the same account and agent require an explicit sender. Disabled numbers and numbers on an unsupported carrier still count as settled attachments. Pending imports do not. With just one settled number, the call can use it only if eligible. With none or one ineligible number, expect `agent_missing_phone_number`. An explicit sender still passes the ownership and eligibility checks.
++
++Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.
++
++Optional `request_id` is a UUID saved before one deliberate call intent. Save the exact original request, including the presence or absence of `prompt_validation`. Adding strict mode or changing the sender under the same UUID returns `409 request_id_conflict`. A saved refusal has `state:"rejected"` and `safe_to_retry:false`. Reconcile it before making a corrected, deliberate new request. A same-ID accepted replay returns HTTP 200 with the same call_id and replayed:true; it does not return to/from. Pending/unknown repeats return 409 and never dispatch again. A 201 with request_status:unconfirmed still preserves the known call ID and safe_to_retry:false. Read the saved UUID through [outbound request status](/api-reference/calls/get-outbound-request).
+
+ ## Response fields
+
+@@ -82,7 +87,7 @@
+
+ These examples use `https://api.nixflex.com` and can place a real call. Set NIXFLEX_API_KEY, the owned agent and number, and an approved recipient before running. The cURL example also needs a durably saved NXF_REQUEST_ID. Keep the account credential private.
+
+-The cURL tab demonstrates the new request UUID. The SDK/CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later; the examples below omit request_id and retain the older launch behaviour. For UUID reconciliation, use the cURL request or the [SDK preparation workflow](/guides/developer/call-requests). No example retries a write.
++The cURL tab sends the customer’s explicit sender, opts into strict purpose validation and uses a saved request UUID. The SDK/CLI examples require Node/CLI 0.11.0 or later or Python 0.4.0 or later; the examples below omit request_id and retain the older launch behaviour. For UUID reconciliation, use the cURL request or the [SDK preparation workflow](/guides/developer/call-requests). No example retries a write.
+
+ <RequestExample>
+
+@@ -93,7 +98,7 @@
+   --url 'https://api.nixflex.com/v1/calls/outbound' \
+   --header "Authorization: Bearer $NIXFLEX_API_KEY" \
+   --header 'Content-Type: application/json' \
+-  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt\":\"Confirm the requested appointment\",\"request_id\":\"$NXF_REQUEST_ID\"}"
++  --data "{\"agent_id\":\"$NXF_AGENT_ID\",\"from_number\":\"$NXF_PHONE_NUMBER\",\"to_number\":\"$NXF_TO_NUMBER\",\"prompt_validation\":\"strict\",\"prompt\":\"Confirm the requested appointment\",\"request_id\":\"$NXF_REQUEST_ID\"}"
+ ```
+
+ ```javascript Node · without UUID
+@@ -125,7 +130,9 @@
+ ```json Request shape
+ {
+   "agent_id": "agent_example",
++  "from_number": "+12025550123",
+   "to_number": "+12025550101",
++  "prompt_validation": "strict",
+   "prompt": "Confirm the requested appointment",
+   "request_id": "9f9aa2b2-4b77-4fa1-9071-9cf6747a9082"
+ }
+@@ -179,9 +186,13 @@
+ | Status | Code | Meaning | What to do |
+ | --- | --- | --- | --- |
+ | 400 | [`missing_field`](/api-reference/errors#missing_field) | agent_id, to_number or a nonblank prompt is missing. | Supply the required fields before attempting a call. |
+-| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | The recipient is not valid E.164. | Correct the recipient number. |
++| 400 | [`invalid_phone_format`](/api-reference/errors#invalid_phone_format) | The recipient is invalid or an explicit sender is null, blank or malformed with the sender rule on. | Correct the number named in the error. |
+ | 400 | [`agent_missing_phone_number`](/api-reference/errors#agent_missing_phone_number) | No eligible outbound number is assigned to the agent. | Connect and enable an owned outbound number. |
+ | 400 | [`from_number_not_found`](/api-reference/errors#from_number_not_found) | The requested origin is not an eligible number of this agent. | Use an owned, assigned and settled origin. |
++| 400 | [`from_number_required`](/api-reference/errors#from_number_required) | The rule is on, multiple numbers are attached and the sender was omitted. | Resolve the intended customer’s sender on your server. The error names the field, without listing candidate numbers. |
++| 400 | [`prompt_too_short`](/api-reference/errors#prompt_too_short) | Strict mode refused a nonblank purpose before dialling. Details include `field:"prompt"` and `min_length:10`. | Describe the actual purpose in at least ten trimmed UTF-16 code units. |
++| 400 | [`invalid_prompt_validation`](/api-reference/errors#invalid_prompt_validation) | An unsupported validation mode was supplied. | Send `"strict"` or omit the field. |
++| 400 | [`invalid_prompt`](/api-reference/errors#invalid_prompt) | An explicitly supplied strict-mode prompt was not text. | Send a string describing the call. |
+ | 404 | [`not_found`](/api-reference/errors#not_found) | The agent is not available to this account. | Use an owned agent ID. |
+ | 409 | [`agent_inactive`](/api-reference/errors#agent_inactive) | The agent is disabled. | Choose or enable the intended agent before sending. |
+ | 409 | [`number_pending`](/api-reference/errors#number_pending) | The number is being imported or removed. | Wait for the number operation to settle. |
+--- a/spec-source/c15-pages/api-reference--errors.mdx.txt
++++ b/spec-source/c15-pages/api-reference--errors.mdx.txt
+@@ -171,6 +171,7 @@
+ | <span id="field_too_long">field_too_long</span> | 400 | A caller-context field exceeds its supported length. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+ | <span id="file_limit">file_limit</span> | 413 | This file is too big. Choose a file up to 10 MiB. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
+ | <span id="from_number_not_found">from_number_not_found</span> | 400 | from_number is not an outbound number of this agent on your account. Import it and assign it on the Phone Numbers page. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
++| <span id="from_number_required">from_number_required</span> | 400 | A single call on a shared agent requires an explicit sender. | Send the verified business number for the intended customer. |
+
+ ### H
+
+@@ -221,7 +222,8 @@
+ | <span id="invalid_period">invalid_period</span> | 400 | Choose period today or 7d. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+ | <span id="invalid_phone_format">invalid_phone_format</span> | 400 | Use an E.164 phone number, including +. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+ | <span id="invalid_phone">invalid_phone</span> | 400, 409 | The supplied phone number is invalid. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+-| <span id="invalid_prompt">invalid_prompt</span> | 400 | Use a shorter system prompt. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
++| <span id="invalid_prompt">invalid_prompt</span> | 400 | The prompt fails the rules for this endpoint. Strict outbound calls require a text value. | Send a string for an outbound purpose. For an agent system prompt, check its length. |
++| <span id="invalid_prompt_validation">invalid_prompt_validation</span> | 400 | An unsupported single-call validation mode was supplied. | Send `"strict"` or omit `prompt_validation`. |
+ | <span id="invalid_query">invalid_query</span> | 400 | Only period and time_zone are supported. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
+ | <span id="invalid_recipient_country">invalid_recipient_country</span> | 409 | Use a valid two-letter recipient country. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+ | <span id="invalid_recipient_timezone">invalid_recipient_timezone</span> | 409 | Use a valid recipient time zone. | Read the current resource, resolve the stated conflict, and decide deliberately whether another action is needed. |
+@@ -337,6 +339,7 @@
+ | <span id="phone_number_not_found">phone_number_not_found</span> | 404 | The business number was not found in this account. | Choose a number belonging to this account before reading caller context. |
+ | <span id="prompt_check_unavailable">prompt_check_unavailable</span> | 503 | The prompt could not be checked; nothing was saved. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
+ | <span id="prompt_too_long">prompt_too_long</span> | 400 | The system prompt exceeds the accepted prompt budget. | Correct the named field using the endpoint rules; inspect safe error details before another attempt. |
++| <span id="prompt_too_short">prompt_too_short</span> | 400 | The strict single-call purpose is nonblank but too short after trimming. | Use at least ten UTF-16 code units after trimming. Check `error.details.min_length`. |
+ | <span id="provider_limit">provider_limit</span> | 413 | The prepared answer was too large. | Reduce the source, file, or request size to the documented limit; do not silently truncate information. |
+ | <span id="provider_unavailable">provider_unavailable</span> | 503 | Knowledge preparation is not configured yet. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
+ | <span id="provider_unconfigured">provider_unconfigured</span> | 503 | Choose service or service for knowledge preparation. | Read current state to reconcile writes. Retry only reads with bounded backoff; contact support if it persists. |
+@@ -565,7 +568,7 @@
+ | <span id="agent_not_assigned">agent_not_assigned</span> | 409 | Assign an eligible owned agent to this number before connecting the calendar. |
+ | <span id="expired_link">expired_link</span> | 409 | Start a fresh consent flow after checking the current connection. |
+ | <span id="calendar_unavailable">calendar_unavailable</span> | 503 | Read the current state and correct the stated field or conflict before another deliberate request. |
+-| <span id="invalid_settings">invalid_settings</span> | 400 | Send only supported setting fields, using their documented types. |
++| <span id="invalid_settings">invalid_settings</span> | 400 | For [outbound settings](/api-reference/organisation/patch-outbound-settings), send only `require_from_number_for_shared_agent` with a boolean value. Other settings endpoints accept their own documented fields and types. |
+ | <span id="invalid_hours">invalid_hours</span> | 400 | Send a valid working_hours object containing all seven days. |
+ | <span id="invalid_slot_minutes">invalid_slot_minutes</span> | 400 | Use an allowed whole-number slot length from the request contract. |
+ | <span id="invalid_calendar_id">invalid_calendar_id</span> | 400 | Supply a valid calendar ID accessible to the connected account. |
+--- a/spec-source/c15-pages/guides--developer--calls.mdx.txt
++++ b/spec-source/c15-pages/guides--developer--calls.mdx.txt
+@@ -39,6 +39,10 @@
+ | Read structured outcomes | [Post-call analysis](/advanced/post-call-analysis) |
+ | Understand eligible listening and takeover | [Live monitoring](/concepts/live-monitor) |
+
++## Choose a sender on a shared agent
++
++Always send the customer’s verified `from_number` on a [single outbound call](/api-reference/calls/create-outbound). Resolve the business number from your own customer record. The Owner can [require explicit senders](/api-reference/organisation/patch-outbound-settings) as an extra check. Supply `prompt_validation: "strict"` in a call request when a short purpose should stop the call before dialling.
++
+ ## Check the outcome
+
+ Use the task’s permissions and prerequisites before making changes. Read the saved result and keep an unavailable or uncertain result distinct from confirmed success. The linked guides explain the relevant recovery steps.

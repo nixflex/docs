@@ -1,0 +1,800 @@
+--- a/spec-source/public-overrides.json
++++ b/spec-source/public-overrides.json
+@@ -8303,7 +8303,7 @@
+           "Calls"
+         ],
+         "summary": "Create an outbound call",
+-        "description": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome. Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. When from_number is omitted, selection uses the oldest eligible number by creation time then row ID. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
++        "description": "Start one outbound call from an account-owned number assigned to an active agent. A 201 response means the call was initiated; it does not prove connection, conversation, completion or a successful outcome. Only send to a recipient you are authorised to contact. This endpoint has no dry-run option. The examples use an explicit recipient variable and can place a real call when run. Optional recipient location values do not override suppression, contact hours or capacity rules.\n\nUse dynamic_vars for single-call substitutions; campaign recipient variables are a different contract. There is no fallback to an agent-level phone_number. With the default setting, omitting from_number selects the oldest eligible number by creation time then row ID. With the requirement enabled, an agent with at least two settled attachments requires an explicit sender. Selection does not bypass the final ownership and availability checks. Contact-hours refusals use error.code outside_hours or needs_timezone (409), or contact_policy_unavailable (503). Details include outcome:not_sent, sent:false and charged:false. Advisory messages can instead start “Outside calling hours” or “Weekend where they are” and contain the next local window. single_contact_policy is an internal policy-check name, not an HTTP error code. refused_before_dispatch is a dispatch outcome marker, not an HTTP status or a replacement error.code. Unknown outcome is not proof that nothing was sent.",
+         "operationId": "createOutboundCall",
+         "security": [
+           {
+@@ -8377,7 +8377,7 @@
+             }
+           },
+           "400": {
+-            "description": "missing_field: agent_id, to_number or a nonblank prompt is missing. Supply the required fields before attempting a call. invalid_phone_format: The recipient is not valid E.164. Correct the recipient number. agent_missing_phone_number: No eligible outbound number is assigned to the agent. Connect and enable an owned outbound number. from_number_not_found: The requested origin is not an eligible number of this agent. Use an owned, assigned and settled origin.",
++            "description": "missing_field: agent_id, to_number or a nonblank prompt is missing. Supply the required fields before attempting a call. invalid_phone_format: The recipient is not valid E.164. Correct the recipient number. agent_missing_phone_number: No eligible outbound number is assigned to the agent. Connect and enable an owned outbound number. from_number_not_found: The requested origin is not an eligible number of this agent. Use an owned, assigned and settled origin. from_number_required: choose the customer’s sender. prompt_too_short: provide at least ten trimmed UTF-16 code units. invalid_prompt_validation: use strict or omit the mode. invalid_prompt: supply text for the strict purpose. With the sender rule enabled an invalid explicit sender also gives invalid_phone_format.",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -8426,6 +8426,61 @@
+                   ],
+                   "description": "",
+                   "additionalProperties": false
++                },
++                "examples": {
++                  "from_number_required": {
++                    "value": {
++                      "error": {
++                        "type": "invalid_request",
++                        "code": "from_number_required",
++                        "message": "Choose a from_number because this agent has multiple attached phone numbers.",
++                        "doc_url": "https://docs.nixflex.com/errors/from_number_required",
++                        "details": {
++                          "field": "from_number"
++                        }
++                      }
++                    }
++                  },
++                  "prompt_too_short": {
++                    "value": {
++                      "error": {
++                        "type": "invalid_request",
++                        "code": "prompt_too_short",
++                        "message": "Describe the call purpose in at least 10 characters after trimming.",
++                        "doc_url": "https://docs.nixflex.com/errors/prompt_too_short",
++                        "details": {
++                          "field": "prompt",
++                          "min_length": 10
++                        }
++                      }
++                    }
++                  },
++                  "invalid_prompt_validation": {
++                    "value": {
++                      "error": {
++                        "type": "invalid_request",
++                        "code": "invalid_prompt_validation",
++                        "message": "Use strict for prompt_validation.",
++                        "doc_url": "https://docs.nixflex.com/errors/invalid_prompt_validation",
++                        "details": {
++                          "field": "prompt_validation"
++                        }
++                      }
++                    }
++                  },
++                  "invalid_prompt": {
++                    "value": {
++                      "error": {
++                        "type": "invalid_request",
++                        "code": "invalid_prompt",
++                        "message": "The call purpose must be text.",
++                        "doc_url": "https://docs.nixflex.com/errors/invalid_prompt",
++                        "details": {
++                          "field": "prompt"
++                        }
++                      }
++                    }
++                  }
+                 }
+               }
+             }
+@@ -8938,12 +8993,11 @@
+                   },
+                   "prompt": {
+                     "type": "string",
+-                    "description": "Send a purpose of at least 10 characters after trimming. A shorter nonblank purpose can pass request validation, but the call is instructed to end.",
+-                    "minLength": 10
++                    "description": "Supply nonblank text describing the purpose. With prompt_validation set to strict, a nonblank purpose shorter than ten UTF-16 code units after trimming is refused before dialling. With the mode omitted, short nonblank text can pass admission and trigger the short-purpose ending."
+                   },
+                   "from_number": {
+                     "type": "string",
+-                    "description": "Optional owned outbound-enabled number assigned to this agent. If omitted, the oldest eligible number is selected."
++                    "description": "An owned, assigned and eligible outbound number. With the organisation rule enabled this is required for a single call when two or more settled numbers are attached, including disabled lines."
+                   },
+                   "dynamic_vars": {
+                     "type": "object",
+@@ -8967,6 +9021,13 @@
+                   "recipient_country": {
+                     "type": "string",
+                     "description": "Optional two-letter recipient country code."
++                  },
++                  "prompt_validation": {
++                    "type": "string",
++                    "enum": [
++                      "strict"
++                    ],
++                    "description": "Optional per-request admission check. Omit the field for existing behaviour."
+                   }
+                 },
+                 "required": [
+@@ -8980,7 +9041,8 @@
+               "example": {
+                 "agent_id": "agent_example",
+                 "to_number": "+12025550101",
+-                "prompt": "Confirm the appointment time requested by the recipient."
++                "prompt": "Confirm the appointment time requested by the recipient.",
++                "from_number": "+12025550123"
+               }
+             }
+           }
+@@ -66609,6 +66671,617 @@
+           }
+         }
+       }
++    },
++    "/organisation/outbound-settings": {
++      "get": {
++        "tags": [
++          "Organisation"
++        ],
++        "operationId": "readOrganisationOutboundSettings",
++        "summary": "Read outbound calling settings",
++        "description": "Read with an active Owner, Admin or Member session or the organisation API key.",
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Current saved organisation setting.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "additionalProperties": false,
++                  "required": [
++                    "require_from_number_for_shared_agent"
++                  ],
++                  "properties": {
++                    "require_from_number_for_shared_agent": {
++                      "type": "boolean",
++                      "description": "Whether a shared agent needs an explicit sender for a single outbound call."
++                    }
++                  }
++                },
++                "example": {
++                  "require_from_number_for_shared_agent": false
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Invalid or expired credential.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Membership was revoked.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Organisation routes are disabled.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "required": [
++                    "error"
++                  ],
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "required": [
++                        "code",
++                        "message"
++                      ],
++                      "properties": {
++                        "code": {
++                          "type": "string"
++                        },
++                        "message": {
++                          "type": "string"
++                        }
++                      }
++                    }
++                  }
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "The current setting could not be confirmed. Read it before another write.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          }
++        }
++      },
++      "patch": {
++        "tags": [
++          "Organisation"
++        ],
++        "operationId": "updateOrganisationOutboundSettings",
++        "summary": "Update outbound calling settings",
++        "description": "Only the personal Owner or the organisation API key may change this boolean. Read the saved value after an uncertain write.",
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Current saved organisation setting.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "additionalProperties": false,
++                  "required": [
++                    "require_from_number_for_shared_agent"
++                  ],
++                  "properties": {
++                    "require_from_number_for_shared_agent": {
++                      "type": "boolean",
++                      "description": "Whether a shared agent needs an explicit sender for a single outbound call."
++                    }
++                  }
++                },
++                "example": {
++                  "require_from_number_for_shared_agent": true
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "invalid_settings: supply exactly the one boolean setting.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Invalid or expired credential.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "The personal role cannot change this setting or membership was revoked.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Organisation routes are disabled.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "required": [
++                    "error"
++                  ],
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "required": [
++                        "code",
++                        "message"
++                      ],
++                      "properties": {
++                        "code": {
++                          "type": "string"
++                        },
++                        "message": {
++                          "type": "string"
++                        }
++                      }
++                    }
++                  }
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "The current setting could not be confirmed. Read it before another write.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "type": {
++                          "type": "string",
++                          "description": "Error category."
++                        },
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Safe explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error documentation URL."
++                        },
++                        "details": {
++                          "type": "object",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "additionalProperties": false,
++                      "description": ""
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "additionalProperties": false,
++                  "description": ""
++                }
++              }
++            }
++          }
++        },
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "require_from_number_for_shared_agent"
++                ],
++                "properties": {
++                  "require_from_number_for_shared_agent": {
++                    "type": "boolean",
++                    "description": "Whether a shared agent needs an explicit sender for a single outbound call."
++                  }
++                }
++              },
++              "example": {
++                "require_from_number_for_shared_agent": true
++              }
++            }
++          }
++        }
++      }
+     }
+   }
+ }
+--- a/spec-source/public-operations.json
++++ b/spec-source/public-operations.json
+@@ -1206,5 +1206,19 @@
+     "path": "/v1/campaigns/:id",
+     "public": true,
+     "source": "B59 api/routes.js and api/voiceCampaignRead.js at dd95cfb"
++  },
++  {
++    "number": 202,
++    "method": "GET",
++    "path": "/v1/organisation/outbound-settings",
++    "public": true,
++    "source": "api/organisationRoutes.js at 178bada"
++  },
++  {
++    "number": 203,
++    "method": "PATCH",
++    "path": "/v1/organisation/outbound-settings",
++    "public": true,
++    "source": "api/organisationRoutes.js at 178bada"
+   }
+ ]
+--- a/spec-source/c15-pages.json
++++ b/spec-source/c15-pages.json
+@@ -701,6 +701,8 @@
+               "api-reference/organisation/patch-organisation-members-id",
+               "api-reference/organisation/delete-organisation-members-id",
+               "api-reference/organisation/patch-organisation-name",
++              "api-reference/organisation/get-outbound-settings",
++              "api-reference/organisation/patch-outbound-settings",
+               "api-reference/organisation/get-organisation-signing-secret"
+             ],
+             "expanded": true
+@@ -2570,6 +2572,16 @@
+       "title": "Many customers on one shared agent",
+       "sidebarTitle": "Shared agent",
+       "description": "Map a customer to its business number and prompt, choose when to split agents, and route outbound calls, inbox reads and booking events safely."
++    },
++    "api-reference/organisation/get-outbound-settings": {
++      "title": "Read outbound calling settings",
++      "sidebarTitle": "Read outbound settings",
++      "description": "Read whether your organisation requires a sender number for single outbound calls on agents with multiple attached numbers."
++    },
++    "api-reference/organisation/patch-outbound-settings": {
++      "title": "Update outbound calling settings",
++      "sidebarTitle": "Update outbound settings",
++      "description": "Require an explicit sender on shared agents or restore automatic selection. Only the Owner or the organisation API key can change this setting."
+     }
+   },
+   "sources": {
+@@ -2861,7 +2873,9 @@
+     "advanced/your-own-storage": "spec-source/c17-pages/advanced--your-own-storage.mdx.txt",
+     "guides/developer/rate-limits": "spec-source/c17-pages/guides--developer--rate-limits.mdx.txt",
+     "reference/errors": "spec-source/c17-pages/reference--errors.mdx.txt",
+-    "api-reference/retries": "spec-source/c17-pages/api-reference--retries.mdx.txt"
++    "api-reference/retries": "spec-source/c17-pages/api-reference--retries.mdx.txt",
++    "api-reference/organisation/get-outbound-settings": "spec-source/doc3-drafts/release-a/get-outbound-settings.mdx.txt",
++    "api-reference/organisation/patch-outbound-settings": "spec-source/doc3-drafts/release-a/patch-outbound-settings.mdx.txt"
+   },
+   "redirects": [
+     {
