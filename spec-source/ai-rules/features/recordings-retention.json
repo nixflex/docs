@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "feature": "recordings-retention",
+  "title": "Recordings, retention and deletion",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "rec-purge",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "DELETE /v1/calls covers the owning account’s calls and related recordings. It takes no number or campaign filter. Its result reports sms_deleted=0.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ],
+      "why": "A number filter on a history read does not scope a bulk write."
+    },
+    {
+      "id": "rec-private",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "There is no bulk erase for just one customer’s number in a shared account.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ],
+      "instead": "Resolve and verify each tenant-owned call ID, then use single-call deletion."
+    },
+    {
+      "id": "rec-get",
+      "kind": "does",
+      "scope": "call",
+      "text": "Check recording availability first. A stored link can expire. Pending, expired, unavailable and customer-bucket states have different meanings.",
+      "evidence": [
+        "api/calls/recording.js:10-42"
+      ]
+    },
+    {
+      "id": "rec-settings",
+      "kind": "change",
+      "scope": "agent",
+      "text": "New agents inherit account retention on creation. Use the agent update to change its saved call-retention policy.",
+      "evidence": [
+        "api/agents/input.js:20-44",
+        "api/retention.js:1-16"
+      ]
+    },
+    {
+      "id": "rec-days",
+      "kind": "limit",
+      "scope": "agent",
+      "text": "Supported retention periods in days are listed here. Zero means delete after each call.",
+      "evidence": [
+        "api/retention.js:1-14"
+      ],
+      "sourceList": "retention.days",
+      "value": [
+        90,
+        30,
+        7,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "rec-api",
+      "kind": "api",
+      "scope": "call",
+      "text": "Read availability for a verified call or delete that one ID. Retrieve customer-bucket content from the customer’s storage.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646",
+        "api/calls/recording.js:10-30"
+      ],
+      "value": [
+        "GET /v1/calls/{id}/recording",
+        "DELETE /v1/calls/{id}"
+      ]
+    },
+    {
+      "id": "rec-error",
+      "kind": "error",
+      "scope": "operation",
+      "text": "On retention_unavailable retry the read later. An unavailable read gives no evidence of erasure.",
+      "evidence": [
+        "api/retention.js:8-15"
+      ],
+      "value": "retention_unavailable"
+    }
+  ]
+}

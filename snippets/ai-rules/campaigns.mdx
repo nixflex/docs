@@ -1,0 +1,9 @@
+**FIXED · campaign** reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
+
+**NOT OFFERED → do this instead · campaign** A finished campaign cannot be replayed or resumed. For Use again create a new campaign with a fresh ID, intended recipients and reviewed settings.
+
+**YOU CAN CHANGE · campaign** Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.
+
+**SCOPE · campaign** Cancel stops eligible future work. In-progress work may finish. Resume handles unattempted rows of the existing running launch. Deletion can wait for confirmed hang-up.
+
+[Read the compact AI rules](https://docs.nixflex.com/ai-rules.md#campaigns)

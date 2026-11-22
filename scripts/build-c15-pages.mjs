@@ -6,8 +6,10 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8').replaceAll('\r\n','\n');
 const write=(p,s)=>{const f=path.join(root,p);fs.mkdirSync(path.dirname(f),{recursive:true});if(!fs.existsSync(f)||read(p)!==s)fs.writeFileSync(f,s);};
 const plan=JSON.parse(read('spec-source/c15-pages.json'));
 const config=JSON.parse(read('docs.json'));
+const rulesGuide=JSON.parse(read('spec-source/ai-rules/index.json')).guide;
 for(const [slug,source] of Object.entries(plan.sources))write(slug+'.mdx',read(source));
 for(const [slug,metadata] of Object.entries(plan.metadata)){
+ if(slug===rulesGuide)continue; // The final rules renderer owns this page and its metadata.
  let s=read(slug+'.mdx');
  // Historical Knowledge builders predate the current package inventory.
  s=s.replaceAll('MCP has 94 registered tools, including 19 Knowledge tools.',`MCP has ${plan.kits.mcp.tools} registered tools, including 19 Knowledge tools.`);

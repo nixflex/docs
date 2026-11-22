@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "feature": "inbound-calls",
+  "title": "Inbound phone calls and greetings",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "in-mechanics",
+      "kind": "fixed",
+      "scope": "agent",
+      "text": "Shared call mechanics and action permissions still apply when a number supplies business instructions.",
+      "evidence": [
+        "shared/data/agentPrompt.js:20-51"
+      ],
+      "why": "Agent instructions and the dialled number’s business profile are composed for the same call."
+    },
+    {
+      "id": "in-static",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "There is no separate fixed welcome_message per number. A dynamic opener is generated and can incorporate the known caller’s name.",
+      "evidence": [
+        "inbound/call/greeting.js:30-55"
+      ],
+      "instead": "Keep a common fixed message on the agent, or use separate agents when different verbatim messages are essential."
+    },
+    {
+      "id": "in-combine",
+      "kind": "does",
+      "scope": "number",
+      "text": "Put common rules in the agent system_prompt and business details in the dialled number’s custom_prompt. The number profile takes precedence on conflicting business details. It cannot grant new permissions.",
+      "evidence": [
+        "shared/data/agentPrompt.js:20-51"
+      ]
+    },
+    {
+      "id": "in-opening",
+      "kind": "change",
+      "scope": "number",
+      "text": "For a different greeting per business, keep Dynamic greeting on (the default) and put the opening line in that number’s custom_prompt. For example, “Start every call with: Thank you for calling Oak and Stone”.",
+      "evidence": [
+        "api/agents/createDefaults.js:1-6",
+        "inbound/call/greeting.js:30-55",
+        "inbound/call/greeting.js:80-89",
+        "shared/data/agentPrompt.js:38-51"
+      ]
+    },
+    {
+      "id": "in-tags",
+      "kind": "limit",
+      "scope": "call",
+      "text": "Available inbound action forms depend on the agent’s enabled capabilities. Outbound menu controls do not apply.",
+      "evidence": [
+        "inbound/providers/claude.js:71-77"
+      ],
+      "sourceList": "inbound.publicTags",
+      "value": [
+        "[SEND_SMS: message]",
+        "[TRANSFER: phone_number]",
+        "[WAIT]",
+        "[END_CALL]"
+      ]
+    },
+    {
+      "id": "in-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Update a number profile, including its opening instruction, through the number settings endpoint.",
+      "evidence": [
+        "shared/features/numberImportInput.js:27-30",
+        "shared/features/phoneNumberImport.js:95-101",
+        "shared/features/phoneNumberImport.js:175-185",
+        "knowledge/agentOnly.js:3-7"
+      ],
+      "value": "PATCH /v1/phone-numbers/{phoneNumber}"
+    },
+    {
+      "id": "in-error",
+      "kind": "error",
+      "scope": "number",
+      "text": "On custom_prompt_too_long shorten the number profile. Use the agent’s knowledge for shared reference material.",
+      "evidence": [
+        "shared/features/numberImportInput.js:27-30",
+        "shared/features/phoneNumberImport.js:95-101",
+        "shared/features/phoneNumberImport.js:175-185",
+        "knowledge/agentOnly.js:3-7"
+      ],
+      "value": "custom_prompt_too_long"
+    }
+  ]
+}

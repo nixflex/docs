@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "feature": "website-agent",
+  "title": "Website chat, voice and installation",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "web-tools",
+      "kind": "fixed",
+      "scope": "number",
+      "text": "Website chat and website voice offer eligible custom functions only. Built-in calendar booking and availability are excluded. Phone and eligible SMS can use a configured calendar.",
+      "evidence": [
+        "shared/features/websiteFunctions.js:2-5",
+        "shared/features/websiteFunctions.js:40-49",
+        "outbound/call/callManager.js:485-508",
+        "inbound/features/smsReply.js:69-76"
+      ],
+      "why": "Website tools are selected separately for that number."
+    },
+    {
+      "id": "web-install",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "The public API does not return ready-to-paste install HTML.",
+      "evidence": [
+        "api/agentInbox.js:60-65",
+        "api/agentWidgetSeen.js:4-9",
+        "sql/security-auth/094_03_web_settings.sql:44-49",
+        "dashboard@app/components/agent-inbox/WebInstall.jsx:9-20"
+      ],
+      "instead": "Use the dashboard Install action for each customer’s number. The settings read includes install_id. An install receipt only reports that a widget was seen."
+    },
+    {
+      "id": "web-prompt",
+      "kind": "does",
+      "scope": "number",
+      "text": "Web chat and web voice use the number’s web_prompt. Configure sms_prompt separately for SMS. A phone profile alone does not configure either channel.",
+      "evidence": [
+        "inbound/features/smsReply.js:27-41",
+        "inbound/features/smsReply.js:398-405",
+        "web/visitorContext.js:18-28",
+        "web/voiceConfig.js:8-18",
+        "knowledge/liveRead.js:20-28"
+      ]
+    },
+    {
+      "id": "web-switch",
+      "kind": "change",
+      "scope": "number",
+      "text": "Enable website custom functions only when every enabled function on that number is safe for public visitors. To offer booking, share the business’s booking link or hand off to phone or SMS.",
+      "evidence": [
+        "shared/features/websiteFunctions.js:2-5",
+        "shared/features/websiteFunctions.js:40-49",
+        "outbound/call/callManager.js:485-508",
+        "inbound/features/smsReply.js:69-76",
+        "shared/features/websiteFunctions.js:18-48"
+      ]
+    },
+    {
+      "id": "web-cap",
+      "kind": "limit",
+      "scope": "number",
+      "text": "The website prompt has its own character limit, [[num-prompt.web_prompt]]. The phone and SMS prompt limits are separate.",
+      "evidence": [
+        "api/agentInbox.js:4-10",
+        "shared/features/phoneNumberImport.js:95-112"
+      ]
+    },
+    {
+      "id": "web-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Read widget settings and installation metadata for the owned number.",
+      "evidence": [
+        "api/agentInbox.js:60-65",
+        "api/agentWidgetSeen.js:4-9",
+        "sql/security-auth/094_03_web_settings.sql:44-49",
+        "dashboard@app/components/agent-inbox/WebInstall.jsx:9-20"
+      ],
+      "value": "GET /v1/agent-web/{number}"
+    },
+    {
+      "id": "web-error",
+      "kind": "error",
+      "scope": "number",
+      "text": "On widget_settings_changed reload the saved settings before applying your edit.",
+      "evidence": [
+        "api/agentInbox.js:5-10"
+      ],
+      "value": "widget_settings_changed"
+    }
+  ]
+}

@@ -1,0 +1,363 @@
+{
+  "schema": 1,
+  "feature": "phone-numbers",
+  "title": "Phone numbers and bringing your own number",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "num-owner",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "A number belongs to the account and is assigned to an agent. An explicit outbound number must be eligible for that account and agent. On a shared agent always pass the intended customer’s from_number.",
+      "why": "Without a selection the resolver orders eligible numbers by creation time and ID. The first number can belong to another customer of the same SaaS account.",
+      "evidence": [
+        "api/routes.js:1055-1078",
+        "api/outboundNumber.js:13-31",
+        "api/outboundNumber.js:37-48",
+        "shared/features/numberMove.js:5-15"
+      ]
+    },
+    {
+      "id": "num-carrier",
+      "kind": "fixed",
+      "scope": "number",
+      "text": "Use one complete carrier credential set from the customer’s carrier account. Only the carrier identifier and credential field names belong in the guide. Keep the values on your server.",
+      "why": "Import validates the carrier identity. The public response projects approved fields and excludes private credentials.",
+      "evidence": [
+        "shared/features/numberImportInput.js:4-11",
+        "shared/features/numberImportInput.js:22-37",
+        "shared/features/numberOperationCarrier.js:9-22",
+        "shared/features/numberReadProjection.js:2-12"
+      ]
+    },
+    {
+      "id": "num-no-tenant",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A number cannot set its own fixed welcome_message, language, general call timezone or pickup delay.",
+      "instead": "Use Dynamic greeting with that number’s custom_prompt for its business opening. Select a separate agent for different agent settings.",
+      "evidence": [
+        "shared/features/phoneNumberImport.js:95-112",
+        "shared/features/numberControls.js:2-4",
+        "api/agents/input.js:2-13",
+        "api/agentFields.js:18-31",
+        "shared/integrations/googleCalendarSettings.js:7-17",
+        "inbound/call/greeting.js:30-55"
+      ]
+    },
+    {
+      "id": "num-no-kb",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A number does not have an independently selectable knowledge base.",
+      "instead": "Assign the number to an agent with the required knowledge.",
+      "evidence": [
+        "knowledge/agentOnly.js:3-12",
+        "shared/features/numberMove.js:5-15"
+      ]
+    },
+    {
+      "id": "num-purpose",
+      "kind": "does",
+      "scope": "number",
+      "text": "Import an existing supported carrier number, assign it to an owned agent, inspect it, change its channel controls and remove its Nixflex connection.",
+      "evidence": [
+        "api/routes.js:1548-1575",
+        "api/routes.js:1583-1627",
+        "api/numberReads.js:3-9",
+        "shared/features/numberMove.js:5-15"
+      ]
+    },
+    {
+      "id": "num-import",
+      "kind": "change",
+      "scope": "number",
+      "text": "Import server-side with POST /v1/phone-numbers. Supply phone_number and agent_id. Pair twilio_sid with twilio_token or telnyx_api_key with telnyx_connection_id. telnyx_public_key is optional for the latter. custom_prompt is optional.",
+      "sourceList": "numbers.importFields",
+      "value": [
+        "phone_number",
+        "agent_id",
+        "twilio_sid",
+        "twilio_token",
+        "telnyx_api_key",
+        "telnyx_connection_id",
+        "telnyx_public_key",
+        "custom_prompt"
+      ],
+      "evidence": [
+        "shared/features/numberImportInput.js:4-11",
+        "shared/features/numberImportInput.js:22-37"
+      ]
+    },
+    {
+      "id": "num-settings",
+      "kind": "change",
+      "scope": "number",
+      "text": "These ordinary number settings are writable by PATCH. Text fields have individual clearing rules. Nullable recording and booking controls can inherit agent settings. Voicemail for an API-imported number uses the number’s controls.",
+      "sourceList": "numbers.updateFields",
+      "value": [
+        "custom_prompt",
+        "voice_id",
+        "sms_reply_enabled",
+        "sms_prompt",
+        "web_prompt",
+        "speaking_rate",
+        "dtmf_enabled",
+        "require_booking_confirmation",
+        "record_call",
+        "recording_source",
+        "voicemail_leave_enabled",
+        "voicemail_message"
+      ],
+      "evidence": [
+        "shared/features/phoneNumberImport.js:95-112",
+        "shared/features/phoneNumberImport.js:120-149",
+        "api/routes.js:1593-1615",
+        "shared/features/voicemailPolicy.js:6-13"
+      ]
+    },
+    {
+      "id": "num-switches",
+      "kind": "change",
+      "scope": "number",
+      "text": "These additional channel switches take true or false.",
+      "sourceList": "numbers.controlFields",
+      "value": [
+        "inbound_enabled",
+        "outbound_enabled",
+        "monitor_enabled",
+        "web_calls_enabled",
+        "web_agent_enabled",
+        "web_functions_enabled"
+      ],
+      "evidence": [
+        "shared/features/numberControls.js:2-14",
+        "api/routes.js:1583-1592"
+      ]
+    },
+    {
+      "id": "num-pair",
+      "kind": "change",
+      "scope": "number",
+      "text": "Select a complete catalogue voice pair on the number or request inheritance with voice_pair_inherit. A configured number pair overrides the whole agent pair. Legacy number aliases and partially migrated pairs follow separate compatibility rules.",
+      "sourceList": "numbers.voicePairFields",
+      "value": [
+        "voice_key",
+        "voice_route_key",
+        "backup_voice_key",
+        "backup_voice_route_key"
+      ],
+      "evidence": [
+        "shared/tts/voicePair.js:2-18",
+        "shared/tts/numberVoicePair.js:21-32",
+        "shared/tts/voicePairLoader.js:26-36"
+      ]
+    },
+    {
+      "id": "num-move",
+      "kind": "change",
+      "scope": "number",
+      "text": "Send agent_id alone on PATCH to move the number to an active target agent. Submit other number edits separately.",
+      "evidence": [
+        "api/routes.js:1583-1589",
+        "shared/features/numberMove.js:5-15"
+      ]
+    },
+    {
+      "id": "num-verification-key",
+      "kind": "change",
+      "scope": "number",
+      "text": "Use telnyx_public_key on the supported number to rotate its webhook verification key. Submit a catalogue voice-pair change separately.",
+      "evidence": [
+        "api/routes.js:1583-1592",
+        "shared/features/numberKeyUpdate.js:2-22",
+        "shared/features/phoneNumberImport.js:189-202"
+      ]
+    },
+    {
+      "id": "num-prompt",
+      "kind": "limit",
+      "scope": "number",
+      "text": "Write limits in characters for the inbound business profile, SMS prompt, website prompt and number voicemail message.",
+      "sourceList": "numbers.textLimits",
+      "value": {
+        "custom_prompt": 8000,
+        "sms_prompt": 20000,
+        "web_prompt": 16000,
+        "voicemail_message": 2000
+      },
+      "evidence": [
+        "shared/features/phoneNumberImport.js:95-112",
+        "shared/features/numberImportInput.js:28-30"
+      ]
+    },
+    {
+      "id": "num-filters",
+      "kind": "api",
+      "scope": "account",
+      "text": "List owned numbers. Supported list inputs include agent_id, provider, limit and cursor.",
+      "value": "GET /v1/phone-numbers",
+      "evidence": [
+        "api/routes.js:1565-1575"
+      ]
+    },
+    {
+      "id": "num-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Import, read, update or detach a number. For an imported Twilio number, detaching it from Nixflex leaves the carrier number in the customer’s account.",
+      "value": [
+        "POST /v1/phone-numbers",
+        "GET /v1/phone-numbers/{phoneNumber}",
+        "PATCH /v1/phone-numbers/{phoneNumber}",
+        "DELETE /v1/phone-numbers/{phoneNumber}"
+      ],
+      "evidence": [
+        "api/routes.js:1548-1563",
+        "api/numberReads.js:3-9",
+        "api/routes.js:1577-1589",
+        "api/routes.js:1621-1627",
+        "shared/features/phoneNumberImport.js:45-58"
+      ]
+    },
+    {
+      "id": "num-usage",
+      "kind": "api",
+      "scope": "number",
+      "text": "Retrieve usage for this number and selected period.",
+      "value": "GET /v1/phone-numbers/{phoneNumber}/usage",
+      "evidence": [
+        "api/numberUsage.js:3-11",
+        "shared/features/numberUsage.js:5-25"
+      ]
+    },
+    {
+      "id": "num-creds",
+      "kind": "api",
+      "scope": "number",
+      "text": "Update a number’s carrier credentials through the dedicated endpoint using the complete pair for its current carrier. Dashboard access for this change requires Owner or Admin.",
+      "value": "POST /v1/phone-numbers/{phoneNumber}/credentials",
+      "evidence": [
+        "api/numberCredentials.js:3-11",
+        "shared/features/numberCredentials.js:17-32"
+      ]
+    },
+    {
+      "id": "num-format",
+      "kind": "error",
+      "scope": "number",
+      "text": "400 invalid_phone_format means the supplied number fails phone validation. Supply the country code and a valid international number.",
+      "value": "invalid_phone_format",
+      "evidence": [
+        "shared/features/numberImportInput.js:13-16"
+      ]
+    },
+    {
+      "id": "num-mixed",
+      "kind": "error",
+      "scope": "number",
+      "text": "400 mixed_provider_credentials means both carrier sets were supplied. Choose one.",
+      "value": "mixed_provider_credentials",
+      "evidence": [
+        "shared/features/numberImportInput.js:22-27"
+      ]
+    },
+    {
+      "id": "num-unknown",
+      "kind": "error",
+      "scope": "number",
+      "text": "400 unknown_field on import means the import body contains an unsupported field. Move supported settings to a separate PATCH.",
+      "value": "unknown_field",
+      "evidence": [
+        "shared/features/numberImportInput.js:7-11"
+      ]
+    },
+    {
+      "id": "num-size",
+      "kind": "error",
+      "scope": "number",
+      "text": "400 custom_prompt_too_long means the number profile exceeded its character limit. Shorten it to the custom_prompt limit shown above.",
+      "value": "custom_prompt_too_long",
+      "evidence": [
+        "shared/features/numberImportInput.js:28-30",
+        "shared/features/phoneNumberImport.js:175-185"
+      ]
+    },
+    {
+      "id": "num-hidden",
+      "kind": "error",
+      "scope": "number",
+      "text": "404 number_not_found on the number read means this account cannot retrieve the number. Check the number and its account assignment.",
+      "value": "number_not_found",
+      "evidence": [
+        "shared/features/numberReads.js:3-20"
+      ]
+    },
+    {
+      "id": "num-read",
+      "kind": "does",
+      "scope": "number",
+      "text": "List and detail responses project different fields. Generated timestamps and the voice pair version are read-only.",
+      "sourceList": "numbers.readColumns",
+      "value": {
+        "list": [
+          "voice_key",
+          "voice_route_key",
+          "backup_voice_key",
+          "backup_voice_route_key",
+          "voice_pair_version",
+          "phone_number",
+          "agent_id",
+          "provider",
+          "twilio_number_sid",
+          "inbound_enabled",
+          "outbound_enabled",
+          "sms_reply_enabled",
+          "web_agent_enabled",
+          "web_calls_enabled",
+          "web_functions_enabled",
+          "monitor_enabled",
+          "custom_prompt",
+          "created_at",
+          "source"
+        ],
+        "detail": [
+          "voice_key",
+          "voice_route_key",
+          "backup_voice_key",
+          "backup_voice_route_key",
+          "voice_pair_version",
+          "phone_number",
+          "agent_id",
+          "provider",
+          "inbound_enabled",
+          "outbound_enabled",
+          "sms_reply_enabled",
+          "web_agent_enabled",
+          "web_calls_enabled",
+          "web_functions_enabled",
+          "monitor_enabled",
+          "custom_prompt",
+          "created_at",
+          "source",
+          "record_call",
+          "recording_source",
+          "sms_prompt",
+          "web_prompt",
+          "voice_id",
+          "speaking_rate",
+          "dtmf_enabled",
+          "require_booking_confirmation",
+          "voicemail_leave_enabled",
+          "voicemail_message"
+        ]
+      },
+      "evidence": [
+        "shared/features/numberReadProjection.js:2-12"
+      ]
+    }
+  ]
+}

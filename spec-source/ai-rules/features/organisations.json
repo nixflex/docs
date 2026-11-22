@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "feature": "organisations",
+  "title": "Organisations and team roles",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "org-roles",
+      "kind": "fixed",
+      "scope": "organisation",
+      "text": "Owner manages keys, transfer and closure. Admin can manage ordinary resources, billing and Activity. Member can read ordinary resources.",
+      "evidence": [
+        "shared/organisations/policy.json:1-6"
+      ],
+      "why": "Permissions follow the acting principal in the selected organisation.",
+      "sourceList": "organisations.permissions",
+      "value": {
+        "owner": [
+          "normal",
+          "write",
+          "billing",
+          "key",
+          "team",
+          "activity",
+          "close",
+          "transfer"
+        ],
+        "admin": [
+          "normal",
+          "write",
+          "billing",
+          "activity",
+          "team",
+          "leave"
+        ],
+        "member": [
+          "normal",
+          "leave"
+        ]
+      }
+    },
+    {
+      "id": "org-owner",
+      "kind": "unavailable",
+      "scope": "organisation",
+      "text": "An Admin cannot manage another Admin or take ownership by editing a role.",
+      "evidence": [
+        "api/organisationRoutes.js:30-55"
+      ],
+      "instead": "Use the Owner’s personal session and the ownership transfer workflow."
+    },
+    {
+      "id": "org-do",
+      "kind": "does",
+      "scope": "organisation",
+      "text": "Use invitations to grant access to the same business resources. Review team activity under the relevant organisation.",
+      "evidence": [
+        "api/organisationRoutes.js:14-55"
+      ]
+    },
+    {
+      "id": "org-invite",
+      "kind": "change",
+      "scope": "organisation",
+      "text": "Choose the permitted role when inviting a colleague. The recipient claims the invitation.",
+      "evidence": [
+        "api/organisationRoutes.js:22-33"
+      ]
+    },
+    {
+      "id": "org-scope",
+      "kind": "limit",
+      "scope": "organisation",
+      "text": "An ordinary Member cannot write business resources. Leaving a team is a personal membership action.",
+      "evidence": [
+        "shared/organisations/policy.json:1-6"
+      ]
+    },
+    {
+      "id": "org-api",
+      "kind": "api",
+      "scope": "organisation",
+      "text": "Read the current context before rendering controls. Retrieve the member list only with the required permission.",
+      "evidence": [
+        "api/organisationRoutes.js:14-21"
+      ],
+      "value": [
+        "GET /v1/organisation",
+        "GET /v1/organisation/members"
+      ]
+    },
+    {
+      "id": "org-refusal",
+      "kind": "error",
+      "scope": "operation",
+      "text": "On permission_denied show the refusal and ask the appropriate organisation role to act.",
+      "evidence": [
+        "shared/organisations/rpc.js:3-12",
+        "shared/organisations/rpc.js:28-32"
+      ],
+      "value": "permission_denied"
+    }
+  ]
+}

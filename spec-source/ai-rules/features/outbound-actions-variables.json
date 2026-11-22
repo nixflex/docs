@@ -1,0 +1,224 @@
+{
+  "schema": 1,
+  "feature": "outbound-actions-variables",
+  "title": "Action tags and outbound variables",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "act-tags",
+      "kind": "fixed",
+      "scope": "platform",
+      "text": "Use the listed developer-facing outbound tag forms exactly. The IVR and keypad navigation forms are outbound only.",
+      "why": "The engine recognises particular markers in the reply and dispatches the matching action. A different label has no action handler.",
+      "sourceList": "outbound.publicTags",
+      "value": [
+        "[SEND_SMS: message]",
+        "[TRANSFER: phone_number]",
+        "[WAIT]",
+        "[END_CALL]",
+        "[IVR]",
+        "[PRESS: digits]",
+        "[IVR_END]"
+      ],
+      "evidence": [
+        "outbound/providers/outboundClaude.js:89-102",
+        "inbound/providers/claude.js:71-77",
+        "outbound/call/conversation.js:267-318"
+      ]
+    },
+    {
+      "id": "act-input",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "The engine uses the explicit TRANSFER destination first. An empty destination falls back to the shared agent transfer_number. Invalid or self targets are refused before dialling.",
+      "why": "Routing resolves one business number and validates one destination before starting the transfer.",
+      "evidence": [
+        "outbound/call/callManager.js:153-161",
+        "shared/features/transferTarget.js:3-15"
+      ]
+    },
+    {
+      "id": "act-mechanics",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "Use WAIT for an instructed pause while a person steps away. In an automated menu use IVR, PRESS with the actual keys, then IVR_END when a person speaks. Voicemail detection has a separate engine-owned marker.",
+      "why": "Human pauses, menu navigation and voicemail use separate call controls.",
+      "evidence": [
+        "outbound/providers/outboundClaude.js:100-111",
+        "shared/features/voicemailDelivery.js:4-13"
+      ]
+    },
+    {
+      "id": "act-builtins",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "The engine fills these outbound variables. Use their exact names inside double braces. The engine writes these values after merging recipient variables.",
+      "why": "The call supplies identity, direction and time context for each recipient.",
+      "sourceList": "outbound.systemVariables",
+      "value": [
+        "caller_phone",
+        "business_phone",
+        "current_date",
+        "current_time",
+        "tomorrow_date",
+        "call_id",
+        "agent_id",
+        "call_direction",
+        "current_iso_date",
+        "current_iso_time",
+        "tomorrow_iso_date",
+        "current_day_of_week",
+        "current_timezone",
+        "upcoming_days"
+      ],
+      "evidence": [
+        "shared/utils/callVariables.js:29-76",
+        "shared/features/singleContactPolicy.js:15-25",
+        "outbound/call/callManager.js:429-448"
+      ]
+    },
+    {
+      "id": "act-scope",
+      "kind": "does",
+      "scope": "call",
+      "text": "Outbound uses its call purpose for developer instructions. Inbound combines the shared agent instructions with the dialled number’s profile. Engine rules and eligible knowledge can also apply.",
+      "evidence": [
+        "shared/data/agentPrompt.js:20-51",
+        "shared/data/agentPrompt.js:67-80",
+        "knowledge/liveRead.js:20-35"
+      ]
+    },
+    {
+      "id": "act-purpose",
+      "kind": "change",
+      "scope": "call",
+      "text": "Send prompt for the single call. For a campaign use its prompt or the recipient’s prompt_override.",
+      "evidence": [
+        "api/routes.js:1033-1045",
+        "outbound/features/voiceCampaignLaunch.js:100-116"
+      ]
+    },
+    {
+      "id": "act-variables",
+      "kind": "change",
+      "scope": "recipient",
+      "text": "Choose case-sensitive ASCII letters, digits and underscores, for example {{appointment_time}}. Use dynamic_vars on a single call and map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name yourself when referenced. Validate every row before submitting.",
+      "evidence": [
+        "shared/features/singleContactPolicy.js:15-25",
+        "api/routes.js:1033-1045",
+        "outbound/features/batchCalls.js:125-135",
+        "outbound/call/callManager.js:429-448",
+        "shared/utils/callVariables.js:31-38"
+      ]
+    },
+    {
+      "id": "act-text",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Enable incall_sms_enabled on the agent to use SEND_SMS. The business number on the call sends to the person being called.",
+      "evidence": [
+        "shared/data/agentPrompt.js:20-32",
+        "outbound/features/midCallSms.js:32-65"
+      ]
+    },
+    {
+      "id": "act-custom",
+      "kind": "unavailable",
+      "scope": "platform",
+      "text": "Developers cannot add or rename an action tag.",
+      "instead": "Use the supported tag. For a custom integration, configure a custom function on the number and have the agent use the tool.",
+      "evidence": [
+        "outbound/providers/outboundClaude.js:89-111",
+        "api/routes.js:2237-2255",
+        "outbound/call/callManager.js:485-488",
+        "outbound/call/conversation.js:155-162"
+      ]
+    },
+    {
+      "id": "act-history",
+      "kind": "unavailable",
+      "scope": "call",
+      "text": "caller_history is not automatically populated on outbound. caller_name and business_name are not engine-filled outbound variables either.",
+      "instead": "Supply the recipient facts you actually need in dynamic_vars or the batch row’s variables.",
+      "evidence": [
+        "shared/utils/callVariables.js:31-49",
+        "shared/utils/callVariables.js:55-76",
+        "shared/features/singleContactPolicy.js:15-25"
+      ]
+    },
+    {
+      "id": "act-min",
+      "kind": "limit",
+      "scope": "call",
+      "text": "Provide a meaningful call purpose meeting the minimum trimmed character count below. The HTTP route rejects blank input. Shorter nonblank input can trigger the no-purpose apology and ending instruction.",
+      "sourceList": "outbound.purposeMin",
+      "value": 10,
+      "evidence": [
+        "api/routes.js:1039-1045",
+        "shared/data/agentPrompt.js:38-46"
+      ]
+    },
+    {
+      "id": "act-single",
+      "kind": "api",
+      "scope": "call",
+      "text": "Start a single outbound call with agent_id, to_number and prompt. On a shared agent always specify the tenant’s owned from_number.",
+      "value": "POST /v1/calls/outbound",
+      "evidence": [
+        "api/routes.js:1025-1045",
+        "api/routes.js:1063-1078",
+        "api/outboundNumber.js:13-31"
+      ]
+    },
+    {
+      "id": "act-batch",
+      "kind": "api",
+      "scope": "campaign",
+      "text": "Create a voice campaign with recipients and their variables.",
+      "value": "POST /v1/calls/batch",
+      "evidence": [
+        "api/routes.js:1137-1175",
+        "outbound/features/batchCalls.js:125-146"
+      ]
+    },
+    {
+      "id": "act-missing",
+      "kind": "error",
+      "scope": "recipient",
+      "text": "With required voice-detail validation enabled, absent, null or blank custom values produce 409 missing_voice_details before dispatch. Read details.missing, fill the named fields and submit the corrected request.",
+      "value": "missing_voice_details",
+      "evidence": [
+        "shared/features/singleContactPolicy.js:15-25",
+        "shared/features/singleContactPolicy.js:45-47",
+        "shared/config/campaignSafety.js:19-20",
+        "shared/config/campaignSafety.js:29-32"
+      ]
+    },
+    {
+      "id": "act-bad-name",
+      "kind": "error",
+      "scope": "recipient",
+      "text": "With that validation enabled, spaces or punctuation in a placeholder produce 409 unsupported_voice_placeholder. Rename it in the template and the recipient data.",
+      "value": "unsupported_voice_placeholder",
+      "evidence": [
+        "shared/features/singleContactPolicy.js:15-25",
+        "shared/features/singleContactPolicy.js:45-47"
+      ]
+    },
+    {
+      "id": "act-grammar",
+      "kind": "limit",
+      "scope": "recipient",
+      "text": "Placeholder names must match the whole case-sensitive ASCII word pattern in the template and the supplied data.",
+      "value": "\\w+",
+      "sourceList": "outbound.placeholderGrammar",
+      "evidence": [
+        "shared/features/singleContactPolicy.js:15-25",
+        "shared/utils/replaceVariables.js:12-20"
+      ]
+    }
+  ]
+}

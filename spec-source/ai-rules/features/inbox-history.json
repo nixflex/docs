@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "feature": "inbox-history",
+  "title": "Inbox, history and tenant-scoped reads",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "hist-tenant",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "Inbox number discovery is account-wide. Address threads by channel and number. Use the number filter on call history. Validate each tenant’s number before returning records.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ],
+      "why": "The account credential can see several customers’ numbers."
+    },
+    {
+      "id": "hist-lists",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "Voice and SMS campaign lists and the suppression list do not provide a general tenant from_number filter.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ],
+      "instead": "Keep a server-side mapping of customer, number and campaign IDs. Filter authorised results before displaying them."
+    },
+    {
+      "id": "hist-page",
+      "kind": "does",
+      "scope": "account",
+      "text": "Use stable filters with the server’s next cursor when following history. Preserve the intended number through pagination.",
+      "evidence": [
+        "api/calls/historyQuery.js:13-45"
+      ]
+    },
+    {
+      "id": "hist-filter",
+      "kind": "change",
+      "scope": "account",
+      "text": "Choose direction, source, outcome and period when supported. The number narrows a history read only.",
+      "evidence": [
+        "api/calls/historyQuery.js:3-20"
+      ],
+      "sourceList": "history.filters",
+      "value": {
+        "direction": [
+          "all",
+          "inbound",
+          "outbound",
+          "web"
+        ],
+        "source": [
+          "all",
+          "campaign",
+          "web",
+          "test",
+          "other"
+        ],
+        "outcome": [
+          "all",
+          "successful",
+          "unsuccessful",
+          "unknown",
+          "failed"
+        ],
+        "period": [
+          "all",
+          "today",
+          "week",
+          "month"
+        ]
+      }
+    },
+    {
+      "id": "hist-delete",
+      "kind": "limit",
+      "scope": "call",
+      "text": "For tenant deletion use DELETE /v1/calls/{id} for a verified call ID. DELETE /v1/calls is account-wide and accepts no number filter.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ]
+    },
+    {
+      "id": "hist-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Look up threads or inspect filtered call history.",
+      "evidence": [
+        "api/agentInbox.js:24-46",
+        "api/calls/historyQuery.js:3-20",
+        "api/routes.js:1265-1283",
+        "api/routes.js:1392-1407",
+        "api/contactSuppression.js:13-23",
+        "api/routes.js:174-211",
+        "api/routes.js:633-646"
+      ],
+      "value": [
+        "GET /v1/agent-inbox/{channel}/{number}",
+        "GET /v1/calls/history"
+      ]
+    },
+    {
+      "id": "hist-error",
+      "kind": "error",
+      "scope": "thread",
+      "text": "On inbox_not_found check the account, channel, number and thread together.",
+      "evidence": [
+        "api/agentInbox.js:5-10"
+      ],
+      "value": "inbox_not_found"
+    }
+  ]
+}

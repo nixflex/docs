@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "feature": "bookings-calendars",
+  "title": "Bookings and calendars",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "book-confirm",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "For a new Google Calendar or Cal.com voice booking, collect and spell contact details separately, finish the combined read-back, then obtain a later clear yes for that proposal. Confirm the booking only after a successful write. This applies even with require_booking_confirmation=false.",
+      "evidence": [
+        "shared/features/bookingSpelling.js:2-18",
+        "shared/features/bookingConfirmation.js:174-212",
+        "shared/features/bookingConfirmation.js:231-241",
+        "shared/features/bookingConfirmation.js:251-267",
+        "inbound/features/smsReply.js:306-311"
+      ],
+      "why": "A new booking uses its own spelling and confirmation gate. Existing bookings, rescheduling, cancellation and SMS have their own flows."
+    },
+    {
+      "id": "book-calzone",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "Cal.com does not offer an independent general call timezone for each number. It checks the agent timezone, its integration fallback, then Europe/London.",
+      "evidence": [
+        "shared/integrations/calcom.js:357-363",
+        "shared/features/bookingTimezone.js:15-35",
+        "shared/integrations/gcalendar.js:394-397",
+        "shared/integrations/googleCalendarSettings.js:7-17"
+      ],
+      "instead": "Use separate agents for different Cal.com agent timezones. Google Calendar honours an explicit number-calendar timezone first, then uses the agent resolution."
+    },
+    {
+      "id": "book-connect",
+      "kind": "does",
+      "scope": "number",
+      "text": "For an owned number assigned to an agent, send only return_url to start Google Calendar consent. Open the returned url for the calendar owner. A competing calendar is refused. Read the number’s status after consent to confirm connection.",
+      "evidence": [
+        "api/googleCalendar.js:7-44"
+      ]
+    },
+    {
+      "id": "book-settings",
+      "kind": "change",
+      "scope": "number",
+      "text": "Supported Google Calendar settings include availability hours, timezone and invitation behaviour. These configure that number’s booking calendar.",
+      "evidence": [
+        "shared/integrations/calcom.js:357-363",
+        "shared/features/bookingTimezone.js:15-35",
+        "shared/integrations/gcalendar.js:394-397",
+        "shared/integrations/googleCalendarSettings.js:7-17",
+        "api/googleCalendar.js:34-44"
+      ],
+      "sourceList": "bookings.googleSettings",
+      "value": [
+        "timezone",
+        "hours",
+        "slot_minutes",
+        "calendar_id",
+        "send_invites"
+      ]
+    },
+    {
+      "id": "book-limit",
+      "kind": "limit",
+      "scope": "session",
+      "text": "Starting consent returns a time-limited URL. If it expires start a fresh consent flow and let the calendar owner finish it.",
+      "evidence": [
+        "api/googleCalendar.js:21-34"
+      ]
+    },
+    {
+      "id": "book-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Start consent and read back that number’s integration status. For call-related changes read the call’s bookings.",
+      "evidence": [
+        "api/googleCalendar.js:7-44",
+        "api/routes.js:113",
+        "api/organisationRoutes.js:14-21",
+        "api/organisationGuard.js:6-9",
+        "shared/organisations/policy.json:2-5",
+        "shared/features/webhook.js:35-40",
+        "shared/features/callBookings.js:45-48",
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+      ],
+      "value": [
+        "POST /v1/integrations/google-calendar/number/{phoneNumber}/connect",
+        "GET /v1/integrations/google-calendar/number/{phoneNumber}",
+        "GET /v1/calls/{id}/bookings"
+      ]
+    },
+    {
+      "id": "book-error",
+      "kind": "error",
+      "scope": "number",
+      "text": "On agent_not_assigned assign an active owned agent to that number before starting the calendar connection.",
+      "evidence": [
+        "api/googleCalendar.js:21-27"
+      ],
+      "value": "agent_not_assigned"
+    },
+    {
+      "id": "book-actions",
+      "kind": "limit",
+      "scope": "call",
+      "text": "The spelling gate applies to these new-appointment voice actions. The details confirmation action excludes an existing booking.",
+      "value": [
+        "book_appointment",
+        "confirm_details"
+      ],
+      "sourceList": "bookings.newVoiceActions",
+      "evidence": [
+        "shared/features/bookingSpelling.js:6-10"
+      ]
+    }
+  ]
+}

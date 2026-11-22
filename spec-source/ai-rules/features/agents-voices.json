@@ -1,0 +1,366 @@
+{
+  "schema": 1,
+  "feature": "agents-voices",
+  "title": "Agent settings, languages and voices",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "agent-common",
+      "kind": "fixed",
+      "scope": "agent",
+      "text": "Language, general call timezone, pickup delay and fixed welcome_message belong to the agent. Numbers share those settings.",
+      "evidence": [
+        "api/agents/input.js:2-13",
+        "api/agentFields.js:18-31",
+        "api/routes.js:1583-1615",
+        "shared/integrations/googleCalendarSettings.js:7-17",
+        "inbound/call/greeting.js:42-55"
+      ],
+      "why": "The fixed phone opener reads the agent’s saved welcome message."
+    },
+    {
+      "id": "agent-default",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A number cannot set a separate fixed welcome_message, language, general timezone or pickup delay.",
+      "evidence": [
+        "api/agents/input.js:2-13",
+        "api/agentFields.js:18-31",
+        "api/routes.js:1583-1615",
+        "shared/integrations/googleCalendarSettings.js:7-17",
+        "inbound/call/greeting.js:42-55"
+      ],
+      "instead": "Use another agent for distinct settings. For a different business opening on the same agent use Dynamic greeting and the number prompt."
+    },
+    {
+      "id": "agent-voice",
+      "kind": "does",
+      "scope": "number",
+      "text": "A configured primary/backup number voice pair wins as a whole. Inherit to use the agent pair. On legacy paths a number voice_id can clear an agent catalogue key. An incompatible partial pair can be unavailable.",
+      "evidence": [
+        "shared/tts/voicePair.js:2-18",
+        "shared/tts/numberVoicePair.js:21-32",
+        "shared/tts/voicePairLoader.js:26-36"
+      ]
+    },
+    {
+      "id": "agent-pick",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Choose the supported catalogue voice and an eligible route. Select manual speech terms or configure structured values to extract from transcripts.",
+      "evidence": [
+        "shared/tts/voicePair.js:2-18",
+        "shared/tts/numberVoicePair.js:21-32",
+        "shared/tts/voicePairLoader.js:26-36",
+        "api/agents/extraction.js:2-19",
+        "api/agents/keyterms.js:2-11"
+      ]
+    },
+    {
+      "id": "agent-terms",
+      "kind": "limit",
+      "scope": "agent",
+      "text": "A changed manual list accepts up to [[agent-terms]] keyterms. Existing over-limit text can remain untouched on an unrelated edit.",
+      "evidence": [
+        "api/agents/keyterms.js:2-11",
+        "api/agents/input.js:23-42"
+      ],
+      "sourceList": "agents.keytermMax",
+      "value": 20
+    },
+    {
+      "id": "agent-extract",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Supported types for a structured extraction field.",
+      "evidence": [
+        "api/agents/extraction.js:2-19"
+      ],
+      "sourceList": "agents.extractionTypes",
+      "value": [
+        "text",
+        "selector",
+        "boolean",
+        "number"
+      ]
+    },
+    {
+      "id": "agent-input",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Use the public create/update field contract for the type, valid range and clearing rule of each setting.",
+      "evidence": [
+        "api/agents/input.js:2-19",
+        "api/agents/contract.js:3-9"
+      ],
+      "sourceList": "agents.input",
+      "value": {
+        "booleans": [
+          "is_active",
+          "ai_speaks_first",
+          "dynamic_greeting",
+          "func_end_call",
+          "func_cold_transfer",
+          "func_send_sms",
+          "record_call",
+          "post_call_sms_enabled",
+          "incall_sms_enabled",
+          "amd_enabled",
+          "greet_by_name",
+          "remember_callers",
+          "require_booking_confirmation",
+          "voicemail_leave_enabled"
+        ],
+        "text": {
+          "name": 200,
+          "system_prompt": 16000,
+          "welcome_message": 16000,
+          "voice_id": 200,
+          "voice_key": 36,
+          "voice_route_key": 200,
+          "backup_voice_key": 36,
+          "backup_voice_route_key": 200,
+          "language": 32,
+          "webhook_url": 2048,
+          "phone_number": 32,
+          "llm_model": 200,
+          "fallback_message": 16000,
+          "post_call_sms_template": 600,
+          "transfer_number": 32,
+          "transfer_whisper": 16000,
+          "timezone": 100,
+          "boosted_keywords": 2000,
+          "voicemail_message": 600
+        },
+        "nullable": [
+          "voice_id",
+          "voice_key",
+          "voice_route_key",
+          "backup_voice_key",
+          "backup_voice_route_key",
+          "webhook_url",
+          "phone_number",
+          "transfer_number",
+          "transfer_whisper",
+          "boosted_keywords",
+          "voicemail_message"
+        ],
+        "ranges": {
+          "temperature": [
+            0,
+            0.7
+          ],
+          "response_eagerness": [
+            0,
+            1000,
+            true
+          ],
+          "stt_confidence": [
+            0,
+            1
+          ],
+          "stt_max_silence_ms": [
+            0,
+            2147483647,
+            true
+          ],
+          "interruption_sensitivity": [
+            0,
+            100,
+            true
+          ],
+          "max_call_duration_seconds": [
+            1,
+            2147483,
+            true
+          ],
+          "silence_hangup_seconds": [
+            1,
+            2147483,
+            true
+          ],
+          "wait_tag_seconds": [
+            30,
+            120,
+            true
+          ],
+          "ivr_timeout_seconds": [
+            1,
+            1800,
+            true
+          ],
+          "voice_speed": [
+            0.01,
+            100
+          ]
+        },
+        "choices": {
+          "response_length": [
+            "short",
+            "medium",
+            "long"
+          ],
+          "transfer_type": [
+            "cold",
+            "warm"
+          ]
+        },
+        "special": [
+          "pickup_delay",
+          "speaking_rate",
+          "dtmf_enabled",
+          "recording_source",
+          "data_extraction_fields",
+          "call_retention_days",
+          "twilio_account_sid",
+          "twilio_auth_token"
+        ]
+      }
+    },
+    {
+      "id": "agent-read",
+      "kind": "does",
+      "scope": "agent",
+      "text": "Read projections include generated metadata. Seeing a field in a response does not grant write access.",
+      "evidence": [
+        "api/agentFields.js:18-31"
+      ],
+      "sourceList": "agents.readColumns",
+      "value": [
+        "id",
+        "agent_id",
+        "api_key_id",
+        "name",
+        "system_prompt",
+        "welcome_message",
+        "voice_route_key",
+        "backup_voice_key",
+        "backup_voice_route_key",
+        "voice_pair_version",
+        "voice_id",
+        "voice_key",
+        "language",
+        "greeting_language",
+        "max_call_duration_seconds",
+        "silence_hangup_seconds",
+        "record_call",
+        "recording_source",
+        "webhook_url",
+        "precall_webhook_url",
+        "phone_number",
+        "voice_speed",
+        "speaking_rate",
+        "llm_model",
+        "temperature",
+        "response_length",
+        "response_eagerness",
+        "fallback_message",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "twilio_account_sid",
+        "post_call_sms_enabled",
+        "post_call_sms_template",
+        "incall_sms_enabled",
+        "transfer_number",
+        "transfer_type",
+        "transfer_whisper",
+        "ai_speaks_first",
+        "dynamic_greeting",
+        "greet_by_name",
+        "remember_callers",
+        "func_end_call",
+        "func_cold_transfer",
+        "func_send_sms",
+        "interruption_sensitivity",
+        "pickup_delay",
+        "stt_confidence",
+        "stt_max_silence_ms",
+        "data_extraction_fields",
+        "timezone",
+        "amd_enabled",
+        "dtmf_enabled",
+        "boosted_keywords",
+        "wait_tag_seconds",
+        "ivr_timeout_seconds",
+        "voicemail_leave_enabled",
+        "voicemail_message",
+        "require_booking_confirmation",
+        "tester_scenarios",
+        "call_retention_days",
+        "outbound_max_duration_seconds",
+        "outbound_silence_hangup_seconds",
+        "outbound_transfer_numbers",
+        "outbound_warm_transfer_numbers",
+        "outbound_post_call_sms_templates"
+      ]
+    },
+    {
+      "id": "agent-api",
+      "kind": "api",
+      "scope": "agent",
+      "text": "Read an agent or update settings for that agent. Fetch the catalogue before assigning a new voice.",
+      "evidence": [
+        "api/routes.js:788-812",
+        "shared/tts/voicePair.js:2-18",
+        "shared/tts/numberVoicePair.js:21-32",
+        "shared/tts/voicePairLoader.js:26-36"
+      ],
+      "value": [
+        "GET /v1/agents/{id}",
+        "PUT /v1/agents/{id}",
+        "GET /v1/voices"
+      ]
+    },
+    {
+      "id": "agent-error",
+      "kind": "error",
+      "scope": "agent",
+      "text": "For invalid_agent_field inspect details.field, correct its type or value and resubmit.",
+      "evidence": [
+        "api/agents/input.js:16-41"
+      ],
+      "value": "invalid_agent_field"
+    },
+    {
+      "id": "agent-extract-limits",
+      "kind": "limit",
+      "scope": "agent",
+      "text": "Structured extraction has a maximum number of fields and choices per selector. Each field accepts the listed properties.",
+      "value": {
+        "fields": 50,
+        "properties": [
+          "name",
+          "type",
+          "description",
+          "choices",
+          "optional",
+          "format_example"
+        ],
+        "choices": 100
+      },
+      "sourceList": "agents.extractionBounds",
+      "evidence": [
+        "api/agents/extraction.js:3-19"
+      ]
+    },
+    {
+      "id": "agent-list-states",
+      "kind": "change",
+      "scope": "account",
+      "text": "Filter agent listings by supported status. Page size affects a response only.",
+      "value": [
+        "active",
+        "disabled",
+        "all"
+      ],
+      "sourceList": "agents.listStatus",
+      "evidence": [
+        "api/agents/list.js:9-20"
+      ]
+    }
+  ]
+}

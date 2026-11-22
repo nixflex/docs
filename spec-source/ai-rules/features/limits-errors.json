@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "feature": "limits-errors",
+  "title": "Limits, errors and safe retries",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "lim-capacity",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "Inbound and outbound share the account/API-key concurrency budget. Read max_concurrent for the effective limit.",
+      "evidence": [
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116"
+      ],
+      "why": "Each number draws from the same account capacity."
+    },
+    {
+      "id": "lim-reserve",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "There is no per-number concurrent-call reservation.",
+      "evidence": [
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116"
+      ],
+      "instead": "Queue or pace each tenant in your application. Use separate accounts if the budgets must be independent."
+    },
+    {
+      "id": "lim-read",
+      "kind": "does",
+      "scope": "operation",
+      "text": "Distinguish a rejected request, an accepted operation and an unknown outcome. Inspect the error code and details before deciding whether to retry.",
+      "evidence": [
+        "api/errorHelper.js:15-36",
+        "api/callReceiptError.js:1-8"
+      ]
+    },
+    {
+      "id": "lim-pace",
+      "kind": "change",
+      "scope": "account",
+      "text": "Adjust the rate at which your application submits work. An accepted queue entry can still wait for capacity.",
+      "evidence": [
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116",
+        "api/campaignControls.js:20-29"
+      ]
+    },
+    {
+      "id": "lim-default",
+      "kind": "limit",
+      "scope": "account",
+      "text": "The default is [[lim-default]] simultaneous calls when the account has no positive override.",
+      "evidence": [
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116"
+      ],
+      "sourceList": "limits.concurrent",
+      "value": 10
+    },
+    {
+      "id": "lim-api",
+      "kind": "api",
+      "scope": "account",
+      "text": "Inspect account usage for current capacity information.",
+      "evidence": [
+        "api/routes.js:1094-1116"
+      ],
+      "value": "GET /v1/usage"
+    },
+    {
+      "id": "lim-retry",
+      "kind": "error",
+      "scope": "operation",
+      "text": "On rate_limit_exceeded use retry_after_seconds. For an uncertain send, reconcile its receipt before submitting anything again.",
+      "evidence": [
+        "api/routes.js:90-103",
+        "api/callReceiptError.js:1-8"
+      ],
+      "value": "rate_limit_exceeded"
+    }
+  ]
+}

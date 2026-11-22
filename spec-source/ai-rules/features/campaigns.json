@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "feature": "campaigns",
+  "title": "Voice and SMS campaigns",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "camp-reuse",
+      "kind": "fixed",
+      "scope": "campaign",
+      "text": "reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.",
+      "evidence": [
+        "outbound/features/batchCalls.js:125-146",
+        "outbound/features/campaignReuse.js:5-18",
+        "api/routes.js:1313-1317",
+        "outbound/features/smsCampaigns.js:46-48",
+        "outbound/features/smsCampaigns.js:142-158"
+      ],
+      "why": "Draft replacement checks campaign ownership and launch state."
+    },
+    {
+      "id": "camp-again",
+      "kind": "unavailable",
+      "scope": "campaign",
+      "text": "A finished campaign cannot be replayed or resumed.",
+      "evidence": [
+        "outbound/features/campaignReuse.js:5-18",
+        "api/campaignControls.js:20-28",
+        "outbound/features/smsCampaigns.js:46-48"
+      ],
+      "instead": "For Use again create a new campaign with a fresh ID, intended recipients and reviewed settings."
+    },
+    {
+      "id": "camp-stop",
+      "kind": "does",
+      "scope": "campaign",
+      "text": "Cancel stops eligible future work. In-progress work may finish. Resume handles unattempted rows of the existing running launch. Deletion can wait for confirmed hang-up.",
+      "evidence": [
+        "api/campaignControls.js:7-29",
+        "api/campaignDelete.js:5-7",
+        "api/contentDelete.js:5-13"
+      ]
+    },
+    {
+      "id": "camp-window",
+      "kind": "change",
+      "scope": "campaign",
+      "text": "Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.",
+      "evidence": [
+        "api/routes.js:1159-1165",
+        "api/routes.js:1313-1328",
+        "outbound/features/campaignSchedule.js:11-18",
+        "outbound/features/campaignScheduler.js:30-49",
+        "outbound/features/campaignScheduler.js:135-168"
+      ]
+    },
+    {
+      "id": "camp-exact",
+      "kind": "unavailable",
+      "scope": "recipient",
+      "text": "There is no scheduled_at promise of dispatch at an exact second.",
+      "evidence": [
+        "api/routes.js:1159-1165",
+        "api/routes.js:1313-1328",
+        "outbound/features/campaignSchedule.js:11-18",
+        "outbound/features/campaignScheduler.js:30-49",
+        "outbound/features/campaignScheduler.js:135-168"
+      ],
+      "instead": "Choose a date and a local window and track actual recipient status."
+    },
+    {
+      "id": "camp-minutes",
+      "kind": "limit",
+      "scope": "campaign",
+      "text": "Local window bounds are minutes since midnight. The accepted weekdays and minute range are shown below.",
+      "evidence": [
+        "api/routes.js:1159-1165",
+        "api/routes.js:1313-1328",
+        "outbound/features/campaignSchedule.js:11-18",
+        "outbound/features/campaignScheduler.js:30-49",
+        "outbound/features/campaignScheduler.js:135-168"
+      ],
+      "sourceList": "campaigns.schedule",
+      "value": {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "min": 0,
+        "max": 1439
+      }
+    },
+    {
+      "id": "camp-api",
+      "kind": "api",
+      "scope": "campaign",
+      "text": "Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes.",
+      "evidence": [
+        "api/campaignControls.js:7-29",
+        "api/campaignDelete.js:5-7",
+        "api/contentDelete.js:5-13"
+      ],
+      "value": [
+        "DELETE /v1/calls/batch/{id}",
+        "POST /v1/calls/batch/{id}/cancel",
+        "POST /v1/calls/batch/{id}/resume",
+        "POST /v1/sms/campaigns/{id}/cancel",
+        "POST /v1/sms/campaigns/{id}/resume"
+      ]
+    },
+    {
+      "id": "camp-error",
+      "kind": "error",
+      "scope": "campaign",
+      "text": "not_resumable means this campaign is outside the running launch state. Read its current state and create a new campaign for another run.",
+      "evidence": [
+        "api/campaignControls.js:20-29"
+      ],
+      "value": "not_resumable"
+    }
+  ]
+}

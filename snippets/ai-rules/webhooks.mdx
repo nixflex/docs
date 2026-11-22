@@ -1,0 +1,9 @@
+**FIXED · organisation** With organisations enabled the signing secret belongs to the organisation. The organisation API credential or a personal Owner can retrieve it. Human Admin and Member cannot. Keep the secret server-side.
+
+**NOT OFFERED → do this instead · number** call.bookings carries no account field or number-specific signing secret. Verify first. Map number to the customer in your server-side directory. For an inbound call use the business to number, for outbound use from.
+
+**YOU CAN CHANGE · number** Set delivery destinations per number. Pre-call settings can be scoped to an agent or number. Keep the delivery destination and your signature-verification secret separate.
+
+**SCOPE · operation** Verify X-Nixflex-Signature (`t=<timestamp>,v1=<hex>`) with HMAC-SHA256 over timestamp + "." + the original raw request body. Compare the digest in constant time and enforce a freshness policy before trusting the payload.
+
+[Read the compact AI rules](https://docs.nixflex.com/ai-rules.md#webhooks)

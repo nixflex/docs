@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "feature": "testing-live-status",
+  "title": "Testing and live status",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "test-real",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "The phone tester places a real call to the selected number. Reserve real numbers for deliberate tests.",
+      "evidence": [
+        "shared/features/agentTester.js:75-147"
+      ],
+      "why": "A real dial can reach the recipient even when confirmation is delayed."
+    },
+    {
+      "id": "test-sim",
+      "kind": "unavailable",
+      "scope": "platform",
+      "text": "The public API does not provide a simulated phone network or a general live-monitor control endpoint.",
+      "evidence": [
+        "shared/http/publicOrigin.js:5-12",
+        "server.js:265-269",
+        "docs@scripts/public-production-policy.mjs:1-4",
+        "docs@api-reference/public.openapi.json:1-30",
+        "shared/monitor/liveStatus.js:15-32"
+      ],
+      "instead": "Test request construction with fixtures. Use the dashboard to observe an authorised real call."
+    },
+    {
+      "id": "test-see",
+      "kind": "does",
+      "scope": "call",
+      "text": "Use the monitor to inspect authorised live calls. Media connection and final call outcome are distinct observations.",
+      "evidence": [
+        "shared/monitor/liveStatus.js:15-32"
+      ]
+    },
+    {
+      "id": "test-choose",
+      "kind": "change",
+      "scope": "call",
+      "text": "Choose a suitable test scenario and check the result before repeating a test.",
+      "evidence": [
+        "shared/features/agentTester.js:75-147"
+      ]
+    },
+    {
+      "id": "test-bound",
+      "kind": "limit",
+      "scope": "call",
+      "text": "A monitor connection loss does not prove that the call ended. Recheck live status and inspect the final record.",
+      "evidence": [
+        "shared/monitor/liveStatus.js:15-19",
+        "shared/monitor/liveStatus.js:42-50"
+      ]
+    },
+    {
+      "id": "test-api",
+      "kind": "api",
+      "scope": "account",
+      "text": "Use call history with the test source filter for recorded test activity.",
+      "evidence": [
+        "api/calls/historyQuery.js:3-20"
+      ],
+      "value": "GET /v1/calls/history"
+    },
+    {
+      "id": "test-error",
+      "kind": "error",
+      "scope": "call",
+      "text": "If tester_call_unconfirmed is reported, check whether the phone call started before trying again.",
+      "evidence": [
+        "api/testerStartError.js:13-18"
+      ],
+      "value": "tester_call_unconfirmed"
+    }
+  ]
+}

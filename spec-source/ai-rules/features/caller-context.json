@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "feature": "caller-context",
+  "title": "Caller records and memory",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "caller-id",
+      "kind": "fixed",
+      "scope": "number",
+      "text": "A caller record belongs to the combination of business number and caller number. Resolve and authorise both before a lookup.",
+      "evidence": [
+        "shared/features/callerContextApi.js:36-56"
+      ],
+      "why": "The same person can contact two businesses on a shared agent."
+    },
+    {
+      "id": "caller-engine",
+      "kind": "unavailable",
+      "scope": "recipient",
+      "text": "Engine-managed history fields cannot be supplied as caller attributes.",
+      "evidence": [
+        "shared/features/callerContextApi.js:57-94"
+      ],
+      "instead": "Use the supported contact fields for your own data. Keep application-only fields in your own records."
+    },
+    {
+      "id": "caller-purpose",
+      "kind": "does",
+      "scope": "recipient",
+      "text": "Use caller context for known callers on eligible inbound paths. Outbound names still need explicit variables.",
+      "evidence": [
+        "shared/utils/callVariables.js:29-76",
+        "shared/features/singleContactPolicy.js:15-25",
+        "outbound/call/callManager.js:429-448",
+        "inbound/call/greeting.js:30-47"
+      ]
+    },
+    {
+      "id": "caller-import",
+      "kind": "change",
+      "scope": "number",
+      "text": "Import caller data under the intended business number or update an individual record. Verify ownership before presenting it to a tenant.",
+      "evidence": [
+        "shared/features/callerContextApi.js:25-56",
+        "shared/features/callerContextApi.js:100-138"
+      ]
+    },
+    {
+      "id": "caller-limit",
+      "kind": "limit",
+      "scope": "source",
+      "text": "Split oversized imports into smaller requests. Each supported contact field also has its own length limit.",
+      "evidence": [
+        "shared/features/callerContextApi.js:20-30",
+        "shared/features/callerContextApi.js:70-83"
+      ]
+    },
+    {
+      "id": "caller-api",
+      "kind": "api",
+      "scope": "recipient",
+      "text": "Read or update a record using both international numbers in the path.",
+      "evidence": [
+        "shared/features/callerContextApi.js:100-138"
+      ],
+      "value": [
+        "GET /v1/phone-numbers/{phoneNumber}/callers/{callerNumber}",
+        "PUT /v1/phone-numbers/{phoneNumber}/callers/{callerNumber}"
+      ]
+    },
+    {
+      "id": "caller-error",
+      "kind": "error",
+      "scope": "recipient",
+      "text": "caller_not_found means there is no record for that caller on that business number. Keep an unknown caller distinct from a failed ownership check.",
+      "evidence": [
+        "shared/features/callerContextApi.js:100-114"
+      ],
+      "value": "caller_not_found"
+    }
+  ]
+}

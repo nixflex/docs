@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "feature": "webhooks",
+  "title": "Webhook verification and tenant routing",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "hook-scope",
+      "kind": "fixed",
+      "scope": "organisation",
+      "text": "With organisations enabled the signing secret belongs to the organisation. The organisation API credential or a personal Owner can retrieve it. Human Admin and Member cannot. Keep the secret server-side.",
+      "evidence": [
+        "api/routes.js:113",
+        "api/organisationRoutes.js:14-21",
+        "api/organisationGuard.js:6-9",
+        "shared/organisations/policy.json:2-5",
+        "shared/features/webhook.js:35-40",
+        "shared/features/callBookings.js:45-48",
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+      ],
+      "why": "All tenant numbers in that organisation share this signing authority."
+    },
+    {
+      "id": "hook-tenant",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "call.bookings carries no account field or number-specific signing secret.",
+      "evidence": [
+        "api/routes.js:113",
+        "api/organisationRoutes.js:14-21",
+        "api/organisationGuard.js:6-9",
+        "shared/organisations/policy.json:2-5",
+        "shared/features/webhook.js:35-40",
+        "shared/features/callBookings.js:45-48",
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+      ],
+      "instead": "Verify first. Map number to the customer in your server-side directory. For an inbound call use the business to number, for outbound use from."
+    },
+    {
+      "id": "hook-hmac",
+      "kind": "does",
+      "scope": "operation",
+      "text": "Verify X-Nixflex-Signature (t=<timestamp>,v1=<hex>) with HMAC-SHA256 over timestamp + \".\" + the original raw request body. Compare the digest in constant time and enforce a freshness policy before trusting the payload.",
+      "evidence": [
+        "shared/features/webhook.js:60-87"
+      ]
+    },
+    {
+      "id": "hook-change",
+      "kind": "change",
+      "scope": "number",
+      "text": "Set delivery destinations per number. Pre-call settings can be scoped to an agent or number. Keep the delivery destination and your signature-verification secret separate.",
+      "evidence": [
+        "api/routes.js:113",
+        "api/organisationRoutes.js:14-21",
+        "api/organisationGuard.js:6-9",
+        "shared/organisations/policy.json:2-5",
+        "shared/features/webhook.js:35-40",
+        "shared/features/callBookings.js:45-48",
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53",
+        "api/routes.js:1629-1667"
+      ]
+    },
+    {
+      "id": "hook-payload",
+      "kind": "limit",
+      "scope": "call",
+      "text": "These are the top-level call.bookings keys. Use call_id to correlate processing and design for redelivery.",
+      "evidence": [
+        "shared/features/callBookings.js:45-48"
+      ],
+      "sourceList": "webhooks.bookingKeys",
+      "value": [
+        "event",
+        "call_id",
+        "agent_id",
+        "from",
+        "to",
+        "number",
+        "ended_at",
+        "timeline",
+        "final"
+      ]
+    },
+    {
+      "id": "hook-api",
+      "kind": "api",
+      "scope": "organisation",
+      "text": "Authorised server access can retrieve the signing secret. For kit users direct the human Owner to the dashboard. Never paste the secret into an AI conversation.",
+      "evidence": [
+        "api/routes.js:113",
+        "api/organisationRoutes.js:14-21",
+        "api/organisationGuard.js:6-9",
+        "shared/organisations/policy.json:2-5",
+        "shared/features/webhook.js:35-40",
+        "shared/features/callBookings.js:45-48",
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+      ],
+      "value": "GET /v1/organisation/signing-secret",
+      "policy": "kit-safety"
+    },
+    {
+      "id": "hook-error",
+      "kind": "error",
+      "scope": "operation",
+      "text": "On permission_denied verify the acting role. A client with insufficient authority should never be given the organisation secret.",
+      "evidence": [
+        "shared/organisations/rpc.js:3-12",
+        "shared/organisations/rpc.js:28-32",
+        "api/organisationRoutes.js:14-22"
+      ],
+      "value": "permission_denied"
+    }
+  ]
+}

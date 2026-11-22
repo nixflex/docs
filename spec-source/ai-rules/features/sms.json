@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "feature": "sms",
+  "title": "SMS, automatic replies and in-call texting",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "sms-sender",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "With incall_sms_enabled on the agent, an SMS-capable imported number with valid credentials can send during a call. Inbound uses the dialled business number as sender. Outbound uses the originating business number. The other party receives the text.",
+      "evidence": [
+        "inbound/features/midCallSms.js:43-53",
+        "inbound/features/midCallSms.js:73-91",
+        "outbound/features/midCallSms.js:32-65",
+        "shared/features/sms.js:122-137",
+        "inbound/features/smsOptOutIntake.js:7-14"
+      ],
+      "why": "The call and its business number determine the SMS sender."
+    },
+    {
+      "id": "sms-profile",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "SMS does not automatically inherit the inbound phone profile.",
+      "evidence": [
+        "inbound/features/smsReply.js:27-41",
+        "inbound/features/smsReply.js:398-405",
+        "web/visitorContext.js:18-28",
+        "web/voiceConfig.js:8-18",
+        "knowledge/liveRead.js:20-28"
+      ],
+      "instead": "Put this business’s SMS instructions in sms_prompt and configure automatic replies for its number."
+    },
+    {
+      "id": "sms-send",
+      "kind": "does",
+      "scope": "message",
+      "text": "A single text, an automatic conversation reply and a call-triggered text are separate sends. Keep each message’s sender, receipt and consent together.",
+      "evidence": [
+        "inbound/features/midCallSms.js:43-53",
+        "inbound/features/midCallSms.js:73-91",
+        "outbound/features/midCallSms.js:32-65",
+        "shared/features/sms.js:122-137",
+        "inbound/features/smsOptOutIntake.js:7-14",
+        "api/singleSmsReceipt.js:14-28"
+      ]
+    },
+    {
+      "id": "sms-config",
+      "kind": "change",
+      "scope": "number",
+      "text": "Choose sms_reply_enabled and sms_prompt for this number. Keep business-specific details separate when numbers share an agent.",
+      "evidence": [
+        "shared/features/phoneNumberImport.js:95-112",
+        "inbound/features/smsReply.js:27-41",
+        "inbound/features/smsReply.js:398-405",
+        "web/visitorContext.js:18-28",
+        "web/voiceConfig.js:8-18",
+        "knowledge/liveRead.js:20-28"
+      ]
+    },
+    {
+      "id": "sms-scope",
+      "kind": "limit",
+      "scope": "account",
+      "text": "A send requires an eligible number and the account’s contact permissions. Individual switches cannot bypass a STOP.",
+      "evidence": [
+        "inbound/features/midCallSms.js:43-53",
+        "inbound/features/midCallSms.js:73-91",
+        "outbound/features/midCallSms.js:32-65",
+        "shared/features/sms.js:122-137",
+        "inbound/features/smsOptOutIntake.js:7-14",
+        "inbound/features/smsOptOutIntake.js:7-15",
+        "api/contactSuppression.js:5-21"
+      ]
+    },
+    {
+      "id": "sms-api",
+      "kind": "api",
+      "scope": "message",
+      "text": "Use the single-message endpoint for an intentional send from the verified business number.",
+      "evidence": [
+        "api/singleSmsReceipt.js:9-29"
+      ],
+      "value": "POST /v1/sms"
+    },
+    {
+      "id": "sms-error",
+      "kind": "error",
+      "scope": "message",
+      "text": "sms_outcome_unknown means delivery could not be confirmed. Check the receipt and history before another send.",
+      "evidence": [
+        "api/singleSmsReceipt.js:17-28"
+      ],
+      "value": "sms_outcome_unknown"
+    }
+  ]
+}

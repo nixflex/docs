@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "feature": "transfer-voicemail-keypad",
+  "title": "Transfer, voicemail and phone menus",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "xfer-target",
+      "kind": "fixed",
+      "scope": "call",
+      "text": "An explicit valid destination in [TRANSFER: phone_number] wins. A bare or empty transfer uses the agent’s transfer_number.",
+      "evidence": [
+        "inbound/call/callManager.js:115-124",
+        "outbound/call/callManager.js:147-161",
+        "shared/features/transferTarget.js:3-15",
+        "shared/features/phoneNumberImport.js:95-112",
+        "shared/data/agentPrompt.js:38-51"
+      ],
+      "why": "The destination is validated before the transfer starts. A self-target or invalid destination is refused."
+    },
+    {
+      "id": "xfer-tenant",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "There is no number-level transfer_number setter or enforced tenant destination in the phone profile.",
+      "evidence": [
+        "inbound/call/callManager.js:115-124",
+        "outbound/call/callManager.js:147-161",
+        "shared/features/transferTarget.js:3-15",
+        "shared/features/phoneNumberImport.js:95-112",
+        "shared/data/agentPrompt.js:38-51"
+      ],
+      "instead": "Give the correct explicit target in the inbound profile or outbound purpose. Leave the shared fallback unset or use separate agents if a wrong fallback is unacceptable."
+    },
+    {
+      "id": "xfer-menu",
+      "kind": "does",
+      "scope": "call",
+      "text": "Outbound menu navigation can send keypad digits. Caller-entered digits on inbound are a separate input capability.",
+      "evidence": [
+        "shared/features/singleContactPolicy.js:15-25",
+        "api/routes.js:1033-1037",
+        "outbound/features/batchCalls.js:125-135",
+        "outbound/providers/outboundClaude.js:89-111",
+        "outbound/call/callManager.js:485-508",
+        "api/agents/input.js:2-13"
+      ]
+    },
+    {
+      "id": "xfer-voice",
+      "kind": "change",
+      "scope": "number",
+      "text": "Set number voicemail controls and the message on an API-imported number. Review the effective settings before placing a voicemail-enabled call.",
+      "evidence": [
+        "shared/features/voicemailPolicy.js:6-13",
+        "shared/features/phoneNumberImport.js:95-112"
+      ]
+    },
+    {
+      "id": "xfer-limit",
+      "kind": "limit",
+      "scope": "call",
+      "text": "Use [WAIT] for a person who steps away. Use the outbound IVR sequence for a phone menu. Keep an ordinary conversation separate from either mode.",
+      "evidence": [
+        "outbound/providers/outboundClaude.js:89-111"
+      ]
+    },
+    {
+      "id": "xfer-api",
+      "kind": "api",
+      "scope": "number",
+      "text": "Inspect the number and its voicemail controls before changing its settings.",
+      "evidence": [
+        "api/numberReads.js:3-9"
+      ],
+      "value": "GET /v1/phone-numbers/{phoneNumber}"
+    },
+    {
+      "id": "xfer-error",
+      "kind": "error",
+      "scope": "agent",
+      "text": "voicemail_message_required means an enabled leave-voicemail policy needs a nonblank message.",
+      "evidence": [
+        "api/agents/input.js:55-61"
+      ],
+      "value": "voicemail_message_required"
+    }
+  ]
+}

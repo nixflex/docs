@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "feature": "account-access",
+  "title": "Accounts, API keys and environments",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "acc-origin",
+      "kind": "fixed",
+      "scope": "platform",
+      "text": "Use https://api.nixflex.com/v1 for customer integrations. Keep the API credential on your server.",
+      "evidence": [
+        "shared/http/publicOrigin.js:5-12",
+        "server.js:265-269",
+        "docs@scripts/public-production-policy.mjs:1-4",
+        "docs@api-reference/public.openapi.json:1-30"
+      ],
+      "why": "The credential grants access to the owning account.",
+      "policy": "public-origin"
+    },
+    {
+      "id": "acc-sandbox",
+      "kind": "unavailable",
+      "scope": "platform",
+      "text": "There is no self-service public sandbox.",
+      "evidence": [
+        "shared/http/publicOrigin.js:5-12",
+        "server.js:265-269",
+        "docs@scripts/public-production-policy.mjs:1-4",
+        "docs@api-reference/public.openapi.json:1-30"
+      ],
+      "instead": "Use local fixtures or an owned test number for deliberate real traffic. Another environment requires access from Nixflex."
+    },
+    {
+      "id": "acc-use",
+      "kind": "does",
+      "scope": "account",
+      "text": "Use your server to identify the customer and authorise each operation before calling Nixflex. A shared account credential can see multiple customers.",
+      "evidence": [
+        "api/routes.js:65-103"
+      ]
+    },
+    {
+      "id": "acc-rotate",
+      "kind": "change",
+      "scope": "account",
+      "text": "Rotate the secret during a coordinated cutover. Update callers holding the old secret immediately.",
+      "evidence": [
+        "api/auth.js:148-164"
+      ]
+    },
+    {
+      "id": "acc-rate",
+      "kind": "limit",
+      "scope": "account",
+      "text": "The default allowance is [[acc-rate]] requests per minute. Observe the effective limit returned by the API.",
+      "evidence": [
+        "api/routes.js:90-102"
+      ],
+      "sourceList": "limits.requestsPerMinute",
+      "value": 300
+    },
+    {
+      "id": "acc-keys",
+      "kind": "api",
+      "scope": "account",
+      "text": "Create a credential on a trusted server or rotate the current secret. Never give a new secret to an AI assistant.",
+      "evidence": [
+        "api/auth.js:1-30"
+      ],
+      "value": [
+        "POST /v1/keys",
+        "POST /v1/keys/rotate"
+      ],
+      "policy": "kit-safety"
+    },
+    {
+      "id": "acc-throttle",
+      "kind": "error",
+      "scope": "account",
+      "text": "On rate_limit_exceeded wait for the indicated retry interval before the next eligible request.",
+      "evidence": [
+        "api/routes.js:90-102"
+      ],
+      "value": "rate_limit_exceeded"
+    }
+  ]
+}

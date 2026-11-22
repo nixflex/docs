@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "feature": "billing-usage",
+  "title": "Agent pricing and usage",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "bill-price",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts).",
+      "evidence": [
+        "api/routes.js:657-699",
+        "api/routes.js:769-779",
+        "api/agents/list.js:9-20",
+        "shared/payments/chargePricing.js:1-5",
+        "knowledge/scopes.js:21-26"
+      ],
+      "why": "Agent creation carries no separate charge. The number of rows on a list page is a pagination setting.",
+      "policy": "agent-pricing"
+    },
+    {
+      "id": "bill-share",
+      "kind": "does",
+      "scope": "agent",
+      "text": "A developer can run many customers on one shared agent. Give each customer its own number and number prompt. Separate agents are needed only when knowledge or agent settings must differ.",
+      "evidence": [
+        "knowledge/agentOnly.js:3-12",
+        "knowledge/scopes.js:13-30",
+        "knowledge/liveRead.js:20-28",
+        "shared/data/agentPrompt.js:20-51",
+        "api/routes.js:657-699"
+      ]
+    },
+    {
+      "id": "bill-cap",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A separate agent does not create a separate account capacity budget.",
+      "evidence": [
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116"
+      ],
+      "instead": "Pace customers’ work in your application. Use independent accounts for independent budgets."
+    },
+    {
+      "id": "bill-attrib",
+      "kind": "change",
+      "scope": "call",
+      "text": "For usage attribution save the intended customer and its verified business number when making a request.",
+      "evidence": [
+        "api/routes.js:1063-1078",
+        "api/outboundNumber.js:13-31",
+        "api/numberUsage.js:3-11"
+      ]
+    },
+    {
+      "id": "bill-limit",
+      "kind": "limit",
+      "scope": "account",
+      "text": "Knowledge-base quotas and simultaneous calls have independent limits. Neither is a limit on how many agents you may create.",
+      "evidence": [
+        "api/routes.js:657-699",
+        "api/routes.js:769-779",
+        "api/agents/list.js:9-20",
+        "shared/payments/chargePricing.js:1-5",
+        "knowledge/scopes.js:21-26",
+        "shared/utils/concurrencyGuard.js:3-10",
+        "shared/utils/concurrencyGuard.js:52-71",
+        "api/routes.js:1103-1116"
+      ]
+    },
+    {
+      "id": "bill-api",
+      "kind": "api",
+      "scope": "account",
+      "text": "Read account usage or narrow the usage report to a specific owned business number.",
+      "evidence": [
+        "api/routes.js:1094-1116",
+        "api/numberUsage.js:3-11"
+      ],
+      "value": [
+        "GET /v1/usage",
+        "GET /v1/phone-numbers/{phoneNumber}/usage"
+      ]
+    },
+    {
+      "id": "bill-uncertain",
+      "kind": "error",
+      "scope": "call",
+      "text": "A carrier_outcome_unknown response needs reconciliation before another call. Use its request receipt to avoid duplicate usage.",
+      "evidence": [
+        "api/callReceiptError.js:5-8"
+      ],
+      "value": "carrier_outcome_unknown"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "feature": "contact-controls",
+  "title": "Contact hours, consent and opt-outs",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "contact-stop",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "An inbound STOP suppresses that recipient across the owning account, for both voice and SMS. The business number that received it is evidence only.",
+      "evidence": [
+        "inbound/features/smsOptOutIntake.js:7-15",
+        "api/contactSuppression.js:5-21"
+      ],
+      "why": "Campaigns on another business number in the same account consult the same suppression."
+    },
+    {
+      "id": "contact-separate",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A number or a separate agent does not create its own STOP boundary.",
+      "evidence": [
+        "inbound/features/smsOptOutIntake.js:7-15",
+        "api/contactSuppression.js:5-21"
+      ],
+      "instead": "Use separate accounts when independent consent domains are required. Never route around a suppression."
+    },
+    {
+      "id": "contact-hold",
+      "kind": "does",
+      "scope": "recipient",
+      "text": "Preview local contact rules before outreach. Report the reason when a recipient is held and resolve the underlying policy or missing data.",
+      "evidence": [
+        "shared/features/campaignContact.js:1-20",
+        "api/contactSuppression.js:5-21"
+      ],
+      "sourceList": "contact.holds",
+      "value": [
+        "needs_timezone",
+        "timezone_policy_paused",
+        "contact_policy_paused",
+        "consent_required",
+        "consent_withdrawn",
+        "do_not_contact",
+        "outside_hours",
+        "not_due_local",
+        "policy_migration_required",
+        "country_policy_review",
+        "holiday_data_unavailable",
+        "public_holiday"
+      ]
+    },
+    {
+      "id": "contact-list",
+      "kind": "change",
+      "scope": "account",
+      "text": "Add a do-not-contact entry for all channels, voice or SMS. Check the selected owner and recipient before any change.",
+      "evidence": [
+        "api/contactSuppression.js:5-21"
+      ]
+    },
+    {
+      "id": "contact-words",
+      "kind": "limit",
+      "scope": "message",
+      "text": "The following normalised whole-message keywords trigger opt-out. A keyword inside an ordinary sentence does not trigger this matcher. Respect other expressions of withdrawal through your own process.",
+      "evidence": [
+        "shared/features/smsOptOut.js:1-9",
+        "inbound/features/smsOptOutIntake.js:7-15"
+      ],
+      "sourceList": "contact.stopWords",
+      "value": [
+        "stop",
+        "stopall",
+        "unsubscribe",
+        "cancel",
+        "end",
+        "quit",
+        "revoke",
+        "optout",
+        "توقف",
+        "وقف",
+        "ايقاف",
+        "الغاء",
+        "الغاء الاشتراك",
+        "وقف الرسائل",
+        "ايقاف الرسائل"
+      ]
+    },
+    {
+      "id": "contact-api",
+      "kind": "api",
+      "scope": "recipient",
+      "text": "Check contact hours or inspect the suppression list for the account.",
+      "evidence": [
+        "inbound/features/smsOptOutIntake.js:7-15",
+        "api/contactSuppression.js:5-21",
+        "shared/features/campaignContact.js:1-20"
+      ],
+      "value": [
+        "POST /v1/contact-hours/preview",
+        "GET /v1/contact-suppressions"
+      ]
+    },
+    {
+      "id": "contact-error",
+      "kind": "error",
+      "scope": "operation",
+      "text": "If feature_paused is returned, contact-list changes are unavailable. Existing opt-outs continue to apply.",
+      "evidence": [
+        "api/contactSuppression.js:5-13"
+      ],
+      "value": "feature_paused"
+    }
+  ]
+}

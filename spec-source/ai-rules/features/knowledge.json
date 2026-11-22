@@ -1,0 +1,325 @@
+{
+  "schema": 1,
+  "feature": "knowledge",
+  "title": "Knowledge bases",
+  "checked": {
+    "date": "2026-11-22",
+    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+  },
+  "rules": [
+    {
+      "id": "kb-home",
+      "kind": "fixed",
+      "scope": "agent",
+      "text": "One live knowledge base belongs to an agent. Its attached numbers use that base on enabled channels. Only the active revision and eligible, unsuppressed pieces enter live retrieval.",
+      "why": "The live query matches account, agent, revision and channel. Its selection has no per-number knowledge policy.",
+      "evidence": [
+        "knowledge/scopes.js:13-30",
+        "knowledge/liveRead.js:20-37"
+      ]
+    },
+    {
+      "id": "kb-selection",
+      "kind": "fixed",
+      "scope": "agent",
+      "text": "A small eligible base is supplied whole. Larger bases use question matches. Seeing all small-base pieces does not mean that they answer a particular question. Use the configured not-found response for missing information.",
+      "why": "The live and Test paths share a selection decision. Evidence and an answer are different things.",
+      "evidence": [
+        "knowledge/liveMemory.js:22-38",
+        "knowledge/selection.js:8-15",
+        "knowledge/policy.js:7-11",
+        "knowledge/test/b49b.test.js:43-52"
+      ]
+    },
+    {
+      "id": "kb-isolation",
+      "kind": "unavailable",
+      "scope": "number",
+      "text": "A separate base or knowledge opt-out for one attached number is unavailable.",
+      "instead": "Use separate agents for different knowledge bases or for a customer who needs no knowledge. Choose knowledge channels on each agent.",
+      "evidence": [
+        "knowledge/agentOnly.js:3-12",
+        "knowledge/scopes.js:13-30",
+        "knowledge/liveRead.js:20-28"
+      ]
+    },
+    {
+      "id": "kb-full-test",
+      "kind": "unavailable",
+      "scope": "session",
+      "text": "Knowledge Test accepts knowledge mode. It does not simulate the number’s whole call prompt or take a call purpose.",
+      "instead": "Use Knowledge Test for source-backed answers. Use an actual test call to check the complete call instructions.",
+      "evidence": [
+        "knowledge/sessions.js:4-13",
+        "shared/data/agentPrompt.js:38-51"
+      ]
+    },
+    {
+      "id": "kb-does",
+      "kind": "does",
+      "scope": "agent",
+      "text": "Prepare knowledge from text, a supported file or selected website pages. Review drafts, edit topics and publish approved material.",
+      "evidence": [
+        "knowledge/routes.js:49-61",
+        "knowledge/writes.js:18-30",
+        "knowledge/writes.js:65-80",
+        "knowledge/topics.js:30-41"
+      ]
+    },
+    {
+      "id": "kb-input",
+      "kind": "change",
+      "scope": "source",
+      "text": "Use pasted text, PDF, DOCX or plain UTF-8 text, or discover a website and import selected pages. API submissions can request review.",
+      "evidence": [
+        "knowledge/parsers/safety.js:2-13",
+        "knowledge/writes.js:19-26",
+        "knowledge/routes.js:29-31"
+      ]
+    },
+    {
+      "id": "kb-channels",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Choose the enabled channels. The initial default is inbound only.",
+      "sourceList": "knowledge.channels",
+      "value": [
+        "inbound",
+        "outbound",
+        "web_voice",
+        "web_chat",
+        "sms"
+      ],
+      "evidence": [
+        "knowledge/policy.js:7-11",
+        "knowledge/scopes.js:4-10"
+      ]
+    },
+    {
+      "id": "kb-settings",
+      "kind": "change",
+      "scope": "agent",
+      "text": "Choose the match setting from the supported options below. The default is Strict. Set not_found to nonblank wording within the indicated character limit.",
+      "evidence": [
+        "knowledge/scopes.js:4-10",
+        "knowledge/policy.js:7-11",
+        "knowledge/policy.js:7-8"
+      ],
+      "sourceList": "knowledge.matchAndFallback",
+      "value": {
+        "match": [
+          "Strict",
+          "Normal"
+        ],
+        "defaultMatch": "Strict",
+        "notFoundMaxChars": 500
+      }
+    },
+    {
+      "id": "kb-volume",
+      "kind": "limit",
+      "scope": "base",
+      "text": "Maximum sources, original-text tokens and topics per base are shown below.",
+      "sourceList": "knowledge.baseLimits",
+      "value": {
+        "sources": 50,
+        "kbTokens": 100000,
+        "topics": 1000
+      },
+      "evidence": [
+        "knowledge/policy.js:2-6",
+        "knowledge/sources.js:14-21",
+        "knowledge/sources.js:49-50",
+        "knowledge/pieces.js:73"
+      ]
+    },
+    {
+      "id": "kb-file",
+      "kind": "limit",
+      "scope": "source",
+      "text": "File size in bytes, source tokens and PDF pages are capped per source.",
+      "sourceList": "knowledge.sourceLimits",
+      "value": {
+        "fileBytes": 10485760,
+        "sourceTokens": 20000,
+        "pages": 200
+      },
+      "evidence": [
+        "knowledge/policy.js:2-6",
+        "knowledge/parsers/index.js:4-12",
+        "knowledge/parsers/worker.js:33"
+      ]
+    },
+    {
+      "id": "kb-count",
+      "kind": "limit",
+      "scope": "account",
+      "text": "The limit is [[kb-count]] nondeleted knowledge bases per account. Agent count is independent.",
+      "sourceList": "knowledge.accountBases",
+      "value": 20,
+      "evidence": [
+        "knowledge/policy.js:2-6",
+        "knowledge/scopes.js:21-28"
+      ]
+    },
+    {
+      "id": "kb-auth",
+      "kind": "fixed",
+      "scope": "account",
+      "text": "Reads use the authenticated account. With organisation roles enabled, ordinary reads allow Owner, Admin and Member. Editing knowledge requires write permission. Reusing a write key with different information is refused.",
+      "why": "The route supplies identity and authorises the operation. The store binds a previous write to its content.",
+      "evidence": [
+        "knowledge/routes.js:11-22",
+        "knowledge/runtime.js:22-25",
+        "shared/organisations/knowledgeAccess.js:2-5",
+        "shared/organisations/policy.js:10-24",
+        "shared/organisations/policy.json:2-5",
+        "knowledge/store.js:53-57"
+      ]
+    },
+    {
+      "id": "kb-api-base",
+      "kind": "api",
+      "scope": "agent",
+      "text": "Read or create/update the target agent’s base. Supply expected_revision for edits and an Idempotency-Key for writes.",
+      "value": [
+        "GET /v1/agents/{target}/knowledge-base",
+        "PUT /v1/agents/{target}/knowledge-base"
+      ],
+      "evidence": [
+        "knowledge/routes.js:13-20",
+        "knowledge/routes.js:38-43",
+        "knowledge/scopes.js:21-28",
+        "knowledge/store.js:53-57"
+      ]
+    },
+    {
+      "id": "kb-api-content",
+      "kind": "api",
+      "scope": "base",
+      "text": "Submit sources, inspect and accept a draft, or manage individual topics. Use the current revision for guarded writes.",
+      "value": [
+        "POST /v1/knowledge-bases/{kb}/sources",
+        "GET /v1/knowledge-bases/{kb}/drafts/{id}",
+        "POST /v1/knowledge-bases/{kb}/drafts/{id}/accept",
+        "GET /v1/knowledge-bases/{kb}/topics",
+        "PATCH /v1/knowledge-bases/{kb}/topics/{id}"
+      ],
+      "evidence": [
+        "knowledge/routes.js:49-61",
+        "knowledge/writes.js:18-26",
+        "knowledge/writes.js:65-80"
+      ]
+    },
+    {
+      "id": "kb-api-test",
+      "kind": "api",
+      "scope": "session",
+      "text": "Start an agent test session, then post messages to that session. Start with an active base that has an approved usable topic.",
+      "value": [
+        "POST /v1/agents/{target}/knowledge-base/test-sessions",
+        "POST /v1/knowledge/test-sessions/{id}/messages"
+      ],
+      "evidence": [
+        "knowledge/routes.js:38-43",
+        "knowledge/routes.js:64-66",
+        "knowledge/sessions.js:4-15"
+      ]
+    },
+    {
+      "id": "kb-api-caps",
+      "kind": "api",
+      "scope": "account",
+      "text": "Read the account’s knowledge capabilities, limits and defaults.",
+      "value": "GET /v1/knowledge/capabilities",
+      "evidence": [
+        "knowledge/routes.js:31-36",
+        "knowledge/reads.js:10-11"
+      ]
+    },
+    {
+      "id": "kb-api-terms",
+      "kind": "api",
+      "scope": "agent",
+      "text": "Read the agent’s automatic keyterms and manual terms with their separate counts and limits.",
+      "value": "GET /v1/agents/{target}/knowledge-keyterms",
+      "evidence": [
+        "knowledge/routes.js:31-34",
+        "knowledge/reads.js:14-23"
+      ]
+    },
+    {
+      "id": "kb-removed",
+      "kind": "error",
+      "scope": "number",
+      "text": "410 number_knowledge_removed means a retired number-knowledge operation was requested. Resolve the attached agent instead.",
+      "value": "number_knowledge_removed",
+      "evidence": [
+        "knowledge/routes.js:34-45",
+        "knowledge/agentOnly.js:3-12"
+      ]
+    },
+    {
+      "id": "kb-stale",
+      "kind": "error",
+      "scope": "base",
+      "text": "409 stale_revision means the base changed. Read its current revision before reapplying the intended edit.",
+      "value": "stale_revision",
+      "evidence": [
+        "knowledge/store.js:26",
+        "knowledge/scopes.js:21-24"
+      ]
+    },
+    {
+      "id": "kb-missing",
+      "kind": "error",
+      "scope": "session",
+      "text": "409 knowledge_missing means Test needs a ready base with an active usable topic. Add and approve one before testing.",
+      "value": "knowledge_missing",
+      "evidence": [
+        "knowledge/sessions.js:4-8"
+      ]
+    },
+    {
+      "id": "kb-large",
+      "kind": "error",
+      "scope": "source",
+      "text": "413 source_limit means the source exceeds the text input limit. Split it into complete smaller documents.",
+      "value": "source_limit",
+      "evidence": [
+        "knowledge/parsers/index.js:4-8"
+      ]
+    },
+    {
+      "id": "kb-session-limits",
+      "kind": "limit",
+      "scope": "session",
+      "text": "Knowledge Test limits session starts per account per day, input characters per message and retained history entries.",
+      "value": {
+        "sessionsPerDay": 100,
+        "messageChars": 4000,
+        "historyMessages": 100
+      },
+      "sourceList": "knowledge.testBounds",
+      "evidence": [
+        "knowledge/sessions.js:4-13",
+        "knowledge/tester.js:4-8",
+        "knowledge/tester.js:30-40",
+        "knowledge/policy.js:2-6"
+      ]
+    },
+    {
+      "id": "kb-pack-default",
+      "kind": "limit",
+      "scope": "base",
+      "text": "Default token budget for a small whole-base pack. Deployments may adjust it. Use capabilities and Knowledge Test when evaluating a real base.",
+      "value": 800,
+      "sourceList": "knowledge.packDefault",
+      "evidence": [
+        "knowledge/livePolicy.js:4-7",
+        "knowledge/liveMemory.js:22-40",
+        "knowledge/reads.js:10-12"
+      ]
+    }
+  ]
+}
