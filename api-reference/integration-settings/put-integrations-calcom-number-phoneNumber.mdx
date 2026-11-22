@@ -19,6 +19,8 @@ Save Cal.com settings for an owned phone number. This replaces the saved configu
 
 **The important part**
 
+- Only one booking calendar can cover a number. Start Google Calendar consent with the [per-number connect endpoint](/api-reference/integration-settings/google-calendar), then open the returned URL for the calendar owner.
+
 - Save the setting for the exact owned target, then read it back to confirm.
 - Only one booking provider can be active for a number.
 
@@ -51,7 +53,7 @@ Send a JSON object. Credential values must stay private.
 | `event_slug` | string | Yes | None | Calendar event slug; trimmed. |
 | `default_timezone` | string | No | `"Europe/London"` | Calendar time zone. |
 
-Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.
+Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Start Google Calendar consent with the [per-number connect endpoint](/api-reference/integration-settings/google-calendar), then open the returned URL for the calendar owner. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.
 
 ## Response fields
 

@@ -17,6 +17,8 @@ Choose an eligible catalog voice and verify the actual spoken result for the int
 
 **The important part**
 
+- **Number voice takes precedence.** Use [the number update endpoint](/api-reference/phone-numbers/update) to set a complete primary and backup voice pair on a number to override the agent’s pair. Supply `voice_key`, `voice_route_key`, `backup_voice_key` and `backup_voice_route_key` together. Use `voice_pair_inherit: true` to return to the agent’s saved pair. Legacy number aliases take priority on legacy configurations. If the agent already uses pairs, save a complete number pair to replace an old alias.
+
 - Use the current catalog key instead of a hard-coded display-name list.
 - speaking_rate affects speed; legacy voice_speed does not.
 - Fallback can change the voice heard even when configuration was saved.
@@ -33,7 +35,7 @@ Choose an eligible catalog voice and verify the actual spoken result for the int
 
 The agent's `voice_key` selects a catalog entry. Its `voice_id` is a legacy alias and can be null for a catalog-only voice. A conflicting key and alias are refused. Use the current [voice catalog](/api-reference/voices/get-voices) and its supported languages rather than copying a fixed list of display names.
 
-On a legacy selection path, the number's voice alias can override the agent alias. In catalog mode, a non-null agent catalog key takes priority over that alias. A number alias is not automatically converted into a catalog override. Custom voice and fallback paths can also change what is actually heard.
+The engine resolves the whole main and backup pair from one source. A number pair wins over an agent pair. On the legacy path, a number alias clears the inherited catalogue key. If a saved agent pair meets an old number alias without a pair, configure a number pair before using that override.
 
 ## Speaking rate
 

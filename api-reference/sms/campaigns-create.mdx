@@ -19,6 +19,10 @@ Create an SMS campaign and its recipient rows. The default now mode immediately 
 
 **The important part**
 
+- **Scheduling.** Use `schedule_type: "schedule"` and `scheduled_date` (YYYY-MM-DD). The scheduler checks the date against UTC. Supply both window bounds in minutes, or omit both. Choose a window and time zone for the earliest eligible work. There is no exact-time `scheduled_at` field or guaranteed dispatch minute.
+
+- Each successful create saves a new campaign. Sending `reuse_campaign_id` cannot replace or replay an SMS campaign. To run it again, submit a fresh campaign. To replace recipients on a scheduled campaign, [cancel the original](/api-reference/sms-campaigns/post-sms-campaigns-id-cancel) and confirm its state before creating the replacement. Work already in progress can finish.
+
 - The default now mode immediately requests launch; scheduled work can run automatically. There is no public draft-only mode.
 - Review recipients, consent and message content before creating the campaign, because creation can send messages.
 
@@ -70,7 +74,7 @@ The scheduler and final contact checks use recipient-local eligibility, consent,
 
 Choose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.
 
-The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation always creates a new campaign. reuse_campaign_id does not implement SMS reuse; do not send it.
+The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation always makes a new campaign ID. An incoming `reuse_campaign_id` is ignored. To run it again, create a new campaign and review its recipients and consent.
 
 JSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.
 
@@ -141,7 +145,7 @@ curl --request POST \
   --url "https://api.nixflex.com/v1/sms/campaigns" \
   --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"agent_id":"agent_fixture","from_number":"+12025550123","message_template":"Hello {{name}}, your requested appointment reminder.","recipients":[{"phone":"+12025550124","variables":{"name":"Example customer"},"country":"GB","timezone":"Europe/London"}],"schedule_type":"schedule","scheduled_date":"2030-11-04","duplicate_policy":"reject","consent_confirmed":true,"window_start_minutes":0,"timezone":null}'
+  --data '{"agent_id":"agent_fixture","from_number":"+12025550123","message_template":"Hello {{name}}, your requested appointment reminder.","recipients":[{"phone":"+12025550124","variables":{"name":"Example customer"},"country":"GB","timezone":"Europe/London"}],"schedule_type":"schedule","scheduled_date":"2030-11-04","duplicate_policy":"reject","consent_confirmed":true,"window_start_minutes":0,"window_end_minutes": 1020,"timezone":null}'
 ```
 
 ```javascript Node
@@ -152,7 +156,7 @@ const c = new Nixflex({
   baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
-const result = await c.sms.campaigns.create({"agent_id": "agent_fixture", "from_number": "+12025550123", "message_template": "Hello {{name}}, your requested appointment reminder.", "recipients": [{"phone": "+12025550124", "variables": {"name": "Example customer"}, "country": "GB", "timezone": "Europe/London"}], "schedule_type": "schedule", "scheduled_date": "2030-11-04", "duplicate_policy": "reject", "consent_confirmed": true, "window_start_minutes": 0, "timezone": null});
+const result = await c.sms.campaigns.create({"agent_id": "agent_fixture", "from_number": "+12025550123", "message_template": "Hello {{name}}, your requested appointment reminder.", "recipients": [{"phone": "+12025550124", "variables": {"name": "Example customer"}, "country": "GB", "timezone": "Europe/London"}], "schedule_type": "schedule", "scheduled_date": "2030-11-04", "duplicate_policy": "reject", "consent_confirmed": true, "window_start_minutes": 0, "window_end_minutes": 1020, "timezone": null});
 ```
 
 ```python Python
@@ -164,7 +168,7 @@ with Nixflex(
     base_url="https://api.nixflex.com",
     max_retries=0,
 ) as c:
-    result = c.sms.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', message_template='Hello {{name}}, your requested appointment reminder.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, timezone=None)
+    result = c.sms.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', message_template='Hello {{name}}, your requested appointment reminder.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, window_end_minutes=1020, timezone=None)
 ```
 
 ```powershell CLI (PowerShell)
@@ -188,6 +192,7 @@ $body = @'
   "duplicate_policy": "reject",
   "consent_confirmed": true,
   "window_start_minutes": 0,
+  "window_end_minutes": 1020,
   "timezone": null
 }
 '@
@@ -215,8 +220,7 @@ nixflex sms campaigns create --body '@request-176.json' --confirm --json --base-
     "schedule_type": "schedule",
     "scheduled_date": "2030-11-04",
     "duplicate_policy": "reject",
-    "consent_confirmed": true,
-    "window_start_minutes": 0
+    "consent_confirmed": true
   }
 }
 ```

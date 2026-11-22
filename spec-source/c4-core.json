@@ -3391,8 +3391,8 @@
           },
           "prompt": {
             "type": "string",
-            "description": "Required nonblank call purpose. No separate route-level character maximum is declared; request-size and downstream admission rules still apply.",
-            "minLength": 1
+            "description": "Send a purpose of at least 10 characters after trimming. A shorter nonblank purpose can pass request validation, but the call is instructed to end.",
+            "minLength": 10
           },
           "from_number": {
             "type": "string",
@@ -3402,7 +3402,7 @@
             "type": "object",
             "properties": {},
             "required": [],
-            "description": "Values for {{name}}-style placeholders in the call purpose. Keys must match supported placeholder names.",
+            "description": "Values for {{name}} placeholders. Choose case-sensitive custom names using ASCII letters, digits and underscores. Reserved call variables are filled by the engine. Supply other referenced values per recipient.",
             "additionalProperties": true
           },
           "campaign_id": {
@@ -3709,7 +3709,7 @@
       "method": "POST",
       "path": "/v1/phone-numbers",
       "group": "Phone numbers",
-      "notes": "The engine currently requires legacy connection credential fields as well as the public fields below. Their names remain undocumented; there is no neutral credential alias in this API revision. For a new setup, connect the number in the dashboard. Existing integrations can supply their securely prepared private import.json unchanged. The examples read that file and do not show, print or invent credential fields. The neutral fields alone are not a successful import request.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches. If custom_prompt is omitted, it is saved as null; import does not copy the agent instructions. A later prompt update is a separate request that must be checked independently.",
+      "notes": "Send the number and its active owned agent with exactly one complete carrier credential set. Keep credentials on your server.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches. If custom_prompt is omitted, it is saved as null; import does not copy the agent instructions. A later prompt update is a separate request that must be checked independently.",
       "slug": "api-reference/phone-numbers/import",
       "specPath": "/phone-numbers",
       "params": [],
@@ -3847,14 +3847,92 @@
             "description": "Optional number-specific prompt, at most 8,000 characters.",
             "maxLength": 8000,
             "default": null
+          },
+          "twilio_sid": {
+            "type": "string",
+            "description": "Carrier account SID. Use AC followed by 32 hexadecimal characters.",
+            "pattern": "^[Aa][Cc][A-Fa-f0-9]{32}$"
+          },
+          "twilio_token": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1,
+            "writeOnly": true,
+            "description": "Private auth token for the account holding the number."
+          },
+          "telnyx_api_key": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1,
+            "writeOnly": true,
+            "description": "Private carrier API key."
+          },
+          "telnyx_connection_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Voice application connection ID."
+          },
+          "telnyx_public_key": {
+            "type": "string",
+            "minLength": 44,
+            "maxLength": 44,
+            "description": "Optional public verification key, canonical base64 encoding exactly 32 bytes."
           }
         },
         "required": [
           "phone_number",
           "agent_id"
         ],
-        "description": "The public fields are shown here. Successful import additionally requires an existing legacy connection credential payload. Those credential field names are deliberately undocumented; this schema is not a complete credential validator.",
-        "additionalProperties": true
+        "description": "Send the number and its active owned agent with exactly one complete carrier credential set. Keep credentials on your server.",
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "twilio_sid",
+              "twilio_token"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "telnyx_api_key"
+                  ]
+                },
+                {
+                  "required": [
+                    "telnyx_connection_id"
+                  ]
+                },
+                {
+                  "required": [
+                    "telnyx_public_key"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "telnyx_api_key",
+              "telnyx_connection_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "twilio_sid"
+                  ]
+                },
+                {
+                  "required": [
+                    "twilio_token"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       },
       "status": 201,
       "response": {
@@ -4321,6 +4399,32 @@
                 ],
                 "description": "Number-specific message. Null or empty clears to null.",
                 "maxLength": 2000
+              },
+              "voice_key": {
+                "type": "string",
+                "description": "Main catalogue voice key. Send all four voice pair fields together."
+              },
+              "voice_route_key": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Selected route for the main voice."
+              },
+              "backup_voice_key": {
+                "type": "string",
+                "description": "Backup catalogue voice key. Required when saving a pair."
+              },
+              "backup_voice_route_key": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Selected route for the backup voice."
+              },
+              "voice_pair_inherit": {
+                "type": "boolean",
+                "description": "Set true to inherit the agent’s saved pair. Omit competing pair values."
               }
             },
             "required": [],

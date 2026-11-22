@@ -4167,7 +4167,7 @@
       "get": {
         "operationId": "organisationSigningSecret",
         "summary": "Get the signing secret",
-        "description": "Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a private secret store; never expose it in logs, chat or tool output. The organisation context and member list never contain this secret. Signing-secret retrieval is a private Owner action in the dashboard and is excluded from every kit. No executable request is provided. Successful retrieval is pending manual test; do not use an assistant or smoke test to retrieve it.",
+        "description": "Read the organisation signing secret server-side with the organisation key, or as the dashboard Owner. One secret verifies signed events for the organisation. Keep the response in private storage.",
         "tags": [
           "Organisation"
         ],
@@ -12849,8 +12849,8 @@
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "Required nonblank call purpose. No separate route-level character maximum is declared; request-size and downstream admission rules still apply.",
-                    "minLength": 1
+                    "description": "Send a purpose of at least 10 characters after trimming. A shorter nonblank purpose can pass request validation, but the call is instructed to end.",
+                    "minLength": 10
                   },
                   "from_number": {
                     "type": "string",
@@ -12859,7 +12859,7 @@
                   "dynamic_vars": {
                     "type": "object",
                     "properties": {},
-                    "description": "Values for {{name}}-style placeholders in the call purpose. Keys must match supported placeholder names.",
+                    "description": "Values for {{name}} placeholders. Choose case-sensitive custom names using ASCII letters, digits and underscores. Reserved call variables are filled by the engine. Supply other referenced values per recipient.",
                     "additionalProperties": true
                   },
                   "campaign_id": {
@@ -12919,7 +12919,7 @@
       "post": {
         "operationId": "createBatchCampaign",
         "summary": "Create a voice campaign",
-        "description": "Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag. ### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. No public voice campaign delete route is available. Reuse replaces the recipient list and settings only while the owned campaign has never launched.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
+        "description": "Create a voice campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag. ### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. DELETE /v1/calls/batch/{id} requests guarded deletion. The cancel and resume routes control eligible work on the current launch. Reuse replaces the recipient list and settings only while the owned campaign has never launched.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
         "tags": [
           "Voice campaigns"
         ],
@@ -13626,7 +13626,7 @@
                       "string",
                       "null"
                     ],
-                    "description": "Required for schedule; YYYY-MM-DD calendar date. Recipient-local eligibility still applies.",
+                    "description": "For schedule mode, use YYYY-MM-DD. A date and optional sending window control eligibility. No scheduled_at field or exact dispatch time is supported.",
                     "format": "date",
                     "default": null
                   },
@@ -15091,7 +15091,7 @@
       "post": {
         "operationId": "createSmsCampaign",
         "summary": "Create an SMS campaign",
-        "description": "Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag. ### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation always creates a new campaign. reuse_campaign_id does not implement SMS reuse; do not send it.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
+        "description": "Create an SMS campaign and its recipient rows. The default now mode immediately requests launch; schedule mode saves scheduled work that can run automatically. There is no public draft-only flag. ### Scheduling, consent and duplicate rows\n\nThe scheduler and final contact checks use recipient-local eligibility, consent, suppression and capacity. A campaign time zone is not a substitute for an unknown recipient location. Preview contact hours before saving; a preview is advisory. Wider hours require the recorded explanation and remain subject to policy.\n\nChoose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.\n\nThe scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. SMS creation generates a new campaign ID even if reuse_campaign_id is sent. Create a new campaign to run it again.\n\nJSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.",
         "tags": [
           "SMS campaigns"
         ],
@@ -15806,7 +15806,7 @@
                       "string",
                       "null"
                     ],
-                    "description": "Required for schedule; YYYY-MM-DD calendar date. Recipient-local eligibility still applies.",
+                    "description": "For schedule mode, use YYYY-MM-DD. A date and optional sending window control eligibility. No scheduled_at field or exact dispatch time is supported.",
                     "format": "date",
                     "default": null
                   },
@@ -18630,7 +18630,7 @@
           "Phone numbers"
         ],
         "summary": "Import a phone number",
-        "description": "Connect a number you already own to an active agent on the same account. Import can replace existing number routing, so another application using that routing can stop receiving calls or texts. The engine currently requires legacy connection credential fields as well as the public fields below. Their names remain undocumented; there is no neutral credential alias in this API revision. For a new setup, connect the number in the dashboard. Existing integrations can supply their securely prepared private import.json unchanged. The examples read that file and do not show, print or invent credential fields. The neutral fields alone are not a successful import request.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches.",
+        "description": "Connect a number you already own to an active agent on the same account. Import can replace existing number routing, so another application using that routing can stop receiving calls or texts. Send the number and its active owned agent with exactly one complete carrier credential set. Keep credentials on your server.\n\nUnknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches. If custom_prompt is omitted, it is saved as null; import does not copy the agent instructions. A later prompt update is a separate request that must be checked independently.",
         "operationId": "importPhoneNumber",
         "security": [
           {
@@ -19069,7 +19069,7 @@
         },
         "requestBody": {
           "required": true,
-          "description": "The public fields are shown here. Successful import additionally requires an existing legacy connection credential payload. Those credential field names are deliberately undocumented; this schema is not a complete credential validator.",
+          "description": "Send the number and its active owned agent with exactly one complete carrier credential set. Keep credentials on your server.",
           "content": {
             "application/json": {
               "schema": {
@@ -19093,14 +19093,92 @@
                     "description": "Optional number-specific prompt, at most 8,000 characters.",
                     "maxLength": 8000,
                     "default": null
+                  },
+                  "twilio_sid": {
+                    "type": "string",
+                    "description": "Carrier account SID. Use AC followed by 32 hexadecimal characters.",
+                    "pattern": "^[Aa][Cc][A-Fa-f0-9]{32}$"
+                  },
+                  "twilio_token": {
+                    "type": "string",
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "writeOnly": true,
+                    "description": "Private auth token for the account holding the number."
+                  },
+                  "telnyx_api_key": {
+                    "type": "string",
+                    "maxLength": 4096,
+                    "minLength": 1,
+                    "writeOnly": true,
+                    "description": "Private carrier API key."
+                  },
+                  "telnyx_connection_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Voice application connection ID."
+                  },
+                  "telnyx_public_key": {
+                    "type": "string",
+                    "minLength": 44,
+                    "maxLength": 44,
+                    "description": "Optional public verification key, canonical base64 encoding exactly 32 bytes."
                   }
                 },
                 "required": [
                   "phone_number",
                   "agent_id"
                 ],
-                "description": "The public fields are shown here. Successful import additionally requires an existing legacy connection credential payload. Those credential field names are deliberately undocumented; this schema is not a complete credential validator.",
-                "additionalProperties": true
+                "description": "Send the number and its active owned agent with exactly one complete carrier credential set. Keep credentials on your server.",
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "required": [
+                      "twilio_sid",
+                      "twilio_token"
+                    ],
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "telnyx_api_key"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "telnyx_connection_id"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "telnyx_public_key"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "telnyx_api_key",
+                      "telnyx_connection_id"
+                    ],
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "twilio_sid"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "twilio_token"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             }
           }
@@ -20757,6 +20835,32 @@
                         ],
                         "description": "Number-specific message. Null or empty clears to null.",
                         "maxLength": 2000
+                      },
+                      "voice_key": {
+                        "type": "string",
+                        "description": "Main catalogue voice key. Send all four voice pair fields together."
+                      },
+                      "voice_route_key": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "Selected route for the main voice."
+                      },
+                      "backup_voice_key": {
+                        "type": "string",
+                        "description": "Backup catalogue voice key. Required when saving a pair."
+                      },
+                      "backup_voice_route_key": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "Selected route for the backup voice."
+                      },
+                      "voice_pair_inherit": {
+                        "type": "boolean",
+                        "description": "Set true to inherit the agent’s saved pair. Omit competing pair values."
                       }
                     },
                     "description": "Partial settings update; at least one recognised setting is required. Unknown-only input is refused.",
@@ -30089,7 +30193,7 @@
       "put": {
         "operationId": "setCalcom",
         "summary": "Set Cal.com settings",
-        "description": "Save Cal.com settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values. Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.",
+        "description": "Save Cal.com settings for an owned phone number. This replaces the saved configuration for this integration; omitted configuration values do not preserve the old values. Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.",
         "tags": [
           "Integration settings"
         ],
@@ -30566,7 +30670,7 @@
       "get": {
         "operationId": "getCalcom",
         "summary": "Get Cal.com settings",
-        "description": "Read the saved Cal.com settings for an owned phone number. Secret values are represented by configuration flags.  Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
+        "description": "Read the saved Cal.com settings for an owned phone number. Secret values are represented by configuration flags.  Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner.",
         "tags": [
           "Integration settings"
         ],
@@ -30841,7 +30945,7 @@
       "delete": {
         "operationId": "deleteCalcom",
         "summary": "Delete Cal.com settings",
-        "description": "Remove the saved Cal.com configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.  Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
+        "description": "Remove the saved Cal.com configuration scoped to this account and number. This does not disconnect the phone number. A missing configuration also returns success.  Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner.",
         "tags": [
           "Integration settings"
         ],

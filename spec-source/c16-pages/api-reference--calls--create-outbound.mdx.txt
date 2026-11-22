@@ -19,6 +19,9 @@ Start one outbound call from an account-owned number assigned to an active agent
 
 **The important part**
 
+- **Call purpose.** Send at least 10 characters after trimming. The agent and phone-number prompts do not supply a fallback purpose.
+- **Per recipient.** You choose [variable names](/concepts/variables). Always send the customer’s `from_number` on a shared agent. Omitting it selects the oldest eligible number.
+
 - Save one UUID request_id before a deliberate call intent if you need launch reconciliation.
 - A 201 means initiated. A same-ID 200 replay returns the existing call; pending or unknown must never trigger a new UUID automatically.
 
@@ -42,9 +45,9 @@ Send a JSON object.
 | --- | --- | --- | --- | --- |
 | `agent_id` | string | Yes | None | Owned active agent ID. Minimum 1 characters. |
 | `to_number` | string | Yes | None | Recipient in E.164 format. Minimum 1 characters. |
-| `prompt` | string | Yes | None | Required nonblank call purpose. No separate route-level character maximum is declared; request-size and downstream admission rules still apply. Minimum 1 characters. |
+| `prompt` | string | Yes | None | At least 10 characters after trimming for a usable call purpose. A shorter nonblank string can pass the request check, but the agent is instructed to apologise and end the call. |
 | `from_number` | string | No | Omitted | Optional owned outbound-enabled number assigned to this agent. If omitted, the oldest eligible number is selected. |
-| `dynamic_vars` | object | No | Omitted | Values for `{{name}}`-style placeholders in the call purpose. Keys must match supported placeholder names. |
+| `dynamic_vars` | object | No | Omitted | Values for `{{name}}`-style placeholders in the call purpose. Choose custom names using ASCII letters, digits and underscores. The engine supplies its reserved names. |
 | `campaign_id` | string or null | No | `null` | Optional campaign association. Omitted or empty becomes null. |
 | `recipient_timezone` | string | No | Omitted | Optional recipient IANA time zone. Used for recipient-local contact checks, not the business clock. |
 | `recipient_country` | string | No | Omitted | Optional two-letter recipient country code. |

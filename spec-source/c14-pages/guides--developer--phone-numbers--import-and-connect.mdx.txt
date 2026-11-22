@@ -1,7 +1,7 @@
 ---
 title: "Import and connect an owned phone number"
 sidebarTitle: "Import and connect"
-description: "Prepare a supported number connection, use the dashboard for new imports and verify saved state and routing without exposing private credentials."
+description: "Import an owned number through the API or dashboard and verify its saved agent and routing without exposing carrier credentials."
 canonical: "https://docs.nixflex.com/guides/developer/phone-numbers/import-and-connect"
 ---
 
@@ -18,7 +18,7 @@ Connect an existing eligible number to an active owned agent, then verify both t
 **The important part**
 
 - Import can replace routing used by another application.
-- New setup uses the supported dashboard flow; the public import schema omits legacy credential fields.
+- You can import a new number from your server or connect it in the dashboard. Use the [import fields for your carrier](/api-reference/phone-numbers/import).
 - A pending or uncertain import is not permission to use or re-import the number.
 
 </div>
@@ -37,7 +37,7 @@ Record the current routing through your authorised configuration process before 
 
 ## Use the supported setup path
 
-For a new connection, use the signed-in dashboard. The [public import reference](/api-reference/phone-numbers/import) documents public number and agent fields but deliberately omits the existing legacy credential payload. Do not guess neutral aliases or treat the public schema as a complete import credential validator.
+For a new API connection, send the owned number, its assigned agent and one complete carrier credential set. The [public import reference](/api-reference/phone-numbers/import) lists the fields for each carrier. The dashboard is also available for a manual connection.
 
 An existing integration may use its securely prepared private import payload unchanged. Keep that file outside source control, logs and shared workspaces, and submit only through an authorised server process. Never put credentials in a URL or a copied command argument.
 

@@ -16,6 +16,10 @@ Prepare a voice campaign’s recipients and permission checks, create executable
 
 **The important part**
 
+- Campaign lists cover the account. Use your saved customer-to-campaign mapping and read each [voice campaign by ID](/api-reference/voice-campaigns/get). A sender filter on the list is unavailable.
+
+- To run a campaign again, create a new one. A voice campaign that has never launched can be edited in place. See [voice creation and controls](/api-reference/calls/batch-create) for the difference between editing, cancelling, resuming and deleting.
+
 - Campaign creation can launch immediately or run when its schedule is due.
 - A duplicate warning is not a sending lock; choose the required policy deliberately.
 - Cancel stops future dispatch and does not hang up active calls.
@@ -92,7 +96,7 @@ Save `campaign_id` even if launch is uncertain. Read campaign state and holds. U
 
 ## 5. Reconcile before replacement
 
-`reuse_campaign_id` replaces an owned never-launched draft or scheduled voice campaign; it is not an idempotency key. Do not recreate after `campaign_outcome_unknown`. There is no public voice campaign deletion endpoint.
+`reuse_campaign_id` replaces an owned never-launched draft or scheduled voice campaign; it is not an idempotency key. Do not recreate after `campaign_outcome_unknown`. [Delete the owned voice campaign](/api-reference/voice-campaigns/delete) after eligible work settles.
 
 ## Example response
 

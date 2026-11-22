@@ -17,6 +17,9 @@ Configure cold or warm transfer and report a successful handoff only after the t
 
 **The important part**
 
+- **Shared destination.** A bare `[TRANSFER]` uses the agent’s `transfer_number` on inbound and outbound calls. An explicit `[TRANSFER: +number]` supplies a target for that action. A number or single-call request has no independent default transfer field.
+- For separate customers, use an agent with that customer’s own default when the destination must be enforced. An instruction in a prompt cannot enforce customer isolation.
+
 - Use an eligible destination and the intended transfer type.
 - Warm transfer can use a whisper; cold transfer follows a different path.
 - A transfer request alone does not prove a human answered.

@@ -99,6 +99,7 @@ const result = {
 };
 let count = 0;
 // Carrier field names and enum values are required for this setup operation.
+result.paths['/phone-numbers'].post.requestBody = structuredClone(overrides.paths['/phone-numbers'].post.requestBody);
 result.paths['/phone-numbers/{phoneNumber}/credentials']=structuredClone(c10Paths['/phone-numbers/{phoneNumber}/credentials']);
 applyC12Contracts(result);
 applyC13Contracts(result);

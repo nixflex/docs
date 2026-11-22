@@ -19,6 +19,8 @@ Connect a number you already own to an active agent on the same account. Import 
 
 **The important part**
 
+- **Server-side import is supported.** Send `POST /v1/phone-numbers` with exactly one carrier credential set. Import can replace the number’s existing routing. Confirm the customer owns the number and authorises that change.
+
 - This connects an existing supported number to the account.
 - A pending import is not permission to send; wait for a usable state.
 
@@ -36,15 +38,20 @@ Send `Authorization: Bearer KEY_ID:KEY_SECRET` using the owning account’s serv
 
 ## Request fields
 
-The public fields are shown here. Successful import additionally requires an existing legacy connection credential payload. Those credential field names are deliberately undocumented; this schema is not a complete credential validator.
+Send the owned phone number, its active agent and one carrier credential set from your server. The number and agent are the public identifiers. Those neutral fields alone are not a successful import. Add credentials for the carrier account that holds the number.
 
 | Field | Type | Required | Default | Limits and meaning |
 | --- | --- | --- | --- | --- |
 | `phone_number` | string | Yes | None | Business number. Up to 64 input characters; spaces, hyphens, parentheses and dots are removed before E.164 validation. Maximum 64 characters. |
 | `agent_id` | string | Yes | None | Owned active agent identifier; trimmed, nonblank, at most 200 characters. Maximum 200 characters. |
+| `twilio_sid` | string | Twilio | None | Account SID beginning with AC followed by 32 hexadecimal characters. |
+| `twilio_token` | string | Twilio | None | Private auth token for that carrier account. |
+| `telnyx_api_key` | string | Telnyx | None | Private API key for the carrier account. |
+| `telnyx_connection_id` | string | Telnyx | None | Connection ID for the number’s voice application. |
+| `telnyx_public_key` | string | Optional for Telnyx | Omitted | Public callback verification key. Use canonical base64 for exactly 32 bytes. |
 | `custom_prompt` | string or null | No | `null` | Optional number-specific prompt, at most 8,000 characters. Maximum 8000 characters. |
 
-The engine currently requires legacy connection credential fields as well as the public fields below. Their names remain undocumented; there is no neutral credential alias in this API revision. For a new setup, connect the number in the dashboard. Existing integrations can supply their securely prepared private import.json unchanged. The examples read that file and do not show, print or invent credential fields. The neutral fields alone are not a successful import request.
+Use the real values only in your private server request. For example, a Twilio import needs four fields: `phone_number`, `agent_id`, `twilio_sid` and `twilio_token`. For Telnyx, replace the last two with `telnyx_api_key` and `telnyx_connection_id`.
 
 Unknown import fields are refused. Use only one connection credential set; do not mix it with another. custom_prompt does not configure the remaining per-number switches. If custom_prompt is omitted, it is saved as null; import does not copy the agent instructions. A later prompt update is a separate request that must be checked independently.
 
@@ -62,7 +69,7 @@ Unknown import fields are refused. Use only one connection credential set; do no
 
 ## Example request
 
-These examples use `https://api.nixflex.com`. Keep `NIXFLEX_API_KEY` in your private process environment. The shell examples use Bash syntax. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later. Prepare `import.json` privately using your existing integration’s accepted payload; the neutral fields in this page are not a complete connection credential payload.
+Prepare the request body as a private `import.json` file using the table above. The examples send it from your server using `NIXFLEX_API_KEY`. Keep the file out of logs and source control. Kit examples require Node/CLI 0.11.0 or later and Python 0.4.0 or later.
 
 <RequestExample>
 

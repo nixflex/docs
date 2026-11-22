@@ -17,6 +17,9 @@ Insert known application data into the correct call or message template and reje
 
 **The important part**
 
+- **You choose custom names.** Put ASCII letters, digits and underscores between the double braces, for example `{{order_id}}`. Names are case-sensitive. Reserve the engine names listed below.
+- **Action names are fixed.** Voice recognises `[END_CALL]`, `[TRANSFER: +number]`, `[SEND_SMS: message]` and `[WAIT]`. Outbound phone menus also use `[IVR]`, `[PRESS: digits]` and `[IVR_END]`. A custom name cannot add an action. Each action still needs its own settings.
+
 - Single calls use dynamic_vars; campaign rows use nested variables.
 - Template syntax varies by field and must be checked against its contract.
 - Caller-supplied contact details are data, not proof of identity.
@@ -34,6 +37,19 @@ Insert known application data into the correct call or message template and reje
 A single outbound call uses `dynamic_vars` with placeholders such as `{{name}}` in its required `prompt`. A voice campaign supplies each recipient as `{"phone":"+12025550101","variables":{"name":"Sam"}}`. Keep recipient variables nested; flattening them into the row changes the request shape.
 
 Validate required input before submitting a call. Do not rely on an unresolved placeholder becoming a safe empty string. A missing name, appointment time or other required field should produce a clear review step in your application.
+
+### Values supplied by the engine
+
+| Available in call prompts | Reserved names |
+| --- | --- |
+| People, line and call | `caller_phone`, `business_phone`, `call_id`, `agent_id`, `call_direction` |
+| Local date, day and time | `current_date`, `tomorrow_date`, `current_day_of_week`, `current_time`, `current_timezone`, `upcoming_days` |
+| ISO date and time | `current_iso_date`, `tomorrow_iso_date`, `current_iso_time` |
+| History when loaded on inbound calls | `caller_history` |
+
+These names belong to the engine. Outbound calls fill the first three rows automatically. They do not load `caller_history`. If an outbound purpose references it, the usual missing-value check applies. Prefer a distinct custom name for history your app supplies. The human is `caller_phone` in either direction. The business line is `business_phone`.
+
+A dashboard chip suggests a name. Supply values for `caller_name` and `business_name` yourself, just as you would for `order_id`. For a campaign, map your CSV headers to each recipient’s `variables` object. A missing or blank custom value can refuse that recipient with `missing_voice_details` before dialling.
 
 ## Message and integration placeholders
 

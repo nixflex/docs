@@ -19,6 +19,11 @@ Create a voice campaign and its recipient rows. The default now mode immediately
 
 **The important part**
 
+- **Scheduling.** Use `schedule_type: "schedule"` and `scheduled_date` (YYYY-MM-DD). The scheduler checks the date against UTC. Supply both window bounds in minutes, or omit both. Choose a window and time zone for the earliest eligible work. There is no exact-time `scheduled_at` field or guaranteed dispatch minute.
+
+- **Edit before launch.** Send `reuse_campaign_id` to replace all recipients and settings of an owned draft or scheduled voice campaign in one operation. Keep `schedule_type` set to `schedule` to leave it scheduled. To run a launched campaign again, create a new campaign.
+- **Controls.** [Cancel](/api-reference/voice-campaigns/post-calls-batch-id-cancel) stops future work. [Resume](/api-reference/voice-campaigns/post-calls-batch-id-resume) covers unattempted rows on the current running launch. [Delete the owned voice campaign](/api-reference/voice-campaigns/delete) after eligible work settles.
+
 - The default now mode immediately requests launch; scheduled work can run automatically. There is no public draft-only mode.
 - Review recipients, consent and contact rules before creating the campaign, because creation can contact people.
 
@@ -70,7 +75,7 @@ The scheduler and final contact checks use recipient-local eligibility, consent,
 
 Choose duplicate_policy deliberately. reject refuses repeated accepted numbers, allow keeps every row, and warn reports duplicates but still allows this route to request launch. The duplicate_choice_required response flag is advisory. It does not create a safe draft or block sending.
 
-The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. No public voice campaign delete route is available. Reuse replaces the recipient list and settings only while the owned campaign has never launched.
+The scheduled example can contact its recipients when due. Use an approved destination and consent; the date is illustrative. No public draft-only flag is accepted. [Delete the owned voice campaign](/api-reference/voice-campaigns/delete) after eligible work settles. Reuse replaces the recipient list and settings only while the owned campaign has never launched.
 
 JSON request size and database constraints can limit a request before the maximum accepted-recipient count. No additional text length limit is declared for the prompt or message template on this route.
 
@@ -136,7 +141,7 @@ curl --request POST \
   --url "https://api.nixflex.com/v1/calls/batch" \
   --header "Authorization: Bearer $NIXFLEX_API_KEY" \
   --header "Content-Type: application/json" \
-  --data '{"agent_id":"agent_fixture","from_number":"+12025550123","prompt":"Confirm the appointment requested by the recipient.","recipients":[{"phone":"+12025550124","variables":{"name":"Example customer"},"country":"GB","timezone":"Europe/London"}],"schedule_type":"schedule","scheduled_date":"2030-11-04","duplicate_policy":"reject","consent_confirmed":true,"window_start_minutes":0,"timezone":null}'
+  --data '{"agent_id":"agent_fixture","from_number":"+12025550123","prompt":"Confirm the appointment requested by the recipient.","recipients":[{"phone":"+12025550124","variables":{"name":"Example customer"},"country":"GB","timezone":"Europe/London"}],"schedule_type":"schedule","scheduled_date":"2030-11-04","duplicate_policy":"reject","consent_confirmed":true,"window_start_minutes":0,"window_end_minutes": 1020,"timezone":null}'
 ```
 
 ```javascript Node
@@ -147,7 +152,7 @@ const c = new Nixflex({
   baseUrl: 'https://api.nixflex.com',
   maxRetries: 0,
 });
-const result = await c.campaigns.create({"agent_id": "agent_fixture", "from_number": "+12025550123", "prompt": "Confirm the appointment requested by the recipient.", "recipients": [{"phone": "+12025550124", "variables": {"name": "Example customer"}, "country": "GB", "timezone": "Europe/London"}], "schedule_type": "schedule", "scheduled_date": "2030-11-04", "duplicate_policy": "reject", "consent_confirmed": true, "window_start_minutes": 0, "timezone": null});
+const result = await c.campaigns.create({"agent_id": "agent_fixture", "from_number": "+12025550123", "prompt": "Confirm the appointment requested by the recipient.", "recipients": [{"phone": "+12025550124", "variables": {"name": "Example customer"}, "country": "GB", "timezone": "Europe/London"}], "schedule_type": "schedule", "scheduled_date": "2030-11-04", "duplicate_policy": "reject", "consent_confirmed": true, "window_start_minutes": 0, "window_end_minutes": 1020, "timezone": null});
 ```
 
 ```python Python
@@ -159,7 +164,7 @@ with Nixflex(
     base_url="https://api.nixflex.com",
     max_retries=0,
 ) as c:
-    result = c.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', prompt='Confirm the appointment requested by the recipient.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, timezone=None)
+    result = c.campaigns.create(agent_id='agent_fixture', from_number='+12025550123', prompt='Confirm the appointment requested by the recipient.', recipients=[{'phone': '+12025550124', 'variables': {'name': 'Example customer'}, 'country': 'GB', 'timezone': 'Europe/London'}], schedule_type='schedule', scheduled_date='2030-11-04', duplicate_policy='reject', consent_confirmed=True, window_start_minutes=0, window_end_minutes=1020, timezone=None)
 ```
 
 ```powershell CLI (PowerShell)
@@ -183,6 +188,7 @@ $body = @'
   "duplicate_policy": "reject",
   "consent_confirmed": true,
   "window_start_minutes": 0,
+  "window_end_minutes": 1020,
   "timezone": null
 }
 '@
@@ -210,8 +216,7 @@ nixflex campaigns create --body '@request-90.json' --confirm --json --base-url "
     "schedule_type": "schedule",
     "scheduled_date": "2030-11-04",
     "duplicate_policy": "reject",
-    "consent_confirmed": true,
-    "window_start_minutes": 0
+    "consent_confirmed": true
   }
 }
 ```

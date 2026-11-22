@@ -17,6 +17,8 @@ Use response headers and a bounded polling policy to stay within the account’s
 
 **The important part**
 
+- **Call capacity is shared.** `max_concurrent` applies across the account’s numbers. A number cannot reserve slots. Pace outbound work per customer in your app when several customers share the account.
+
 - Honour Retry-After for a safe read and stop at an application deadline.
 - HTTP request quotas, call capacity and feature limits are different.
 - A throttle does not grant permission to repeat an uncertain write.

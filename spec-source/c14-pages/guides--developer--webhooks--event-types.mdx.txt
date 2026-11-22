@@ -17,6 +17,9 @@ Choose the event that proves the business result you need, then process it using
 
 **The important part**
 
+- **Verify before routing.** The organisation has one signing secret. An Owner can retrieve it in the dashboard or your server can use the [signing-secret endpoint](/api-reference/organisation/get-organisation-signing-secret) with the organisation API key.
+- For `call.bookings`, map the signed `number` to your customer. It is `to` for inbound calls and `from` for outbound calls. The payload has no account ID. For other event types, use their documented business-number field.
+
 - Call completion does not prove final analysis, recording access or a booking result.
 - Use call.bookings for confirmed post-call calendar mutations and reconcile its final state.
 - Unsigned test traffic must never trigger business actions.

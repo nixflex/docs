@@ -22,7 +22,10 @@ test('C4 has 19 complete nine-part pages with sized metadata, schema bindings an
   assert.ok(page.includes('/api-reference/public.openapi.json '+d.method+' '+d.specPath));
   assert.ok(spec.paths[d.specPath][d.method.toLowerCase()].responses[d.status]);
   assert.equal((page.match(/\x60\x60\x60(?:bash|javascript|python) /g)||[]).length,4);
-  assert.doesNotMatch(page,/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i);
+  const checkedCopy = d.slug === 'api-reference/phone-numbers/import'
+    ? page.replace(/\b(?:Twilio|Telnyx|twilio_sid|twilio_token|telnyx_api_key|telnyx_connection_id|telnyx_public_key)\b/g,'')
+    : page;
+  assert.doesNotMatch(checkedCopy,/twilio|telnyx|openai|anthropic|deepgram|inworld|elevenlabs|supabase|groq/i);
   for(const match of page.matchAll(/\]\((\/[^)]+)\)/g)){
    const [target,anchor]=match[1].split('#');
    assert.ok(fs.existsSync(path.join(root,target+'.mdx')),d.slug+' -> '+target);

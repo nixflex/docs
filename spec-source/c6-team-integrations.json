@@ -150,7 +150,7 @@
         "is_active": true
       },
       "retry": "This is a replacement write with no idempotency token. Read the current settings after a timeout before deciding whether to resend. Never overwrite a newer configuration blindly.",
-      "notes": "Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.",
+      "notes": "Per-number calendar settings override agent settings. A conflict with another booking calendar is checked only after number ownership. This endpoint does not connect or disconnect other integrations. Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner. HTTP 409 booking_provider_conflict refuses a competing calendar before saving. The error identifies the connected provider in details.connected_provider. Number connections and the agent-level fallback are both checked; changing is_active does not bypass that guard. Number-level message pattern: `CALENDAR is already connected to NUMBER. Only one booking calendar can be connected to a number at a time - the AI would be given both sets of booking tools and would silently use only one. Disconnect CALENDAR first, then connect Cal.com.` Agent-level message pattern: `CALENDAR is already connected to this agent, which covers every number on it. Only one booking calendar can be active at a time. Disconnect CALENDAR first, then connect Cal.com.` CALENDAR and NUMBER are replaced with the connected calendar label and owned number.",
       "requestTable": {
         "type": "object",
         "properties": {
@@ -389,7 +389,7 @@
           "Respect Retry-After."
         ]
       ],
-      "notes": " Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
+      "notes": " Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner.",
       "kitExamples": {
         "curl": "curl --request GET \\\n  --url \"https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
         "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.get(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
@@ -494,7 +494,7 @@
           "Respect Retry-After."
         ]
       ],
-      "notes": " Google Calendar connects through the dashboard authorisation flow; no public API-key connection endpoint is provided.",
+      "notes": " Start Google Calendar authorisation through POST /v1/integrations/google-calendar/number/{phoneNumber}/connect and open the returned URL for the calendar owner.",
       "kitExamples": {
         "curl": "curl --request DELETE \\\n  --url \"https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550123\" \\\n  --header \"Authorization: Bearer $NIXFLEX_API_KEY\"",
         "node": "import { Nixflex } from 'nixflex';\nconst c = new Nixflex({apiKey:process.env.NIXFLEX_API_KEY,baseUrl:'https://api.nixflex.com',maxRetries:0});\nconst result = await c.integrations.delete(\"calcom\", \"+12025550123\");\n// Keep private responses out of logs and AI conversations.",
@@ -8126,7 +8126,7 @@
         "signing_secret": "REDACTED_EXAMPLE_ONLY"
       },
       "sensitive": true,
-      "notes": "The organisation context and member list never contain this secret. Signing-secret retrieval is a private Owner action in the dashboard and is excluded from every kit. No executable request is provided. Successful retrieval is pending manual test; do not use an assistant or smoke test to retrieve it.",
+      "notes": "The organisation context and member list omit this secret. Your server can use the organisation API key. Among dashboard users, only the Owner can retrieve the shared signing secret. The published kits omit this operation.",
       "auth": "Send `Authorization: Bearer KEY_ID:KEY_SECRET` for server-side organisation API-key authority, or a verified personal dashboard Bearer session. The shared API key has Owner authority for these methods; keep it server-side. A personal session is checked against current membership and MFA. Personal access is Owner only. The service must have organisations enabled; otherwise these routes return 404. Personal invitation acceptance, leaving and ownership transfer are separate dashboard flows and are not API-key methods.",
       "title": "Get the signing secret",
       "description": "Get the signing secret with the Nixflex API. Explicitly retrieve the organisation signing secret for verifying event deliveries. Keep the result in a.",

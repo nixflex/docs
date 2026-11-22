@@ -10,8 +10,13 @@ test('Batch3 navigation and channel matrix distinguish public website from owner
   for (const text of ['Inbound phone', 'Outbound phone', 'Website chat', 'Website voice',
     'separate authenticated browser-call path', 'Per-call `prompt`', "Number's `web_prompt`",
     '300 seconds', '10 seconds', 'switch off']) a.ok(matrix.includes(text), text);
-  a.match(matrix, /phone welcome cleared/); a.match(matrix, /catalog mode prioritizes agent/);
-  a.match(read('concepts/voices.mdx'), /non-null agent catalog key takes priority/);
+  a.match(matrix, /phone welcome cleared/);
+  a.match(matrix, /configured number pair wins/i);
+  a.ok(matrix.includes('](/concepts/voices)'));
+  const voices = read('concepts/voices.mdx');
+  a.match(voices, /whole main and backup pair/i);
+  a.match(voices, /number alias clears the inherited catalogue key/i);
+  a.match(voices, /saved agent pair meets an old number alias without a pair, configure a number pair/i);
 });
 
 test('Batch3 inert fields stay inert in prose and schema descriptions', () => {

@@ -21,7 +21,25 @@ test('deployed bundle contains only allowlisted operations, unique IDs, no refs 
   const ids=new Set();for(const [p,ms]of Object.entries(spec.paths))for(const [m,op]of Object.entries(ms)){
     assert.ok(approved.has(m.toUpperCase()+' '+shape(p)),m+' '+p);assert.ok(op.operationId);assert.ok(!ids.has(op.operationId));ids.add(op.operationId);
   }
-  assert.equal(ids.size,151);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);const safe=structuredClone(spec);delete safe.paths['/phone-numbers/{phoneNumber}/credentials'];assert.doesNotMatch(JSON.stringify(safe),brand);
+  assert.equal(ids.size,151);assert.doesNotMatch(JSON.stringify(spec),/"\$ref"/);const safe=structuredClone(spec);delete safe.paths['/phone-numbers/{phoneNumber}/credentials'];
+  const input = safe.paths['/phone-numbers'].post.requestBody.content['application/json'].schema;
+  const first = ['twilio_sid','twilio_token'], second = ['telnyx_api_key','telnyx_connection_id'];
+  const fields = [...first,...second,'telnyx_public_key'];
+  assert.deepEqual(input.oneOf.map(branch => branch.required), [first, second]);
+  assert.deepEqual(input.oneOf.map(branch => branch.not.anyOf.map(item => item.required)),
+    [[...second,'telnyx_public_key'].map(key => [key]), first.map(key => [key])]);
+  assert.equal(input.properties.twilio_token.writeOnly, true);
+  assert.equal(input.properties.telnyx_api_key.writeOnly, true);
+  // Mask only approved wire names at their input-schema locations. Still check every description and response.
+  for (const [index,key] of fields.entries()) {
+    assert.ok(Object.hasOwn(input.properties,key));
+    input.properties['carrier_field_' + index] = input.properties[key];
+    delete input.properties[key];
+  }
+  for (const branch of input.oneOf) {
+    for (const rule of [branch,...branch.not.anyOf]) rule.required = rule.required.map(key => 'carrier_field_' + fields.indexOf(key));
+  }
+  assert.doesNotMatch(JSON.stringify(safe),brand);
   assert.equal(spec.paths['/keys'].post.security.length,0);
   assert.ok(spec.paths['/account/retention'].get);assert.ok(spec.paths['/organisation/name'].patch);
 });

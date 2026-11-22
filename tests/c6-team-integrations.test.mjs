@@ -29,7 +29,11 @@ test('C6 preserves the real organisation authority, activity and uncertain membe
  assert.match(read('api-reference/organisation/get-organisation-activity.mdx'),/500 is not a total export limit/);
  assert.match(read('api-reference/organisation/post-organisation-claim-invite.mdx'),/accepts the existing API key only/);
  assert.equal(spec.paths['/organisation/accept'],undefined);assert.equal(spec.paths['/organisation/transfer'],undefined);
- assert.match(read('api-reference/organisation/get-organisation-signing-secret.mdx'),/Dashboard only/);
+ const signing = read('api-reference/organisation/get-organisation-signing-secret.mdx');
+ assert.match(signing,/server can use the organisation API key/);
+ assert.match(signing,/Among dashboard users, only the Owner/);
+ assert.ok(signing.includes('GET /v1/organisation/signing-secret'));
+ assert.match(signing,/response belongs in private server configuration/);
  assert.doesNotMatch(read('api-reference/organisation/get-organisation-signing-secret.mdx'),/<RequestExample>|```(?:bash|javascript|python|powershell)/);
 });
 test('C6 integration schemas preserve secret flags, defaults, replacement and partial-update rules',()=>{
