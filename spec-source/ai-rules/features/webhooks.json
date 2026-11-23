@@ -3,7 +3,7 @@
   "feature": "webhooks",
   "title": "Webhook verification and tenant routing",
   "checked": {
-    "date": "2026-11-22",
+    "date": "2026-11-23",
     "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
   },
   "rules": [
@@ -11,7 +11,7 @@
       "id": "hook-scope",
       "kind": "fixed",
       "scope": "organisation",
-      "text": "**MUST** With organisations enabled, direct the human Owner to the dashboard for the signing secret. Never ask for it in chat or expose it through AI tools.\\\nOne secret covers the organisation. A server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.",
+      "text": "**MUST** With organisations enabled, each organisation has one signing secret. Send the human Owner to the dashboard. Never ask for it in chat or expose it to AI tools.\\\nAn authorised server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.",
       "evidence": [
         "api/routes.js:113",
         "api/organisationRoutes.js:14-21",
@@ -19,7 +19,8 @@
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
         "shared/features/callBookings.js:45-48",
-        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53",
+        "api/organisationRoutes.js:6-12"
       ],
       "why": "All tenant numbers in that organisation share this signing authority."
     },
@@ -89,7 +90,7 @@
       "id": "hook-api",
       "kind": "api",
       "scope": "organisation",
-      "text": "Owner-authorised server retrieval only. The kits omit this secret read.",
+      "text": "With organisations enabled, only an Owner session or the organisation API credential can retrieve the secret on a server. The kits omit this secret read.",
       "evidence": [
         "api/routes.js:113",
         "api/organisationRoutes.js:14-21",
@@ -97,7 +98,8 @@
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
         "shared/features/callBookings.js:45-48",
-        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53"
+        "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53",
+        "api/organisationRoutes.js:6-12"
       ],
       "value": "GET /v1/organisation/signing-secret",
       "policy": "kit-safety"

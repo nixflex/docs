@@ -3,7 +3,7 @@
   "feature": "campaigns",
   "title": "Voice and SMS campaigns",
   "checked": {
-    "date": "2026-11-22",
+    "date": "2026-11-23",
     "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
   },
   "rules": [
@@ -11,13 +11,14 @@
       "id": "camp-reuse",
       "kind": "fixed",
       "scope": "campaign",
-      "text": "reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.",
+      "text": "**MUST** [[camp-again]]\\\nreuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.",
       "evidence": [
         "outbound/features/batchCalls.js:125-146",
         "outbound/features/campaignReuse.js:5-18",
         "api/routes.js:1313-1317",
         "outbound/features/smsCampaigns.js:46-48",
-        "outbound/features/smsCampaigns.js:142-158"
+        "outbound/features/smsCampaigns.js:142-158",
+        "api/campaignControls.js:20-28"
       ],
       "why": "Draft replacement checks campaign ownership and launch state."
     },
@@ -25,13 +26,14 @@
       "id": "camp-again",
       "kind": "unavailable",
       "scope": "campaign",
-      "text": "Resume covers only unattempted work in the existing running launch. Neither resume nor reuse replays completed work.",
+      "text": "[[camp-again]]",
       "evidence": [
         "outbound/features/campaignReuse.js:5-18",
         "api/campaignControls.js:20-28",
         "outbound/features/smsCampaigns.js:46-48"
       ],
-      "instead": "For another run create a campaign with a fresh ID, selected recipients and reviewed settings."
+      "instead": "For another run create a campaign with a fresh ID, selected recipients and reviewed settings.",
+      "value": "Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work."
     },
     {
       "id": "camp-stop",
@@ -102,7 +104,7 @@
       "id": "camp-api",
       "kind": "api",
       "scope": "campaign",
-      "text": "Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes.",
+      "text": "[[camp-again]] Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes.",
       "evidence": [
         "api/campaignControls.js:7-29",
         "api/campaignDelete.js:5-7",
@@ -120,7 +122,7 @@
       "id": "camp-error",
       "kind": "error",
       "scope": "campaign",
-      "text": "not_resumable means this campaign is outside the running launch state. Read its current state and create a new campaign for another run.",
+      "text": "not_resumable means this campaign is outside the running launch state. Read its current state and create a new campaign for another run. [[camp-again]]",
       "evidence": [
         "api/campaignControls.js:20-29"
       ],

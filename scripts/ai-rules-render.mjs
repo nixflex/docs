@@ -111,7 +111,10 @@ export function render(data){
   for(const p of index.features[f.feature].pages){
    const original=p===index.guide?sharedPage(index,c,plan.metadata[p]):read(p+'.mdx')
    let links=''
-   if(['index','guides/developer/build-with-ai'].includes(p))links='\n[Read the rules]('+origin+'/ai-rules.md) · <a href="/downloads/nixflex-ai-rules.txt" download="AGENTS.md">Download AGENTS.md</a> · <a href="/downloads/nixflex-ai-rules.txt" download="CLAUDE.md">Download CLAUDE.md</a> · [Many customers on one shared agent](/'+index.guide+')\n'
+   if(['index','guides/developer/build-with-ai'].includes(p)){
+    links="\nimport { RulesDownload } from '/snippets/RulesDownload.jsx'\n\n"+
+     '[Read the rules]('+origin+'/ai-rules.md) · <RulesDownload name="AGENTS.md" /> · <RulesDownload name="CLAUDE.md" /> · [Many customers on one shared agent](/'+index.guide+')\n'
+   }
    out.set(p+'.mdx',patchPage(original,f.feature,links))
   }
  }
@@ -120,8 +123,11 @@ export function render(data){
 export function validateOutputs(out,data){
  const s=out.get('ai-rules.md');assert.equal(s,out.get(data.index.downloadAsset),'Static download differs');assert.equal(s,out.get('CLAUDE.md'),'CLAUDE.md differs');assert.equal(s,out.get('AGENTS.md'),'AGENTS.md differs')
  assert.ok(Buffer.byteLength(s)<=28*1024,'Rules exceed 28 KiB: '+Buffer.byteLength(s));assert.ok(s.endsWith('\n'))
- const redirectRows=json('docs.json').redirects,asset='https://docs.nixflex.com/'+data.index.downloadAsset
- for(const name of ['ai-rules','AGENTS','CLAUDE'])assert.ok(redirectRows.some(r=>r.source==='/'+name&&r.destination===asset),'Missing raw download redirect '+name)
+ const redirects=json('docs.json').redirects
+ const raw='https://raw.githubusercontent.com/nixflex/docs/main/'
+ for(const name of ['ai-rules','AGENTS','CLAUDE']){
+  for(const suffix of ['','.md'])assert.ok(redirects.some(r=>r.source==='/'+name+suffix&&r.destination===raw+name+'.md'),'Missing raw redirect '+name+suffix)
+ }
  assert.equal(out.get('llms.txt').match(/\]\(([^)]+)\)/)?.[1],origin+'/ai-rules.md','First listing')
  for(const [f,rows] of Object.entries(data.index.features)){
   assert.ok(s.includes('<a id="'+f+'"></a>'),f)
