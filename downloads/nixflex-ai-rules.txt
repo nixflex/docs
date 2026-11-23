@@ -143,9 +143,10 @@ Validate every row before sending. The required voice-details flag can be off. R
 
 ## Voice and SMS campaigns
 
-**FIXED** reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
+**MUST** Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work.\
+reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
 
-**NOT OFFERED → do this instead** Resume covers only unattempted work in the existing running launch. Neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
+**NOT OFFERED → do this instead** Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
 
 There is no scheduled_at promise of dispatch at an exact second. Choose a date and a local window and track actual recipient status.
 
@@ -153,7 +154,7 @@ There is no scheduled_at promise of dispatch at an exact second. Choose a date a
 
 **SCOPE · campaign** Cancel stops eligible future work. In-progress work may finish. Deletion can wait for confirmed hang-up.
 
-Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes. `DELETE /v1/calls/batch/{id}`, `POST /v1/calls/batch/{id}/cancel`, `POST /v1/calls/batch/{id}/resume`, `POST /v1/sms/campaigns/{id}/cancel`, `POST /v1/sms/campaigns/{id}/resume`.
+Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work. Voice deletion, cancellation and resume are separate operations. SMS has its own cancel and resume routes. `DELETE /v1/calls/batch/{id}`, `POST /v1/calls/batch/{id}/cancel`, `POST /v1/calls/batch/{id}/resume`, `POST /v1/sms/campaigns/{id}/cancel`, `POST /v1/sms/campaigns/{id}/resume`.
 
 <a id="contact-controls"></a>
 
@@ -289,8 +290,8 @@ On duplicate_function choose a unique name or update the intended existing funct
 
 ## Webhook verification and tenant routing
 
-**MUST** With organisations enabled, direct the human Owner to the dashboard for the signing secret. Never ask for it in chat or expose it through AI tools.\
-One secret covers the organisation. A server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.
+**MUST** With organisations enabled, each organisation has one signing secret. Send the human Owner to the dashboard. Never ask for it in chat or expose it to AI tools.\
+An authorised server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.
 
 **NOT OFFERED → do this instead** call.bookings has no account field or per-number secret. After signature verification, look up number in your own tenant table. It is the business to number inbound and from number outbound.
 
@@ -300,7 +301,7 @@ One secret covers the organisation. A server can use an Owner session or the org
 
 These are the top-level call.bookings keys. Use call_id to correlate processing and design for redelivery. `event`, `call_id`, `agent_id`, `from`, `to`, `number`, `ended_at`, `timeline`, `final`.
 
-Owner-authorised server retrieval only. The kits omit this secret read. `GET /v1/organisation/signing-secret`.
+With organisations enabled, only an Owner session or the organisation API credential can retrieve the secret on a server. The kits omit this secret read. `GET /v1/organisation/signing-secret`.
 
 <a id="recordings-retention"></a>
 

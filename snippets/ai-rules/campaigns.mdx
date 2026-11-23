@@ -1,6 +1,7 @@
-**FIXED · campaign** reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
+**FIXED · campaign** **MUST** Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work.\
+reuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.
 
-**NOT OFFERED → do this instead · campaign** Resume covers only unattempted work in the existing running launch. Neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
+**NOT OFFERED → do this instead · campaign** Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
 
 **YOU CAN CHANGE · campaign** Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.
 
