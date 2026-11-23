@@ -1,0 +1,1285 @@
+--- a/guides/business/voice-campaigns/check-results.mdx
++++ b/guides/business/voice-campaigns/check-results.mdx
+@@ -106,6 +106,14 @@
+ 
+ Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
+ 
++## Compare results for one business number
++
++Use the web dashboard for this task, including in your phone’s browser.
++
++In **Outbound**, open your voice campaigns and choose the number in the business-number filter. Choose a period. With one number selected, the cards cover all matching campaigns created in that period, including campaigns beyond the first page. Choose **All numbers** to return to the account view.
++
++**Pickup rate** is answered calls divided by all call attempts. For this measure, an answered call lasts over five seconds and has no detected voicemail. A call that failed to start counts as one unanswered attempt and adds zero minutes. One answered call lasting nine seconds and one failed start give a pickup rate of 50%. A dash means there are no attempts to measure. If the figures could not load, retry before reporting a result.
++
+ ## Next
+ 
+ - [Review voice recipients](/guides/business/voice-campaigns/review-recipients)
+--- a/guides/business/sms-campaigns/check-delivery.mdx
++++ b/guides/business/sms-campaigns/check-delivery.mdx
+@@ -106,6 +106,14 @@
+ 
+ Read [delete call data](/guides/business/privacy/delete-call-data) for the dashboard task and [single-call deletion](/api-reference/calls/delete) for response fields.
+ 
++## Check delivery for one business number
++
++Use the web dashboard for this task, including in your phone’s browser.
++
++In **Outbound**, open SMS campaigns and choose the sending number. Select a period to include campaigns created during that period. The filtered cards combine every matching page. **Scheduled** counts future scheduled campaigns. **Messages sent** counts sends, **Delivery rate** divides delivered messages by delivered plus failed messages, and **Estimated segments** counts message parts. A sent text can still be waiting for a delivery result. Choose **All numbers** to return to the account view.
++
++To review people who asked this number to stop contacting them, open the [do-not-contact list](/guides/business/contact-controls). Choosing a number changes the view only. An opt-out can still protect a person across the whole account.
++
+ ## Next
+ 
+ - [Review SMS recipients](/guides/business/sms-campaigns/review-recipients)
+--- a/guides/business/contact-controls.mdx
++++ b/guides/business/contact-controls.mdx
+@@ -77,7 +77,7 @@
+ 
+ <span id="3-review-locked-opt-outs" />
+ 
+-An entry created when someone opts out is marked separately and cannot be removed by the business. **View message** shows the received opt-out evidence when available. The restriction can apply to both voice and SMS.
++A keyword opt-out is locked. An entry marked as AI-detected has a separate review process. **View message** shows the received opt-out evidence when available. The restriction can apply to both voice and SMS.
+ 
+ </Step>
+ 
+@@ -113,6 +113,16 @@
+ | Restricted | A business restriction or recipient opt-out applies. | Keep the recipient held; do not bypass a locked opt-out. |
+ | Check unavailable | Readiness could not be established. | Wait for the check to recover. |
+ 
++## Review where an opt-out came from
++
++Use the web dashboard for this task, including in your phone’s browser.
++
++Select a business number to see requests received on that line. For a keyword opt-out, choose **View message**. Where AI review is available, the AI-detected entry shows its excerpt and time directly. A number filter identifies where the original request arrived. It does not limit the protection to that number.
++
++A whole-message **STOP** works separately from AI recognition. Recognition of everyday requests such as “Please don’t contact me again” is off by default. There is no customer switch for recognition. When Nixflex makes it available, it applies to eligible incoming texts with automatic SMS replies enabled. A recognised request blocks future calls and texts on the account. The person may receive one brief goodbye in their language. A greeting, a quotation or “stop the music” does not by itself request an opt-out.
++
++If review is available, the Owner can choose **Correct AI mistake** on an eligible AI-detected entry, read the evidence and enter a reason. A keyword STOP or another independent restriction stays locked. Correcting an AI mistake does not establish permission to contact the person.
++
+ ## Common questions
+ 
+ <AccordionGroup>
+@@ -127,7 +137,7 @@
+ 
+ Nixflex records the opt-out before an AI reply or its billing and sends no confirmation text through that path. It blocks further calls and texts to that person in the account. Network-level behaviour is separate.
+ 
+-Recognised whole-message keywords are **STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, REVOKE, OPTOUT**, and **توقف، وقف، ايقاف، الغاء، الغاء الاشتراك، وقف الرسائل، ايقاف الرسائل**. Case, spacing and some punctuation are normalised. A sentence such as “please stop contacting me” may not match this keyword check; handle that request through your own review process and restrict contact. Keyword detection alone is not a complete consent process.
++Recognised whole-message keywords are **STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, REVOKE, OPTOUT**, and **توقف، وقف، ايقاف، الغاء، الغاء الاشتراك، وقف الرسائل، ايقاف الرسائل**. Case, spacing and some punctuation are normalised. With automatic recognition off, a longer sentence may miss the keyword check. Review it and restrict contact yourself.
+ 
+ </Accordion>
+ 
+--- a/guides/business/sms-campaigns.mdx
++++ b/guides/business/sms-campaigns.mdx
+@@ -119,7 +119,7 @@
+ 
+ <Accordion title="Can I remove a STOP opt-out?">
+ 
+-The business cannot remove a person’s locked opt-out. Contact support for a genuine correction request.
++A keyword opt-out stays locked. The Owner can review an eligible AI mistake in the [do-not-contact list](/guides/business/contact-controls).
+ 
+ </Accordion>
+ 
+--- a/guides/developer/contact-controls.mdx
++++ b/guides/developer/contact-controls.mdx
+@@ -104,7 +104,7 @@
+ 
+ ## 3. Read suppressions
+ 
+-GET `/v1/contact-suppressions` for the intended channel. `both`, `voice` and `sms` are separate scopes. Distinguish owner-added entries from `sms_optout`, and preserve `removal_locked` rather than offering a remove button for every row.
++GET `/v1/contact-suppressions` for the intended channel. `all`, `voice` and `sms` are separate scopes. Distinguish owner-added entries from `sms_optout`, and preserve `removal_locked` rather than offering a remove button for every row.
+ 
+ ## 4. Change business entries deliberately
+ 
+@@ -119,6 +119,12 @@
+ ## Example response
+ 
+ Preview replies describe current guidance and any next allowed time. `advisory_only` identifies that this is not dispatch permission. Render the safe `message` as text and refresh after expiry; do not replace a failed preview with a local guess.
++
++## Separate keyword evidence from AI review
++
++Read [opt-out evidence](/api-reference/contact-controls/get-contact-suppressions) with `?channel=all&business_number=%2B12025550100&source=attributed` for both keyword and AI requests. The saved business number is evidence of the first recorded request. Enforcement is account-wide. The eligible inbound SMS path may recognise an objection in the sender’s language when Nixflex enables recognition. Customers cannot enable recognition or demand a goodbye by API.
++
++Only offer [correction of an AI mistake](/api-reference/contact-controls/correct-ai-opt-out) when the current entry is AI-detected, correctable and the reviewer is authorised. Quote its current `review_version` and supply a reason. A separate restriction or changed review blocks the write. Read again after an uncertain result. A correction never grants consent.
+ 
+ ## Errors and limits
+ 
+--- a/guides/developer/campaigns/results-and-controls.mdx
++++ b/guides/developer/campaigns/results-and-controls.mdx
+@@ -75,3 +75,7 @@
+ 
+ 
+ Read one owned campaign with [Get a voice campaign](/api-reference/voice-campaigns/get). It returns the same saved fields as the list, without recipients, and sends `Cache-Control: no-store`. A 503 keeps the result unavailable; it must not clear the campaign or turn the wider-hours choice into false.
++
++## Read pickup rate for a number
++
++Send one owned business number in E.164 format, including the leading `+` (encode it as `%2B` in URLs). Omit `business_number` for the account view. A pending or inaccessible number returns `404 not_found`. Clear any previous page selection when changing the number. Request [voice campaigns](/api-reference/voice-campaigns/get-campaigns) with `?business_number=%2B12025550100&include_totals=true`. Sum `total_answered` and divide by the sum of `total_calls` across the campaigns you actually have. A zero denominator has no rate. Use `total_seconds / 60` for minutes. Filtered dashboard cards can cover more rows than the bounded public list. Do not present a partial list as an account-wide total.
+--- a/guides/developer/sms-campaigns/delivery-and-controls.mdx
++++ b/guides/developer/sms-campaigns/delivery-and-controls.mdx
+@@ -70,3 +70,7 @@
+ ## Related dashboard and AI tasks
+ 
+ - [Check SMS delivery and customer replies](/guides/business/sms-campaigns/check-delivery)
++
++## Page through one sender’s campaigns
++
++Send one owned business number in E.164 format, including the leading `+` (encode it as `%2B` in URLs). Omit `business_number` for the account view. A pending or inaccessible number returns `404 not_found`. Clear any previous page selection when changing the number. Request [SMS campaigns](/api-reference/sms/campaigns-list) with `?business_number=%2B12025550100`. Carry the same number and status onto every page. URL-encode the returned `next_cursor` as the next `before` value. Stop at null. For delivery rate, divide total delivered by total delivered plus total failed. Pending delivery has no final outcome.
+--- a/api-reference/voice-campaigns/get-campaigns.mdx
++++ b/api-reference/voice-campaigns/get-campaigns.mdx
+@@ -50,7 +50,7 @@
+ 
+ Do not send a request body.
+ 
+-Sort order is created_at descending. There is no tie-break cursor, offset, total or full-history paging contract. Unknown query keys are ignored. Counts describe stored campaign state, not delivery guarantees.
++Sort order is created_at descending. There is no tie-break cursor, offset, overall campaign count or full-history paging contract. Unknown query keys are ignored. Counts describe stored campaign state, not delivery guarantees.
+ 
+ ## Response fields
+ 
+@@ -165,6 +165,25 @@
+ 
+ This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+ 
++## Filter by the business number
++
++Send one owned business number in E.164 format, including the leading `+` (encode it as `%2B` in URLs). Omit `business_number` for the account view. A pending or inaccessible number returns `404 not_found`. Clear any previous page selection when changing the number.
++
++Set `include_totals=true` for six per-campaign fields: `total_calls`, `total_seconds`, `total_answered`, `today_calls`, `today_seconds`, `today_answered`. Omit it or send `false` for ordinary rows. Other values return `400 invalid_request`. Today means since the service’s start of day. Answered means a call longer than five seconds with no detected voicemail. Counts include unsuccessful starts as unanswered with zero seconds. A limit bounds rows returned, not the attempts counted for each row.
++
++```bash
++curl "https://api.nixflex.com/v1/campaigns?business_number=%2B12025550100&include_totals=true" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++Example totals from one returned campaign: `total_calls: 2`, `total_answered: 1`, `total_seconds: 9`.
++
++| Status | Filter error | Action |
++| --- | --- | --- |
++| 400 | `invalid_business_number` | Send one international number with 7–15 digits, starting with a nonzero digit. |
++| 404 | `not_found` | Check the selected number belongs to this account and finished importing. |
++| 503 | `number_lookup_unavailable` | Retry the read. Keep the scope you selected. |
++
+ ## Related endpoints
+ 
+ - [Create a voice campaign](/api-reference/calls/batch-create)
+--- a/api-reference/sms/campaigns-list.mdx
++++ b/api-reference/sms/campaigns-list.mdx
+@@ -182,6 +182,25 @@
+ 
+ This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+ 
++## Filter by the business number
++
++Send one owned business number in E.164 format, including the leading `+` (encode it as `%2B` in URLs). Omit `business_number` for the account view. A pending or inaccessible number returns `404 not_found`. Clear any previous page selection when changing the number.
++
++Continue with `before` set to the URL-encoded `next_cursor` from the same number and status. When either filter changes, discard the old cursor. A malformed cursor can return `500 server_error`. Restart from page one using the same filters instead of repeating the invalid cursor. A successful empty page is different from a failed read.
++
++```bash
++curl "https://api.nixflex.com/v1/sms/campaigns?business_number=%2B12025550100" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++Example when the sender has no campaigns: `{"campaigns":[],"next_cursor":null}`.
++
++| Status | Filter error | Action |
++| --- | --- | --- |
++| 400 | `invalid_business_number` | Send one international number with 7–15 digits, starting with a nonzero digit. |
++| 404 | `not_found` | Check the selected number belongs to this account and finished importing. |
++| 503 | `number_lookup_unavailable` | Retry the read. Keep the scope you selected. |
++
+ ## Related endpoints
+ 
+ - [Create an SMS campaign](/api-reference/sms/campaigns-create)
+--- a/api-reference/contact-controls/get-contact-suppressions.mdx
++++ b/api-reference/contact-controls/get-contact-suppressions.mdx
+@@ -65,8 +65,8 @@
+ | `entries[].channel` | string | Stored channel bucket. Allowed: `"all"`, `"voice"`, `"sms"`. |
+ | `entries[].source` | string | Why it was suppressed, for example owner or sms_optout. |
+ | `entries[].created_at` | string or null | Saved timestamp, or null. Format: date-time. |
+-| `entries[].removal_locked` | boolean | Only false for an explicitly removable owner-created entry. |
+-| `entries[].opted_out_message` | string or null | For SMS opt-outs: retained text, limited to 160 code points. |
++| `entries[].removal_locked` | boolean | False can identify an owner entry or a reviewable AI entry. Use `can_correct` and the separate correction endpoint for AI evidence. |
++| `entries[].opted_out_message` | string or null | Trimmed original text for keyword or AI opt-outs, up to 160 Unicode code points. |
+ | `entries[].opted_out_at` | string or null | Saved timestamp, or null. Format: date-time. |
+ | `entries[].opted_out_business_number` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+ | `next_cursor` | string or null | International number with + and digits; no spaces. Pattern: `^\+[1-9][0-9]{6,14}$`. |
+@@ -156,6 +156,25 @@
+ 
+ This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+ 
++## Filter by the business number
++
++Send one owned business number in E.164 format, including the leading `+` (encode it as `%2B` in URLs). Omit `business_number` for the account view. A pending or inaccessible number returns `404 not_found`. Clear any previous page selection when changing the number.
++
++`channel` selects the exact `all`, `voice` or `sms` bucket (default `all`). `source` accepts `sms_optout`, `ai_optout`, `attributed`, `owner`, `registry` or `support`. A number alone selects keyword opt-outs. `attributed` selects keyword and AI entries. A business number plus owner, registry or support returns an empty list. Omit the number to include unattributed entries. `opted_out_message` is a trimmed excerpt up to 160 characters, `opted_out_at` is its time and `opted_out_business_number` is its destination. These can be null. AI rows add `detection`, `medium`, `direction`, `review_version` and `can_correct`. Respect `removal_locked`. For another page use `after=next_cursor` with the same filters. An empty page ends pagination.
++
++```bash
++curl "https://api.nixflex.com/v1/contact-suppressions?business_number=%2B12025550100&source=attributed&channel=all" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++Example when no entries match: `{"entries":[],"next_cursor":null}`.
++
++| Status | Filter error | Action |
++| --- | --- | --- |
++| 400 | `invalid_business_number` | Send one international number with 7–15 digits, starting with a nonzero digit. |
++| 404 | `not_found` | Check the selected number belongs to this account and finished importing. |
++| 503 | `number_lookup_unavailable` | Retry the read. Keep the scope you selected. |
++
+ ## Related endpoints
+ 
+ - [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview)
+--- /dev/null
++++ b/api-reference/contact-controls/correct-ai-opt-out.mdx
+@@ -0,0 +1,50 @@
++---
++title: "Correct a mistaken AI-detected SMS opt-out"
++sidebarTitle: "Correct an AI opt-out"
++description: "Review an eligible AI-detected opt-out, provide its current review version and a reason, then verify the result before changing outbound contact."
++openapi: "/api-reference/public.openapi.json POST /contact-suppressions/ai-corrections"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/contact-controls/correct-ai-opt-out"
++---
++
++Use this action only after reviewing the original incoming message and deciding the AI made a mistake. Use an organisation API key on your server. In the dashboard, only the Owner can correct the entry.
++
++## Request
++
++All four JSON fields are required. Extra fields return an error.
++
++| Field | Value |
++| --- | --- |
++| `phone_number` | Recipient’s E.164 number, with a leading plus and 7–15 digits. |
++| `channel` | Literal `all`. Recognition protects calls and texts across the account. |
++| `review_version` | UUID from the current eligible AI entry. |
++| `reason` | Nonblank text, 1–300 Unicode characters after trimming. |
++
++```bash
++curl -X POST "https://api.nixflex.com/v1/contact-suppressions/ai-corrections" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY" -H "Content-Type: application/json" \
++  -d '{"phone_number":"+12025550123","channel":"all","review_version":"e5cdb54a-7e27-42dc-b446-d31ebd35a2ff","reason":"The sender quoted an example."}'
++```
++
++## Response
++
++HTTP 200 identifies the exact recipient and scope corrected. A correction does not supply consent.
++
++```json
++{"removed":true,"phone_number":"+12025550123","channel":"all"}
++```
++
++## Errors and recovery
++
++| HTTP | Code | Action |
++| --- | --- | --- |
++| 400 | `invalid_request` | Fix the fields or reason. |
++| 401 | `unauthorized`, `authentication_required` | Check the signed-in account or organisation key. |
++| 403 | `permission_denied` | A personal correction requires the Owner. |
++| 404 | `not_found` | Read the list again in the correct account. |
++| 409 | `review_changed` | Re-read the evidence and decide again using its new version. |
++| 409 | `suppression_locked` | An independent restriction still protects the recipient. Leave it in place. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 503 | `outcome_unknown` | The result carries `safe_to_retry: false`. Check the current entry before taking any further action. |
++
++There is no idempotency-key contract for this endpoint. Never automatically repeat a correction. [List opt-out evidence](/api-reference/contact-controls/get-contact-suppressions) · [Contact controls guide](/guides/developer/contact-controls).
+--- a/api-reference/introduction.mdx
++++ b/api-reference/introduction.mdx
+@@ -228,7 +228,7 @@
+ 
+ </Accordion>
+ 
+-<Accordion title="Contacts (8)">
++<Accordion title="Contacts (9)">
+ 
+ | Task | Method and path |
+ | --- | --- |
+@@ -238,6 +238,7 @@
+ | [Import caller context](/api-reference/caller-context/import) | `POST /phone-numbers/{phoneNumber}/callers/import` |
+ | [Preview contact hours](/api-reference/contact-controls/post-contact-hours-preview) | `POST /contact-hours/preview` |
+ | [List contact suppressions](/api-reference/contact-controls/get-contact-suppressions) | `GET /contact-suppressions` |
++| [Correct a mistaken AI-detected SMS opt-out](/api-reference/contact-controls/correct-ai-opt-out) | `POST /contact-suppressions/ai-corrections` |
+ | [Add contact suppressions](/api-reference/contact-controls/post-contact-suppressions) | `POST /contact-suppressions` |
+ | [Remove a contact suppression](/api-reference/contact-controls/delete-contact-suppressions) | `DELETE /contact-suppressions` |
+ 
+--- a/docs.json
++++ b/docs.json
+@@ -2409,6 +2409,7 @@
+               "api-reference/caller-context/import",
+               "api-reference/contact-controls/post-contact-hours-preview",
+               "api-reference/contact-controls/get-contact-suppressions",
++              "api-reference/contact-controls/correct-ai-opt-out",
+               "api-reference/contact-controls/post-contact-suppressions",
+               "api-reference/contact-controls/delete-contact-suppressions"
+             ],
+--- a/api-reference/public.openapi.json
++++ b/api-reference/public.openapi.json
+@@ -14161,6 +14161,23 @@
+               "minimum": 1,
+               "maximum": 200
+             }
++          },
++          {
++            "in": "query",
++            "name": "business_number",
++            "schema": {
++              "type": "string",
++              "pattern": "^\\+[1-9]\\d{6,14}$"
++            },
++            "description": "One owned business number. Omit for account scope."
++          },
++          {
++            "name": "include_totals",
++            "in": "query",
++            "schema": {
++              "type": "boolean",
++              "default": false
++            }
+           }
+         ],
+         "responses": {
+@@ -14312,6 +14329,36 @@
+                             "type": "integer",
+                             "description": "Count.",
+                             "minimum": 0
++                          },
++                          "total_calls": {
++                            "type": "integer",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
++                          },
++                          "total_seconds": {
++                            "type": "number",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
++                          },
++                          "total_answered": {
++                            "type": "integer",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
++                          },
++                          "today_calls": {
++                            "type": "integer",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
++                          },
++                          "today_seconds": {
++                            "type": "number",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
++                          },
++                          "today_answered": {
++                            "type": "integer",
++                            "minimum": 0,
++                            "description": "Present with include_totals=true."
+                           }
+                         },
+                         "required": [
+@@ -14356,6 +14403,54 @@
+               }
+             }
+           },
++          "400": {
++            "description": "invalid_business_number invalid_request for invalid include_totals.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
+           "401": {
+             "description": "unauthorized: The credential is missing or invalid.",
+             "content": {
+@@ -14404,6 +14499,54 @@
+               }
+             }
+           },
++          "404": {
++            "description": "not_found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
+           "429": {
+             "description": "rate_limit_exceeded: The account request limit was reached.",
+             "content": {
+@@ -14454,6 +14597,54 @@
+           },
+           "500": {
+             "description": "server_error: The result could not be confirmed.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "number_lookup_unavailable",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -15987,6 +16178,15 @@
+               "type": "string",
+               "description": "Opaque next_cursor from the previous response; preserve unchanged."
+             }
++          },
++          {
++            "in": "query",
++            "name": "business_number",
++            "schema": {
++              "type": "string",
++              "pattern": "^\\+[1-9]\\d{6,14}$"
++            },
++            "description": "One owned business number. Omit for account scope."
+           }
+         ],
+         "responses": {
+@@ -16244,6 +16444,54 @@
+               }
+             }
+           },
++          "400": {
++            "description": "invalid_business_number",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
+           "401": {
+             "description": "unauthorized: The credential is missing or invalid.",
+             "content": {
+@@ -16292,6 +16540,54 @@
+               }
+             }
+           },
++          "404": {
++            "description": "not_found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
+           "429": {
+             "description": "rate_limit_exceeded: The account request limit was reached.",
+             "content": {
+@@ -16342,6 +16638,54 @@
+           },
+           "500": {
+             "description": "server_error: The result could not be confirmed.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "number_lookup_unavailable",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -43139,6 +43483,30 @@
+               "description": "Continue after this E.164 number from next_cursor.",
+               "pattern": "^\\+[1-9][0-9]{6,14}$"
+             }
++          },
++          {
++            "in": "query",
++            "name": "business_number",
++            "schema": {
++              "type": "string",
++              "pattern": "^\\+[1-9]\\d{6,14}$"
++            },
++            "description": "One owned business number. Omit for account scope."
++          },
++          {
++            "in": "query",
++            "name": "source",
++            "schema": {
++              "enum": [
++                "owner",
++                "registry",
++                "support",
++                "sms_optout",
++                "ai_optout",
++                "attributed"
++              ]
++            },
++            "description": "attributed includes keyword and AI entries. Number alone selects keyword entries."
+           }
+         ],
+         "responses": {
+@@ -43182,14 +43550,14 @@
+                           },
+                           "removal_locked": {
+                             "type": "boolean",
+-                            "description": "Only false for an explicitly removable owner-created entry."
++                            "description": "False can indicate a removable owner entry or a correctable AI entry. Use the correct endpoint for the source."
+                           },
+                           "opted_out_message": {
+                             "type": [
+                               "string",
+                               "null"
+                             ],
+-                            "description": "For SMS opt-outs: retained text, limited to 160 code points."
++                            "description": "Original text for keyword or AI opt-outs, trimmed to 160 Unicode code points."
+                           },
+                           "opted_out_at": {
+                             "type": [
+@@ -43206,6 +43574,25 @@
+                             ],
+                             "description": "International number with + and digits; no spaces.",
+                             "pattern": "^\\+[1-9][0-9]{6,14}$"
++                          },
++                          "detection": {
++                            "const": "ai_detected"
++                          },
++                          "medium": {
++                            "const": "sms"
++                          },
++                          "direction": {
++                            "const": "inbound"
++                          },
++                          "review_version": {
++                            "type": [
++                              "string",
++                              "null"
++                            ],
++                            "format": "uuid"
++                          },
++                          "can_correct": {
++                            "type": "boolean"
+                           }
+                         },
+                         "required": [
+@@ -43244,7 +43631,7 @@
+             }
+           },
+           "400": {
+-            "description": "invalid_request: The identifier or request fields are invalid.",
++            "description": "invalid_request: The identifier or request fields are invalid. invalid_business_number",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -43339,6 +43726,54 @@
+               }
+             }
+           },
++          "404": {
++            "description": "not_found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
+           "429": {
+             "description": "rate_limit_exceeded: The account request limit was reached.",
+             "content": {
+@@ -43388,7 +43823,7 @@
+             }
+           },
+           "503": {
+-            "description": "unavailable: Suppression entries could not be read.",
++            "description": "unavailable: Suppression entries could not be read. number_lookup_unavailable",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -73541,6 +73976,416 @@
+           }
+         }
+       }
++    },
++    "/contact-suppressions/ai-corrections": {
++      "post": {
++        "operationId": "correctAiContactOptOut",
++        "summary": "Correct a mistaken AI-detected opt-out",
++        "tags": [
++          "Contact controls"
++        ],
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "properties": {
++                  "phone_number": {
++                    "type": "string",
++                    "pattern": "^\\+[1-9]\\d{6,14}$"
++                  },
++                  "channel": {
++                    "const": "all"
++                  },
++                  "review_version": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "reason": {
++                    "type": "string",
++                    "minLength": 1,
++                    "maxLength": 300
++                  }
++                },
++                "required": [
++                  "phone_number",
++                  "channel",
++                  "review_version",
++                  "reason"
++                ],
++                "additionalProperties": false
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Reviewed entry removed.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "removed": {
++                      "const": true
++                    },
++                    "phone_number": {
++                      "type": "string",
++                      "pattern": "^\\+[1-9]\\d{6,14}$"
++                    },
++                    "channel": {
++                      "const": "all"
++                    }
++                  },
++                  "required": [
++                    "removed",
++                    "phone_number",
++                    "channel"
++                  ],
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "invalid_request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "unauthorized, authentication_required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "permission_denied",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "not_found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "review_changed, suppression_locked",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "rate_limit_exceeded",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "outcome_unknown",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "type": "object",
++                  "properties": {
++                    "error": {
++                      "type": "object",
++                      "properties": {
++                        "code": {
++                          "type": "string",
++                          "description": "Machine-readable error code."
++                        },
++                        "message": {
++                          "type": "string",
++                          "description": "Explanation."
++                        },
++                        "doc_url": {
++                          "type": "string",
++                          "description": "Error reference link."
++                        },
++                        "details": {
++                          "type": "object",
++                          "properties": {},
++                          "description": "Optional context; inspect campaign_id, status, outcome and safe_to_retry for uncertain writes.",
++                          "additionalProperties": true
++                        }
++                      },
++                      "required": [
++                        "code",
++                        "message",
++                        "doc_url",
++                        "type"
++                      ],
++                      "description": "",
++                      "additionalProperties": false
++                    }
++                  },
++                  "required": [
++                    "error"
++                  ],
++                  "description": "",
++                  "additionalProperties": false
++                }
++              }
++            }
++          }
++        }
++      }
+     }
+   },
+   "components": {

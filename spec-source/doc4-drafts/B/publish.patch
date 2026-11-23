@@ -1,0 +1,323 @@
+--- a/actions/calcom.mdx
++++ b/actions/calcom.mdx
+@@ -1,6 +1,6 @@
+ ---
+ title: "Connect Cal.com bookings in code"
+-description: "Connect a Nixflex number to Cal.com, use the agent time zone and confirmation controls, and check real calendar outcomes before promising a booking."
++description: "Connect a Nixflex number to Cal.com, choose the number’s booking time zone and confirmation controls, and check real calendar outcomes before promising a booking."
+ canonical: "https://docs.nixflex.com/actions/calcom"
+ sidebarTitle: "Cal.com bookings"
+ ---
+@@ -23,7 +23,7 @@
+ 
+ **The important part**
+ 
+-- **Booking time zone.** A saved agent time zone takes precedence over the legacy Cal.com integration default, even on a per-number connection. Use separate agents for independent Cal.com time zones, or configure [Google Calendar per number](/api-reference/integration-settings/google-calendar-settings).
++- **Booking time zone.** Two numbers on one agent can use the same Cal.com connection and book in different time zones. Set a booking zone on each number that needs its own.
+ 
+ - Calendar access and the agent’s permission to act are separate.
+ - Collect the spelled name and email for a new voice booking, then use one combined read-back and one yes.
+@@ -81,7 +81,7 @@
+ 
+ ## 2. Save the connection
+ 
+-Use the documented PUT integration route with the calendar credentials and event configuration. Treat secrets as write-only. Set the agent’s intended IANA time zone; the current booking path applies that agent zone over a legacy integration default.
++Use the documented PUT integration route with the calendar credentials and event configuration. Treat secrets as write-only. Set the booking zone on the number when it differs from the agent’s zone.
+ 
+ ## 3. Describe permitted booking
+ 
+@@ -100,6 +100,14 @@
+ ## Example response
+ 
+ The settings GET returns a safe configuration view without the full secret. Booking tools return structured outcomes such as created, rescheduled, cancelled, needs_info or an error; use the actual result rather than a fixed success sentence.
++
++## Set and verify a number’s booking zone
++
++Send a [number update](/api-reference/phone-numbers/update) with `{"calcom_timezone_override":"America/New_York"}`. Send JSON `null` to inherit again. Omit the field to preserve it. Use an IANA zone so future appointments follow the branch’s local clock changes. Numeric offsets and empty strings are invalid. Send moves and credential changes as separate requests.
++
++Read the [number](/api-reference/phone-numbers/get) or its [Cal.com status](/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber). The first available value wins: number, agent, saved connection, then `Europe/London`. The effective value and its source appear only with a booking context. You can save a number preference before booking is available. A saved connection on an unassigned number can still report `booking_available: false`.
++
++On inbound and outbound phone calls, a changed target for rescheduling or cancellation needs a complete spoken read-back and a later yes. A fresh lookup, an interrupted read-back or approval of a previous appointment cannot authorise the changed target. During clock changes, ask for another local time if the requested minute is skipped or ambiguous.
+ 
+ ## Errors and limits
+ 
+--- a/guides/business/calcom.mdx
++++ b/guides/business/calcom.mdx
+@@ -116,6 +116,16 @@
+ | Save outcome unknown | You do not know whether the new settings took effect. | Refresh the card before making another change. |
+ | Conversation promises a booking | The spoken answer is not the final record. | Check Cal.com and the available booking result. |
+ 
++## Give a number its own booking time zone
++
++Use the web dashboard for this task, including in your phone’s browser.
++
++In **Integrations**, select the business number, open **Cal.com**, and find **Booking time zone**. Choose the city that follows your branch’s local clocks and select **Save time zone**. Reopen the card to check the zone and where it came from. Owners and Admins can save a change. Members can view it.
++
++Choose **Use agent time zone** to clear the number’s choice. Nixflex then uses the agent’s zone, the saved Cal.com connection’s zone, or London, in that order. This setting changes Cal.com appointment times only. Two numbers can share an agent and a calendar and still book in different local times.
++
++If an existing appointment changes while a caller is moving or cancelling it, the agent reads the updated appointment back. Let it finish, then confirm the specific appointment. An earlier yes cannot approve the changed time. Check the actual calendar for the result.
++
+ ## Common questions
+ 
+ <AccordionGroup>
+--- a/actions/booking-confirmation.mdx
++++ b/actions/booking-confirmation.mdx
+@@ -143,6 +143,12 @@
+ 
+ The agent update returns the safe saved agent projection. Check the intended fields in a fresh [agent read](/api-reference/agents/get); call outcomes are separate records.
+ 
++## When an existing Cal.com appointment changes
++
++During either direction of a phone call, the agent may look up the caller’s appointments more than once. If the selected appointment changes, disappears and returns, or the calendar changes, the agent must read the selected appointment’s current details aloud and finish speaking before accepting a new yes to cancel or reschedule it. This protection also applies when optional booking confirmation is off. An unaffected appointment keeps its usual checks. SMS follows its separate approval flow.
++
++For example, if a 10:00 appointment now appears at 11:00, a yes to 10:00 does not approve moving 11:00. Check the calendar result after the caller confirms.
++
+ ## Errors and limits
+ 
+ | Condition | Handling |
+--- a/api-reference/phone-numbers/get.mdx
++++ b/api-reference/phone-numbers/get.mdx
+@@ -223,6 +223,30 @@
+ 
+ Use bounded retries only for temporary read failures. Keep the same filters while paging. See [retry rules](/api-reference/retries).
+ 
++## Read the Cal.com booking zone
++
++`calcom_timezone_override` is the number’s saved IANA zone or null. When booking is available, `effective_calcom_timezone` is the resolved zone and `effective_calcom_timezone_source` is `number`, `agent`, `connection` or `default`, in that order. The final fallback is `Europe/London`. A number without a booking context can have a saved override and omit both effective fields. General call time and Google Calendar settings are independent.
++
++Read the number owned by the authenticated account. Use its saved and effective values to confirm a previous update.
++
++```bash
++curl -X GET "https://api.nixflex.com/v1/phone-numbers/%2B12025550100" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++Example number response (relevant fields):
++
++```json
++{
++  "phone_number": {
++    "phone_number": "+12025550100",
++    "calcom_timezone_override": "America/New_York",
++    "effective_calcom_timezone": "America/New_York",
++    "effective_calcom_timezone_source": "number"
++  }
++}
++```
++
+ ## Related endpoints
+ 
+ - [List phone numbers](/api-reference/phone-numbers/list)
+--- a/api-reference/phone-numbers/update.mdx
++++ b/api-reference/phone-numbers/update.mdx
+@@ -220,6 +220,32 @@
+ 
+ Never automatically retry PATCH. Read the number after an uncertain settings write or move. Do not change routing to compensate for an unconfirmed move.
+ 
++## Save and read back the Cal.com zone
++
++`calcom_timezone_override` is the number’s saved IANA zone or null. When booking is available, `effective_calcom_timezone` is the resolved zone and `effective_calcom_timezone_source` is `number`, `agent`, `connection` or `default`, in that order. The final fallback is `Europe/London`. A number without a booking context can have a saved override and omit both effective fields. General call time and Google Calendar settings are independent.
++
++Send a nonempty IANA zone or JSON `null` to clear it. Omission keeps the saved choice. An invalid zone returns `400 invalid_timezone`. Mixing a booking-zone change with carrier credential rotation returns `400 invalid_settings`. Send an agent move by itself. If a successful save includes `phone_number.calcom_timezone_warning`, read the number again before making another change.
++
++```bash
++curl -X PATCH "https://api.nixflex.com/v1/phone-numbers/%2B12025550100" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY" \
++  -H "Content-Type: application/json" \
++  -d '{"calcom_timezone_override":"America/New_York"}'
++```
++
++Example number response (relevant fields):
++
++```json
++{
++  "phone_number": {
++    "phone_number": "+12025550100",
++    "calcom_timezone_override": "America/New_York",
++    "effective_calcom_timezone": "America/New_York",
++    "effective_calcom_timezone_source": "number"
++  }
++}
++```
++
+ ## Related endpoints
+ 
+ - [List phone numbers](/api-reference/phone-numbers/list)
+--- a/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber.mdx
++++ b/api-reference/integration-settings/get-integrations-calcom-number-phoneNumber.mdx
+@@ -132,7 +132,6 @@
+ 
+ | Status | Code | Meaning | What to do |
+ | --- | --- | --- | --- |
+-| 500 | [`server_error`](/api-reference/errors#server_error) | The result could not be confirmed. | Read the current state before retrying a write. |
+ | 404 | [`not_found`](/api-reference/errors#not_found) | No matching owned resource or saved configuration was found. | Check the identifier and owning account. |
+ | 401 | [`unauthorized`](/api-reference/errors#unauthorized) | The credential is missing or invalid. | Check the full account credential. |
+ | 429 | [`rate_limit_exceeded`](/api-reference/errors#rate_limit_exceeded) | The account request limit was reached. | Wait for Retry-After. Reconcile uncertain writes before resending. |
+@@ -143,6 +142,35 @@
+ 
+ This is a read-only request. Retry transient connection or server failures with bounded backoff; respect Retry-After for 429. Do not retry validation or ownership errors unchanged. A later read can return newer state.
+ 
++## Read the Cal.com booking zone
++
++`calcom_timezone_override` is the number’s saved IANA zone or null. When booking is available, `effective_calcom_timezone` is the resolved zone and `effective_calcom_timezone_source` is `number`, `agent`, `connection` or `default`, in that order. The final fallback is `Europe/London`. A number without a booking context can have a saved override and omit both effective fields. General call time and Google Calendar settings are independent.
++
++`booking_available` describes whether this number can book now. `inherited` describes the connection. A directly connected unassigned number may show `is_active: true` and `booking_available: false`. No connection returns `404 not_found`. Unknown, inaccessible or pending numbers return `404 number_not_found`. `503 calendar_unavailable` means the check did not finish. Retry the read.
++
++```bash
++curl -X GET "https://api.nixflex.com/v1/integrations/calcom/number/%2B12025550100" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++Example status response:
++
++```json
++{
++  "phone_number": "+12025550100",
++  "is_active": true,
++  "api_key_set": true,
++  "username": "example-team",
++  "event_slug": "consultation",
++  "default_timezone": "Europe/London",
++  "inherited": false,
++  "booking_available": true,
++  "calcom_timezone_override": "America/New_York",
++  "effective_calcom_timezone": "America/New_York",
++  "effective_calcom_timezone_source": "number"
++}
++```
++
+ ## Related endpoints
+ 
+ - [Set Cal.com settings](/api-reference/integration-settings/put-integrations-calcom-number-phoneNumber)
+--- a/api-reference/public.openapi.json
++++ b/api-reference/public.openapi.json
+@@ -20049,6 +20049,25 @@
+                           "type": "boolean",
+                           "readOnly": true,
+                           "description": "Saved website voice true and Web agent not false (legacy null retains old semantics). Switch eligibility only; active/billing admission still applies."
++                        },
++                        "calcom_timezone_override": {
++                          "type": [
++                            "string",
++                            "null"
++                          ],
++                          "description": "Number booking zone. Send null to inherit."
++                        },
++                        "effective_calcom_timezone": {
++                          "type": "string",
++                          "description": "Present with booking context."
++                        },
++                        "effective_calcom_timezone_source": {
++                          "enum": [
++                            "number",
++                            "agent",
++                            "connection",
++                            "default"
++                          ]
+                         }
+                       }
+                     }
+@@ -20267,6 +20286,28 @@
+                               ],
+                               "description": "Number-specific message. Null or empty clears to null.",
+                               "maxLength": 2000
++                            },
++                            "calcom_timezone_override": {
++                              "type": [
++                                "string",
++                                "null"
++                              ],
++                              "description": "Number booking zone. Send null to inherit."
++                            },
++                            "effective_calcom_timezone": {
++                              "type": "string",
++                              "description": "Present with booking context."
++                            },
++                            "effective_calcom_timezone_source": {
++                              "enum": [
++                                "number",
++                                "agent",
++                                "connection",
++                                "default"
++                              ]
++                            },
++                            "calcom_timezone_warning": {
++                              "type": "string"
+                             }
+                           },
+                           "required": [
+@@ -20328,7 +20369,7 @@
+             }
+           },
+           "400": {
+-            "description": "missing_field: No recognised setting was supplied. Send a documented setting, or agent_id alone for a move. invalid_number_control: A strict switch is not a JSON boolean or aliases conflict. Send true or false once for that switch. invalid_agent_move: A move contains other settings or an invalid agent ID. Send only agent_id; update settings separately. invalid_number: A move URL does not contain a complete E.164 number. Correct and URL-encode the number. custom_prompt_too_long: The number prompt exceeds 8,000 characters. Shorten it. sms_prompt_too_long: The SMS prompt exceeds 20,000 characters. Shorten it. web_prompt_too_long: The web prompt exceeds 16,000 characters. Shorten it. voicemail_message_too_long: The voicemail message exceeds 2,000 characters. Shorten it. voicemail_message_required: The merged settings enable voicemail without a message. Supply the message or disable voicemail. invalid_recording_source: The recording source value is unsupported. Use provider, nixflex or null.",
++            "description": "missing_field: No recognised setting was supplied. Send a documented setting, or agent_id alone for a move. invalid_number_control: A strict switch is not a JSON boolean or aliases conflict. Send true or false once for that switch. invalid_agent_move: A move contains other settings or an invalid agent ID. Send only agent_id; update settings separately. invalid_number: A move URL does not contain a complete E.164 number. Correct and URL-encode the number. custom_prompt_too_long: The number prompt exceeds 8,000 characters. Shorten it. sms_prompt_too_long: The SMS prompt exceeds 20,000 characters. Shorten it. web_prompt_too_long: The web prompt exceeds 16,000 characters. Shorten it. voicemail_message_too_long: The voicemail message exceeds 2,000 characters. Shorten it. voicemail_message_required: The merged settings enable voicemail without a message. Supply the message or disable voicemail. invalid_recording_source: The recording source value is unsupported. Use provider, nixflex or null. invalid_timezone: use an IANA zone or null. invalid_settings: save credentials separately.",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -20861,6 +20902,13 @@
+                       "voice_pair_inherit": {
+                         "type": "boolean",
+                         "description": "Set true to inherit the agent’s saved pair. Omit competing pair values."
++                      },
++                      "calcom_timezone_override": {
++                        "type": [
++                          "string",
++                          "null"
++                        ],
++                        "description": "Number booking zone. Send null to inherit."
+                       }
+                     },
+                     "description": "Partial settings update; at least one recognised setting is required. Unknown-only input is refused.",
+@@ -30716,6 +30764,31 @@
+                     "api_key_set": {
+                       "type": "boolean",
+                       "description": "A calendar credential is configured; never the credential itself."
++                    },
++                    "calcom_timezone_override": {
++                      "type": [
++                        "string",
++                        "null"
++                      ],
++                      "description": "Number booking zone. Send null to inherit."
++                    },
++                    "effective_calcom_timezone": {
++                      "type": "string",
++                      "description": "Present with booking context."
++                    },
++                    "effective_calcom_timezone_source": {
++                      "enum": [
++                        "number",
++                        "agent",
++                        "connection",
++                        "default"
++                      ]
++                    },
++                    "booking_available": {
++                      "type": "boolean"
++                    },
++                    "inherited": {
++                      "type": "boolean"
+                     }
+                   },
+                   "required": [
+@@ -30791,7 +30864,7 @@
+             }
+           },
+           "404": {
+-            "description": "not_found: No matching owned resource or saved configuration was found.",
++            "description": "not_found: No matching owned resource or saved configuration was found. number_not_found: number not accessible.",
+             "content": {
+               "application/json": {
+                 "schema": {
+@@ -30890,8 +30963,8 @@
+               }
+             }
+           },
+-          "500": {
+-            "description": "server_error: The result could not be confirmed.",
++          "503": {
++            "description": "calendar_unavailable",
+             "content": {
+               "application/json": {
+                 "schema": {

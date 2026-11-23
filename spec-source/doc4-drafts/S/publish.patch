@@ -1,0 +1,2158 @@
+--- a/guides/business/account.mdx
++++ b/guides/business/account.mdx
+@@ -47,15 +47,7 @@
+ 
+ ## Get help
+ 
+-1. Open **Settings → Help**, choose **Support tickets**, then **New ticket**.
+-2. Choose **Problem**, **Billing**, **Raise call limit**, **Report abuse** or **Other**. For a higher call limit, enter the number of simultaneous calls you need and what you’ll use them for.
+-3. Enter a **Subject** and **Message**, then select **Send ticket**. Support aims to reply within 48 hours, including weekends.
+-
+-In **My tickets**, select a subject to read the conversation. Owners and Admins can see their organisation’s tickets. Members can see only the tickets they opened.
+-
+-**Waiting on customer** means support is waiting for your reply. Write your message and select **Send reply**. When the issue is resolved, choose **Mark solved**. To reopen a solved ticket, write a message and choose **Reply and reopen**.
+-
+-If the dashboard says the ticket changed, choose **Refresh ticket** and read the latest conversation before sending your update. If it cannot confirm a submission and shows **Retry same request**, use that button to retry the original change.
++In **Settings → Help**, choose **Contact us** to send a request or **My tickets** to follow a conversation. You can also email [support@nixflex.com](mailto:support@nixflex.com). [Choose a request type and follow the reply](/guides/business/support-tickets).
+ 
+ ## Profile and email preferences
+ 
+--- a/guides/developer/account.mdx
++++ b/guides/developer/account.mdx
+@@ -50,7 +50,7 @@
+ 
+ ## Get help with a request
+ 
+-Open **Settings → Help → Support tickets** in the dashboard. Include the failing action and its request ID or error code if available. Keep credentials and private call content out of the message. [Open and follow a ticket](/guides/business/account#get-help).
++[Open and follow a support ticket through the API](/guides/developer/support-tickets). For a personal submission with a lost response, check the original request receipt before submitting again. Include a request ID or error code when useful. Keep credentials and private call content out of the message.
+ 
+ ## Check the outcome
+ 
+--- /dev/null
++++ b/guides/business/support-tickets.mdx
+@@ -0,0 +1,38 @@
++---
++title: "Contact Nixflex support and follow your ticket"
++sidebarTitle: "Contact support"
++description: "Choose a request type in Help, ask for a higher simultaneous call limit, and find the latest public reply in your dashboard or the Nixflex phone app."
++canonical: "https://docs.nixflex.com/guides/business/support-tickets"
++---
++
++Use a ticket to keep the request and replies together. If you prefer email, write to [support@nixflex.com](mailto:support@nixflex.com). We aim to reply within 48 hours, including weekends.
++
++## Send a request
++
++1. Sign in to the organisation the request is about. In the dashboard open **Settings → Help**. In the phone app open **Account → Help**.
++2. Under **Contact us**, check your name, business and verified email. These fields come from your account. If you have no verified email, you can still use **My tickets**.
++3. Choose the request type and write a message. Include the time and what you were trying to do. Leave out passwords, keys and private call content. Your first nonblank line becomes the subject.
++4. Choose **Send request**. If the outcome is unclear, let Help check the original request. If your workspace changed, reopen Help in the intended account and check **My tickets** before starting again.
++
++| Choose | What to include |
++| --- | --- |
++| Increase my simultaneous call limit | The total number of calls you need at one time and why. Support reviews the request before a limit changes. |
++| Complaint or problem | What happened, when and what you expected. Use this for a billing problem too. |
++| Report abuse | What happened and when, with a safe reference if you have one. |
++| Other | What you need help with. |
++
++## Follow the conversation
++
++Open **My tickets**. Check the type, date opened, status and latest public reply. Select a subject to see its messages. Owners and Admins can read the organisation’s tickets. A Member sees the tickets they personally opened while they still have access.
++
++**Waiting for your reply** means support needs something from you. Send your reply in the thread. Choose **Mark done** once the issue is resolved. If it comes back, reply to reopen it. If someone updated the ticket while you were writing, refresh it and read their reply first. A notification email directs you back to sign in and read the conversation.
++
++## Common questions
++
++**Can I ask for a call back?** The form offers the four choices above. Older callback tickets remain in your history.
++
++**Can I check a ticket on my phone?** In the app, **Account → Help** includes the request form and ticket list. **Copy email address** lets you use your own mail app.
++
++**Does a request immediately increase my call limit?** Your current limit applies until a reviewed change is confirmed.
++
++[Account settings](/guides/business/account) · [Support for developers](/guides/developer/support-tickets)
+--- /dev/null
++++ b/guides/developer/support-tickets.mdx
+@@ -0,0 +1,61 @@
++---
++title: "Open and recover support tickets with the Nixflex API"
++sidebarTitle: "Support tickets in code"
++description: "Create a ticket, read its public thread, reply at the latest version, and recover a personal request in the same workspace after a lost response."
++canonical: "https://docs.nixflex.com/guides/developer/support-tickets"
++---
++
++Use a server-side organisation key to work with the organisation’s tickets. A personal bearer session has the signed-in person’s current access and MFA requirements. Members can work with their own tickets. Keep ticket text private.
++
++## 1. Find the ticket
++
++<CodeGroup>
++
++```bash cURL
++curl "https://api.nixflex.com/v1/support/tickets?limit=5" -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++```javascript Node
++const response = await fetch('https://api.nixflex.com/v1/support/tickets?limit=5', {
++  headers: { Authorization: 'Bearer ' + process.env.NIXFLEX_API_KEY }
++})
++if (!response.ok) throw new Error('HTTP ' + response.status)
++const page = await response.json()
++```
++
++```python Python
++import json, os, urllib.request
++req = urllib.request.Request('https://api.nixflex.com/v1/support/tickets?limit=5',
++    headers={'Authorization': 'Bearer ' + os.environ['NIXFLEX_API_KEY']})
++with urllib.request.urlopen(req, timeout=15) as response:
++    page = json.load(response)
++```
++
++```powershell PowerShell
++$headers = @{ Authorization = "Bearer $env:NIXFLEX_API_KEY" }
++$page = Invoke-RestMethod -Uri 'https://api.nixflex.com/v1/support/tickets?limit=5' -Headers $headers
++```
++
++</CodeGroup>
++
++An empty page is `{"tickets":[],"next_cursor":null}`. Preserve the filters and pass any returned cursor back unchanged. Read the individual ticket to obtain its current version and public conversation.
++
++## 2. Submit once in the intended workspace
++
++Choose a unique `Idempotency-Key` for each intended create, reply or solve. Keep the key with the exact action, body and revision. For a personal create or reply, capture the workspace’s public `key_id` **when the draft starts** and send it in `X-Nixflex-Expected-Account`. Never derive that header from whichever workspace happens to be open when retrying. An organisation key already selects its workspace.
++
++[Create](/api-reference/support/create) uses `message`. [Reply](/api-reference/support/reply) uses `body` and the thread’s latest version in `X-Expected-Revision`. [Mark done](/api-reference/support/solve) takes that version in the JSON body. A reply can reopen a solved ticket.
++
++## 3. Recover a lost acknowledgement
++
++For a personal submission, [look up the receipt](/api-reference/support/receipt) with the original signed-in person, request key and workspace header. On 200, show the current ticket and the original receipt. An organisation-key client can replay the identical write with its original key. Only an already committed and still authorised personal write can replay without the workspace header.
++
++| Result | What to do |
++| --- | --- |
++| 404 `request_not_found` | Check identity, workspace and original key. If still in doubt, refresh the list. Reuse the original key and exact payload for a deliberate retry. |
++| 409 `account_changed` | Discard the stale draft, refresh the signed-in workspace and check the intended workspace separately. Never replay the draft into the newly selected account. |
++| 409 `ticket_changed` | Read the thread. Review the new revision before composing a new change. |
++| 409 `request_conflict` | The key identifies a different payload. Reconcile the original action first. |
++| 429 or 503 | Wait and retry a read. Reconcile a write before resending. |
++
++[List tickets](/api-reference/support/list) · [Read a thread](/api-reference/support/get) · [Dashboard and app guide](/guides/business/support-tickets)
+--- /dev/null
++++ b/api-reference/support/list.mdx
+@@ -0,0 +1,72 @@
++---
++title: "List support tickets"
++sidebarTitle: "List support tickets"
++description: "Read the tickets visible to the calling account or person and use a cursor to get the next page with the same filters."
++openapi: "/api-reference/public.openapi.json GET /support/tickets"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/list"
++---
++
++Read the tickets visible to the calling account or person and use a cursor to get the next page with the same filters.
++
++## Access
++
++Use a server-side organisation key or a signed-in personal bearer session. Owners, Admins and organisation keys have organisation-wide ticket access. Members can access only tickets they opened.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `limit` | Optional integer, default 20. Use 1–50. |
++| `cursor` | Optional. Use the previous `next_cursor` unchanged. Positive decimal string up to 9223372036854775807. |
++| `category` | Optional raw value: `problem`, `billing`, `raise_call_limit`, `call_me_back`, `report_abuse`, `other`. Historical values can still be filtered. |
++| `status` | Optional: `open`, `waiting_on_customer`, `solved`. |
++
++Send no request body.
++
++## Example request
++
++```bash
++curl -X GET "https://api.nixflex.com/v1/support/tickets?limit=20" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++## Response
++
++Returns `tickets[]` and `next_cursor` (string or null). The list contains summaries only. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time.
++
++```json
++{
++  "tickets": [
++    {
++      "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++      "category": "other",
++      "display_category": "other",
++      "subject": "Please check our test request",
++      "status": "open",
++      "version": 1,
++      "created_at": "2026-11-23T10:00:00Z",
++      "updated_at": "2026-11-23T10:00:00Z",
++      "solved_at": null,
++      "last_customer_reply_at": "2026-11-23T10:00:00Z",
++      "last_staff_reply_at": null,
++      "last_public_reply": null
++    }
++  ],
++  "next_cursor": null
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 400 | `invalid_ticket` | Check permitted fields, value limits, headers and revision. |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- /dev/null
++++ b/api-reference/support/create.mdx
+@@ -0,0 +1,89 @@
++---
++title: "Create a support ticket"
++sidebarTitle: "Create a support ticket"
++description: "Open a support request and keep the original request key so that a lost response can be reconciled safely."
++openapi: "/api-reference/public.openapi.json POST /support/tickets"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/create"
++---
++
++Open a support request and keep the original request key so that a lost response can be reconciled safely.
++
++## Access
++
++Use a server-side organisation key or a signed-in personal bearer session. Owners, Admins and organisation keys have organisation-wide ticket access. Members can access only tickets they opened.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `Idempotency-Key` | Required header. Choose a unique value for this change, 1–128 letters, digits or `._:-`. Keep it for recovery. |
++| `X-Nixflex-Expected-Account` | For a new personal write, required public `key_id` of the original workspace. Preserve it on retries. Organisation-key writes do not need it. |
++| `category` | Required string. Use `raise_call_limit`, `problem`, `report_abuse` or `other`. `billing` remains accepted for compatibility and displays as a problem. Fresh `call_me_back` requests return 400. |
++| `message` | Required plain text, 1–8,000 Unicode characters, at most 32,000 UTF-8 bytes. |
++| `subject` | Optional, 1–160 characters. Otherwise the first nonblank message line supplies the subject, with spaces collapsed and long titles shortened. |
++| `desired_limit`, `use_case` | Capacity only. Required desired total, integer 1–2,147,483,647. Optional nonblank reason up to 1,000 characters. If omitted, the message is the reason and must fit 1,000 characters. |
++| `reviewed_help_session_id` | Optional UUID for a personal, reviewed Help copy owned by the current person and workspace. It must be unused and unexpired. Include only approved text. |
++
++Send only the documented JSON fields. The entire body must fit within 64 KiB.
++
++## Example request
++
++```bash
++curl -X POST "https://api.nixflex.com/v1/support/tickets" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY" \
++  -H "Content-Type: application/json" \
++  -H "Idempotency-Key: $REQUEST_KEY" \
++  -d '{"category":"other","message":"Please check our test request"}'
++```
++
++## Response
++
++Returns HTTP 201 with the current ticket and the receipt for the original create. A capacity request does not change the call limit. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time. The receipt records `request_id`, `operation`, original `version` and `message_id`.
++
++```json
++{
++  "ticket": {
++    "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++    "category": "other",
++    "display_category": "other",
++    "subject": "Please check our test request",
++    "status": "open",
++    "version": 1,
++    "created_at": "2026-11-23T10:00:00Z",
++    "updated_at": "2026-11-23T10:00:00Z",
++    "solved_at": null,
++    "last_customer_reply_at": "2026-11-23T10:00:00Z",
++    "last_staff_reply_at": null,
++    "last_public_reply": null
++  },
++  "receipt": {
++    "request_id": "df84c8f3-ac66-404f-b50c-b91bda2abeb3",
++    "operation": "create",
++    "version": 1,
++    "message_id": "56a3de9d-a9d9-4a7e-9d56-c5388706204b"
++  }
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 400 | `invalid_ticket` | Check permitted fields, value limits, headers and revision. |
++| 400 | `invalid_json` | Correct the JSON syntax. |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 404 | `ticket_not_found` | An earlier ticket is no longer visible to this actor. Recheck current access. |
++| 404 | `reviewed_copy_unavailable` | Refresh the reviewed Help copy before submitting. |
++| 409 | `request_conflict` | This key was used for a different write. Reconcile the original request. |
++| 409 | `account_changed` | Discard the stale personal draft. Refresh Help in the intended workspace. |
++| 413 | `payload_too_large` | Keep the complete JSON request within 64 KiB. |
++| 415 | `unsupported_media_type` | Send application/json. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 429 | `ticket_create_limit` | Default is 10 creates per account in 24 hours. Wait before creating another. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++On a lost response, reconcile first. A personal client can look up the original receipt. An identical authorised replay uses the original key and payload. Use a new key only for a newly reviewed action. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- /dev/null
++++ b/api-reference/support/receipt.mdx
+@@ -0,0 +1,75 @@
++---
++title: "Look up a support request receipt"
++sidebarTitle: "Look up a support request receipt"
++description: "Check a personal support request after a lost response. The lookup reads the original receipt and the current ticket without sending a message."
++openapi: "/api-reference/public.openapi.json GET /support/tickets/requests/{request_key}"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/receipt"
++---
++
++Check a personal support request after a lost response. The lookup reads the original receipt and the current ticket without sending a message.
++
++## Access
++
++Use the original person’s current bearer session and original workspace. A teammate cannot recover another person’s receipt.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `request_key` | Required path segment. URL-encode the original `Idempotency-Key`, 1–128 letters, digits or `._:-`. |
++| `X-Nixflex-Expected-Account` | Required header. Send the original workspace’s public `key_id` captured when the submission was composed. |
++
++Send no request body.
++
++## Example request
++
++```bash
++curl -X GET "https://api.nixflex.com/v1/support/tickets/requests/example-request-001" \
++  -H "Authorization: Bearer $NIXFLEX_PERSONAL_TOKEN" \
++  -H "X-Nixflex-Expected-Account: $ORIGINAL_ACCOUNT_ID"
++```
++
++## Response
++
++Returns the current `ticket` and original `receipt`. Their versions may differ. The lookup omits message content, private notes, history, contact destination and use case. A valid organisation API key cannot look up a personal receipt and receives the same 404 as an unknown request. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time. The receipt records `request_id`, `operation`, original `version` and `message_id`.
++
++```json
++{
++  "ticket": {
++    "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++    "category": "other",
++    "display_category": "other",
++    "subject": "Please check our test request",
++    "status": "open",
++    "version": 2,
++    "created_at": "2026-11-23T10:00:00Z",
++    "updated_at": "2026-11-23T10:00:00Z",
++    "solved_at": null,
++    "last_customer_reply_at": "2026-11-23T10:00:00Z",
++    "last_staff_reply_at": null,
++    "last_public_reply": {"author_label": "You", "created_at": "2026-11-23T10:00:00Z"}
++  },
++  "receipt": {
++    "request_id": "df84c8f3-ac66-404f-b50c-b91bda2abeb3",
++    "operation": "create",
++    "version": 1,
++    "message_id": "56a3de9d-a9d9-4a7e-9d56-c5388706204b"
++  }
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 404 | `request_not_found` | Opaque result for an absent, uncommitted or inaccessible receipt. Check the original identity and key. |
++| 409 | `account_changed` | Discard the stale personal draft. Refresh Help in the intended workspace. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- /dev/null
++++ b/api-reference/support/get.mdx
+@@ -0,0 +1,83 @@
++---
++title: "Read a support ticket"
++sidebarTitle: "Read a support ticket"
++description: "Read the public conversation and its current revision before sending a reply or marking an issue done."
++openapi: "/api-reference/public.openapi.json GET /support/tickets/{ticket_id}"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/get"
++---
++
++Read the public conversation and its current revision before sending a reply or marking an issue done.
++
++## Access
++
++Use a server-side organisation key or a signed-in personal bearer session. Owners, Admins and organisation keys have organisation-wide ticket access. Members can access only tickets they opened.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `ticket_id` | Required UUID in the path, for a visible ticket. |
++
++Send no request body.
++
++## Example request
++
++```bash
++curl -X GET "https://api.nixflex.com/v1/support/tickets/a2f03f19-70b8-4bb6-9f14-3bd3eb529c01" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY"
++```
++
++## Response
++
++Returns `ticket`, `messages[]` and `events[]`. Messages carry an ID, author kind and label, timestamp and plain text `body`. Events carry ID, kind and timestamp. Internal staff notes are private. The thread can include `desired_limit` and `use_case` for capacity requests and historic callback details. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time.
++
++```json
++{
++  "ticket": {
++    "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++    "category": "other",
++    "display_category": "other",
++    "subject": "Please check our test request",
++    "status": "open",
++    "version": 1,
++    "created_at": "2026-11-23T10:00:00Z",
++    "updated_at": "2026-11-23T10:00:00Z",
++    "solved_at": null,
++    "last_customer_reply_at": "2026-11-23T10:00:00Z",
++    "last_staff_reply_at": null,
++    "last_public_reply": null
++  },
++  "messages": [
++    {
++      "id": "56a3de9d-a9d9-4a7e-9d56-c5388706204b",
++      "author_kind": "person",
++      "author_label": "Your team",
++      "body": "Please check our test request",
++      "created_at": "2026-11-23T10:00:00Z"
++    }
++  ],
++  "events": [
++    {
++      "id": "df84c8f3-ac66-404f-b50c-b91bda2abeb3",
++      "kind": "created",
++      "created_at": "2026-11-23T10:00:00Z"
++    }
++  ]
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 400 | `invalid_ticket` | Check permitted fields, value limits, headers and revision. |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 404 | `ticket_not_found` | Check the identifier, current access and account. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- /dev/null
++++ b/api-reference/support/reply.mdx
+@@ -0,0 +1,88 @@
++---
++title: "Reply to a support ticket"
++sidebarTitle: "Reply to a support ticket"
++description: "Append one public message to a ticket at the version you reviewed. A reply can reopen a solved ticket."
++openapi: "/api-reference/public.openapi.json POST /support/tickets/{ticket_id}/messages"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/reply"
++---
++
++Append one public message to a ticket at the version you reviewed. A reply can reopen a solved ticket.
++
++## Access
++
++Use a server-side organisation key or a signed-in personal bearer session. Owners, Admins and organisation keys have organisation-wide ticket access. Members can access only tickets they opened.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `ticket_id` | Required UUID in the path, for a visible ticket. |
++| `Idempotency-Key` | Required header. Choose a unique value for this change, 1–128 letters, digits or `._:-`. Keep it for recovery. |
++| `X-Nixflex-Expected-Account` | For a new personal write, required public `key_id` of the original workspace. Preserve it on retries. Organisation-key writes do not need it. |
++| `X-Expected-Revision` | Required header. Current ticket version, integer 1–2,147,483,647. |
++| `body` | Required JSON string. Nonblank plain text, up to 8,000 Unicode characters and 32,000 UTF-8 bytes. |
++
++Send only the documented JSON fields. The entire body must fit within 64 KiB.
++
++## Example request
++
++```bash
++curl -X POST "https://api.nixflex.com/v1/support/tickets/a2f03f19-70b8-4bb6-9f14-3bd3eb529c01/messages" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY" \
++  -H "Content-Type: application/json" \
++  -H "Idempotency-Key: $REQUEST_KEY" \
++  -H "X-Expected-Revision: 1" \
++  -d '{"body":"We can provide a safe example."}'
++```
++
++## Response
++
++Returns the ticket and receipt for the reply. Read the thread again to display the conversation. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time. The receipt records `request_id`, `operation`, original `version` and `message_id`.
++
++```json
++{
++  "ticket": {
++    "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++    "category": "other",
++    "display_category": "other",
++    "subject": "Please check our test request",
++    "status": "open",
++    "version": 2,
++    "created_at": "2026-11-23T10:00:00Z",
++    "updated_at": "2026-11-23T10:00:00Z",
++    "solved_at": null,
++    "last_customer_reply_at": "2026-11-23T10:00:00Z",
++    "last_staff_reply_at": null,
++    "last_public_reply": {"author_label": "Your organisation", "created_at": "2026-11-23T10:00:00Z"}
++  },
++  "receipt": {
++    "request_id": "df84c8f3-ac66-404f-b50c-b91bda2abeb3",
++    "operation": "reply",
++    "version": 2,
++    "message_id": "56a3de9d-a9d9-4a7e-9d56-c5388706204b"
++  }
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 400 | `invalid_ticket` | Check permitted fields, value limits, headers and revision. |
++| 400 | `invalid_json` | Correct the JSON syntax. |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 404 | `ticket_not_found` | Check the identifier, current access and account. |
++| 409 | `request_conflict` | This key was used for a different write. Reconcile the original request. |
++| 409 | `ticket_changed` | Read the thread, review the outstanding change and use the new revision. |
++| 409 | `account_changed` | Discard the stale personal draft. Refresh Help in the intended workspace. |
++| 413 | `payload_too_large` | Keep the complete JSON request within 64 KiB. |
++| 415 | `unsupported_media_type` | Send application/json. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 429 | `ticket_reply_limit` | Default is 60 replies per account per hour. Wait before replying again. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++On a lost response, reconcile first. A personal client can look up the original receipt. An identical authorised replay uses the original key and payload. Use a new key only for a newly reviewed action. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- /dev/null
++++ b/api-reference/support/solve.mdx
+@@ -0,0 +1,83 @@
++---
++title: "Mark a support ticket done"
++sidebarTitle: "Mark a support ticket done"
++description: "Mark a ticket solved at its current revision and keep its receipt. The customer can still reply to reopen it."
++openapi: "/api-reference/public.openapi.json POST /support/tickets/{ticket_id}/solve"
++playground: "simple"
++canonical: "https://docs.nixflex.com/api-reference/support/solve"
++---
++
++Mark a ticket solved at its current revision and keep its receipt. The customer can still reply to reopen it.
++
++## Access
++
++Use a server-side organisation key or a signed-in personal bearer session. Owners, Admins and organisation keys have organisation-wide ticket access. Members can access only tickets they opened.
++
++## Request fields
++
++| Field | Requirement and meaning |
++| --- | --- |
++| `ticket_id` | Required UUID in the path, for a visible ticket. |
++| `Idempotency-Key` | Required header. Choose a unique value for this change, 1–128 letters, digits or `._:-`. Keep it for recovery. |
++| `version` | Required JSON integer. Use the revision from the ticket you just reviewed, 1–2,147,483,647. |
++
++Send only the documented JSON fields. The entire body must fit within 64 KiB.
++
++## Example request
++
++```bash
++curl -X POST "https://api.nixflex.com/v1/support/tickets/a2f03f19-70b8-4bb6-9f14-3bd3eb529c01/solve" \
++  -H "Authorization: Bearer $NIXFLEX_API_KEY" \
++  -H "Content-Type: application/json" \
++  -H "Idempotency-Key: $REQUEST_KEY" \
++  -d '{"version":1}'
++```
++
++## Response
++
++Returns the ticket and the solve receipt. `message_id` is null for a solve without a message. A summary includes the ticket ID, subject, raw and display categories, status, current version and timestamps. `last_public_reply` is null or an author label and time. The receipt records `request_id`, `operation`, original `version` and `message_id`.
++
++```json
++{
++  "ticket": {
++    "id": "a2f03f19-70b8-4bb6-9f14-3bd3eb529c01",
++    "category": "other",
++    "display_category": "other",
++    "subject": "Please check our test request",
++    "status": "solved",
++    "version": 2,
++    "created_at": "2026-11-23T10:00:00Z",
++    "updated_at": "2026-11-23T10:00:00Z",
++    "solved_at": "2026-11-23T10:00:00Z",
++    "last_customer_reply_at": "2026-11-23T10:00:00Z",
++    "last_staff_reply_at": null,
++    "last_public_reply": null
++  },
++  "receipt": {
++    "request_id": "df84c8f3-ac66-404f-b50c-b91bda2abeb3",
++    "operation": "solve",
++    "version": 2,
++    "message_id": null
++  }
++}
++```
++
++## Errors
++
++| HTTP | Error code | What to do |
++| --- | --- | --- |
++| 400 | `invalid_ticket` | Check permitted fields, value limits, headers and revision. |
++| 400 | `invalid_json` | Correct the JSON syntax. |
++| 401 | `unauthorized`, `invalid_token` | Supply a valid organisation key or refresh the personal session. |
++| 403 | `mfa_required`, `support_access_denied` | Complete personal verification or recheck current workspace access. |
++| 404 | `ticket_not_found` | Check the identifier, current access and account. |
++| 409 | `request_conflict` | This key was used for a different write. Reconcile the original request. |
++| 409 | `ticket_changed` | Read the thread, review the outstanding change and use the new revision. |
++| 413 | `payload_too_large` | Keep the complete JSON request within 64 KiB. |
++| 415 | `unsupported_media_type` | Send application/json. |
++| 429 | `rate_limit_exceeded` | Wait for the request limit to reset. |
++| 503 | `auth_unavailable`, `support_unavailable` | Retry a read later. Reconcile any write before sending again. |
++
++## Retry
++
++On a lost response, reconcile first. A personal client can look up the original receipt. An identical authorised replay uses the original key and payload. Use a new key only for a newly reviewed action. [Ticket workflow and recovery](/guides/developer/support-tickets).
+--- a/guides/business/using-on-phone.mdx
++++ b/guides/business/using-on-phone.mdx
+@@ -112,6 +112,10 @@
+ | Text is too small | Increase browser text size or zoom; turning the phone sideways may also help. |
+ | An action has no confirmed result | Reopen the saved record before repeating the action. |
+ 
++## Follow a support request on your phone
++
++In the Nixflex app, open **Account → Help**. Use **Contact us** to send a request or open **My tickets** for replies, dates and status. **Copy email address** lets you contact support using your own email app. [Choose a request type and follow your ticket](/guides/business/support-tickets).
++
+ ## Common questions
+ 
+ <AccordionGroup>
+--- a/api-reference/introduction.mdx
++++ b/api-reference/introduction.mdx
+@@ -81,9 +81,22 @@
+ 
+ ## Find an API operation
+ 
+-Choose a resource below for the exact request fields, responses and recovery steps. These are the 151 public HTTP operations; webhook events and dashboard-only personal actions are separate.
++Choose a resource below for its request fields, responses and recovery steps.
+ 
+ <AccordionGroup>
++
++<Accordion title="Support tickets (6)">
++
++| Task | Method and path |
++| --- | --- |
++| [List support tickets](/api-reference/support/list) | `GET /support/tickets` |
++| [Create a support ticket](/api-reference/support/create) | `POST /support/tickets` |
++| [Read a support ticket](/api-reference/support/get) | `GET /support/tickets/{ticket_id}` |
++| [Reply to a support ticket](/api-reference/support/reply) | `POST /support/tickets/{ticket_id}/messages` |
++| [Mark a support ticket done](/api-reference/support/solve) | `POST /support/tickets/{ticket_id}/solve` |
++| [Look up a support request receipt](/api-reference/support/receipt) | `GET /support/tickets/requests/{request_key}` |
++
++</Accordion>
+ 
+ <Accordion title="Agents (5)">
+ 
+--- a/docs.json
++++ b/docs.json
+@@ -1994,6 +1994,7 @@
+             "expanded": true,
+             "pages": [
+               "guides/business/account",
++              "guides/business/support-tickets",
+               "guides/business/api-keys",
+               "guides/business/billing",
+               "guides/business/billing/add-credit",
+@@ -2199,6 +2200,7 @@
+             "expanded": true,
+             "pages": [
+               "guides/developer/account",
++              "guides/developer/support-tickets",
+               "guides/developer/billing",
+               "concepts/data-retention",
+               "guides/developer/account/security",
+@@ -2246,6 +2248,18 @@
+               "api-reference/idempotency",
+               "api-reference/retries",
+               "api-reference/versioning"
++            ],
++            "expanded": true
++          },
++          {
++            "group": "Support tickets",
++            "pages": [
++              "api-reference/support/list",
++              "api-reference/support/create",
++              "api-reference/support/get",
++              "api-reference/support/reply",
++              "api-reference/support/solve",
++              "api-reference/support/receipt"
+             ],
+             "expanded": true
+           },
+--- a/api-reference/public.openapi.json
++++ b/api-reference/public.openapi.json
+@@ -16,6 +16,784 @@
+     }
+   ],
+   "paths": {
++    "/support/tickets": {
++      "get": {
++        "operationId": "listSupportTickets",
++        "summary": "List support tickets",
++        "description": "Newest-created first. Follow next_cursor with the same filters. Owner, Admin and the organisation API key can use the account queue. A Member can access only tickets they created. Personal sessions require current membership. Responses exclude internal messages and events.",
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "in": "query",
++            "name": "cursor",
++            "schema": {
++              "type": "string",
++              "pattern": "^[1-9][0-9]{0,18}$"
++            }
++          },
++          {
++            "in": "query",
++            "name": "limit",
++            "schema": {
++              "type": "integer",
++              "minimum": 1,
++              "maximum": 50,
++              "default": 20
++            }
++          },
++          {
++            "in": "query",
++            "name": "category",
++            "schema": {
++              "type": "string",
++              "enum": [
++                "problem",
++                "billing",
++                "raise_call_limit",
++                "call_me_back",
++                "report_abuse",
++                "other"
++              ]
++            }
++          },
++          {
++            "in": "query",
++            "name": "status",
++            "schema": {
++              "type": "string",
++              "enum": [
++                "open",
++                "waiting_on_customer",
++                "solved"
++              ]
++            }
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportPage"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "Invalid fields or request key",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      },
++      "post": {
++        "operationId": "createSupportTicket",
++        "summary": "Create a support ticket",
++        "description": "The first message opens the ticket. The default account limit is 10 tickets per rolling 24 hours. Call limit requests are reviewed. Owner, Admin and the organisation API key can use the account queue. A Member can access only tickets they created. Personal sessions require current membership. Responses exclude internal messages and events. Use the same key and fields to retry. A changed request returns 409. JSON requests are limited to 64 KiB. Omit subject to use the first nonblank line with whitespace collapsed (160 Unicode characters including a final ellipsis). Fresh callback requests return 400 invalid_ticket. Only an exact, currently authorised retry of a previously committed callback is accepted. Names, business, email and recipients are resolved by the server.",
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "name": "Idempotency-Key",
++            "in": "header",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 1,
++              "maxLength": 128,
++              "pattern": "^[A-Za-z0-9._:-]+$"
++            }
++          },
++          {
++            "in": "header",
++            "name": "X-Nixflex-Expected-Account",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "For a new personal create or reply, send the public key_id of the workspace where the draft was composed. Preserve it on retry. Mismatch returns 409 account_changed. An authorised existing receipt can be replayed without this header. Organisation-key writes do not use it."
++          }
++        ],
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "$ref": "#/components/schemas/SupportCreate"
++              }
++            }
++          }
++        },
++        "responses": {
++          "201": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportResult"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "Invalid fields or request key",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "413": {
++            "description": "Request exceeds 64 KiB",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "415": {
++            "description": "Send changes as application/json",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
++    "/support/tickets/requests/{request_key}": {
++      "get": {
++        "operationId": "getSupportTicketReceipt",
++        "summary": "Recover a personal ticket request",
++        "description": "Use the original request key and expected account. Only the person who made the original write can recover its receipt. The dashboard-session alias is GET /api/support/tickets/requests/{request_key}. A successful response includes the current ticket summary and the original receipt. The conversation and message bodies are excluded.",
++        "security": [
++          {
++            "bearerAuth": []
++          }
++        ],
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "in": "path",
++            "name": "request_key",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
++            }
++          },
++          {
++            "in": "header",
++            "name": "X-Nixflex-Expected-Account",
++            "required": true,
++            "schema": {
++              "type": "string"
++            },
++            "description": "Public key_id of the original signed-in workspace."
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Committed request found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportResult"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "request_not_found for all missing or inaccessible keys",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "account_changed for a missing or different expected account",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Rate limit exceeded",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
++    "/support/tickets/{ticket_id}": {
++      "get": {
++        "operationId": "getSupportTicket",
++        "summary": "Read a ticket conversation",
++        "description": "Cross-account and inaccessible same-account tickets return 404. Owner, Admin and the organisation API key can use the account queue. A Member can access only tickets they created. Personal sessions require current membership. Responses exclude internal messages and events.",
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "name": "ticket_id",
++            "in": "path",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "format": "uuid"
++            }
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportThread"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "Invalid fields or request key",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
++    "/support/tickets/{ticket_id}/messages": {
++      "post": {
++        "operationId": "replyToSupportTicket",
++        "summary": "Reply to a ticket",
++        "description": "Supply the current version in X-Expected-Revision. A reply reopens Waiting on customer or Solved. The default limit is 60 replies per account per rolling hour. Owner, Admin and the organisation API key can use the account queue. A Member can access only tickets they created. Personal sessions require current membership. Responses exclude internal messages and events. Use the same key and fields to retry. A changed request returns 409. JSON requests are limited to 64 KiB.",
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "name": "ticket_id",
++            "in": "path",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "format": "uuid"
++            }
++          },
++          {
++            "name": "Idempotency-Key",
++            "in": "header",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 1,
++              "maxLength": 128,
++              "pattern": "^[A-Za-z0-9._:-]+$"
++            }
++          },
++          {
++            "name": "X-Expected-Revision",
++            "in": "header",
++            "required": true,
++            "schema": {
++              "type": "integer",
++              "minimum": 1,
++              "maximum": 2147483647
++            }
++          },
++          {
++            "in": "header",
++            "name": "X-Nixflex-Expected-Account",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "For a new personal create or reply, send the public key_id of the workspace where the draft was composed. Preserve it on retry. Mismatch returns 409 account_changed. An authorised existing receipt can be replayed without this header. Organisation-key writes do not use it."
++          }
++        ],
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "$ref": "#/components/schemas/SupportReply"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportResult"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "Invalid fields or request key",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "413": {
++            "description": "Request exceeds 64 KiB",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "415": {
++            "description": "Send changes as application/json",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
++    "/support/tickets/{ticket_id}/solve": {
++      "post": {
++        "operationId": "solveSupportTicket",
++        "summary": "Mark a ticket solved",
++        "description": "Supply the current version. A later customer reply reopens the ticket. Owner, Admin and the organisation API key can use the account queue. A Member can access only tickets they created. Personal sessions require current membership. Responses exclude internal messages and events. Use the same key and fields to retry. A changed request returns 409. JSON requests are limited to 64 KiB.",
++        "tags": [
++          "Support tickets"
++        ],
++        "parameters": [
++          {
++            "name": "ticket_id",
++            "in": "path",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "format": "uuid"
++            }
++          },
++          {
++            "name": "Idempotency-Key",
++            "in": "header",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 1,
++              "maxLength": 128,
++              "pattern": "^[A-Za-z0-9._:-]+$"
++            }
++          }
++        ],
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "$ref": "#/components/schemas/SupportSolve"
++              }
++            }
++          }
++        },
++        "responses": {
++          "200": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportResult"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "Invalid fields or request key",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "413": {
++            "description": "Request exceeds 64 KiB",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "415": {
++            "description": "Send changes as application/json",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          }
++        }
++      }
++    },
+     "/organisation": {
+       "get": {
+         "operationId": "organisationContext",
+@@ -73550,6 +74328,651 @@
+         "scheme": "bearer",
+         "description": "KEY_ID:KEY_SECRET from the owning account. Keep it server-side. A verified personal dashboard Bearer session may be used where the operation documents role-based access."
+       }
++    },
++    "schemas": {
++      "SupportSummary": {
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "format": "uuid"
++          },
++          "category": {
++            "type": "string",
++            "enum": [
++              "problem",
++              "billing",
++              "raise_call_limit",
++              "call_me_back",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "subject": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 160
++          },
++          "status": {
++            "type": "string",
++            "enum": [
++              "open",
++              "waiting_on_customer",
++              "solved"
++            ]
++          },
++          "version": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 2147483647
++          },
++          "created_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "updated_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "solved_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "last_customer_reply_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "last_staff_reply_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "display_category": {
++            "enum": [
++              "problem",
++              "raise_call_limit",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "last_public_reply": {
++            "anyOf": [
++              {
++                "type": "null"
++              },
++              {
++                "type": "object",
++                "properties": {
++                  "author_label": {
++                    "enum": [
++                      "You",
++                      "Your team",
++                      "Your organisation",
++                      "Nixflex Support"
++                    ]
++                  },
++                  "created_at": {
++                    "type": "string",
++                    "format": "date-time"
++                  }
++                },
++                "required": [
++                  "author_label",
++                  "created_at"
++                ],
++                "additionalProperties": false
++              }
++            ]
++          }
++        },
++        "required": [
++          "id",
++          "category",
++          "subject",
++          "status",
++          "version",
++          "created_at",
++          "updated_at",
++          "solved_at",
++          "last_customer_reply_at",
++          "last_staff_reply_at",
++          "display_category",
++          "last_public_reply"
++        ],
++        "additionalProperties": false
++      },
++      "SupportDetail": {
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "format": "uuid"
++          },
++          "category": {
++            "type": "string",
++            "enum": [
++              "problem",
++              "billing",
++              "raise_call_limit",
++              "call_me_back",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "subject": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 160
++          },
++          "status": {
++            "type": "string",
++            "enum": [
++              "open",
++              "waiting_on_customer",
++              "solved"
++            ]
++          },
++          "version": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 2147483647
++          },
++          "created_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "updated_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "solved_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "last_customer_reply_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "last_staff_reply_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "callback_number": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 40
++          },
++          "best_time": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 160
++          },
++          "desired_limit": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 2147483647
++          },
++          "use_case": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 1000
++          },
++          "display_category": {
++            "enum": [
++              "problem",
++              "raise_call_limit",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "last_public_reply": {
++            "anyOf": [
++              {
++                "type": "null"
++              },
++              {
++                "type": "object",
++                "properties": {
++                  "author_label": {
++                    "enum": [
++                      "You",
++                      "Your team",
++                      "Your organisation",
++                      "Nixflex Support"
++                    ]
++                  },
++                  "created_at": {
++                    "type": "string",
++                    "format": "date-time"
++                  }
++                },
++                "required": [
++                  "author_label",
++                  "created_at"
++                ],
++                "additionalProperties": false
++              }
++            ]
++          }
++        },
++        "required": [
++          "id",
++          "category",
++          "subject",
++          "status",
++          "version",
++          "created_at",
++          "updated_at",
++          "solved_at",
++          "last_customer_reply_at",
++          "last_staff_reply_at",
++          "display_category",
++          "last_public_reply"
++        ],
++        "additionalProperties": false
++      },
++      "SupportCreate": {
++        "oneOf": [
++          {
++            "type": "object",
++            "properties": {
++              "category": {
++                "enum": [
++                  "problem",
++                  "billing",
++                  "report_abuse",
++                  "other"
++                ]
++              },
++              "subject": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 160
++              },
++              "message": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 8000,
++                "description": "Plain text, at most 32,000 UTF-8 bytes."
++              },
++              "reviewed_help_session_id": {
++                "type": "string",
++                "format": "uuid",
++                "description": "Optional personal reference to a reviewed Help copy. A reference must belong to the current account and person, be unexpired and unused. The approved text becomes a ticket message."
++              }
++            },
++            "required": [
++              "category",
++              "message"
++            ],
++            "additionalProperties": false
++          },
++          {
++            "type": "object",
++            "properties": {
++              "category": {
++                "const": "call_me_back"
++              },
++              "subject": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 160
++              },
++              "message": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 8000,
++                "description": "Plain text, at most 32,000 UTF-8 bytes."
++              },
++              "callback_number": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 40
++              },
++              "best_time": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 160
++              },
++              "reviewed_help_session_id": {
++                "type": "string",
++                "format": "uuid",
++                "description": "Optional personal reference to a reviewed Help copy. A reference must belong to the current account and person, be unexpired and unused. The approved text becomes a ticket message."
++              }
++            },
++            "required": [
++              "category",
++              "subject",
++              "message"
++            ],
++            "additionalProperties": false,
++            "description": "Exact historical retry only. A fresh callback request is refused.",
++            "deprecated": true
++          },
++          {
++            "type": "object",
++            "properties": {
++              "category": {
++                "const": "raise_call_limit"
++              },
++              "subject": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 160
++              },
++              "message": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 8000,
++                "description": "Plain text, at most 32,000 UTF-8 bytes."
++              },
++              "desired_limit": {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 2147483647
++              },
++              "use_case": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 1000,
++                "description": "If omitted, message supplies this explanation and is limited to 1,000 Unicode characters."
++              },
++              "reviewed_help_session_id": {
++                "type": "string",
++                "format": "uuid",
++                "description": "Optional personal reference to a reviewed Help copy. A reference must belong to the current account and person, be unexpired and unused. The approved text becomes a ticket message."
++              }
++            },
++            "required": [
++              "category",
++              "message",
++              "desired_limit"
++            ],
++            "additionalProperties": false,
++            "if": {
++              "not": {
++                "required": [
++                  "use_case"
++                ]
++              }
++            },
++            "then": {
++              "properties": {
++                "message": {
++                  "maxLength": 1000
++                }
++              }
++            }
++          }
++        ]
++      },
++      "SupportReply": {
++        "type": "object",
++        "properties": {
++          "body": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 8000,
++            "description": "Plain text, at most 32,000 UTF-8 bytes."
++          }
++        },
++        "required": [
++          "body"
++        ],
++        "additionalProperties": false
++      },
++      "SupportSolve": {
++        "type": "object",
++        "properties": {
++          "version": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 2147483647
++          }
++        },
++        "required": [
++          "version"
++        ],
++        "additionalProperties": false
++      },
++      "SupportMessage": {
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "format": "uuid"
++          },
++          "author_kind": {
++            "enum": [
++              "person",
++              "api",
++              "staff"
++            ]
++          },
++          "body": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 8000,
++            "description": "Plain text, at most 32,000 UTF-8 bytes."
++          },
++          "created_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "author_label": {
++            "enum": [
++              "You",
++              "Your team",
++              "Your organisation",
++              "Nixflex Support"
++            ]
++          }
++        },
++        "required": [
++          "id",
++          "author_kind",
++          "body",
++          "created_at",
++          "author_label"
++        ],
++        "additionalProperties": false
++      },
++      "SupportEvent": {
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "format": "uuid"
++          },
++          "kind": {
++            "enum": [
++              "created",
++              "customer_reply",
++              "staff_reply",
++              "solved",
++              "reopened",
++              "redacted"
++            ]
++          },
++          "created_at": {
++            "type": "string",
++            "format": "date-time"
++          }
++        },
++        "required": [
++          "id",
++          "kind",
++          "created_at"
++        ],
++        "additionalProperties": false
++      },
++      "SupportPage": {
++        "type": "object",
++        "properties": {
++          "tickets": {
++            "type": "array",
++            "items": {
++              "$ref": "#/components/schemas/SupportSummary"
++            }
++          },
++          "next_cursor": {
++            "anyOf": [
++              {
++                "type": "string"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          }
++        },
++        "required": [
++          "tickets",
++          "next_cursor"
++        ],
++        "additionalProperties": false
++      },
++      "SupportThread": {
++        "type": "object",
++        "properties": {
++          "ticket": {
++            "$ref": "#/components/schemas/SupportDetail"
++          },
++          "messages": {
++            "type": "array",
++            "items": {
++              "$ref": "#/components/schemas/SupportMessage"
++            }
++          },
++          "events": {
++            "type": "array",
++            "items": {
++              "$ref": "#/components/schemas/SupportEvent"
++            }
++          }
++        },
++        "required": [
++          "ticket",
++          "messages",
++          "events"
++        ],
++        "additionalProperties": false
++      },
++      "SupportResult": {
++        "type": "object",
++        "properties": {
++          "ticket": {
++            "$ref": "#/components/schemas/SupportSummary"
++          },
++          "receipt": {
++            "type": "object",
++            "properties": {
++              "request_id": {
++                "type": "string",
++                "format": "uuid"
++              },
++              "operation": {
++                "enum": [
++                  "create",
++                  "reply",
++                  "solve"
++                ]
++              },
++              "version": {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 2147483647
++              },
++              "message_id": {
++                "anyOf": [
++                  {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  {
++                    "type": "null"
++                  }
++                ]
++              }
++            },
++            "required": [
++              "request_id",
++              "operation",
++              "version",
++              "message_id"
++            ],
++            "additionalProperties": false
++          }
++        },
++        "required": [
++          "ticket",
++          "receipt"
++        ],
++        "additionalProperties": false
++      },
++      "SupportError": {
++        "type": "object",
++        "properties": {
++          "error": {
++            "type": "object",
++            "properties": {
++              "type": {
++                "type": "string"
++              },
++              "code": {
++                "type": "string"
++              },
++              "message": {
++                "type": "string"
++              },
++              "doc_url": {
++                "type": "string",
++                "format": "uri"
++              },
++              "details": {
++                "type": "object"
++              }
++            },
++            "required": [
++              "type",
++              "code",
++              "message",
++              "doc_url",
++              "details"
++            ]
++          }
++        },
++        "required": [
++          "error"
++        ]
++      }
+     }
+   },
+   "webhooks": {
