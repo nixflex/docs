@@ -3,8 +3,12 @@ reuse_campaign_id replaces settings and recipients atomically only on an owned, 
 
 **NOT OFFERED → do this instead · campaign** Resume covers only unattempted work in the existing running launch, and neither resume nor reuse replays completed work. For another run create a campaign with a fresh ID, selected recipients and reviewed settings.
 
-**YOU CAN CHANGE · campaign** Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.
+**YOU CAN CHANGE · campaign** Use schedule_type=schedule, scheduled_date (YYYY-MM-DD), timezone, window_days and optional paired window_start_minutes/window_end_minutes. UTC date checks, local windows and capacity apply.
 
-**SCOPE · campaign** Cancel stops eligible future work. In-progress work may finish. Deletion can wait for confirmed hang-up.
+**SCOPE · campaign** `DELETE /v1/calls/batch/{id}` deletes a voice campaign. Voice and SMS have separate cancel routes. Cancel stops future work. Running attempts may finish.
+
+For one owned sender, send business_number (encode + as %2B) on `GET /v1/campaigns` or `GET /v1/sms/campaigns`. Omit for account scope. Keep the same number and status through SMS cursors. Restart paging if either changes. Voice include_totals=true covers returned campaigns only (default 50, max 200).
+
+Pickup rate = answered attempts / all attempts, including failed starts. Answered means over five seconds with no detected voicemail. Sum counts before dividing. Zero attempts means no rate. SMS delivery rate = delivered / (delivered + failed).
 
 [Read the compact AI rules](https://docs.nixflex.com/ai-rules.md#campaigns)

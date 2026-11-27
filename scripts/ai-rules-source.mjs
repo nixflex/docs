@@ -54,12 +54,16 @@ export function extract(read){
  const limits=Object.fromEntries([...one(k,/const limits = Object.freeze\(\{([\s\S]*?)\}\);/g).matchAll(/\b(\w+):\s*(\d+(?:\s*\*\s*\d+)*)(?=\s*[,} ]|$)/g)].map(m=>[m[1],m[2].split('*').reduce((a,n)=>a*Number(n),1)]))
  const importLimit=Number(one(get('shared/features/numberImportInput.js'),/customPrompt\.length\s*>\s*(\d+)/g))
  assert.equal(max.custom_prompt,importLimit,'Number import and PATCH custom_prompt limits differ')
+ const purpose=get('shared/features/callPurpose.js')
+ assert.match(purpose,/prompt\.trim\(\)\.length >= minLength/)
+ assert.match(get('shared/data/agentPrompt.js'),/callPurpose'\)\.sufficient\(promptOverride\)/)
+ assert.match(get('api/calls/purposeValidation.js'),/!purpose\.sufficient\(body\.prompt\)/)
  const more=extractMore(get)
  return {
   'outbound.publicTags':readTags(get('outbound/providers/outboundClaude.js')),
   'inbound.publicTags':readTags(get('inbound/providers/claude.js')),
   'outbound.systemVariables':automatic,
-  'outbound.purposeMin':Number(one(get('shared/data/agentPrompt.js'),/promptOverride\.trim\(\)\.length >= (\d+)/g)),
+  'outbound.purposeMin':Number(one(purpose,/const minLength = (\d+);/g)),
   'numbers.importFields':imp.split(',').map(pair=>one(pair,/^\s*\w+:\s*'(\w+)'\s*$/g)),
   'numbers.updateFields':names,'numbers.textLimits':max,
   'numbers.controlFields':controls.map(pair=>strings(pair.slice(1,-1))[1]),

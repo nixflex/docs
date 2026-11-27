@@ -3,8 +3,8 @@
   "feature": "campaigns",
   "title": "Voice and SMS campaigns",
   "checked": {
-    "date": "2026-11-23",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -13,9 +13,9 @@
       "scope": "campaign",
       "text": "**MUST** [[camp-again]]\\\nreuse_campaign_id replaces settings and recipients atomically only on an owned, never-launched voice draft or scheduled campaign. A launch claim prevents replacement. SMS creation always generates a fresh ID, even if the request forwards this field. Omit it for SMS.",
       "evidence": [
-        "outbound/features/batchCalls.js:125-146",
-        "outbound/features/campaignReuse.js:5-18",
-        "api/routes.js:1313-1317",
+        "outbound/features/batchCalls.js:132-153",
+        "outbound/features/campaignReuse.js:5-19",
+        "api/routes.js:1326-1330",
         "outbound/features/smsCampaigns.js:46-48",
         "outbound/features/smsCampaigns.js:142-158",
         "api/campaignControls.js:20-28"
@@ -28,7 +28,7 @@
       "scope": "campaign",
       "text": "[[camp-again]]",
       "evidence": [
-        "outbound/features/campaignReuse.js:5-18",
+        "outbound/features/campaignReuse.js:5-19",
         "api/campaignControls.js:20-28",
         "outbound/features/smsCampaigns.js:46-48"
       ],
@@ -39,7 +39,7 @@
       "id": "camp-stop",
       "kind": "does",
       "scope": "campaign",
-      "text": "Cancel stops eligible future work. In-progress work may finish. Deletion can wait for confirmed hang-up.",
+      "text": "DELETE /v1/calls/batch/{id} deletes a voice campaign. Voice and SMS have separate cancel routes. Cancel stops future work. Running attempts may finish.",
       "evidence": [
         "api/campaignControls.js:7-29",
         "api/campaignDelete.js:5-7",
@@ -50,10 +50,10 @@
       "id": "camp-window",
       "kind": "change",
       "scope": "campaign",
-      "text": "Use schedule_type=schedule and scheduled_date (YYYY-MM-DD), timezone, optional paired window_start_minutes and window_end_minutes, and window_days. The date check uses UTC. Local recipient rules, time windows and capacity still apply.",
+      "text": "Use schedule_type=schedule, scheduled_date (YYYY-MM-DD), timezone, window_days and optional paired window_start_minutes/window_end_minutes. UTC date checks, local windows and capacity apply.",
       "evidence": [
-        "api/routes.js:1159-1165",
-        "api/routes.js:1313-1328",
+        "api/routes.js:1165-1171",
+        "api/routes.js:1326-1341",
         "outbound/features/campaignSchedule.js:11-18",
         "outbound/features/campaignScheduler.js:30-49",
         "outbound/features/campaignScheduler.js:135-168"
@@ -65,8 +65,8 @@
       "scope": "recipient",
       "text": "There is no scheduled_at promise of dispatch at an exact second.",
       "evidence": [
-        "api/routes.js:1159-1165",
-        "api/routes.js:1313-1328",
+        "api/routes.js:1165-1171",
+        "api/routes.js:1326-1341",
         "outbound/features/campaignSchedule.js:11-18",
         "outbound/features/campaignScheduler.js:30-49",
         "outbound/features/campaignScheduler.js:135-168"
@@ -79,8 +79,8 @@
       "scope": "campaign",
       "text": "Local window bounds are minutes since midnight. The accepted weekdays and minute range are shown below.",
       "evidence": [
-        "api/routes.js:1159-1165",
-        "api/routes.js:1313-1328",
+        "api/routes.js:1165-1171",
+        "api/routes.js:1326-1341",
         "outbound/features/campaignSchedule.js:11-18",
         "outbound/features/campaignScheduler.js:30-49",
         "outbound/features/campaignScheduler.js:135-168"
@@ -127,6 +127,29 @@
         "api/campaignControls.js:20-29"
       ],
       "value": "not_resumable"
+    },
+    {
+      "id": "camp-filter",
+      "kind": "change",
+      "scope": "campaign",
+      "text": "For one owned sender, send business_number (encode + as %2B) on GET /v1/campaigns or GET /v1/sms/campaigns. Omit for account scope. Keep the same number and status through SMS cursors. Restart paging if either changes. Voice include_totals=true covers returned campaigns only (default 50, max 200).",
+      "evidence": [
+        "api/businessNumberFilter.js:4-20",
+        "api/routes.js:1273-1296",
+        "api/routes.js:1407-1441"
+      ]
+    },
+    {
+      "id": "camp-pickup",
+      "kind": "change",
+      "scope": "campaign",
+      "text": "Pickup rate = answered attempts / all attempts, including failed starts. Answered means over five seconds with no detected voicemail. Sum counts before dividing. Zero attempts means no rate. SMS delivery rate = delivered / (delivered + failed).",
+      "evidence": [
+        "api/voiceCampaignTotals.js:2-21",
+        "sql/security-auth/114_01_ai_optout.sql:103-134",
+        "dashboard@lib/campaignPeriodCards.js:5-17",
+        "dashboard@lib/voiceCampaignRead.js:20-26"
+      ]
     }
   ]
 }

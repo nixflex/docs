@@ -3,15 +3,15 @@
   "feature": "caller-context",
   "title": "Caller records and memory",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "caller-id",
       "kind": "fixed",
       "scope": "number",
-      "text": "A caller record belongs to the combination of business number and caller number. Resolve and authorise both before a lookup.",
+      "text": "A caller record is keyed by business number and caller number. Authorise both.",
       "evidence": [
         "shared/features/callerContextApi.js:36-56"
       ],
@@ -21,11 +21,11 @@
       "id": "caller-engine",
       "kind": "unavailable",
       "scope": "recipient",
-      "text": "Engine-managed history fields cannot be supplied as caller attributes.",
+      "text": "History fields are engine-managed.",
       "evidence": [
         "shared/features/callerContextApi.js:57-94"
       ],
-      "instead": "Use the supported contact fields for your own data. Keep application-only fields in your own records."
+      "instead": "Store supported caller attributes in Nixflex and app-only fields locally."
     },
     {
       "id": "caller-purpose",
@@ -43,7 +43,7 @@
       "id": "caller-import",
       "kind": "change",
       "scope": "number",
-      "text": "Import caller data under the intended business number or update an individual record. Verify ownership before presenting it to a tenant.",
+      "text": "Import or update caller data under the tenant’s verified business number.",
       "evidence": [
         "shared/features/callerContextApi.js:25-56",
         "shared/features/callerContextApi.js:100-138"

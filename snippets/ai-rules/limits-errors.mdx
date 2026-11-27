@@ -1,9 +1,9 @@
 **FIXED · account** Inbound and outbound share the account/API-key concurrency budget. Read max_concurrent for the effective limit.
 
-**NOT OFFERED → do this instead · number** There is no per-number concurrent-call reservation. Queue or pace each tenant in your application. Use separate accounts if the budgets must be independent.
+**NOT OFFERED → do this instead · number** No per-number concurrency reservation exists. Pace tenants in your app or use separate accounts for independent budgets.
 
-**YOU CAN CHANGE · account** Adjust the rate at which your application submits work. An accepted queue entry can still wait for capacity.
+**YOU CAN CHANGE · account** Pace submissions. Accepted work may wait for capacity.
 
-**SCOPE · operation** Distinguish a rejected request, an accepted operation and an unknown outcome. Inspect the error code and details before deciding whether to retry.
+**SCOPE · operation** Check the code and details to distinguish refusal, acceptance and unknown outcome before retrying.
 
 [Read the compact AI rules](https://docs.nixflex.com/ai-rules.md#limits-errors)

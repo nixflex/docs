@@ -3,8 +3,8 @@
   "feature": "phone-numbers",
   "title": "Phone numbers and bringing your own number",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -14,10 +14,10 @@
       "text": "A number belongs to an account and agent. On a shared agent always pass that customer’s eligible from_number.",
       "why": "Without a selection the resolver orders eligible numbers by creation time and ID. The first number can belong to another customer of the same SaaS account.",
       "evidence": [
-        "api/routes.js:1055-1078",
-        "api/outboundNumber.js:13-31",
-        "api/outboundNumber.js:37-48",
-        "shared/features/numberMove.js:5-15"
+        "api/routes.js:1059-1084",
+        "api/outboundNumber.js:16-27",
+        "shared/features/numberMove.js:5-15",
+        "api/outboundNumber.js:65-85"
       ]
     },
     {
@@ -40,7 +40,7 @@
       "text": "Fixed welcome_message, language, general timezone and pickup delay belong to the agent.",
       "instead": "Use Dynamic greeting and the number’s custom_prompt for its opening. Split agents for different fixed settings.",
       "evidence": [
-        "shared/features/phoneNumberImport.js:95-112",
+        "shared/features/phoneNumberImport.js:95-113",
         "shared/features/numberControls.js:2-4",
         "api/agents/input.js:2-13",
         "api/agentFields.js:18-31",
@@ -65,8 +65,8 @@
       "scope": "number",
       "text": "Import an owned carrier number, assign an agent, edit its channels or remove its Nixflex connection.",
       "evidence": [
-        "api/routes.js:1548-1575",
-        "api/routes.js:1583-1627",
+        "api/routes.js:1565-1592",
+        "api/routes.js:1600-1646",
         "api/numberReads.js:3-9",
         "shared/features/numberMove.js:5-15"
       ]
@@ -98,9 +98,10 @@
       "id": "num-settings",
       "kind": "change",
       "scope": "number",
-      "text": "Other PATCH fields follow. Text clearing varies by field. A null recording or booking override inherits the agent setting. On imported numbers use the number’s voicemail controls.",
+      "text": "PATCH fields below. Clearing depends on the field. Null record_call or require_booking_confirmation inherits. Use the number’s voicemail controls.",
       "sourceList": "numbers.updateFields",
       "value": [
+        "calcom_timezone_override",
         "custom_prompt",
         "voice_id",
         "sms_reply_enabled",
@@ -115,9 +116,9 @@
         "voicemail_message"
       ],
       "evidence": [
-        "shared/features/phoneNumberImport.js:95-112",
-        "shared/features/phoneNumberImport.js:120-149",
-        "api/routes.js:1593-1615",
+        "shared/features/phoneNumberImport.js:95-113",
+        "shared/features/phoneNumberImport.js:121-151",
+        "api/routes.js:1611-1633",
         "shared/features/voicemailPolicy.js:6-13"
       ]
     },
@@ -137,14 +138,14 @@
       ],
       "evidence": [
         "shared/features/numberControls.js:2-14",
-        "api/routes.js:1583-1592"
+        "api/routes.js:1600-1610"
       ]
     },
     {
       "id": "num-pair",
       "kind": "change",
       "scope": "number",
-      "text": "Set a complete number pair with these fields, or use voice_pair_inherit for the agent pair.",
+      "text": "Set the complete number pair, or set voice_pair_inherit for the agent pair.",
       "sourceList": "numbers.voicePairFields",
       "value": [
         "voice_key",
@@ -164,7 +165,7 @@
       "scope": "number",
       "text": "Send agent_id alone on PATCH to move the number to an active target agent. Submit other number edits separately.",
       "evidence": [
-        "api/routes.js:1583-1589",
+        "api/routes.js:1600-1607",
         "shared/features/numberMove.js:5-15"
       ]
     },
@@ -174,9 +175,9 @@
       "scope": "number",
       "text": "Use telnyx_public_key on the supported number to rotate its webhook verification key. Submit a catalogue voice-pair change separately.",
       "evidence": [
-        "api/routes.js:1583-1592",
+        "api/routes.js:1600-1610",
         "shared/features/numberKeyUpdate.js:2-22",
-        "shared/features/phoneNumberImport.js:189-202"
+        "shared/features/phoneNumberImport.js:197-210"
       ]
     },
     {
@@ -192,7 +193,7 @@
         "voicemail_message": 2000
       },
       "evidence": [
-        "shared/features/phoneNumberImport.js:95-112",
+        "shared/features/phoneNumberImport.js:95-113",
         "shared/features/numberImportInput.js:28-30"
       ]
     },
@@ -203,7 +204,7 @@
       "text": "List owned numbers. Supported list inputs include agent_id, provider, limit and cursor.",
       "value": "GET /v1/phone-numbers",
       "evidence": [
-        "api/routes.js:1565-1575"
+        "api/routes.js:1582-1592"
       ]
     },
     {
@@ -218,10 +219,10 @@
         "DELETE /v1/phone-numbers/{phoneNumber}"
       ],
       "evidence": [
-        "api/routes.js:1548-1563",
+        "api/routes.js:1565-1580",
         "api/numberReads.js:3-9",
-        "api/routes.js:1577-1589",
-        "api/routes.js:1621-1627",
+        "api/routes.js:1594-1607",
+        "api/routes.js:1640-1646",
         "shared/features/phoneNumberImport.js:45-58"
       ]
     },
@@ -285,7 +286,7 @@
       "value": "custom_prompt_too_long",
       "evidence": [
         "shared/features/numberImportInput.js:28-30",
-        "shared/features/phoneNumberImport.js:175-185",
+        "shared/features/phoneNumberImport.js:183-193",
         "knowledge/agentOnly.js:3-7"
       ]
     },
@@ -346,6 +347,7 @@
           "custom_prompt",
           "created_at",
           "source",
+          "calcom_timezone_override",
           "record_call",
           "recording_source",
           "sms_prompt",

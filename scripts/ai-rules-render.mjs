@@ -66,7 +66,7 @@ function box(f,index,c){
 }
 function guide(facts,c){
  const {index,features}=facts
- let s='# Nixflex rules for AI\n\nReviewed '+index.date+' against production engine '+code(index.engine)+'. Refresh project copies from '+origin+'/ai-rules.md. Append the rules to your project instructions or attach the file to a chat that cannot read your workspace.\n\n'
+ let s='# Nixflex rules for AI\n\nReviewed '+index.date+' against release engine '+code(index.engine)+'. Refresh from '+origin+'/ai-rules.md. Add to project instructions or attach to your chat.\n\n'
  s+=index.lead.map(id=>c.describe(id)).join('\n\n')+'\n\n## Find a feature\n\n'
  s+=features.map(f=>'['+f.title+'](#'+f.feature+')').join(' · ')+'\n'
  for(const f of features){
@@ -75,7 +75,7 @@ function guide(facts,c){
   for(const kind of Object.keys(labels)){
    const picked=rows.filter(r=>r.kind===kind);if(!picked.length)picked.push(f.rules.find(r=>r.kind===kind))
    const passages=picked.map(r=>c.describe(r.id,{why:kind==='unavailable'}))
-   const label=passages[0].startsWith('**MUST** ')?'':'**'+labels[kind]+'** '
+   const label=passages[0].startsWith('**MUST** ')?'':'**'+(kind==='unavailable'?'NOT OFFERED':labels[kind])+'** '
    s+=label+passages.join('\n\n')+'\n\n'
   }
   s+='**SCOPE · '+scope.scope+'** '+c.describe(scope.id)+'\n'

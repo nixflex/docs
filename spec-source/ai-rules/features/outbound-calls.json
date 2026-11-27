@@ -3,18 +3,19 @@
   "feature": "outbound-calls",
   "title": "Single outbound calls and request receipts",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "out-route",
       "kind": "fixed",
       "scope": "call",
-      "text": "Always pass the customer’s verified from_number on a shared agent. If omitted the engine selects the oldest eligible number for the owning account and agent, ordered by created_at then id.",
+      "text": "Pass the customer’s verified from_number. With require_from_number_for_shared_agent off (default), omission selects the oldest eligible number by created_at then id. With it on, two or more settled attachments, even disabled ones, require an explicit sender (400 from_number_required). A sole eligible number works. Pending imports do not count.",
       "evidence": [
-        "api/routes.js:1063-1078",
-        "api/outboundNumber.js:13-31"
+        "api/outboundNumber.js:60-85",
+        "sql/security-auth/112_01_account_outbound_sender.sql:38-55",
+        "dashboard@lib/outboundSettings.js:23-28"
       ],
       "why": "A successful call from the wrong customer’s number is still a routing error for your application."
     },
@@ -38,7 +39,7 @@
       "text": "Track an outbound request using its receipt. Preserve the request ID across an uncertain response and check its status before another dial.",
       "evidence": [
         "api/callReceiptError.js:1-8",
-        "api/routes.js:1025-1045"
+        "api/routes.js:1027-1049"
       ]
     },
     {
@@ -47,24 +48,26 @@
       "scope": "call",
       "text": "Send agent_id, from_number, to_number and a meaningful prompt. Choose dynamic_vars for this call.",
       "evidence": [
-        "api/routes.js:1039-1045",
+        "api/routes.js:1041-1049",
         "shared/data/agentPrompt.js:38-46",
-        "api/routes.js:1063-1078",
-        "api/outboundNumber.js:13-31",
+        "api/routes.js:1067-1084",
         "shared/features/singleContactPolicy.js:15-25",
-        "api/routes.js:1033-1037",
-        "outbound/features/batchCalls.js:125-135",
+        "api/routes.js:1035-1039",
+        "outbound/features/batchCalls.js:132-142",
         "outbound/providers/outboundClaude.js:89-111",
-        "outbound/call/callManager.js:485-508"
+        "outbound/call/callManager.js:485-508",
+        "api/outboundNumber.js:65-85"
       ]
     },
     {
       "id": "out-length",
       "kind": "limit",
       "scope": "call",
-      "text": "The route rejects a blank prompt. A nonblank string shorter than [[act-min]] trimmed characters may reach the no-purpose apology and end instruction.",
+      "text": "Blank purposes are rejected. With prompt_validation=strict, a nonblank purpose under [[act-min]] trimmed characters gets 400 prompt_too_short before dialling. Without strict validation it can reach the apology and hang-up.",
       "evidence": [
-        "api/routes.js:1039-1045",
+        "shared/features/callPurpose.js:3-6",
+        "api/calls/purposeValidation.js:4-19",
+        "api/routes.js:1038-1053",
         "shared/data/agentPrompt.js:38-46"
       ]
     },
@@ -75,7 +78,7 @@
       "text": "Create the call and look up the durable request status when an ID is returned.",
       "evidence": [
         "api/callReceiptError.js:1-8",
-        "api/routes.js:1039-1045",
+        "api/routes.js:1041-1049",
         "shared/data/agentPrompt.js:38-46"
       ],
       "value": [
@@ -89,9 +92,20 @@
       "scope": "number",
       "text": "from_number_not_found means the supplied sender is ineligible. Check account ownership, assignment and the number’s outbound controls.",
       "evidence": [
-        "api/outboundNumber.js:37-48"
+        "api/outboundNumber.js:16-27"
       ],
       "value": "from_number_not_found"
+    },
+    {
+      "id": "out-number-setting",
+      "kind": "change",
+      "scope": "organisation",
+      "text": "Read GET /v1/organisation/outbound-settings. Where available, the Owner or organisation API key can PATCH the same path with require_from_number_for_shared_agent. Campaigns need a reviewed sender. If it changes, choose and confirm again.",
+      "evidence": [
+        "api/organisationRoutes.js:16-30",
+        "outbound/features/campaignSenderChoice.js:2-14",
+        "dashboard@lib/outboundSettings.js:8-28"
+      ]
     }
   ]
 }

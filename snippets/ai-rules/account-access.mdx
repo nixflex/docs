@@ -2,8 +2,14 @@
 
 **NOT OFFERED → do this instead · platform** No self-service sandbox account or URL exists. Use fixtures locally or an owned test number for real traffic. Use another environment only when Nixflex provisions it.
 
-**YOU CAN CHANGE · account** Rotate the secret during a coordinated cutover. Update callers holding the old secret immediately.
+**YOU CAN CHANGE · account** Rotate the credential and update its callers together.
 
-**SCOPE · account** Use your server to identify the customer and authorise each operation before calling Nixflex. A shared account credential can see multiple customers.
+**SCOPE · account** Authorise each customer on your server. A shared credential sees multiple tenants.
+
+In Help choose New request for a capacity review, complaint or problem, abuse report, or other issue. Follow Your open chats. Owners and Admins see organisation tickets. Members see their own while authorised. Close chat removes it from the open list. A staff-closed chat can surface until its final reply is read. `POST /v1/support/tickets/chat-summary` is a read. Use watch_ticket to check a displayed ticket outside the current page.
+
+Use /v1/support/tickets. A personal session sends X-Nixflex-Expected-Account with the original workspace’s public key_id for list, detail, chat-summary, writes and receipt lookup. Organisation keys select their own account. On 409 account_changed, discard the stale draft and refresh Help in the intended workspace.
+
+Create, reply and solve each need an Idempotency-Key. Reply uses X-Expected-Revision. Solve sends version in JSON. Lost response? The original person can `GET /v1/support/tickets/requests/{request_key}` with the original account header. A 200 returns the current ticket and original receipt. 404 means missing or inaccessible. Never resend in a different workspace. Organisation keys can replay only the identical write with its key, body and revision.
 
 [Read the compact AI rules](https://docs.nixflex.com/ai-rules.md#account-access)

@@ -3,8 +3,8 @@
   "feature": "website-agent",
   "title": "Website chat, voice and installation",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -40,7 +40,7 @@
       "text": "Configure each number’s sms_prompt for SMS and web_prompt for website chat and voice. Neither channel inherits its phone custom_prompt. Both still use the agent knowledge enabled for that channel and follow their own channel rules.",
       "evidence": [
         "inbound/features/smsReply.js:27-41",
-        "inbound/features/smsReply.js:398-405",
+        "inbound/features/smsReply.js:412-421",
         "web/visitorContext.js:18-28",
         "web/voiceConfig.js:8-18",
         "knowledge/liveRead.js:20-28"
@@ -66,14 +66,14 @@
       "text": "The website prompt has its own character limit, [[num-prompt.web_prompt]]. The phone and SMS prompt limits are separate.",
       "evidence": [
         "api/agentInbox.js:4-10",
-        "shared/features/phoneNumberImport.js:95-112"
+        "shared/features/phoneNumberImport.js:95-113"
       ]
     },
     {
       "id": "web-api",
       "kind": "api",
       "scope": "number",
-      "text": "Read widget settings and installation metadata for the owned number.",
+      "text": "Read the number’s widget settings and install ID.",
       "evidence": [
         "api/agentInbox.js:60-65",
         "api/agentWidgetSeen.js:4-9",

@@ -3,8 +3,8 @@
   "feature": "outbound-actions-variables",
   "title": "Action tags and outbound variables",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -99,7 +99,7 @@
       "scope": "call",
       "text": "Send prompt for the single call. For a campaign use its prompt or the recipient’s prompt_override.",
       "evidence": [
-        "api/routes.js:1033-1045",
+        "api/routes.js:1035-1049",
         "outbound/features/voiceCampaignLaunch.js:100-116"
       ]
     },
@@ -110,8 +110,8 @@
       "text": "Use case-sensitive ASCII letters, digits and underscores for names such as {{pickup_time}}. Send dynamic_vars for one call. Map CSV columns to recipients[].variables for each campaign row. Supply caller_name and business_name when referenced.",
       "evidence": [
         "shared/features/singleContactPolicy.js:15-25",
-        "api/routes.js:1033-1045",
-        "outbound/features/batchCalls.js:125-135",
+        "api/routes.js:1035-1049",
+        "outbound/features/batchCalls.js:132-142",
         "outbound/call/callManager.js:429-448",
         "shared/utils/callVariables.js:31-38"
       ]
@@ -134,7 +134,7 @@
       "instead": "For your own workflow, configure a number-level custom function with defined arguments.",
       "evidence": [
         "outbound/providers/outboundClaude.js:89-111",
-        "api/routes.js:2237-2255",
+        "api/routes.js:2243-2261",
         "outbound/call/callManager.js:485-488",
         "outbound/call/conversation.js:155-162"
       ]
@@ -155,11 +155,12 @@
       "id": "act-min",
       "kind": "limit",
       "scope": "call",
-      "text": "Supply at least [[act-min]] trimmed characters of meaningful purpose. Blank input is rejected. Shorter input can trigger an apology and hang-up.",
+      "text": "Supply at least [[act-min]] trimmed characters of meaningful purpose. Set prompt_validation=strict on a single call to refuse a shorter purpose before dialling.",
       "sourceList": "outbound.purposeMin",
       "value": 10,
       "evidence": [
-        "api/routes.js:1039-1045",
+        "shared/features/callPurpose.js:3-6",
+        "api/calls/purposeValidation.js:4-19",
         "shared/data/agentPrompt.js:38-46"
       ]
     },
@@ -170,9 +171,9 @@
       "text": "Start a single outbound call with agent_id, to_number and prompt. On a shared agent always specify the tenant’s owned from_number.",
       "value": "POST /v1/calls/outbound",
       "evidence": [
-        "api/routes.js:1025-1045",
-        "api/routes.js:1063-1078",
-        "api/outboundNumber.js:13-31"
+        "api/routes.js:1027-1049",
+        "api/routes.js:1067-1084",
+        "api/outboundNumber.js:65-85"
       ]
     },
     {
@@ -182,8 +183,8 @@
       "text": "Create a voice campaign with recipients and their variables.",
       "value": "POST /v1/calls/batch",
       "evidence": [
-        "api/routes.js:1137-1175",
-        "outbound/features/batchCalls.js:125-146"
+        "api/routes.js:1143-1183",
+        "outbound/features/batchCalls.js:132-153"
       ]
     },
     {

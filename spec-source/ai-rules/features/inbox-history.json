@@ -3,23 +3,23 @@
   "feature": "inbox-history",
   "title": "Inbox, history and tenant-scoped reads",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "hist-tenant",
       "kind": "fixed",
       "scope": "account",
-      "text": "Inbox number discovery is account-wide. Filter threads by channel and number, and call history by number. DELETE /v1/calls purges calls and related recordings account-wide and reports sms_deleted=0. For one customer verify each call ID before deletion.",
+      "text": "Inbox number discovery is account-wide. Filter threads by channel and number, and call history by number. DELETE /v1/calls purges calls and related recordings account-wide and reports sms_deleted=0. For one customer verify each call ID, then use DELETE /v1/calls/{id}.",
       "evidence": [
         "api/agentInbox.js:24-46",
         "api/calls/historyQuery.js:3-20",
-        "api/routes.js:1265-1283",
-        "api/routes.js:1392-1407",
-        "api/contactSuppression.js:13-23",
-        "api/routes.js:174-211",
-        "api/routes.js:633-646"
+        "api/routes.js:1274-1296",
+        "api/routes.js:1405-1424",
+        "api/contactSuppression.js:13-37",
+        "api/routes.js:176-213",
+        "api/routes.js:635-648"
       ],
       "why": "The account credential can see several customers’ numbers."
     },
@@ -27,23 +27,20 @@
       "id": "hist-lists",
       "kind": "unavailable",
       "scope": "number",
-      "text": "Voice and SMS campaign lists and the suppression list do not provide a general tenant from_number filter.",
+      "text": "A business_number filter on campaign and opt-out reads does not establish tenant identity.",
       "evidence": [
-        "api/agentInbox.js:24-46",
-        "api/calls/historyQuery.js:3-20",
-        "api/routes.js:1265-1283",
-        "api/routes.js:1392-1407",
-        "api/contactSuppression.js:13-23",
-        "api/routes.js:174-211",
-        "api/routes.js:633-646"
+        "api/businessNumberFilter.js:4-20",
+        "api/routes.js:1273-1296",
+        "api/routes.js:1410-1440",
+        "api/contactSuppression.js:17-32"
       ],
-      "instead": "Keep a server-side mapping of customer, number and campaign IDs. Filter authorised results before displaying them."
+      "instead": "Authorise the tenant and its number on your server. Keep that filter through SMS pagination. Bulk call deletion stays account-wide."
     },
     {
       "id": "hist-page",
       "kind": "does",
       "scope": "account",
-      "text": "Use stable filters with the server’s next cursor when following history. Preserve the intended number through pagination.",
+      "text": "Keep the same filters with each server-issued cursor.",
       "evidence": [
         "api/calls/historyQuery.js:13-45"
       ]
@@ -94,11 +91,11 @@
       "evidence": [
         "api/agentInbox.js:24-46",
         "api/calls/historyQuery.js:3-20",
-        "api/routes.js:1265-1283",
-        "api/routes.js:1392-1407",
-        "api/contactSuppression.js:13-23",
-        "api/routes.js:174-211",
-        "api/routes.js:633-646"
+        "api/routes.js:1274-1296",
+        "api/routes.js:1405-1424",
+        "api/contactSuppression.js:13-37",
+        "api/routes.js:176-213",
+        "api/routes.js:635-648"
       ]
     },
     {
@@ -109,11 +106,11 @@
       "evidence": [
         "api/agentInbox.js:24-46",
         "api/calls/historyQuery.js:3-20",
-        "api/routes.js:1265-1283",
-        "api/routes.js:1392-1407",
-        "api/contactSuppression.js:13-23",
-        "api/routes.js:174-211",
-        "api/routes.js:633-646"
+        "api/routes.js:1274-1296",
+        "api/routes.js:1405-1424",
+        "api/contactSuppression.js:13-37",
+        "api/routes.js:176-213",
+        "api/routes.js:635-648"
       ],
       "value": [
         "GET /v1/agent-inbox/{channel}/{number}",

@@ -6,7 +6,7 @@ These three patches target the combined Release A draft and published Help base,
 | --- | --- | --- |
 | B | Number-specific Cal.com booking times and renewed appointment approval | Engine 8ce7190, dashboard ce5cb21 |
 | C | Campaign number filters, pickup rate, attributed opt-outs, SMS recognition and Owner correction | Engine 56a162b, dashboard 2634e55 |
-| S | Contact us, My tickets, app Help, ticket API and personal receipt recovery | Engine b3a05ff, dashboard 3532745 |
+| S | Help chats, app Help, ticket API and personal receipt recovery | Engine 16046688, dashboard 668be49f |
 
 ## Review a candidate
 
@@ -26,7 +26,7 @@ python spec-source/doc4-drafts/verify.py
 
 The verifier above checks the combined preview. B and C leave the native app controls undescribed. The S phone guide requires the released app shell with ticket support. If web and app releases split, hold its phone-page hunk and the app-specific sentences until the app is available.
 
-Apply these release overlays **after** the existing generators. For ongoing publication, fold reviewed content into the current authored sources and operation inventory before dropping the overlay step. Rebuild on a clean candidate, reapply selected overlays, regenerate the directory, and compare the resulting MDX, menu and public schema to the reviewed preview. The frozen AI-rule mapping needs the separately reviewed new operations and updated Cal.com wording. Run the rules proof once on the joined release before publishing. Existing Release A patches remain a distinct release. Round 2 supersedes the earlier Help form and the email-only description in the older SC2 app draft.
+Apply these release overlays **after** the existing generators. For ongoing publication, fold reviewed content into the current authored sources and operation inventory before dropping the overlay step. Rebuild on a clean candidate, reapply selected overlays, regenerate the directory, and compare the resulting MDX, menu and public schema to the reviewed preview. The DOC5 rules map the ten additional operations across A, C and Help and describe the effective Cal.com zone. Publish those rules with the joined release after two independent 30/30 runs. Existing Release A patches remain a distinct release. Round 2 supersedes the earlier Help form and the email-only description in the older SC2 app draft.
 
 ## Publication checks
 

@@ -3,15 +3,15 @@
   "feature": "testing-live-status",
   "title": "Testing and live status",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "test-real",
       "kind": "fixed",
       "scope": "call",
-      "text": "The phone tester places a real call to the selected number. Reserve real numbers for deliberate tests.",
+      "text": "The phone tester places a real call to the selected number.",
       "evidence": [
         "shared/features/agentTester.js:75-147"
       ],
@@ -24,7 +24,7 @@
       "text": "The public API does not provide a simulated phone network or a general live-monitor control endpoint.",
       "evidence": [
         "shared/http/publicOrigin.js:5-12",
-        "server.js:265-269",
+        "server.js:266-270",
         "docs@scripts/public-production-policy.mjs:1-4",
         "docs@api-reference/public.openapi.json:1-30",
         "shared/monitor/liveStatus.js:15-32"
@@ -35,7 +35,7 @@
       "id": "test-see",
       "kind": "does",
       "scope": "call",
-      "text": "Use the monitor to inspect authorised live calls. Media connection and final call outcome are distinct observations.",
+      "text": "An authorised monitor connection shows live media. Check the final call record for its outcome.",
       "evidence": [
         "shared/monitor/liveStatus.js:15-32"
       ]
@@ -44,7 +44,7 @@
       "id": "test-choose",
       "kind": "change",
       "scope": "call",
-      "text": "Choose a suitable test scenario and check the result before repeating a test.",
+      "text": "Choose a test scenario and check its result before retrying.",
       "evidence": [
         "shared/features/agentTester.js:75-147"
       ]

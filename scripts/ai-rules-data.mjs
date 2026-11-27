@@ -52,6 +52,11 @@ export function validateShape(features,index){
 }
 export function validateBoundary(features,index,publicOps){
  const primary=Object.values(index.features).flatMap(f=>f.operations)
+ // The release overlays land independently. A newly visible operation has one owner in either state.
+ for(const [feature,operations] of Object.entries(index.releaseOperations)){
+  assert.ok(index.features[feature],'Unknown release feature '+feature)
+  primary.push(...operations.filter(op=>publicOps.has(op)))
+ }
  assert.deepEqual([...primary].sort(),[...publicOps].sort(),'Every public operation needs exactly one primary owner')
  const all=features.flatMap(f=>f.rules),find=id=>all.find(r=>r.id===id)
  for(const r of all.filter(r=>r.kind==='api'))for(const op of [r.value].flat())assert.ok(publicOps.has(op),r.id+' unpublished '+op)
@@ -79,6 +84,14 @@ export function verifySources(data,repos,ref,{refresh=false}={}){
   before[repo]=readBlobs(repos[repo],index[repo],index.sources[repo])
   current[repo]=repo==='engine'&&ref!==index.engine?readBlobs(repos.engine,ref,index.sources.engine):before[repo]
  }
+ const registered=JSON.parse(current.engine.get('contracts/registered-routes.json').text)
+ const routes=new Set(registered.map(r=>r.method+' '+r.path.replace(/:(\w+)/g,'{$1}')))
+ const release=Object.values(index.releaseOperations).flat()
+ assert.equal(new Set(release).size,release.length,'Duplicate release operation')
+ for(const op of release)assert.ok(op.includes(' /v1/')&&routes.has(op),'Unregistered release operation '+op)
+ const ticketSpec=JSON.parse(current.engine.get('docs/support.openapi.json').text)
+ const tickets=Object.entries(ticketSpec.paths).flatMap(([path,methods])=>Object.keys(methods).map(m=>m.toUpperCase()+' /v1'+path))
+ assert.deepEqual(index.releaseOperations['account-access'].slice().sort(),tickets.sort(),'Incomplete Help contract')
  const values=extract(file=>current.engine.get(file)?.text)
  assert.deepEqual([...sourceIds].sort(),Object.keys(values).sort(),'Each extracted contract must be represented')
  for(const r of all)for(const s of r.evidence){

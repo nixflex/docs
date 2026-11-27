@@ -3,17 +3,17 @@
   "feature": "integrations",
   "title": "Automation, CRM and notifications",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "integ-owner",
       "kind": "fixed",
       "scope": "number",
-      "text": "Use a number-owned connection for the intended customer. A Slack connection for one number does not configure another number.",
+      "text": "Scope each connection to its business number, including Slack.",
       "evidence": [
-        "api/routes.js:1782-1823"
+        "api/routes.js:1788-1829"
       ],
       "why": "The adapter checks the business number and its owning account."
     },
@@ -23,7 +23,7 @@
       "scope": "number",
       "text": "The Slack settings read cannot recover a saved incoming webhook URL.",
       "evidence": [
-        "api/routes.js:1815-1823"
+        "api/routes.js:1821-1829"
       ],
       "instead": "Read webhook_url_set to check configuration. Enter the replacement secret on your server when rotating it."
     },
@@ -31,9 +31,9 @@
       "id": "integ-pick",
       "kind": "does",
       "scope": "number",
-      "text": "Connect Slack notifications, GoHighLevel or a supported automation through Zapier or Make. Use the matching integration resource for that business number.",
+      "text": "Use that number’s integration for Slack, GoHighLevel, Zapier or Make.",
       "evidence": [
-        "api/routes.js:1782-1823",
+        "api/routes.js:1788-1829",
         "shared/integrations/automation.js:1-20"
       ]
     },
@@ -41,9 +41,9 @@
       "id": "integ-change",
       "kind": "change",
       "scope": "number",
-      "text": "Supply the supported endpoint and settings for the chosen adapter. Verify the number and destination before making a change.",
+      "text": "Verify the business number, endpoint and settings before changing an integration.",
       "evidence": [
-        "api/routes.js:1782-1813"
+        "api/routes.js:1788-1819"
       ]
     },
     {
@@ -52,7 +52,7 @@
       "scope": "number",
       "text": "A Slack incoming webhook must be a supported HTTPS Slack endpoint. A generic automation URL belongs to its corresponding adapter.",
       "evidence": [
-        "api/routes.js:1782-1798"
+        "api/routes.js:1788-1804"
       ]
     },
     {
@@ -61,7 +61,7 @@
       "scope": "number",
       "text": "Inspect a connection before replacing its configuration.",
       "evidence": [
-        "api/routes.js:1782-1823"
+        "api/routes.js:1788-1829"
       ],
       "value": [
         "GET /v1/integrations/slack/number/{phoneNumber}",
@@ -74,7 +74,7 @@
       "scope": "number",
       "text": "invalid_url means the destination failed validation. Correct the HTTPS endpoint for the selected integration.",
       "evidence": [
-        "api/routes.js:1787-1795"
+        "api/routes.js:1793-1801"
       ],
       "value": "invalid_url"
     }

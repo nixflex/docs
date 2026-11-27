@@ -13,7 +13,7 @@
 -**Waiting on customer** means support is waiting for your reply. Write your message and select **Send reply**. When the issue is resolved, choose **Mark solved**. To reopen a solved ticket, write a message and choose **Reply and reopen**.
 -
 -If the dashboard says the ticket changed, choose **Refresh ticket** and read the latest conversation before sending your update. If it cannot confirm a submission and shows **Retry same request**, use that button to retry the original change.
-+In **Settings → Help**, choose **Contact us** to send a request or **My tickets** to follow a conversation. You can also email [support@nixflex.com](mailto:support@nixflex.com). [Choose a request type and follow the reply](/guides/business/support-tickets).
++In **Settings → Help**, choose **New request** to send a request or **Your open chats** to follow a conversation. You can also email [support@nixflex.com](mailto:support@nixflex.com). [Choose a request type and follow the reply](/guides/business/support-tickets).
  
  ## Profile and email preferences
  
@@ -38,14 +38,14 @@
 +canonical: "https://docs.nixflex.com/guides/business/support-tickets"
 +---
 +
-+Use a ticket to keep the request and replies together. If you prefer email, write to [support@nixflex.com](mailto:support@nixflex.com). We aim to reply within 48 hours, including weekends.
++Use a ticket to keep the request and replies together. If you prefer email, write to [support@nixflex.com](mailto:support@nixflex.com). We aim to reply within 48 hours.
 +
 +## Send a request
 +
 +1. Sign in to the organisation the request is about. In the dashboard open **Settings → Help**. In the phone app open **Account → Help**.
-+2. Under **Contact us**, check your name, business and verified email. These fields come from your account. If you have no verified email, you can still use **My tickets**.
++2. Select **New request** and check your name, business and verified email. These fields come from your account. If you have no verified email, you can still use **Your open chats**.
 +3. Choose the request type and write a message. Include the time and what you were trying to do. Leave out passwords, keys and private call content. Your first nonblank line becomes the subject.
-+4. Choose **Send request**. If the outcome is unclear, let Help check the original request. If your workspace changed, reopen Help in the intended account and check **My tickets** before starting again.
++4. Choose **Send request**. If the outcome is unclear, let Help check the original request. If your workspace changed, reopen Help in the intended account and check **Your open chats** before starting again.
 +
 +| Choose | What to include |
 +| --- | --- |
@@ -56,9 +56,9 @@
 +
 +## Follow the conversation
 +
-+Open **My tickets**. Check the type, date opened, status and latest public reply. Select a subject to see its messages. Owners and Admins can read the organisation’s tickets. A Member sees the tickets they personally opened while they still have access.
++Open **Your open chats**. Check the type, date opened, status and latest public reply. Select a subject to see its messages. Owners and Admins can read the organisation’s tickets. A Member sees the tickets they personally opened while they still have access.
 +
-+**Waiting for your reply** means support needs something from you. Send your reply in the thread. Choose **Mark done** once the issue is resolved. If it comes back, reply to reopen it. If someone updated the ticket while you were writing, refresh it and read their reply first. A notification email directs you back to sign in and read the conversation.
++**Waiting for your reply** means support needs something from you. Send your reply in the thread. Choose **Close chat** and confirm when the issue is resolved. A staff-closed chat can remain visible until you read the final answer. From a closed chat, start a new request if you need more help. If someone updated the ticket while you were writing, refresh it and read their reply first. A notification email directs you back to sign in and read the conversation.
 +
 +## Common questions
 +
@@ -71,7 +71,7 @@
 +[Account settings](/guides/business/account) · [Support for developers](/guides/developer/support-tickets)
 --- /dev/null
 +++ b/guides/developer/support-tickets.mdx
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,63 @@
 +---
 +title: "Open and recover support tickets with the Nixflex API"
 +sidebarTitle: "Support tickets in code"
@@ -116,13 +116,13 @@
 +
 +## 2. Submit once in the intended workspace
 +
-+Choose a unique `Idempotency-Key` for each intended create, reply or solve. Keep the key with the exact action, body and revision. For a personal create or reply, capture the workspace’s public `key_id` **when the draft starts** and send it in `X-Nixflex-Expected-Account`. Never derive that header from whichever workspace happens to be open when retrying. An organisation key already selects its workspace.
++Choose a unique `Idempotency-Key` for each intended create, reply or solve. Keep the key with the exact action, body and revision. For personal sessions, send the original account header for list, detail, chat summary, create, reply, solve and receipt. Capture the workspace’s public `key_id` **when the draft starts** and send it in `X-Nixflex-Expected-Account`. Never derive that header from whichever workspace happens to be open when retrying. An organisation key already selects its workspace.
 +
 +[Create](/api-reference/support/create) uses `message`. [Reply](/api-reference/support/reply) uses `body` and the thread’s latest version in `X-Expected-Revision`. [Mark done](/api-reference/support/solve) takes that version in the JSON body. A reply can reopen a solved ticket.
 +
 +## 3. Recover a lost acknowledgement
 +
-+For a personal submission, [look up the receipt](/api-reference/support/receipt) with the original signed-in person, request key and workspace header. On 200, show the current ticket and the original receipt. An organisation-key client can replay the identical write with its original key. Only an already committed and still authorised personal write can replay without the workspace header.
++For a personal submission, [look up the receipt](/api-reference/support/receipt) with the original signed-in person, request key and workspace header. On 200, show the current ticket and the original receipt. An organisation-key client can replay the identical write with its original key. Keep the original header on retries. Personal solve and receipt calls always require it.
 +
 +| Result | What to do |
 +| --- | --- |
@@ -133,9 +133,11 @@
 +| 429 or 503 | Wait and retry a read. Reconcile a write before resending. |
 +
 +[List tickets](/api-reference/support/list) · [Read a thread](/api-reference/support/get) · [Dashboard and app guide](/guides/business/support-tickets)
++
++[Read the chat summary and watch a displayed ticket](/api-reference/support/chat-summary).
 --- /dev/null
 +++ b/api-reference/support/list.mdx
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,75 @@
 +---
 +title: "List support tickets"
 +sidebarTitle: "List support tickets"
@@ -155,6 +157,7 @@
 +
 +| Field | Requirement and meaning |
 +| --- | --- |
++| `X-Nixflex-Expected-Account` | A personal session must send the original workspace’s public `key_id`. An organisation key binds its own account. |
 +| `limit` | Optional integer, default 20. Use 1–50. |
 +| `cursor` | Optional. Use the previous `next_cursor` unchanged. Positive decimal string up to 9223372036854775807. |
 +| `category` | Optional raw value: `problem`, `billing`, `raise_call_limit`, `call_me_back`, `report_abuse`, `other`. Historical values can still be filtered. |
@@ -208,6 +211,8 @@
 +## Retry
 +
 +Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
++
++On HTTP 409 `account_changed` discard stale state and refresh Help in the intended workspace.
 --- /dev/null
 +++ b/api-reference/support/create.mdx
 @@ -0,0 +1,89 @@
@@ -380,7 +385,7 @@
 +Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
 --- /dev/null
 +++ b/api-reference/support/get.mdx
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,86 @@
 +---
 +title: "Read a support ticket"
 +sidebarTitle: "Read a support ticket"
@@ -400,6 +405,7 @@
 +
 +| Field | Requirement and meaning |
 +| --- | --- |
++| `X-Nixflex-Expected-Account` | A personal session must send the original workspace’s public `key_id`. An organisation key binds its own account. |
 +| `ticket_id` | Required UUID in the path, for a visible ticket. |
 +
 +Send no request body.
@@ -464,6 +470,8 @@
 +## Retry
 +
 +Retry transient reads with bounded backoff. A later read can show newer ticket state. [Ticket workflow and recovery](/guides/developer/support-tickets).
++
++On HTTP 409 `account_changed` discard stale state and refresh Help in the intended workspace.
 --- /dev/null
 +++ b/api-reference/support/reply.mdx
 @@ -0,0 +1,88 @@
@@ -557,7 +565,7 @@
 +On a lost response, reconcile first. A personal client can look up the original receipt. An identical authorised replay uses the original key and payload. Use a new key only for a newly reviewed action. [Ticket workflow and recovery](/guides/developer/support-tickets).
 --- /dev/null
 +++ b/api-reference/support/solve.mdx
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,86 @@
 +---
 +title: "Mark a support ticket done"
 +sidebarTitle: "Mark a support ticket done"
@@ -577,6 +585,7 @@
 +
 +| Field | Requirement and meaning |
 +| --- | --- |
++| `X-Nixflex-Expected-Account` | A personal session must send the original workspace’s public `key_id`. An organisation key binds its own account. |
 +| `ticket_id` | Required UUID in the path, for a visible ticket. |
 +| `Idempotency-Key` | Required header. Choose a unique value for this change, 1–128 letters, digits or `._:-`. Keep it for recovery. |
 +| `version` | Required JSON integer. Use the revision from the ticket you just reviewed, 1–2,147,483,647. |
@@ -641,6 +650,8 @@
 +## Retry
 +
 +On a lost response, reconcile first. A personal client can look up the original receipt. An identical authorised replay uses the original key and payload. Use a new key only for a newly reviewed action. [Ticket workflow and recovery](/guides/developer/support-tickets).
++
++On HTTP 409 `account_changed` discard stale state and refresh Help in the intended workspace.
 --- a/guides/business/using-on-phone.mdx
 +++ b/guides/business/using-on-phone.mdx
 @@ -112,6 +112,10 @@
@@ -649,14 +660,14 @@
  
 +## Follow a support request on your phone
 +
-+In the Nixflex app, open **Account → Help**. Use **Contact us** to send a request or open **My tickets** for replies, dates and status. **Copy email address** lets you contact support using your own email app. [Choose a request type and follow your ticket](/guides/business/support-tickets).
++In the Nixflex app, open **Account → Help**. Use **New request** to send a request or open **Your open chats** for replies, dates and status. **Copy email address** lets you contact support using your own email app. [Choose a request type and follow your ticket](/guides/business/support-tickets).
 +
  ## Common questions
  
  <AccordionGroup>
 --- a/api-reference/introduction.mdx
 +++ b/api-reference/introduction.mdx
-@@ -81,9 +81,22 @@
+@@ -81,9 +81,23 @@
  
  ## Find an API operation
  
@@ -665,10 +676,11 @@
  
  <AccordionGroup>
 +
-+<Accordion title="Support tickets (6)">
++<Accordion title="Support tickets (7)">
 +
 +| Task | Method and path |
 +| --- | --- |
++| [Read chat summary](/api-reference/support/chat-summary) | `POST /support/tickets/chat-summary` |
 +| [List support tickets](/api-reference/support/list) | `GET /support/tickets` |
 +| [Create a support ticket](/api-reference/support/create) | `POST /support/tickets` |
 +| [Read a support ticket](/api-reference/support/get) | `GET /support/tickets/{ticket_id}` |
@@ -698,7 +710,7 @@
                "guides/developer/billing",
                "concepts/data-retention",
                "guides/developer/account/security",
-@@ -2246,6 +2248,18 @@
+@@ -2246,6 +2248,19 @@
                "api-reference/idempotency",
                "api-reference/retries",
                "api-reference/versioning"
@@ -713,13 +725,14 @@
 +              "api-reference/support/get",
 +              "api-reference/support/reply",
 +              "api-reference/support/solve",
-+              "api-reference/support/receipt"
++              "api-reference/support/receipt",
++              "api-reference/support/chat-summary"
              ],
              "expanded": true
            },
 --- a/api-reference/public.openapi.json
 +++ b/api-reference/public.openapi.json
-@@ -16,6 +16,784 @@
+@@ -16,6 +16,841 @@
      }
    ],
    "paths": {
@@ -776,6 +789,15 @@
 +                "solved"
 +              ]
 +            }
++          },
++          {
++            "name": "X-Nixflex-Expected-Account",
++            "in": "header",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "Required for a personal session. Use the displayed workspace key_id. Missing or stale scope returns 409 account_changed. Organisation API keys use their authenticated account."
 +          }
 +        ],
 +        "responses": {
@@ -848,6 +870,16 @@
 +                }
 +              }
 +            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
 +          }
 +        }
 +      },
@@ -867,7 +899,7 @@
 +              "type": "string",
 +              "minLength": 1,
 +              "maxLength": 128,
-+              "pattern": "^[A-Za-z0-9._:-]+$"
++              "pattern": "^(?!\\.+$)[A-Za-z0-9._:-]+$"
 +            }
 +          },
 +          {
@@ -902,7 +934,7 @@
 +            }
 +          },
 +          "400": {
-+            "description": "Invalid fields or request key",
++            "description": "Invalid fields or request key. A key made only of dots returns invalid_request_key.",
 +            "content": {
 +              "application/json": {
 +                "schema": {
@@ -1014,7 +1046,7 @@
 +            "required": true,
 +            "schema": {
 +              "type": "string",
-+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
++              "pattern": "^(?!\\.+$)[A-Za-z0-9._:-]{1,128}$"
 +            }
 +          },
 +          {
@@ -1034,6 +1066,16 @@
 +              "application/json": {
 +                "schema": {
 +                  "$ref": "#/components/schemas/SupportResult"
++                }
++              }
++            }
++          },
++          "400": {
++            "description": "invalid_request_key for a key made only of dots. Ordinary dotted keys are allowed.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
 +                }
 +              }
 +            }
@@ -1118,6 +1160,15 @@
 +              "type": "string",
 +              "format": "uuid"
 +            }
++          },
++          {
++            "name": "X-Nixflex-Expected-Account",
++            "in": "header",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "Required for a personal session. Use the displayed workspace key_id. Missing or stale scope returns 409 account_changed. Organisation API keys use their authenticated account."
 +          }
 +        ],
 +        "responses": {
@@ -1190,6 +1241,16 @@
 +                }
 +              }
 +            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
 +          }
 +        }
 +      }
@@ -1220,7 +1281,7 @@
 +              "type": "string",
 +              "minLength": 1,
 +              "maxLength": 128,
-+              "pattern": "^[A-Za-z0-9._:-]+$"
++              "pattern": "^(?!\\.+$)[A-Za-z0-9._:-]+$"
 +            }
 +          },
 +          {
@@ -1265,7 +1326,7 @@
 +            }
 +          },
 +          "400": {
-+            "description": "Invalid fields or request key",
++            "description": "Invalid fields or request key. A key made only of dots returns invalid_request_key.",
 +            "content": {
 +              "application/json": {
 +                "schema": {
@@ -1383,8 +1444,17 @@
 +              "type": "string",
 +              "minLength": 1,
 +              "maxLength": 128,
-+              "pattern": "^[A-Za-z0-9._:-]+$"
++              "pattern": "^(?!\\.+$)[A-Za-z0-9._:-]+$"
 +            }
++          },
++          {
++            "name": "X-Nixflex-Expected-Account",
++            "in": "header",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "Required for a personal session. Use the displayed workspace key_id. Missing or stale scope returns 409 account_changed. Organisation API keys use their authenticated account."
 +          }
 +        ],
 +        "requestBody": {
@@ -1409,7 +1479,7 @@
 +            }
 +          },
 +          "400": {
-+            "description": "Invalid fields or request key",
++            "description": "Invalid fields or request key. A key made only of dots returns invalid_request_key.",
 +            "content": {
 +              "application/json": {
 +                "schema": {
@@ -1504,10 +1574,176 @@
      "/organisation": {
        "get": {
          "operationId": "organisationContext",
-@@ -73550,6 +74328,651 @@
+@@ -73541,6 +74376,164 @@
+           }
+         }
+       }
++    },
++    "/support/tickets/chat-summary": {
++      "post": {
++        "operationId": "summarizeSupportChats",
++        "tags": [
++          "Support tickets"
++        ],
++        "summary": "Read a page of open chats and the device unread count",
++        "description": "Read-only operation. Supply device read revisions keyed by marker_key. Counts cover every eligible chat; snippets cover one page. A solved chat appears only for an unread public staff answer after staff closure. Markers are compared transiently. Supply watch_ticket to check the displayed ticket independently of the page. The watched header contains only id, status and version, or null if unavailable to the same account and person.",
++        "parameters": [
++          {
++            "name": "X-Nixflex-Expected-Account",
++            "in": "header",
++            "required": false,
++            "schema": {
++              "type": "string"
++            },
++            "description": "Required for a personal session. Use the displayed workspace key_id. Missing or stale scope returns 409 account_changed. Organisation API keys use their authenticated account."
++          }
++        ],
++        "requestBody": {
++          "required": true,
++          "content": {
++            "application/json": {
++              "schema": {
++                "type": "object",
++                "additionalProperties": false,
++                "properties": {
++                  "watch_ticket": {
++                    "type": "string",
++                    "format": "uuid"
++                  },
++                  "seen": {
++                    "type": "object",
++                    "additionalProperties": {
++                      "type": "integer",
++                      "minimum": 1,
++                      "maximum": 2147483647
++                    }
++                  },
++                  "cursor": {
++                    "type": "string",
++                    "pattern": "^[1-9][0-9]{0,18}$"
++                  },
++                  "limit": {
++                    "type": "integer",
++                    "minimum": 1,
++                    "maximum": 50,
++                    "default": 20
++                  }
++                }
++              }
++            }
++          }
++        },
++        "responses": {
++          "400": {
++            "description": "Invalid fields or request key. A key made only of dots returns invalid_request_key.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "401": {
++            "description": "Sign in required",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "403": {
++            "description": "Access changed",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "404": {
++            "description": "Ticket not found",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "409": {
++            "description": "Refresh the ticket or check the original request",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "413": {
++            "description": "Read markers must fit within 2 MiB. Ticket writes retain the 64 KiB limit.",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "415": {
++            "description": "Send changes as application/json",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "429": {
++            "description": "Account request limit reached",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "503": {
++            "description": "Temporarily unavailable",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportError"
++                }
++              }
++            }
++          },
++          "200": {
++            "description": "Success",
++            "content": {
++              "application/json": {
++                "schema": {
++                  "$ref": "#/components/schemas/SupportChatPage"
++                }
++              }
++            }
++          }
++        }
++      }
+     }
+   },
+   "components": {
+@@ -73549,6 +74542,962 @@
+         "type": "http",
          "scheme": "bearer",
          "description": "KEY_ID:KEY_SECRET from the owning account. Keep it server-side. A verified personal dashboard Bearer session may be used where the operation documents role-based access."
-       }
++      }
 +    },
 +    "schemas": {
 +      "SupportSummary": {
@@ -1616,6 +1852,44 @@
 +                "additionalProperties": false
 +              }
 +            ]
++          },
++          "marker_key": {
++            "type": "string",
++            "pattern": "^[1-9][0-9]{0,18}$",
++            "description": "Opaque decimal ticket reference for device read markers. Scope stored revisions to the verified person and account."
++          },
++          "closed_by": {
++            "enum": [
++              null,
++              "staff",
++              "customer"
++            ],
++            "description": "Closure origin. Open tickets return null. A personal or organisation-key close is customer."
++          },
++          "last_staff_revision": {
++            "anyOf": [
++              {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 2147483647
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Exact ticket revision at that staff answer. Later answers have higher revisions."
++          },
++          "last_staff_message_id": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "uuid"
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Identifier of the last public staff answer. Compare with the message actually displayed."
 +          }
 +        },
 +        "required": [
@@ -1760,6 +2034,44 @@
 +                "additionalProperties": false
 +              }
 +            ]
++          },
++          "marker_key": {
++            "type": "string",
++            "pattern": "^[1-9][0-9]{0,18}$",
++            "description": "Opaque decimal ticket reference for device read markers. Scope stored revisions to the verified person and account."
++          },
++          "closed_by": {
++            "enum": [
++              null,
++              "staff",
++              "customer"
++            ],
++            "description": "Closure origin. Open tickets return null. A personal or organisation-key close is customer."
++          },
++          "last_staff_revision": {
++            "anyOf": [
++              {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 2147483647
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Exact ticket revision at that staff answer. Later answers have higher revisions."
++          },
++          "last_staff_message_id": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "uuid"
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Identifier of the last public staff answer. Compare with the message actually displayed."
 +          }
 +        },
 +        "required": [
@@ -2152,7 +2464,257 @@
 +        "required": [
 +          "error"
 +        ]
-+      }
++      },
++      "SupportChatRow": {
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "format": "uuid"
++          },
++          "category": {
++            "type": "string",
++            "enum": [
++              "problem",
++              "billing",
++              "raise_call_limit",
++              "call_me_back",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "subject": {
++            "type": "string",
++            "minLength": 1,
++            "maxLength": 160
++          },
++          "status": {
++            "type": "string",
++            "enum": [
++              "open",
++              "waiting_on_customer",
++              "solved"
++            ]
++          },
++          "version": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 2147483647
++          },
++          "created_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "updated_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "solved_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "last_customer_reply_at": {
++            "type": "string",
++            "format": "date-time"
++          },
++          "last_staff_reply_at": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "date-time"
++              },
++              {
++                "type": "null"
++              }
++            ]
++          },
++          "display_category": {
++            "enum": [
++              "problem",
++              "raise_call_limit",
++              "report_abuse",
++              "other"
++            ]
++          },
++          "last_public_reply": {
++            "anyOf": [
++              {
++                "type": "null"
++              },
++              {
++                "type": "object",
++                "properties": {
++                  "author_label": {
++                    "enum": [
++                      "You",
++                      "Your team",
++                      "Your organisation",
++                      "Nixflex Support"
++                    ]
++                  },
++                  "created_at": {
++                    "type": "string",
++                    "format": "date-time"
++                  }
++                },
++                "required": [
++                  "author_label",
++                  "created_at"
++                ],
++                "additionalProperties": false
++              }
++            ]
++          },
++          "marker_key": {
++            "type": "string",
++            "pattern": "^[1-9][0-9]{0,18}$",
++            "description": "Opaque decimal ticket reference for device read markers. Scope stored revisions to the verified person and account."
++          },
++          "closed_by": {
++            "enum": [
++              null,
++              "staff",
++              "customer"
++            ],
++            "description": "Closure origin. Open tickets return null. A personal or organisation-key close is customer."
++          },
++          "last_staff_revision": {
++            "anyOf": [
++              {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 2147483647
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Exact ticket revision at that staff answer. Later answers have higher revisions."
++          },
++          "last_staff_message_id": {
++            "anyOf": [
++              {
++                "type": "string",
++                "format": "uuid"
++              },
++              {
++                "type": "null"
++              }
++            ],
++            "description": "Identifier of the last public staff answer. Compare with the message actually displayed."
++          },
++          "snippet": {
++            "type": [
++              "string",
++              "null"
++            ],
++            "maxLength": 160
++          },
++          "snippet_author": {
++            "type": [
++              "string",
++              "null"
++            ]
++          },
++          "unread": {
++            "type": "boolean"
++          }
++        },
++        "required": [
++          "id",
++          "category",
++          "subject",
++          "status",
++          "version",
++          "created_at",
++          "updated_at",
++          "solved_at",
++          "last_customer_reply_at",
++          "last_staff_reply_at",
++          "display_category",
++          "last_public_reply"
++        ],
++        "additionalProperties": false
++      },
++      "SupportChatPage": {
++        "type": "object",
++        "required": [
++          "tickets",
++          "next_cursor",
++          "unread_count"
++        ],
++        "properties": {
++          "watched": {
++            "type": [
++              "object",
++              "null"
++            ],
++            "additionalProperties": false,
++            "required": [
++              "id",
++              "status",
++              "version"
++            ],
++            "properties": {
++              "id": {
++                "type": "string",
++                "format": "uuid"
++              },
++              "status": {
++                "type": "string",
++                "enum": [
++                  "open",
++                  "waiting_on_customer",
++                  "solved"
++                ]
++              },
++              "version": {
++                "type": "integer",
++                "minimum": 1
++              }
++            }
++          },
++          "tickets": {
++            "type": "array",
++            "items": {
++              "$ref": "#/components/schemas/SupportChatRow"
++            },
++            "maxItems": 50
++          },
++          "unread_count": {
++            "type": "integer",
++            "minimum": 0
++          },
++          "next_cursor": {
++            "type": [
++              "string",
++              "null"
++            ]
++          }
++        }
+       }
      }
    },
-   "webhooks": {
+--- /dev/null
++++ b/api-reference/support/chat-summary.mdx
+@@ -0,0 +1,13 @@
++---
++title: "Read the Help chat summary"
++sidebarTitle: "Read chat summary"
++description: "Read open chats, the unread count and the current revision of a displayed ticket."
++openapi: "/api-reference/public.openapi.json POST /support/tickets/chat-summary"
++canonical: "https://docs.nixflex.com/api-reference/support/chat-summary"
++---
++
++Send an empty JSON object for the first page. This POST only reads. A personal session sends its original workspace’s public `key_id` in `X-Nixflex-Expected-Account`. An organisation key selects its own workspace. On 409 `account_changed`, clear stale state and reopen Help in the intended workspace.
++
++Use `seen` for the last displayed staff revision of each `marker_key`. Store those markers per person and workspace. The unread count covers all eligible chats. Continue with the cursor for more rows. A staff-closed chat with an unread public answer stays visible until the answer is read.
++
++Pass a displayed ticket ID in `watch_ticket` to check its status and version outside the current page. A missing or inaccessible watched ticket returns a null watched header. Read the authorised [ticket detail](/api-reference/support/get) before acting on a new revision.

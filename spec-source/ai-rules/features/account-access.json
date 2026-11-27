@@ -3,8 +3,8 @@
   "feature": "account-access",
   "title": "Accounts, API keys and environments",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -14,7 +14,7 @@
       "text": "Use https://api.nixflex.com/v1 for customer integrations. Keep the API credential on your server.",
       "evidence": [
         "shared/http/publicOrigin.js:5-12",
-        "server.js:265-269",
+        "server.js:266-270",
         "docs@scripts/public-production-policy.mjs:1-4",
         "docs@api-reference/public.openapi.json:1-30"
       ],
@@ -28,7 +28,7 @@
       "text": "No self-service sandbox account or URL exists.",
       "evidence": [
         "shared/http/publicOrigin.js:5-12",
-        "server.js:265-269",
+        "server.js:266-270",
         "docs@scripts/public-production-policy.mjs:1-4",
         "docs@api-reference/public.openapi.json:1-30"
       ],
@@ -40,16 +40,16 @@
       "id": "acc-use",
       "kind": "does",
       "scope": "account",
-      "text": "Use your server to identify the customer and authorise each operation before calling Nixflex. A shared account credential can see multiple customers.",
+      "text": "Authorise each customer on your server. A shared credential sees multiple tenants.",
       "evidence": [
-        "api/routes.js:65-103"
+        "api/routes.js:66-104"
       ]
     },
     {
       "id": "acc-rotate",
       "kind": "change",
       "scope": "account",
-      "text": "Rotate the secret during a coordinated cutover. Update callers holding the old secret immediately.",
+      "text": "Rotate the credential and update its callers together.",
       "evidence": [
         "api/auth.js:148-164"
       ]
@@ -60,7 +60,7 @@
       "scope": "account",
       "text": "The default allowance is [[acc-rate]] requests per minute. Observe the effective limit returned by the API.",
       "evidence": [
-        "api/routes.js:90-102"
+        "api/routes.js:91-103"
       ],
       "sourceList": "limits.requestsPerMinute",
       "value": 300
@@ -85,9 +85,42 @@
       "scope": "account",
       "text": "On rate_limit_exceeded wait for the indicated retry interval before the next eligible request.",
       "evidence": [
-        "api/routes.js:90-102"
+        "api/routes.js:91-103"
       ],
       "value": "rate_limit_exceeded"
+    },
+    {
+      "id": "help-thread",
+      "kind": "change",
+      "scope": "thread",
+      "text": "In Help choose New request for a capacity review, complaint or problem, abuse report, or other issue. Follow Your open chats. Owners and Admins see organisation tickets. Members see their own while authorised. Close chat removes it from the open list. A staff-closed chat can surface until its final reply is read. POST /v1/support/tickets/chat-summary is a read. Use watch_ticket to check a displayed ticket outside the current page.",
+      "evidence": [
+        "support/routes.js:66-100",
+        "sql/security-auth/L2_06_support_chat.sql:185-214",
+        "dashboard@app/dashboard/settings/support/SupportTickets.jsx:328-340",
+        "dashboard@app/dashboard/settings/support/TicketList.jsx:1-19"
+      ]
+    },
+    {
+      "id": "help-scope",
+      "kind": "change",
+      "scope": "thread",
+      "text": "Use /v1/support/tickets. A personal session sends X-Nixflex-Expected-Account with the original workspace’s public key_id for list, detail, chat-summary, writes and receipt lookup. Organisation keys select their own account. On 409 account_changed, discard the stale draft and refresh Help in the intended workspace.",
+      "evidence": [
+        "support/routes.js:46-100",
+        "sql/security-auth/L2_06_support_chat.sql:147-163"
+      ]
+    },
+    {
+      "id": "help-receipt",
+      "kind": "change",
+      "scope": "thread",
+      "text": "Create, reply and solve each need an Idempotency-Key. Reply uses X-Expected-Revision. Solve sends version in JSON. Lost response? The original person can GET /v1/support/tickets/requests/{request_key} with the original account header. A 200 returns the current ticket and original receipt. 404 means missing or inaccessible. Never resend in a different workspace. Organisation keys can replay only the identical write with its key, body and revision.",
+      "evidence": [
+        "support/routes.js:44-103",
+        "support/input.js:17-42",
+        "docs/support.openapi.json:1-42"
+      ]
     }
   ]
 }

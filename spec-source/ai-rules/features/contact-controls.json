@@ -3,18 +3,18 @@
   "feature": "contact-controls",
   "title": "Contact hours, consent and opt-outs",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
       "id": "contact-stop",
       "kind": "fixed",
       "scope": "account",
-      "text": "An inbound STOP suppresses that recipient across the owning account, for both voice and SMS. The business number that received it is evidence only.",
+      "text": "An incoming STOP blocks voice and SMS across the owning account. The receiving business number is evidence only.",
       "evidence": [
-        "inbound/features/smsOptOutIntake.js:7-15",
-        "api/contactSuppression.js:5-21"
+        "inbound/features/smsOptOutIntake.js:7-18",
+        "api/contactSuppression.js:5-35"
       ],
       "why": "Campaigns on another business number in the same account consult the same suppression."
     },
@@ -24,8 +24,8 @@
       "scope": "number",
       "text": "A number or a separate agent does not create its own STOP boundary.",
       "evidence": [
-        "inbound/features/smsOptOutIntake.js:7-15",
-        "api/contactSuppression.js:5-21"
+        "inbound/features/smsOptOutIntake.js:7-18",
+        "api/contactSuppression.js:5-35"
       ],
       "instead": "Use separate accounts when independent consent domains are required. Never route around a suppression."
     },
@@ -36,7 +36,7 @@
       "text": "Preview local contact rules before outreach. Report the reason when a recipient is held and resolve the underlying policy or missing data.",
       "evidence": [
         "shared/features/campaignContact.js:1-20",
-        "api/contactSuppression.js:5-21"
+        "api/contactSuppression.js:5-35"
       ],
       "sourceList": "contact.holds",
       "value": [
@@ -60,7 +60,7 @@
       "scope": "account",
       "text": "Add a do-not-contact entry for all channels, voice or SMS. Check the selected owner and recipient before any change.",
       "evidence": [
-        "api/contactSuppression.js:5-21"
+        "api/contactSuppression.js:5-35"
       ]
     },
     {
@@ -70,7 +70,7 @@
       "text": "The following normalised whole-message keywords trigger opt-out. A keyword inside an ordinary sentence does not trigger this matcher. Respect other expressions of withdrawal through your own process.",
       "evidence": [
         "shared/features/smsOptOut.js:1-9",
-        "inbound/features/smsOptOutIntake.js:7-15"
+        "inbound/features/smsOptOutIntake.js:7-18"
       ],
       "sourceList": "contact.stopWords",
       "value": [
@@ -97,8 +97,8 @@
       "scope": "recipient",
       "text": "Check contact hours or inspect the suppression list for the account.",
       "evidence": [
-        "inbound/features/smsOptOutIntake.js:7-15",
-        "api/contactSuppression.js:5-21",
+        "inbound/features/smsOptOutIntake.js:7-18",
+        "api/contactSuppression.js:5-35",
         "shared/features/campaignContact.js:1-20"
       ],
       "value": [
@@ -115,6 +115,27 @@
         "api/contactSuppression.js:5-13"
       ],
       "value": "feature_paused"
+    },
+    {
+      "id": "contact-ai",
+      "kind": "change",
+      "scope": "recipient",
+      "text": "Keyword STOP works independently. AI recognition of a sender’s clear objection in a verified incoming SMS is off by default. Customers have no switch for it. Where enabled on eligible automatic replies, it blocks calls and texts account-wide and may send one goodbye.",
+      "evidence": [
+        "inbound/features/smsReplyOptOut.js:5-29",
+        "inbound/features/smsReplyOptOut.js:54-65",
+        "inbound/features/smsOptOutIntake.js:1-20"
+      ]
+    },
+    {
+      "id": "contact-review",
+      "kind": "change",
+      "scope": "recipient",
+      "text": "On GET /v1/contact-suppressions, business_number alone selects keyword evidence. Add source=attributed for keyword and AI entries. To correct an eligible AI mistake, the Owner or account key sends phone_number, channel=all, current review_version and a reason to POST /v1/contact-suppressions/ai-corrections. Reload on review_changed. Keyword STOP and independent restrictions stay locked. Correction never supplies consent.",
+      "evidence": [
+        "api/contactSuppression.js:16-39",
+        "api/aiOptOutCorrection.js:7-31"
+      ]
     }
   ]
 }

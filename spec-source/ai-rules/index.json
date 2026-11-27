@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1",
-  "dashboard": "ff9c0cf35657ea9960b0e97e8a1b26518f50543d",
-  "date": "2026-11-22",
+  "engine": "16046688ec2ddc33999a9f5561748e32b4449424",
+  "dashboard": "668be49f4d9bea3008272712d4793c7ed1337ff9",
+  "date": "2026-11-27",
   "policy": {
     "agent-pricing": "Fahim, 22 November 2026: unlimited agents, no per-agent fee, pay only for usage (minutes and texts).",
     "public-origin": "Public production API and approved public method/path allowlist. Other environments require Nixflex provisioning.",
@@ -49,7 +49,10 @@
         "acc-origin",
         "acc-sandbox",
         "acc-rotate",
-        "acc-rate"
+        "acc-rate",
+        "help-thread",
+        "help-scope",
+        "help-receipt"
       ]
     },
     "organisations": {
@@ -170,7 +173,6 @@
       ],
       "short": [
         "num-owner",
-        "num-no-tenant",
         "num-import",
         "num-settings",
         "num-pair",
@@ -214,7 +216,8 @@
         "out-prompt",
         "out-length",
         "out-status",
-        "out-error"
+        "out-error",
+        "out-number-setting"
       ]
     },
     "outbound-actions-variables": {
@@ -235,7 +238,6 @@
         "act-custom",
         "act-history",
         "act-variables",
-        "act-min",
         "act-missing"
       ]
     },
@@ -311,7 +313,8 @@
         "camp-window",
         "camp-stop",
         "camp-exact",
-        "camp-api"
+        "camp-filter",
+        "camp-pickup"
       ]
     },
     "contact-controls": {
@@ -333,7 +336,9 @@
         "contact-stop",
         "contact-separate",
         "contact-list",
-        "contact-hold"
+        "contact-hold",
+        "contact-ai",
+        "contact-review"
       ]
     },
     "sms": {
@@ -419,8 +424,7 @@
       "short": [
         "hist-tenant",
         "hist-lists",
-        "hist-filter",
-        "hist-delete"
+        "hist-filter"
       ]
     },
     "knowledge": {
@@ -527,7 +531,6 @@
         "kb-full-test",
         "kb-channels",
         "kb-settings",
-        "kb-volume",
         "kb-count"
       ]
     },
@@ -593,8 +596,7 @@
         "book-confirm",
         "book-calzone",
         "book-settings",
-        "book-connect",
-        "book-api"
+        "book-connect"
       ]
     },
     "integrations": {
@@ -807,13 +809,13 @@
     "book-calzone",
     "hook-tenant",
     "hist-tenant",
-    "bill-price"
+    "bill-price",
+    "camp-filter",
+    "contact-review",
+    "help-receipt"
   ],
   "lead": [
-    "bill-price",
-    "out-route",
-    "contact-stop",
-    "lim-reserve"
+    "bill-price"
   ],
   "generalPages": [
     "what-is-nixflex",
@@ -842,7 +844,22 @@
     "billing-usage": [
       "bill-share"
     ],
-    "account-access": []
+    "account-access": [
+      "help-thread",
+      "help-scope",
+      "help-receipt"
+    ],
+    "outbound-calls": [
+      "out-number-setting"
+    ],
+    "campaigns": [
+      "camp-filter",
+      "camp-pickup"
+    ],
+    "contact-controls": [
+      "contact-ai",
+      "contact-review"
+    ]
   },
   "sources": {
     "engine": [
@@ -961,7 +978,24 @@
       "sql/security-auth/094_03_web_settings.sql",
       "sql/security-auth/097_01_number_operations.sql",
       "web/visitorContext.js",
-      "web/voiceConfig.js"
+      "web/voiceConfig.js",
+      "sql/security-auth/112_01_account_outbound_sender.sql",
+      "outbound/features/campaignSenderChoice.js",
+      "shared/features/callPurpose.js",
+      "api/calls/purposeValidation.js",
+      "shared/integrations/calcomZone.js",
+      "api/numberCalcomZone.js",
+      "shared/integrations/calcomTarget.js",
+      "api/businessNumberFilter.js",
+      "api/voiceCampaignTotals.js",
+      "sql/security-auth/114_01_ai_optout.sql",
+      "inbound/features/smsReplyOptOut.js",
+      "api/aiOptOutCorrection.js",
+      "support/routes.js",
+      "sql/security-auth/L2_06_support_chat.sql",
+      "support/input.js",
+      "docs/support.openapi.json",
+      "contracts/registered-routes.json"
     ],
     "docs": [
       "api-reference/organisation/get-organisation-signing-secret.mdx",
@@ -969,8 +1003,31 @@
       "scripts/public-production-policy.mjs"
     ],
     "dashboard": [
-      "app/components/agent-inbox/WebInstall.jsx"
+      "app/components/agent-inbox/WebInstall.jsx",
+      "lib/outboundSettings.js",
+      "lib/campaignPeriodCards.js",
+      "lib/voiceCampaignRead.js",
+      "app/dashboard/settings/support/SupportTickets.jsx",
+      "app/dashboard/settings/support/TicketList.jsx"
     ]
   },
-  "downloadAsset": "downloads/nixflex-ai-rules.txt"
+  "downloadAsset": "downloads/nixflex-ai-rules.txt",
+  "releaseOperations": {
+    "outbound-calls": [
+      "GET /v1/organisation/outbound-settings",
+      "PATCH /v1/organisation/outbound-settings"
+    ],
+    "contact-controls": [
+      "POST /v1/contact-suppressions/ai-corrections"
+    ],
+    "account-access": [
+      "GET /v1/support/tickets",
+      "POST /v1/support/tickets",
+      "GET /v1/support/tickets/{ticket_id}",
+      "POST /v1/support/tickets/{ticket_id}/messages",
+      "POST /v1/support/tickets/{ticket_id}/solve",
+      "GET /v1/support/tickets/requests/{request_key}",
+      "POST /v1/support/tickets/chat-summary"
+    ]
+  }
 }

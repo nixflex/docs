@@ -3,8 +3,8 @@
   "feature": "webhooks",
   "title": "Webhook verification and tenant routing",
   "checked": {
-    "date": "2026-11-23",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -13,8 +13,8 @@
       "scope": "organisation",
       "text": "**MUST** With organisations enabled, each organisation has one signing secret. Send the human Owner to the dashboard. Never ask for it in chat or expose it to AI tools.\\\nAn authorised server can use an Owner session or the organisation API credential. Admin and Member sessions cannot retrieve it. Store it on the receiving server.",
       "evidence": [
-        "api/routes.js:113",
-        "api/organisationRoutes.js:14-21",
+        "api/routes.js:114",
+        "api/organisationRoutes.js:14-35",
         "api/organisationGuard.js:6-9",
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
@@ -30,8 +30,8 @@
       "scope": "number",
       "text": "call.bookings has no account field or per-number secret.",
       "evidence": [
-        "api/routes.js:113",
-        "api/organisationRoutes.js:14-21",
+        "api/routes.js:114",
+        "api/organisationRoutes.js:14-35",
         "api/organisationGuard.js:6-9",
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
@@ -55,14 +55,14 @@
       "scope": "number",
       "text": "Set delivery destinations per number. Pre-call settings can be scoped to an agent or number. Keep the delivery destination and your signature-verification secret separate.",
       "evidence": [
-        "api/routes.js:113",
-        "api/organisationRoutes.js:14-21",
+        "api/routes.js:114",
+        "api/organisationRoutes.js:14-35",
         "api/organisationGuard.js:6-9",
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
         "shared/features/callBookings.js:45-48",
         "docs@api-reference/organisation/get-organisation-signing-secret.mdx:33-53",
-        "api/routes.js:1629-1667"
+        "api/routes.js:1648-1686"
       ]
     },
     {
@@ -92,8 +92,8 @@
       "scope": "organisation",
       "text": "With organisations enabled, only an Owner session or the organisation API credential can retrieve the secret on a server. The kits omit this secret read.",
       "evidence": [
-        "api/routes.js:113",
-        "api/organisationRoutes.js:14-21",
+        "api/routes.js:114",
+        "api/organisationRoutes.js:14-35",
         "api/organisationGuard.js:6-9",
         "shared/organisations/policy.json:2-5",
         "shared/features/webhook.js:35-40",
@@ -112,7 +112,7 @@
       "evidence": [
         "shared/organisations/rpc.js:3-12",
         "shared/organisations/rpc.js:28-32",
-        "api/organisationRoutes.js:14-22"
+        "api/organisationRoutes.js:14-36"
       ],
       "value": "permission_denied"
     }

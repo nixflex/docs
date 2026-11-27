@@ -3,8 +3,8 @@
   "feature": "limits-errors",
   "title": "Limits, errors and safe retries",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -15,7 +15,7 @@
       "evidence": [
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116"
+        "api/routes.js:1109-1122"
       ],
       "why": "Each number draws from the same account capacity."
     },
@@ -23,19 +23,19 @@
       "id": "lim-reserve",
       "kind": "unavailable",
       "scope": "number",
-      "text": "There is no per-number concurrent-call reservation.",
+      "text": "No per-number concurrency reservation exists.",
       "evidence": [
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116"
+        "api/routes.js:1109-1122"
       ],
-      "instead": "Queue or pace each tenant in your application. Use separate accounts if the budgets must be independent."
+      "instead": "Pace tenants in your app or use separate accounts for independent budgets."
     },
     {
       "id": "lim-read",
       "kind": "does",
       "scope": "operation",
-      "text": "Distinguish a rejected request, an accepted operation and an unknown outcome. Inspect the error code and details before deciding whether to retry.",
+      "text": "Check the code and details to distinguish refusal, acceptance and unknown outcome before retrying.",
       "evidence": [
         "api/errorHelper.js:15-36",
         "api/callReceiptError.js:1-8"
@@ -45,11 +45,11 @@
       "id": "lim-pace",
       "kind": "change",
       "scope": "account",
-      "text": "Adjust the rate at which your application submits work. An accepted queue entry can still wait for capacity.",
+      "text": "Pace submissions. Accepted work may wait for capacity.",
       "evidence": [
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116",
+        "api/routes.js:1109-1122",
         "api/campaignControls.js:20-29"
       ]
     },
@@ -61,7 +61,7 @@
       "evidence": [
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116"
+        "api/routes.js:1109-1122"
       ],
       "sourceList": "limits.concurrent",
       "value": 10
@@ -72,7 +72,7 @@
       "scope": "account",
       "text": "Inspect account usage for current capacity information.",
       "evidence": [
-        "api/routes.js:1094-1116"
+        "api/routes.js:1100-1122"
       ],
       "value": "GET /v1/usage"
     },
@@ -82,7 +82,7 @@
       "scope": "operation",
       "text": "On rate_limit_exceeded use retry_after_seconds. For an uncertain send, reconcile its receipt before submitting anything again.",
       "evidence": [
-        "api/routes.js:90-103",
+        "api/routes.js:91-104",
         "api/callReceiptError.js:1-8"
       ],
       "value": "rate_limit_exceeded"

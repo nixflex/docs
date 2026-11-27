@@ -3,8 +3,8 @@
   "feature": "billing-usage",
   "title": "Agent pricing and usage",
   "checked": {
-    "date": "2026-11-22",
-    "engine": "0fd3f79bbc9acac787e5e3b31182e7987f3353e1"
+    "date": "2026-11-27",
+    "engine": "16046688ec2ddc33999a9f5561748e32b4449424"
   },
   "rules": [
     {
@@ -13,8 +13,8 @@
       "scope": "account",
       "text": "Agents are unlimited. There is no fee per agent. Customers pay only for usage (minutes and texts). Many customers can use one shared agent, each with its own number and number prompt. Use separate agents only for different knowledge or agent settings. List page size, knowledge-base quotas and simultaneous-call limits do not cap agent count.",
       "evidence": [
-        "api/routes.js:657-699",
-        "api/routes.js:769-779",
+        "api/routes.js:659-701",
+        "api/routes.js:771-781",
         "api/agents/list.js:9-20",
         "shared/payments/chargePricing.js:1-5",
         "knowledge/scopes.js:21-26",
@@ -35,7 +35,7 @@
         "knowledge/scopes.js:13-30",
         "knowledge/liveRead.js:20-28",
         "shared/data/agentPrompt.js:20-51",
-        "api/routes.js:657-699",
+        "api/routes.js:659-701",
         "api/agents/list.js:9-20",
         "knowledge/scopes.js:21-26"
       ]
@@ -48,7 +48,7 @@
       "evidence": [
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116"
+        "api/routes.js:1109-1122"
       ],
       "instead": "Pace customers’ work in your application. Use independent accounts for independent budgets."
     },
@@ -56,11 +56,11 @@
       "id": "bill-attrib",
       "kind": "change",
       "scope": "call",
-      "text": "For usage attribution save the intended customer and its verified business number when making a request.",
+      "text": "Save the customer and verified business number with each request.",
       "evidence": [
-        "api/routes.js:1063-1078",
-        "api/outboundNumber.js:13-31",
-        "api/numberUsage.js:3-11"
+        "api/routes.js:1067-1084",
+        "api/numberUsage.js:3-11",
+        "api/outboundNumber.js:65-85"
       ]
     },
     {
@@ -69,14 +69,14 @@
       "scope": "account",
       "text": "Knowledge-base quotas and simultaneous calls have independent limits. Neither is a limit on how many agents you may create.",
       "evidence": [
-        "api/routes.js:657-699",
-        "api/routes.js:769-779",
+        "api/routes.js:659-701",
+        "api/routes.js:771-781",
         "api/agents/list.js:9-20",
         "shared/payments/chargePricing.js:1-5",
         "knowledge/scopes.js:21-26",
         "shared/utils/concurrencyGuard.js:3-10",
         "shared/utils/concurrencyGuard.js:52-71",
-        "api/routes.js:1103-1116"
+        "api/routes.js:1109-1122"
       ]
     },
     {
@@ -85,7 +85,7 @@
       "scope": "account",
       "text": "Read account usage or narrow the usage report to a specific owned business number.",
       "evidence": [
-        "api/routes.js:1094-1116",
+        "api/routes.js:1100-1122",
         "api/numberUsage.js:3-11"
       ],
       "value": [
